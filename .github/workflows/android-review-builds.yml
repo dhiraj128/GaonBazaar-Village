@@ -19,8 +19,8 @@ on:
         default: 'split-per-abi'
         type: choice
         options:
-          - split-per-abi (Target 15-25MB per ABI)
-          - universal (Single universal APK ~50MB)
+          - split-per-abi
+          - universal
 
 jobs:
   build-apks:
