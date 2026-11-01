@@ -55,3 +55,17 @@ class AddProductToStoreRequest(BaseModel):
     image_url: Optional[str] = None
     stock_quantity: int = 50
     in_stock: bool = True
+
+class StoreRegistrationRequest(BaseModel):
+    shop_name: str
+    owner_name: str
+    category: str
+    latitude: float
+    longitude: float
+    village: str
+    landmark: Optional[str] = None
+    block: str = "Minapur"
+    district: str = "Muzaffarpur"
+    banner_url: Optional[str] = None
+    upi_id: Optional[str] = None
+

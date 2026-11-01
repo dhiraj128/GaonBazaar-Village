@@ -6,9 +6,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.db.session import get_db
+from pydantic import BaseModel
 from app.models.base import (
-    Order, OrderItem, OrderTimeline, Store, StoreProduct, Address, User, Runner
+    Order, OrderItem, OrderTimeline, Store, StoreProduct, Address, User, Runner, SupportTicket
 )
+
+class CreateTicketRequest(BaseModel):
+    subject: str
+    message: str
+    order_id: Optional[str] = None
 from app.schemas.order import (
     CartSyncRequest, CartPriceBreakdown, CreateOrderRequest, OrderResponse,
     OrderItemDetail, OrderTimelineDetail, OrderActionRequest
@@ -190,6 +196,32 @@ async def get_order_details(order_id: str, db: AsyncSession = Depends(get_db)):
     if not resp:
         raise HTTPException(status_code=404, detail="Order not found")
     return resp
+
+@router.post("/orders/tickets")
+async def create_support_ticket(
+    req: CreateTicketRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    ticket = SupportTicket(
+        user_id=user_id,
+        order_id=req.order_id,
+        subject=req.subject,
+        message=req.message,
+        status="OPEN"
+    )
+    db.add(ticket)
+    await db.commit()
+    await db.refresh(ticket)
+    return {
+        "id": ticket.id,
+        "subject": ticket.subject,
+        "message": ticket.message,
+        "status": ticket.status,
+        "created_at": ticket.created_at.isoformat() if ticket.created_at else None
+    }
+
 
 @router.post("/orders/{order_id}/cancel")
 async def cancel_order(

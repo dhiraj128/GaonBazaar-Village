@@ -8,6 +8,9 @@ import {
   Package,
   CircleDollarSign,
   ShieldCheck,
+  Users,
+  Headphones,
+  ScrollText,
 } from 'lucide-react';
 
 export type NavTab =
@@ -15,9 +18,12 @@ export type NavTab =
   | 'vendors'
   | 'runners'
   | 'orders'
+  | 'customers'
+  | 'tickets'
   | 'zones'
   | 'catalog'
-  | 'settlements';
+  | 'settlements'
+  | 'audit';
 
 interface SidebarProps {
   currentTab: NavTab;
@@ -25,6 +31,7 @@ interface SidebarProps {
   pendingVendorsCount: number;
   pendingRunnersCount: number;
   activeOrdersCount: number;
+  openTicketsCount?: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -33,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   pendingVendorsCount,
   pendingRunnersCount,
   activeOrdersCount,
+  openTicketsCount = 0,
 }) => {
   const navItems = [
     {
@@ -63,6 +71,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badgeColor: 'bg-emerald-600 text-white',
     },
     {
+      id: 'customers' as NavTab,
+      label: 'Registered Customers',
+      icon: Users,
+      badge: null,
+    },
+    {
+      id: 'tickets' as NavTab,
+      label: 'Support Tickets',
+      icon: Headphones,
+      badge: openTicketsCount > 0 ? `${openTicketsCount} Open` : null,
+      badgeColor: 'bg-rose-500 text-white',
+    },
+    {
       id: 'zones' as NavTab,
       label: 'Zones & Pricing Rules',
       icon: MapPin,
@@ -78,6 +99,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'settlements' as NavTab,
       label: 'Settlements & Finance',
       icon: CircleDollarSign,
+      badge: null,
+    },
+    {
+      id: 'audit' as NavTab,
+      label: 'Security & Audit Logs',
+      icon: ScrollText,
       badge: null,
     },
   ];

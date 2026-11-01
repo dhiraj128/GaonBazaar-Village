@@ -196,3 +196,16 @@ class SupportTicket(Base):
     message = Column(Text, nullable=False)
     status = Column(String(30), default="OPEN") # OPEN, RESOLVED, CLOSED
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    actor_id = Column(String(36), nullable=True)
+    actor_role = Column(String(20), default="admin")
+    action = Column(String(100), nullable=False)
+    target_type = Column(String(50), nullable=False)
+    target_id = Column(String(50), nullable=True)
+    details = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+

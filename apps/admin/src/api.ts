@@ -6,6 +6,9 @@ import type {
   CatalogItem,
   PlatformSettings,
   SettlementLedger,
+  CustomerItem,
+  SupportTicketItem,
+  AuditLogItem,
 } from './types';
 
 const API_BASE = 'http://localhost:8000/api/v1/admin';
@@ -428,6 +431,124 @@ export const adminApi = {
       ],
       platform_fee_collected: delivered.length * 3.0,
       total_delivered_orders: delivered.length,
+    };
+  },
+
+  async getCustomers(): Promise<CustomerItem[]> {
+    try {
+      const res = await fetch(`${API_BASE}/customers`);
+      if (res.ok) return await res.json();
+    } catch {}
+    return [
+      {
+        id: 'cust_001',
+        phone: '9876543210',
+        name: 'Amit Kumar Singh',
+        preferred_language: 'hi',
+        is_active: true,
+        addresses_count: 2,
+        orders_count: 5,
+        created_at: '2026-10-25T10:00:00Z',
+      },
+      {
+        id: 'cust_002',
+        phone: '9812345678',
+        name: 'Pooja Kumari',
+        preferred_language: 'hi',
+        is_active: true,
+        addresses_count: 1,
+        orders_count: 3,
+        created_at: '2026-10-28T14:30:00Z',
+      },
+    ];
+  },
+
+  async getTickets(): Promise<SupportTicketItem[]> {
+    try {
+      const res = await fetch(`${API_BASE}/tickets`);
+      if (res.ok) return await res.json();
+    } catch {}
+    return [
+      {
+        id: 'tick_001',
+        user_id: 'cust_001',
+        order_id: 'ORD-20261031-001',
+        subject: 'Delivery delayed due to rain',
+        message: 'Runner informed road waterlogged near Sivay Patti culvert',
+        status: 'OPEN',
+        created_at: '2026-11-01T11:00:00Z',
+      },
+      {
+        id: 'tick_002',
+        user_id: 'user_v1',
+        subject: 'Product pricing update request',
+        message: 'Want to update local mustard oil brand price to match village rate',
+        status: 'RESOLVED',
+        created_at: '2026-10-31T16:00:00Z',
+      },
+    ];
+  },
+
+  async updateTicketStatus(id: string, status: 'OPEN' | 'RESOLVED' | 'CLOSED'): Promise<void> {
+    try {
+      await fetch(`${API_BASE}/tickets/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+    } catch {}
+  },
+
+  async getAuditLogs(): Promise<AuditLogItem[]> {
+    try {
+      const res = await fetch(`${API_BASE}/audit-logs`);
+      if (res.ok) return await res.json();
+    } catch {}
+    return [
+      {
+        id: 'log_001',
+        actor_role: 'super_admin',
+        action: 'VENDOR_APPROVED',
+        target_type: 'STORE',
+        target_id: 'store_001',
+        details: 'Approved Minapur Central Kirana & General Store after physical verification',
+        created_at: '2026-10-30T09:15:00Z',
+      },
+      {
+        id: 'log_002',
+        actor_role: 'system',
+        action: 'SETTINGS_UPDATED',
+        target_type: 'PLATFORM_SETTINGS',
+        target_id: 'global',
+        details: 'Radius: 8.0km, PlatformFee: ₹3, Commission: 0%',
+        created_at: '2026-10-31T12:00:00Z',
+      },
+    ];
+  },
+
+  async updateSettings(settings: Partial<PlatformSettings>): Promise<PlatformSettings> {
+    try {
+      const res = await fetch(`${API_BASE}/settings`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      if (res.ok) return await res.json();
+    } catch {}
+    return {
+      pilot_block: 'Minapur Block',
+      pilot_district: 'Muzaffarpur',
+      pilot_state: 'Bihar',
+      pilot_localities: [
+        { name: 'Chaturshi / Chatursi', lat: 26.1950, lng: 85.3450 },
+        { name: 'Tubanaghara / Benaghara', lat: 26.2100, lng: 85.3550 },
+        { name: 'Sivay Patti', lat: 26.2250, lng: 85.3600 },
+        { name: 'Tulsi Ganj / Bangaon', lat: 26.1880, lng: 85.3320 },
+      ],
+      max_delivery_radius_km: settings.max_delivery_radius_km ?? 8.0,
+      platform_fee: settings.platform_fee ?? 3.0,
+      vendor_commission_pct: settings.vendor_commission_pct ?? 0.0,
+      cancel_window_seconds: 180,
     };
   },
 };

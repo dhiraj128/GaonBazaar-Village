@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     PER_KM_DELIVERY_FEE: float = 5.0
     PLATFORM_FEE: float = 3.0 # Strict ₹3 platform fee
     CUSTOMER_CANCEL_WINDOW_SECONDS: int = 180 # Strict 180-second cancellation
+    DEFAULT_VENDOR_COMMISSION_PCT: float = 0.0 # Strict 0% introductory rate
     
     # Pilot Geography: Minapur Block, Muzaffarpur, Bihar
     PILOT_BLOCK: str = "Minapur"
