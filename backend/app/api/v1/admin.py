@@ -1,12 +1,30 @@
 from typing import List, Optional
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from app.db.session import get_db
-from app.models.base import Store, Runner, Order, User, GlobalCatalogItem
+from app.models.base import Store, Runner, Order, User, GlobalCatalogItem, OrderItem
 from app.core.config import settings
 
 router = APIRouter(prefix="/admin", tags=["Super Admin Operations"])
+
+class SettingsUpdate(BaseModel):
+    max_delivery_radius_km: Optional[float] = None
+    platform_fee: Optional[float] = None
+    vendor_commission_pct: Optional[float] = None
+
+class CatalogItemCreate(BaseModel):
+    name_en: str
+    name_hi: str
+    category: str
+    standard_unit: str
+    suggested_price: float
+    image_url: str
+
+class OrderStatusUpdate(BaseModel):
+    status: str
 
 @router.get("/overview")
 async def get_admin_overview(db: AsyncSession = Depends(get_db)):
@@ -28,6 +46,7 @@ async def get_admin_overview(db: AsyncSession = Depends(get_db)):
         "pilot_area": f"{settings.PILOT_BLOCK}, {settings.PILOT_DISTRICT}, {settings.PILOT_STATE}",
         "max_delivery_radius_km": settings.MAX_DELIVERY_RADIUS_KM,
         "platform_fee": settings.PLATFORM_FEE,
+        "vendor_commission_pct": settings.DEFAULT_VENDOR_COMMISSION_PCT,
         "total_stores": len(stores),
         "active_stores": len([s for s in stores if s.is_online and s.is_approved]),
         "total_runners": len(runners),
@@ -38,6 +57,11 @@ async def get_admin_overview(db: AsyncSession = Depends(get_db)):
         "pending_vendor_approvals": len(pending_vendors),
         "pending_runner_approvals": len(pending_runners)
     }
+
+@router.get("/vendors")
+async def get_all_vendors(db: AsyncSession = Depends(get_db)):
+    res = await db.execute(select(Store))
+    return res.scalars().all()
 
 @router.get("/vendors/pending")
 async def get_pending_vendors(db: AsyncSession = Depends(get_db)):
@@ -52,7 +76,22 @@ async def approve_vendor(store_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Store not found")
     st.is_approved = True
     await db.commit()
-    return {"message": f"Store {st.shop_name} approved successfully"}
+    return {"message": f"Store {st.shop_name} approved successfully", "is_approved": True}
+
+@router.post("/vendors/{store_id}/reject")
+async def reject_vendor(store_id: str, db: AsyncSession = Depends(get_db)):
+    res = await db.execute(select(Store).where(Store.id == store_id))
+    st = res.scalars().first()
+    if not st:
+        raise HTTPException(status_code=404, detail="Store not found")
+    st.is_approved = False
+    await db.commit()
+    return {"message": f"Store {st.shop_name} rejected", "is_approved": False}
+
+@router.get("/runners")
+async def get_all_runners(db: AsyncSession = Depends(get_db)):
+    res = await db.execute(select(Runner))
+    return res.scalars().all()
 
 @router.get("/runners/pending")
 async def get_pending_runners(db: AsyncSession = Depends(get_db)):
@@ -67,4 +106,126 @@ async def approve_runner(runner_id: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Runner not found")
     rn.is_approved = True
     await db.commit()
-    return {"message": f"Runner {rn.full_name} approved successfully"}
+    return {"message": f"Runner {rn.full_name} approved successfully", "is_approved": True}
+
+@router.post("/runners/{runner_id}/reject")
+async def reject_runner(runner_id: str, db: AsyncSession = Depends(get_db)):
+    res = await db.execute(select(Runner).where(Runner.id == runner_id))
+    rn = res.scalars().first()
+    if not rn:
+        raise HTTPException(status_code=404, detail="Runner not found")
+    rn.is_approved = False
+    await db.commit()
+    return {"message": f"Runner {rn.full_name} rejected", "is_approved": False}
+
+@router.get("/orders")
+async def get_all_orders(db: AsyncSession = Depends(get_db)):
+    res = await db.execute(
+        select(Order).options(selectinload(Order.items), selectinload(Order.store)).order_by(Order.created_at.desc())
+    )
+    orders = res.scalars().all()
+    results = []
+    for o in orders:
+        results.append({
+            "id": o.id,
+            "customer_id": o.customer_id,
+            "store_id": o.store_id,
+            "store_name": o.store.shop_name if o.store else "Store",
+            "runner_id": o.runner_id,
+            "status": o.status,
+            "subtotal": o.subtotal,
+            "delivery_fee": o.delivery_fee,
+            "platform_fee": o.platform_fee,
+            "total_amount": o.total_amount,
+            "payment_mode": o.payment_mode,
+            "payment_status": o.payment_status,
+            "delivery_otp": o.delivery_otp,
+            "items_count": len(o.items),
+            "created_at": o.created_at.isoformat() if o.created_at else None,
+            "is_cancellable": o.is_cancellable
+        })
+    return results
+
+@router.patch("/orders/{order_id}/status")
+async def update_order_status(order_id: str, req: OrderStatusUpdate, db: AsyncSession = Depends(get_db)):
+    res = await db.execute(select(Order).where(Order.id == order_id))
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    valid_statuses = ["PLACED", "ACCEPTED", "PACKED", "RUNNER_ASSIGNED", "PICKED_UP", "OUT_FOR_DELIVERY", "DELIVERED", "CANCELLED"]
+    if req.status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    order.status = req.status
+    if req.status == "DELIVERED" and order.payment_mode == "COD":
+        order.payment_status = "PAID"
+    await db.commit()
+    return {"message": f"Order {order_id} status updated to {req.status}", "status": order.status}
+
+@router.get("/catalog")
+async def get_master_catalog(db: AsyncSession = Depends(get_db)):
+    res = await db.execute(select(GlobalCatalogItem))
+    return res.scalars().all()
+
+@router.post("/catalog")
+async def add_master_catalog_item(item: CatalogItemCreate, db: AsyncSession = Depends(get_db)):
+    new_item = GlobalCatalogItem(
+        name_en=item.name_en,
+        name_hi=item.name_hi,
+        category=item.category,
+        standard_unit=item.standard_unit,
+        suggested_price=item.suggested_price,
+        image_url=item.image_url
+    )
+    db.add(new_item)
+    await db.commit()
+    await db.refresh(new_item)
+    return new_item
+
+@router.get("/settings")
+async def get_platform_settings():
+    return {
+        "pilot_block": settings.PILOT_BLOCK,
+        "pilot_district": settings.PILOT_DISTRICT,
+        "pilot_state": settings.PILOT_STATE,
+        "pilot_localities": [
+            {"name": "Chaturshi / Chatursi", "lat": 26.1950, "lng": 85.3450},
+            {"name": "Tubanaghara / Benaghara", "lat": 26.2100, "lng": 85.3550},
+            {"name": "Sivay Patti", "lat": 26.2250, "lng": 85.3600},
+            {"name": "Tulsi Ganj / Bangaon", "lat": 26.1880, "lng": 85.3320}
+        ],
+        "max_delivery_radius_km": settings.MAX_DELIVERY_RADIUS_KM,
+        "platform_fee": settings.PLATFORM_FEE,
+        "vendor_commission_pct": settings.DEFAULT_VENDOR_COMMISSION_PCT,
+        "cancel_window_seconds": settings.CANCEL_WINDOW_SECONDS
+    }
+
+@router.get("/settlements")
+async def get_settlements_ledger(db: AsyncSession = Depends(get_db)):
+    res = await db.execute(
+        select(Order).options(selectinload(Order.store)).where(Order.status == "DELIVERED")
+    )
+    delivered_orders = res.scalars().all()
+    
+    vendor_totals = {}
+    runner_totals = {}
+    
+    for o in delivered_orders:
+        if o.store_id:
+            s_name = o.store.shop_name if o.store else "Store"
+            if o.store_id not in vendor_totals:
+                vendor_totals[o.store_id] = {"store_id": o.store_id, "store_name": s_name, "total_payout": 0.0, "order_count": 0}
+            vendor_totals[o.store_id]["total_payout"] += o.subtotal
+            vendor_totals[o.store_id]["order_count"] += 1
+            
+        if o.runner_id:
+            if o.runner_id not in runner_totals:
+                runner_totals[o.runner_id] = {"runner_id": o.runner_id, "total_payout": 0.0, "order_count": 0}
+            runner_totals[o.runner_id]["total_payout"] += o.delivery_fee
+            runner_totals[o.runner_id]["order_count"] += 1
+
+    return {
+        "vendor_settlements": list(vendor_totals.values()),
+        "runner_settlements": list(runner_totals.values()),
+        "platform_fee_collected": len(delivered_orders) * settings.PLATFORM_FEE,
+        "total_delivered_orders": len(delivered_orders)
+    }
