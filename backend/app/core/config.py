@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "[REDACTED_SECRET_KEY]"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
+    ADMIN_API_KEY: str = "[REDACTED_ADMIN_KEY]"
+    TESTING: bool = False
     
     # Database (Default to SQLite file for robust local testing without external daemon)
     DATABASE_URL: str = "sqlite+aiosqlite:///./gaonbazaar.db"

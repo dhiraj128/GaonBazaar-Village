@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import type { NavTab } from './components/Sidebar';
 import { Header } from './components/Header';
+import { LoginView } from './components/LoginView';
 import { OverviewView } from './components/OverviewView';
 import { VendorsView } from './components/VendorsView';
 import { RunnersView } from './components/RunnersView';
@@ -27,6 +28,7 @@ import type {
 } from './types';
 
 export function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => adminApi.isAuthenticated());
   const [currentTab, setCurrentTab] = useState<NavTab>('overview');
   const [isLoading, setIsLoading] = useState(false);
   const [overview, setOverview] = useState<AdminOverview | null>(null);
@@ -41,6 +43,7 @@ export function App() {
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
 
   const fetchData = async () => {
+    if (!adminApi.isAuthenticated()) return;
     setIsLoading(true);
     try {
       const [ov, st, rn, ord, cat, sett, stt, cust, tck, logs] = await Promise.all([
@@ -73,8 +76,19 @@ export function App() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [isAuthenticated]);
+
+  const handleLogout = () => {
+    adminApi.logout();
+    setIsAuthenticated(false);
+  };
+
+  if (!isAuthenticated) {
+    return <LoginView onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
 
   const handleApproveVendor = async (id: string) => {
     await adminApi.approveVendor(id);
@@ -132,7 +146,7 @@ export function App() {
 
       {/* Main Content Area */}
       <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        <Header currentTab={currentTab} onRefresh={fetchData} isLoading={isLoading} />
+        <Header currentTab={currentTab} onRefresh={fetchData} isLoading={isLoading} onLogout={handleLogout} />
 
         <main className="flex-1 p-8 mt-16 max-w-7xl w-full">
           {currentTab === 'overview' && (
