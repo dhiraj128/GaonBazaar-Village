@@ -1,28 +1,24 @@
 import uuid
 import pytest
-import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from app.main import app
+from tests.conftest import issue_and_verify_test_token
 
 @pytest.mark.asyncio
 async def test_role_authentication_and_token_generation():
-    """Verify customer, vendor, runner, and admin get appropriate JWT tokens and roles."""
+    """Verify customer, vendor, runner get appropriate JWT tokens and roles."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # Customer
-        c_res = await client.post("/api/v1/auth/otp/verify", json={"phone": "9911122233", "otp": "123456", "role": "customer"})
-        assert c_res.status_code == 200
-        assert c_res.json()["user"]["role"] == "customer"
-        assert "access_token" in c_res.json()
+        c_headers = await issue_and_verify_test_token(client, "9911122233", "customer")
+        assert "Authorization" in c_headers
 
         # Vendor
-        v_res = await client.post("/api/v1/auth/otp/verify", json={"phone": "9922233344", "otp": "123456", "role": "vendor"})
-        assert v_res.status_code == 200
-        assert v_res.json()["user"]["role"] == "vendor"
+        v_headers = await issue_and_verify_test_token(client, "9922233344", "vendor")
+        assert "Authorization" in v_headers
 
         # Runner
-        r_res = await client.post("/api/v1/auth/otp/verify", json={"phone": "9933344455", "otp": "123456", "role": "runner"})
-        assert r_res.status_code == 200
-        assert r_res.json()["user"]["role"] == "runner"
+        r_headers = await issue_and_verify_test_token(client, "9933344455", "runner")
+        assert "Authorization" in r_headers
 
 @pytest.mark.asyncio
 async def test_unapproved_vendor_not_in_customer_store_list():
@@ -30,9 +26,7 @@ async def test_unapproved_vendor_not_in_customer_store_list():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # 1. Register a brand-new vendor with unique phone
         unique_phone = f"99{uuid.uuid4().int % 100000000:08d}"
-        v_auth = await client.post("/api/v1/auth/otp/verify", json={"phone": unique_phone, "otp": "123456", "role": "vendor"})
-        v_token = v_auth.json()["access_token"]
-        v_headers = {"Authorization": f"Bearer {v_token}"}
+        v_headers = await issue_and_verify_test_token(client, unique_phone, "vendor")
 
         s_res = await client.post("/api/v1/stores/onboard", headers=v_headers, json={
             "shop_name": "Unapproved Test Store",
@@ -59,14 +53,10 @@ async def test_address_ownership_isolation():
     """Verify customers cannot access or order with another customer's address."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # Customer A
-        a_auth = await client.post("/api/v1/auth/otp/verify", json={"phone": "9100000001", "otp": "123456", "role": "customer"})
-        a_token = a_auth.json()["access_token"]
-        a_headers = {"Authorization": f"Bearer {a_token}"}
+        a_headers = await issue_and_verify_test_token(client, "9100000001", "customer")
 
         # Customer B
-        b_auth = await client.post("/api/v1/auth/otp/verify", json={"phone": "9100000002", "otp": "123456", "role": "customer"})
-        b_token = b_auth.json()["access_token"]
-        b_headers = {"Authorization": f"Bearer {b_token}"}
+        b_headers = await issue_and_verify_test_token(client, "9100000002", "customer")
 
         # Customer A creates an address
         addr_res = await client.post("/api/v1/addresses", headers=a_headers, json={
@@ -81,7 +71,6 @@ async def test_address_ownership_isolation():
         a_address_id = addr_res.json()["id"]
 
         # Customer B tries to create an order using Customer A's address -> 404
-        # Get a real store and product first
         stores = (await client.get("/api/v1/stores/nearby?latitude=26.1950&longitude=85.3450")).json()
         store_id = stores[0]["id"]
         prod_res = await client.get(f"/api/v1/stores/{store_id}/products")

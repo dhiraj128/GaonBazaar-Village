@@ -2,6 +2,7 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import app
 from app.core.config import settings
+from tests.conftest import issue_and_verify_test_token
 
 @pytest.mark.asyncio
 async def test_otp_bypass_restricted_for_public_numbers():
@@ -20,7 +21,7 @@ async def test_otp_bypass_restricted_for_public_numbers():
             send_data = send_res.json()
             assert send_data["mock_otp"] is None, "Public numbers must NEVER expose mock_otp in API response"
 
-            # 2. Attempt fixed OTP '123456' bypass
+            # 2. Attempt fixed OTP '123456' bypass on public number -> must fail
             verify_res = await client.post("/api/v1/auth/otp/verify", json={
                 "phone": public_phone,
                 "otp": "123456",
@@ -29,14 +30,16 @@ async def test_otp_bypass_restricted_for_public_numbers():
             assert verify_res.status_code == 400, "Fixed OTP bypass must be rejected for public non-whitelisted numbers"
             assert "गलत ओटीपी" in verify_res.json()["detail"]
 
-            # 3. Verify authorized whitelisted test persona (9800000000) CAN use test OTP
+            # 3. Verify authorized whitelisted test persona (9800000000) requires genuine challenge issuance first
+            from app.api.v1.auth import OTP_STORAGE
             test_phone = "9800000000"
+            OTP_STORAGE.pop(test_phone, None)
             t_send = await client.post("/api/v1/auth/otp/send", json={
                 "phone": test_phone,
                 "role": "customer"
             })
             assert t_send.status_code == 200
-            assert t_send.json()["mock_otp"] == "123456"
+            assert t_send.json()["mock_otp"] is None, "Even for test personas, response must never leak usable OTP"
 
             t_verify = await client.post("/api/v1/auth/otp/verify", json={
                 "phone": test_phone,
@@ -94,14 +97,8 @@ async def test_financial_safeguards_for_test_accounts():
     """Verify orders placed by test accounts cannot trigger real external payment captures."""
     settings.TESTING = True
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        # Authenticate test customer 9800000000
-        auth_res = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": "9800000000",
-            "otp": "123456",
-            "role": "customer"
-        })
-        token = auth_res.json()["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
+        # Authenticate test customer 9800000000 cleanly
+        headers = await issue_and_verify_test_token(client, "9800000000", "customer")
 
         # Fetch nearby stores
         stores_res = await client.get("/api/v1/stores/nearby?latitude=26.2210&longitude=85.3500&radius_km=8.0")
@@ -135,4 +132,4 @@ async def test_financial_safeguards_for_test_accounts():
         assert order_res.status_code == 201
         order_data = order_res.json()
         assert order_data["payment_method"] == "ONLINE_SIMULATED", "Test account orders must use simulated mode to avoid real financial gateway capture"
-        assert order_data["payment_status"] == "PAID"
+        assert order_data["payment_status"] == "SIMULATED", "Simulated orders must be tracked as SIMULATED, not genuinely PAID"

@@ -39,16 +39,14 @@ class CatalogItemCreate(BaseModel):
 
 class OrderStatusUpdate(BaseModel):
     status: str
+    cash_collected: Optional[bool] = None
 
 @router.post("/auth/login")
 async def admin_login(req: AdminLoginRequest, db: AsyncSession = Depends(get_db)):
     # Strict Admin Security: Must supply matching ADMIN_API_KEY
     is_key_match = bool(req.secret_key and req.secret_key.strip() == settings.ADMIN_API_KEY)
     
-    # Allow automated testing suite only when settings.TESTING is explicitly enabled
-    is_test_auth = bool(getattr(settings, "TESTING", False) and req.phone == "9800000099" and req.otp == "123456")
-    
-    if not (is_key_match or is_test_auth):
+    if not is_key_match:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="प्रशासनिक क्रेडेंशियल्स अमान्य हैं (Invalid Admin credentials. Authorized Admin Key required)"
@@ -214,8 +212,14 @@ async def update_order_status(order_id: str, req: OrderStatusUpdate, db: AsyncSe
     if req.status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
     order.status = req.status
-    if req.status == "DELIVERED" and order.payment_method == "COD":
-        order.payment_status = "PAID"
+    if req.status == "DELIVERED":
+        if order.payment_method == "COD":
+            if req.cash_collected is True:
+                order.payment_status = "PAID"
+            else:
+                order.payment_status = "PENDING"
+        elif order.payment_method == "ONLINE_SIMULATED":
+            order.payment_status = "SIMULATED"
     await db.commit()
     return {"message": f"Order {order_id} status updated to {req.status}", "status": order.status}
 

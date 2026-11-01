@@ -2,6 +2,8 @@ import time
 import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import app
+from app.core.config import settings
+from tests.conftest import issue_and_verify_test_token
 
 @pytest.mark.asyncio
 async def test_twenty_step_integrated_journey():
@@ -12,17 +14,11 @@ async def test_twenty_step_integrated_journey():
     vendor_phone = f"98{ts:08d}"
     customer_phone = f"97{ts:08d}"
     runner_phone = f"96{ts:08d}"
+    adm_headers = {"X-Admin-Key": settings.ADMIN_API_KEY}
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # STEP 1: Register a test Vendor
-        v_reg = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": vendor_phone,
-            "otp": "123456",
-            "role": "vendor"
-        })
-        assert v_reg.status_code == 200
-        v_token = v_reg.json()["access_token"]
-        v_headers = {"Authorization": f"Bearer {v_token}"}
+        v_headers = await issue_and_verify_test_token(client, vendor_phone, "vendor")
         
         # Onboard Store
         store_onboard = await client.post("/api/v1/stores/onboard", headers=v_headers, json={
@@ -44,17 +40,19 @@ async def test_twenty_step_integrated_journey():
         assert store["is_approved"] is False # Quarantined prior to Admin review
         
         # STEP 2: Approve Vendor through Admin
-        v_approve = await client.post(f"/api/v1/admin/vendors/{store_id}/approve")
+        v_approve = await client.post(f"/api/v1/admin/vendors/{store_id}/approve", headers=adm_headers)
         assert v_approve.status_code == 200
         assert v_approve.json()["is_approved"] is True
         
+        # Make store online
+        await client.patch("/api/v1/stores/status", headers=v_headers, json={"is_online": True})
+
         # STEP 3 & 4: Add a real catalog product, image, stock, and price
         catalog_res = await client.get("/api/v1/catalog/global")
         assert catalog_res.status_code == 200
         cat_items = catalog_res.json()
         assert len(cat_items) >= 9
         
-        # Pick Tomato / Chakki Atta from catalog
         selected_cat = cat_items[0]
         prod_add = await client.post("/api/v1/vendor/products", headers=v_headers, json={
             "global_product_id": selected_cat["id"],
@@ -62,7 +60,7 @@ async def test_twenty_step_integrated_journey():
             "custom_name_hi": "प्रीमियम चक्की आटा",
             "category": "Grocery",
             "unit": "5 kg",
-            "price": 210.0, # Vendor custom selling price
+            "price": 210.0,
             "mrp": 240.0,
             "image_url": selected_cat["image_url"],
             "stock_quantity": 50,
@@ -75,16 +73,9 @@ async def test_twenty_step_integrated_journey():
         assert product["stock_quantity"] == 50
         
         # STEP 5: Register a test Customer
-        c_reg = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": customer_phone,
-            "otp": "123456",
-            "role": "customer"
-        })
-        assert c_reg.status_code == 200
-        c_token = c_reg.json()["access_token"]
-        c_headers = {"Authorization": f"Bearer {c_token}"}
+        c_headers = await issue_and_verify_test_token(client, customer_phone, "customer")
         
-        # STEP 6: Choose a real confirmed test address (within Minapur pilot block, 1.2 km from store)
+        # STEP 6: Choose a real confirmed test address
         addr_add = await client.post("/api/v1/addresses", headers=c_headers, json={
             "title": "Home",
             "recipient_name": "Anita Devi",
@@ -147,25 +138,11 @@ async def test_twenty_step_integrated_journey():
         assert v_prep.json()["status"] == "PACKED"
         
         # STEP 11: Register and approve a test Runner
-        r_reg = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": runner_phone,
-            "otp": "123456",
-            "role": "runner"
-        })
-        assert r_reg.status_code == 200
-        r_user_id = r_reg.json()["user"]["id"]
-        r_token = r_reg.json()["access_token"]
-        r_headers = {"Authorization": f"Bearer {r_token}"}
+        r_headers = await issue_and_verify_test_token(client, runner_phone, "runner")
+        r_me = await client.get("/api/v1/runner/me", headers=r_headers)
+        runner_id = r_me.json()["id"]
         
-        # Fetch runner list to get Runner entity ID
-        runners_res = await client.get("/api/v1/admin/runners")
-        assert runners_res.status_code == 200
-        runners_list = runners_res.json()
-        matching_runners = [r for r in runners_list if r.get("user_id") == r_user_id]
-        assert len(matching_runners) > 0
-        runner_id = matching_runners[0]["id"]
-        
-        r_app = await client.post(f"/api/v1/admin/runners/{runner_id}/approve")
+        r_app = await client.post(f"/api/v1/admin/runners/{runner_id}/approve", headers=adm_headers)
         assert r_app.status_code == 200
         assert r_app.json()["is_approved"] is True
         
@@ -174,34 +151,37 @@ async def test_twenty_step_integrated_journey():
         assert r_acc.status_code == 200
         assert r_acc.json()["status"] == "RUNNER_ASSIGNED"
         
-        # STEP 13, 14, 15: Runner inspects order details & confirms pickup
+        # STEP 13, 14, 15: Runner inspects order details, confirms pickup, then goes out for delivery
         job_info = await client.get(f"/api/v1/orders/{order_id}", headers=r_headers)
         assert job_info.status_code == 200
         j_data = job_info.json()
         assert j_data["store_name"] == "Test Kisan Kirana Store"
         assert "Shiv Mandir" in j_data["delivery_address"]
         
-        r_pick = await client.post(f"/api/v1/runner/jobs/{order_id}/action", headers=r_headers, json={"action": "OUT_FOR_DELIVERY"})
-        assert r_pick.status_code == 200
-        assert r_pick.json()["status"] == "OUT_FOR_DELIVERY"
+        r_pickup = await client.post(f"/api/v1/runner/jobs/{order_id}/action", headers=r_headers, json={"action": "PICKUP"})
+        assert r_pickup.status_code == 200
+        assert r_pickup.json()["status"] == "PICKED_UP"
+
+        r_out = await client.post(f"/api/v1/runner/jobs/{order_id}/action", headers=r_headers, json={"action": "OUT_FOR_DELIVERY"})
+        assert r_out.status_code == 200
+        assert r_out.json()["status"] == "OUT_FOR_DELIVERY"
         
-        # STEP 16 & 17: Verify delivery OTP and complete delivery
-        # Wrong OTP fails with 400
+        # STEP 16 & 17: Verify delivery OTP and complete delivery with verified cash collection
         bad_del = await client.post(f"/api/v1/runner/jobs/{order_id}/action", headers=r_headers, json={
             "action": "DELIVER",
             "delivery_otp": "0000"
         })
         assert bad_del.status_code == 400
         
-        # Correct OTP succeeds
         good_del = await client.post(f"/api/v1/runner/jobs/{order_id}/action", headers=r_headers, json={
             "action": "DELIVER",
-            "delivery_otp": delivery_otp
+            "delivery_otp": delivery_otp,
+            "cash_collected": True
         })
         assert good_del.status_code == 200
         assert good_del.json()["status"] == "DELIVERED"
         
-        # STEP 18: Verify Customer sees Delivered
+        # STEP 18: Verify Customer sees Delivered and Paid
         cust_order = await client.get(f"/api/v1/orders/{order_id}", headers=c_headers)
         assert cust_order.status_code == 200
         c_data = cust_order.json()
@@ -209,12 +189,12 @@ async def test_twenty_step_integrated_journey():
         assert c_data["payment_status"] == "PAID"
         
         # STEP 19 & 20: Verify Admin order records and settlement calculations
-        admin_orders = await client.get("/api/v1/admin/orders")
+        admin_orders = await client.get("/api/v1/admin/orders", headers=adm_headers)
         assert admin_orders.status_code == 200
         admin_o_ids = [o["id"] for o in admin_orders.json()]
         assert order_id in admin_o_ids
         
-        settlements = await client.get("/api/v1/admin/settlements")
+        settlements = await client.get("/api/v1/admin/settlements", headers=adm_headers)
         assert settlements.status_code == 200
         settle_data = settlements.json()
         assert settle_data["platform_fee_collected"] >= 3.0
