@@ -49,9 +49,9 @@ jobs:
           cd apps/customer
           flutter pub get
           if [ "${{ inputs.build_mode }}" == "universal" ]; then
-            flutter build apk --release
+            flutter build apk --release --dart-define=API_BASE_URL=https://gaonbazaar-village-api.onrender.com/api/v1
           else
-            flutter build apk --release --split-per-abi
+            flutter build apk --release --split-per-abi --dart-define=API_BASE_URL=https://gaonbazaar-village-api.onrender.com/api/v1
           fi
           echo "=== Customer APK Sizes ==="
           ls -lh build/app/outputs/flutter-apk/*.apk
@@ -71,9 +71,9 @@ jobs:
           cd apps/vendor
           flutter pub get
           if [ "${{ inputs.build_mode }}" == "universal" ]; then
-            flutter build apk --release
+            flutter build apk --release --dart-define=API_BASE_URL=https://gaonbazaar-village-api.onrender.com/api/v1
           else
-            flutter build apk --release --split-per-abi
+            flutter build apk --release --split-per-abi --dart-define=API_BASE_URL=https://gaonbazaar-village-api.onrender.com/api/v1
           fi
           echo "=== Vendor APK Sizes ==="
           ls -lh build/app/outputs/flutter-apk/*.apk
@@ -93,9 +93,9 @@ jobs:
           cd apps/runner
           flutter pub get
           if [ "${{ inputs.build_mode }}" == "universal" ]; then
-            flutter build apk --release
+            flutter build apk --release --dart-define=API_BASE_URL=https://gaonbazaar-village-api.onrender.com/api/v1
           else
-            flutter build apk --release --split-per-abi
+            flutter build apk --release --split-per-abi --dart-define=API_BASE_URL=https://gaonbazaar-village-api.onrender.com/api/v1
           fi
           echo "=== Runner APK Sizes ==="
           ls -lh build/app/outputs/flutter-apk/*.apk

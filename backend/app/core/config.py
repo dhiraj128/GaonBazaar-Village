@@ -15,6 +15,26 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///./gaonbazaar.db"
     SYNC_DATABASE_URL: str = "sqlite:///./gaonbazaar.db"
     
+    @property
+    def ASYNC_DATABASE_URL(self) -> str:
+        url = self.DATABASE_URL
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return url
+
+    @property
+    def RESOLVED_SYNC_DATABASE_URL(self) -> str:
+        url = self.SYNC_DATABASE_URL or self.DATABASE_URL
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        elif url.startswith("postgresql+asyncpg://"):
+            url = url.replace("postgresql+asyncpg://", "postgresql://", 1)
+        elif url.startswith("sqlite+aiosqlite:///"):
+            url = url.replace("sqlite+aiosqlite:///", "sqlite:///", 1)
+        return url
+    
     # Rural Hyperlocal Configuration
     MAX_DELIVERY_RADIUS_KM: float = 8.0
     BASE_DELIVERY_FEE: float = 15.0

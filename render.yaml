@@ -1,0 +1,57 @@
+services:
+  # ----------------------------------------------------------------------
+  # A. GaonBazaar-Village FastAPI Backend Web Service
+  # ----------------------------------------------------------------------
+  - type: web
+    name: gaonbazaar-village-api
+    runtime: python
+    region: singapore
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: ENVIRONMENT
+        value: staging
+      - key: PILOT_BLOCK
+        value: Minapur
+      - key: PILOT_DISTRICT
+        value: Muzaffarpur
+      - key: PILOT_STATE
+        value: Bihar
+      - key: MAX_DELIVERY_RADIUS_KM
+        value: "8.0"
+      - key: PLATFORM_FEE
+        value: "3.0"
+      - key: CUSTOMER_CANCEL_WINDOW_SECONDS
+        value: "180"
+      - key: DEFAULT_VENDOR_COMMISSION_PCT
+        value: "0.0"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false # Connect to the dedicated new PostgreSQL database (e.g. gaonbazaar-village-db)
+
+  # ----------------------------------------------------------------------
+  # B. GaonBazaar-Village Super Admin Dashboard Static Site
+  # ----------------------------------------------------------------------
+  - type: web
+    name: gaonbazaar-village-admin
+    runtime: static
+    region: singapore
+    plan: free
+    rootDir: apps/admin
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    autoDeploy: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://gaonbazaar-village-api.onrender.com/api/v1
