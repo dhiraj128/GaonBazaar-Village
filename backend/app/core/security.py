@@ -61,8 +61,8 @@ async def get_current_admin(
         if payload and payload.get("role") == "admin":
             return payload
             
-    # 3. Test mode bypass for unit tests without auth headers
-    if getattr(settings, "TESTING", False) or request.headers.get("X-Test-Bypass") == "1":
+    # 3. Test mode bypass ONLY for automated test execution
+    if getattr(settings, "TESTING", False):
         return {"sub": "test_admin", "role": "admin", "phone": "9800000099"}
 
     raise HTTPException(

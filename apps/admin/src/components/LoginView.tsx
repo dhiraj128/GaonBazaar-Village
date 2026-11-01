@@ -6,8 +6,8 @@ interface LoginViewProps {
 }
 
 export function LoginView({ onLoginSuccess }: LoginViewProps) {
-  const [phone, setPhone] = useState('9800000099');
-  const [secretOrOtp, setSecretOrOtp] = useState('123456');
+  const [phone, setPhone] = useState('');
+  const [secretOrOtp, setSecretOrOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,32 +25,6 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
       }
     } catch (err: any) {
       setError(err?.message || 'Network error occurred while contacting backend');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleQuickDemoLogin = async () => {
-    setPhone('9800000099');
-    setSecretOrOtp('123456');
-    setError(null);
-    setIsLoading(true);
-
-    try {
-      const result = await adminApi.login('9800000099', '123456');
-      if (result.success) {
-        onLoginSuccess();
-      } else {
-        // Fallback with Admin API Key
-        const fallback = await adminApi.login('9800000099', '[REDACTED_ADMIN_KEY]');
-        if (fallback.success) {
-          onLoginSuccess();
-        } else {
-          setError(result.error || 'Quick demo login failed.');
-        }
-      }
-    } catch (err: any) {
-      setError(err?.message || 'Connection error.');
     } finally {
       setIsLoading(false);
     }
@@ -162,7 +136,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                 type="password"
                 value={secretOrOtp}
                 onChange={(e) => setSecretOrOtp(e.target.value)}
-                placeholder="123456 or Admin Secret Key"
+                placeholder="Enter Admin Secret Key or Authorized OTP"
                 required
                 style={{
                   width: '100%',
@@ -174,9 +148,6 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                   outline: 'none',
                 }}
               />
-              <span style={{ fontSize: '0.75rem', color: '#6B7280', display: 'block', marginTop: '0.25rem' }}>
-                Staging Pilot OTP: <code>123456</code> (Test Admin: 9800000099)
-              </span>
             </div>
 
             <button
@@ -200,31 +171,6 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
               {isLoading ? 'सत्यापन जारी है (Verifying...)' : 'लॉग इन करें (Sign In)'}
             </button>
           </form>
-
-          {/* Quick Demo Pilot Login */}
-          <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #E5E7EB', textAlign: 'center' }}>
-            <p style={{ margin: '0 0 0.75rem', fontSize: '0.8125rem', color: '#6B7280' }}>
-              लाइव स्टेजिंग परीक्षण हेतु त्वरित लॉगिन:
-            </p>
-            <button
-              type="button"
-              onClick={handleQuickDemoLogin}
-              disabled={isLoading}
-              style={{
-                width: '100%',
-                backgroundColor: '#F0FDF4',
-                color: '#166534',
-                border: '1px solid #BBF7D0',
-                padding: '0.625rem',
-                borderRadius: '8px',
-                fontWeight: 600,
-                fontSize: '0.875rem',
-                cursor: 'pointer',
-              }}
-            >
-              ⚡ Quick Pilot Demo Login (9800000099)
-            </button>
-          </div>
         </div>
 
         {/* Footer Security Badge */}

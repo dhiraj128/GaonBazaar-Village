@@ -24,10 +24,10 @@ TEST_PHONE_WHITELIST = {
 }
 
 def is_whitelisted_test_phone(phone: str) -> bool:
-    """Returns True if the phone is an authorized test persona or running under test mode."""
+    """Returns True if the phone is an authorized test persona in staging/test mode, or running under test mode."""
+    if getattr(settings, "ENVIRONMENT", "").lower() == "production":
+        return False
     if phone in TEST_PHONE_WHITELIST:
-        return True
-    if phone.startswith("98000000"):
         return True
     if getattr(settings, "TESTING", False):
         return True
