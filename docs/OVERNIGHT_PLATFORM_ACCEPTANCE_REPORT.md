@@ -3,6 +3,9 @@
 **Repository:** `dhiraj128/GaonBazaar-Village` (Branch: `main`)  
 **Strict Project Boundary:** Old repository `dhiraj128/GaonBazar` and legacy Render services (`GaonBazar`, `gaonbazar-mobile-preview`, `gaonbazaar-db`) are untouched.  
 **Latest Verified Commits:**
+- `14e6c20`: `feat(runner): forward cash_collected confirmation flag during COD delivery completion`
+- `4941a26`: `feat(catalog): expand central product library to 31 essential rural items with bilingual names and image assets`
+- `cb45c7d`: `docs: create master platform defect tracker and overnight acceptance report`
 - `c17962b`: `fix(security): resolve verified P0 vendor authorization, runner assignment, payment integrity, and OTP challenge vulnerabilities`
 - `36c931c`: `fix(security): Phase 0 security incident remediation - rotate credentials, harden admin auth and sanitize render.yaml`
 
