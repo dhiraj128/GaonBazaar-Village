@@ -25,6 +25,21 @@ async def onboard_store(
     res = await db.execute(select(Store).where(Store.owner_id == owner_id))
     existing = res.scalars().first()
     if existing:
+        existing.shop_name = req.shop_name
+        existing.owner_name = req.owner_name
+        existing.category = req.category
+        existing.latitude = req.latitude
+        existing.longitude = req.longitude
+        existing.village = req.village
+        existing.landmark = req.landmark
+        existing.block = req.block
+        existing.district = req.district
+        if req.banner_url:
+            existing.banner_url = req.banner_url
+        if req.upi_id:
+            existing.upi_id = req.upi_id
+        await db.commit()
+        await db.refresh(existing)
         return StoreResponse(
             id=existing.id,
             owner_id=existing.owner_id,

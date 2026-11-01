@@ -109,6 +109,56 @@ async def lifespan(app: FastAPI):
                     suggested_mrp=99.0,
                     image_url="https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=400",
                     tags="bulb,led,light,बल्ब"
+                ),
+                GlobalCatalogItem(
+                    id="cat_sugar",
+                    name_en="Pure Refined Sugar (Cheeni)",
+                    name_hi="सफ़ेद चीनी (शक्कर)",
+                    category="Grocery",
+                    default_unit="1 kg",
+                    suggested_mrp=46.0,
+                    image_url="https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=400",
+                    tags="sugar,cheeni,shakkar,चीनी"
+                ),
+                GlobalCatalogItem(
+                    id="cat_salt",
+                    name_en="Tata Iodized Salt (Namak)",
+                    name_hi="आयोडीन युक्त नमक",
+                    category="Grocery",
+                    default_unit="1 kg",
+                    suggested_mrp=28.0,
+                    image_url="https://images.unsplash.com/photo-1626082896492-766af4eb6501?w=400",
+                    tags="salt,namak,नमक"
+                ),
+                GlobalCatalogItem(
+                    id="cat_biscuits",
+                    name_en="Parle-G Glucose Biscuits",
+                    name_hi="पारले-जी ग्लूकोज बिस्कुट",
+                    category="Snacks",
+                    default_unit="1 pack (250g)",
+                    suggested_mrp=25.0,
+                    image_url="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400",
+                    tags="biscuit,parle,snacks,बिस्कुट"
+                ),
+                GlobalCatalogItem(
+                    id="cat_green_chili",
+                    name_en="Fresh Green Chili & Coriander Combo",
+                    name_hi="ताज़ा हरी मिर्च और धनिया",
+                    category="Vegetables",
+                    default_unit="250 g",
+                    suggested_mrp=20.0,
+                    image_url="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400",
+                    tags="chili,coriander,mirchi,dhaniya,मिर्च"
+                ),
+                GlobalCatalogItem(
+                    id="cat_toor_dal",
+                    name_en="Desi Toor / Arhar Dal",
+                    name_hi="देशी अरहर (तुअर) दाल",
+                    category="Grocery",
+                    default_unit="1 kg",
+                    suggested_mrp=145.0,
+                    image_url="https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400",
+                    tags="dal,toor,arhar,दाल"
                 )
             ]
             session.add_all(items)
