@@ -1,0 +1,60 @@
+# GaonBazaar Root GitIgnore
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/.venv/
+.venv/
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+*.db
+*.sqlite3
+
+# Node / React Admin
+node_modules/
+apps/admin/dist/
+apps/admin/build/
+.npm
+*.log
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+*.apk
+*.aab
+apps/*/build/
+packages/*/build/
+.idea/
+*.iml
+.vscode/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+
+# OS generated
+.DS_Store
+Thumbs.db
