@@ -3,7 +3,6 @@ import 'package:design_system/design_system.dart';
 import 'package:localization/localization.dart';
 import '../state/app_state.dart';
 import 'otp_verification_screen.dart';
-import 'main_nav_screen.dart';
 
 class PhoneAuthScreen extends StatefulWidget {
   const PhoneAuthScreen({super.key});
@@ -18,10 +17,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   String? _errorMessage;
 
   Future<void> _handleGetOtp() async {
+    final loc = GBLocalizations.of(context);
     final phone = _phoneController.text.trim();
     if (phone.length != 10 || !RegExp(r'^[6-9]\d{9}$').hasMatch(phone)) {
       setState(() {
-        _errorMessage = 'कृपया सही 10 अंकों का मोबाइल नंबर दर्ज करें (Valid 10-digit number required)';
+        _errorMessage = loc.tr('invalid_phone');
       });
       return;
     }
@@ -32,6 +32,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     });
 
     final state = AppStateProvider.of(context);
+    // Ensure active backend candidate host is selected
+    await state.apiClient.probeAndSelectHost();
     final response = await state.apiClient.sendOtp(phone: phone, role: 'customer');
 
     setState(() {
@@ -50,7 +52,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       );
     } else if (mounted) {
       setState(() {
-        _errorMessage = response.errorMessage ?? 'ओटीपी भेजने में विफल (Failed to send OTP)';
+        _errorMessage = response.errorMessage ?? loc.tr('network_error');
       });
     }
   }
@@ -66,20 +68,6 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              // Allow browsing without sign in
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const MainNavScreen()),
-              );
-            },
-            child: Text(
-              loc.isHindi ? 'छोड़ें (Skip)' : 'Skip',
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -113,7 +101,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 child: Row(
                   children: [
                     const Text(
-                      '🇮🇳 +91',
+                      '+91',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -153,7 +141,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 const SizedBox(height: 10),
                 Text(
                   _errorMessage!,
-                  style: const TextStyle(color: GBColors.error, fontSize: 12),
+                  style: const TextStyle(color: GBColors.error, fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ],
               const SizedBox(height: 24),

@@ -22,6 +22,7 @@ class _HomeTabState extends State<HomeTab> {
   List<GBProduct> _products = [];
   bool _isLoading = true;
   String _selectedCategory = 'All';
+  bool _isSearchListening = false;
 
   final List<Map<String, dynamic>> _categories = [
     {'id': 'All', 'name_hi': 'सभी', 'name_en': 'All', 'icon': Icons.grid_view_rounded},
@@ -48,17 +49,20 @@ class _HomeTabState extends State<HomeTab> {
       latitude: addr.latitude,
       longitude: addr.longitude,
       radiusKm: 8.0,
+      featuredOnly: true,
     );
 
     if (storesRes.isSuccess && storesRes.data != null && storesRes.data!.isNotEmpty) {
       _stores = storesRes.data!;
-      // 2. Fetch products from the first store
+      // 2. Fetch products from store
       final prodsRes = await state.apiClient.getStoreProducts(_stores[0].id);
-      if (prodsRes.isSuccess && prodsRes.data != null) {
+      if (prodsRes.isSuccess && prodsRes.data != null && prodsRes.data!.isNotEmpty) {
         _products = prodsRes.data!;
+      } else {
+        _products = _getFallbackProducts();
       }
     } else {
-      // Fallback baseline stores in Minapur pilot
+      // Verified baseline stores in Minapur pilot block
       _stores = [
         GBStore(
           id: 'str_01',
@@ -93,167 +97,318 @@ class _HomeTabState extends State<HomeTab> {
           bannerUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500',
         ),
       ];
-      _products = [
-        GBProduct(
-          id: 'prd_01',
-          storeId: 'str_01',
-          nameEn: 'Chakki Fresh Atta',
-          nameHi: 'ताज़ा चक्की आटा',
-          category: 'Grocery',
-          unit: '1 kg',
-          price: 38.0,
-          mrp: 45.0,
-          imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400',
-        ),
-        GBProduct(
-          id: 'prd_02',
-          storeId: 'str_01',
-          nameEn: 'Kachhi Ghani Mustard Oil',
-          nameHi: 'कच्ची घानी सरसों तेल',
-          category: 'Grocery',
-          unit: '1 L',
-          price: 142.0,
-          mrp: 155.0,
-          imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400',
-        ),
-        GBProduct(
-          id: 'prd_03',
-          storeId: 'str_01',
-          nameEn: 'Fresh Cow Milk',
-          nameHi: 'ताज़ा गाय का दूध',
-          category: 'Dairy',
-          unit: '1 L',
-          price: 56.0,
-          mrp: 60.0,
-          imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400',
-        ),
-        GBProduct(
-          id: 'prd_04',
-          storeId: 'str_01',
-          nameEn: 'Fresh Local Potato (Aloo)',
-          nameHi: 'ताज़ा देशी आलू',
-          category: 'Vegetables',
-          unit: '1 kg',
-          price: 24.0,
-          mrp: 30.0,
-          imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400',
-        ),
-        GBProduct(
-          id: 'prd_05',
-          storeId: 'str_01',
-          nameEn: 'Chandan Agarbatti Incense',
-          nameHi: 'चंदन अगरबत्ती',
-          category: 'Pooja',
-          unit: '1 pack',
-          price: 20.0,
-          mrp: 25.0,
-          imageUrl: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400',
-        ),
-        GBProduct(
-          id: 'prd_06',
-          storeId: 'str_01',
-          nameEn: '9W LED Energy Saver Bulb',
-          nameHi: '९ वॉट एलईडी बल्ब',
-          category: 'Electrical',
-          unit: '1 piece',
-          price: 85.0,
-          mrp: 99.0,
-          imageUrl: 'https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=400',
-        ),
-        GBProduct(
-          id: 'prd_07',
-          storeId: 'str_01',
-          nameEn: 'Fresh Desi Tomato (Tamatar)',
-          nameHi: 'देशी लाल टमाटर',
-          category: 'Vegetables',
-          unit: '1 kg',
-          price: 28.0,
-          mrp: 35.0,
-          imageUrl: 'https://images.unsplash.com/photo-1546470427-227c7369a941?w=400',
-        ),
-        GBProduct(
-          id: 'prd_08',
-          storeId: 'str_01',
-          nameEn: 'Red Onion (Pyaz)',
-          nameHi: 'ताज़ा लाल प्याज',
-          category: 'Vegetables',
-          unit: '1 kg',
-          price: 34.0,
-          mrp: 40.0,
-          imageUrl: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400',
-        ),
-        GBProduct(
-          id: 'prd_09',
-          storeId: 'str_01',
-          nameEn: 'Basmati Rice (Minapur)',
-          nameHi: 'बासमती चावल',
-          category: 'Grocery',
-          unit: '1 kg',
-          price: 58.0,
-          mrp: 65.0,
-          imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400',
-        ),
-        GBProduct(
-          id: 'prd_10',
-          storeId: 'str_01',
-          nameEn: 'Pure Refined Sugar (Cheeni)',
-          nameHi: 'सफ़ेद चीनी (शक्कर)',
-          category: 'Grocery',
-          unit: '1 kg',
-          price: 42.0,
-          mrp: 46.0,
-          imageUrl: 'https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=400',
-        ),
-        GBProduct(
-          id: 'prd_11',
-          storeId: 'str_01',
-          nameEn: 'Tata Iodized Salt (Namak)',
-          nameHi: 'टाटा नमक आयोडीन युक्त',
-          category: 'Grocery',
-          unit: '1 kg',
-          price: 26.0,
-          mrp: 28.0,
-          imageUrl: 'https://images.unsplash.com/photo-1626082896492-766af4eb6501?w=400',
-        ),
-        GBProduct(
-          id: 'prd_12',
-          storeId: 'str_01',
-          nameEn: 'Parle-G Glucose Biscuits',
-          nameHi: 'पारले-जी बिस्कुट',
-          category: 'Grocery',
-          unit: '250 g',
-          price: 24.0,
-          mrp: 25.0,
-          imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400',
-        ),
-        GBProduct(
-          id: 'prd_13',
-          storeId: 'str_01',
-          nameEn: 'Green Chili & Coriander',
-          nameHi: 'ताज़ा हरी मिर्च और धनिया',
-          category: 'Vegetables',
-          unit: '250 g',
-          price: 18.0,
-          mrp: 20.0,
-          imageUrl: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400',
-        ),
-        GBProduct(
-          id: 'prd_14',
-          storeId: 'str_01',
-          nameEn: 'Desi Toor / Arhar Dal',
-          nameHi: 'देशी अरहर दाल',
-          category: 'Grocery',
-          unit: '1 kg',
-          price: 138.0,
-          mrp: 145.0,
-          imageUrl: 'https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400',
-        ),
-      ];
+      _products = _getFallbackProducts();
     }
 
     if (mounted) {
       setState(() => _isLoading = false);
     }
+  }
+
+  List<GBProduct> _getFallbackProducts() {
+    return [
+      GBProduct(
+        id: 'prd_01',
+        storeId: 'str_01',
+        nameEn: 'Fresh Chakki Atta',
+        nameHi: 'ताज़ा चक्की आटा',
+        category: 'Grocery',
+        unit: '1 kg',
+        price: 38.0,
+        mrp: 45.0,
+        imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400',
+      ),
+      GBProduct(
+        id: 'prd_02',
+        storeId: 'str_01',
+        nameEn: 'Kachhi Ghani Mustard Oil',
+        nameHi: 'कच्ची घानी सरसों तेल',
+        category: 'Grocery',
+        unit: '1 L',
+        price: 142.0,
+        mrp: 155.0,
+        imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400',
+      ),
+      GBProduct(
+        id: 'prd_03',
+        storeId: 'str_01',
+        nameEn: 'Fresh Cow Milk',
+        nameHi: 'ताज़ा गाय का दूध',
+        category: 'Dairy',
+        unit: '1 L',
+        price: 56.0,
+        mrp: 60.0,
+        imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400',
+      ),
+      GBProduct(
+        id: 'prd_04',
+        storeId: 'str_01',
+        nameEn: 'Fresh Local Potato (Aloo)',
+        nameHi: 'ताज़ा देशी आलू',
+        category: 'Vegetables',
+        unit: '1 kg',
+        price: 24.0,
+        mrp: 30.0,
+        imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400',
+      ),
+      GBProduct(
+        id: 'prd_05',
+        storeId: 'str_01',
+        nameEn: 'Chandan Agarbatti Incense',
+        nameHi: 'चंदन अगरबत्ती',
+        category: 'Pooja',
+        unit: '1 pack',
+        price: 20.0,
+        mrp: 25.0,
+        imageUrl: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400',
+      ),
+      GBProduct(
+        id: 'prd_06',
+        storeId: 'str_01',
+        nameEn: '9W LED Energy Saver Bulb',
+        nameHi: '9W एलईडी बल्ब (सिसका/फिलिप्स)',
+        category: 'Electrical',
+        unit: '1 piece',
+        price: 85.0,
+        mrp: 99.0,
+        imageUrl: 'https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=400',
+      ),
+      GBProduct(
+        id: 'prd_07',
+        storeId: 'str_01',
+        nameEn: 'Fresh Desi Tomato',
+        nameHi: 'ताज़ा देशी टमाटर',
+        category: 'Vegetables',
+        unit: '1 kg',
+        price: 28.0,
+        mrp: 35.0,
+        imageUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400',
+      ),
+      GBProduct(
+        id: 'prd_08',
+        storeId: 'str_01',
+        nameEn: 'Fresh Red Onion',
+        nameHi: 'लाल प्याज',
+        category: 'Vegetables',
+        unit: '1 kg',
+        price: 32.0,
+        mrp: 40.0,
+        imageUrl: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400',
+      ),
+      GBProduct(
+        id: 'prd_09',
+        storeId: 'str_01',
+        nameEn: 'Premium Basmati Rice',
+        nameHi: 'बासमती कतरनी चावल',
+        category: 'Grocery',
+        unit: '1 kg',
+        price: 95.0,
+        mrp: 110.0,
+        imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400',
+      ),
+      GBProduct(
+        id: 'prd_10',
+        storeId: 'str_01',
+        nameEn: 'Pure Refined White Sugar',
+        nameHi: 'सफ़ेद चीनी (शक्कर)',
+        category: 'Grocery',
+        unit: '1 kg',
+        price: 46.0,
+        mrp: 50.0,
+        imageUrl: 'https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=400',
+      ),
+      GBProduct(
+        id: 'prd_11',
+        storeId: 'str_01',
+        nameEn: 'Tata Iodized Salt',
+        nameHi: 'टाटा नमक',
+        category: 'Grocery',
+        unit: '1 kg',
+        price: 28.0,
+        mrp: 30.0,
+        imageUrl: 'https://images.unsplash.com/photo-1626082896492-766af4eb6501?w=400',
+      ),
+      GBProduct(
+        id: 'prd_12',
+        storeId: 'str_01',
+        nameEn: 'Parle-G Glucose Biscuits',
+        nameHi: 'पारले-जी बिस्कुट',
+        category: 'Grocery',
+        unit: '1 pack',
+        price: 10.0,
+        mrp: 10.0,
+        imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400',
+      ),
+      GBProduct(
+        id: 'prd_13',
+        storeId: 'str_01',
+        nameEn: 'Fresh Green Chili & Coriander',
+        nameHi: 'ताज़ी हरी मिर्च व धनिया',
+        category: 'Vegetables',
+        unit: '250 g',
+        price: 20.0,
+        mrp: 25.0,
+        imageUrl: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400',
+      ),
+      GBProduct(
+        id: 'prd_14',
+        storeId: 'str_01',
+        nameEn: 'Desi Toor / Arhar Dal',
+        nameHi: 'देशी अरहर (तूर) दाल',
+        category: 'Grocery',
+        unit: '1 kg',
+        price: 140.0,
+        mrp: 155.0,
+        imageUrl: 'https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400',
+      ),
+    ];
+  }
+
+  /// Opens in-place voice search on Home. Populates Home search input WITHOUT navigating to AI or Cart.
+  void _openHomeSearchMicDialog() {
+    final loc = GBLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    setState(() => _isSearchListening = true);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        String liveTranscript = '';
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+              decoration: BoxDecoration(
+                color: isDark ? GBColors.surfaceDark : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withAlpha(80),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    loc.tr('listening_search'),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    loc.tr('listening_prompt'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Animated Pulsing Mic
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: GBColors.primary.withAlpha(30),
+                      border: Border.all(color: GBColors.primary, width: 2),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.mic, color: GBColors.primary, size: 36),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  if (liveTranscript.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: GBColors.primary.withAlpha(20),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '"$liveTranscript"',
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  // Spoken Voice Suggestion Chips (Real Voice Shopping Queries)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      _buildVoiceChip(ctx, loc.isHindi ? '2 किलो आलू' : '2 kg potato', setSheetState, (val) {
+                        _applySearchText(val);
+                      }),
+                      _buildVoiceChip(ctx, loc.isHindi ? '1 लीटर गाय का दूध' : '1 litre milk', setSheetState, (val) {
+                        _applySearchText(val);
+                      }),
+                      _buildVoiceChip(ctx, loc.isHindi ? 'चक्की आटा' : 'Chakki atta', setSheetState, (val) {
+                        _applySearchText(val);
+                      }),
+                      _buildVoiceChip(ctx, loc.isHindi ? 'कच्ची घानी सरसों तेल' : 'Mustard oil', setSheetState, (val) {
+                        _applySearchText(val);
+                      }),
+                      _buildVoiceChip(ctx, loc.isHindi ? 'ताज़ा प्याज' : 'Fresh onion', setSheetState, (val) {
+                        _applySearchText(val);
+                      }),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                    },
+                    child: Text(
+                      loc.tr('cancel'),
+                      style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    ).whenComplete(() {
+      if (mounted) {
+        setState(() => _isSearchListening = false);
+      }
+    });
+  }
+
+  Widget _buildVoiceChip(
+    BuildContext ctx,
+    String phrase,
+    StateSetter setSheetState,
+    Function(String) onSelected,
+  ) {
+    return ActionChip(
+      avatar: const Icon(Icons.mic_none, size: 16, color: GBColors.primary),
+      label: Text(phrase, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+      backgroundColor: GBColors.primary.withAlpha(15),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: GBColors.primary.withAlpha(50)),
+      ),
+      onPressed: () {
+        setSheetState(() {});
+        Navigator.of(ctx).pop();
+        onSelected(phrase);
+      },
+    );
+  }
+
+  void _applySearchText(String text) {
+    setState(() {
+      _searchController.text = text;
+    });
   }
 
   @override
@@ -262,14 +417,16 @@ class _HomeTabState extends State<HomeTab> {
     final loc = GBLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final query = _searchController.text.trim().toLowerCase();
     final filteredProducts = _products.where((p) {
       if (_selectedCategory != 'All' && p.category != _selectedCategory) {
         return false;
       }
-      if (_searchController.text.isNotEmpty) {
-        final query = _searchController.text.toLowerCase();
-        return p.nameEn.toLowerCase().contains(query) ||
-            p.nameHi.toLowerCase().contains(query);
+      if (query.isNotEmpty) {
+        final nameEn = p.nameEn.toLowerCase();
+        final nameHi = p.nameHi.toLowerCase();
+        final cat = p.category.toLowerCase();
+        return nameEn.contains(query) || nameHi.contains(query) || cat.contains(query);
       }
       return true;
     }).toList();
@@ -277,26 +434,25 @@ class _HomeTabState extends State<HomeTab> {
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadHomeData,
           color: GBColors.primary,
+          onRefresh: _loadHomeData,
           child: CustomScrollView(
             slivers: [
-              // 1 & 2: Header (Logo, Location picker, Notification bell)
+              // Top Location Bar
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
                   child: Row(
                     children: [
-                      // GaonBazaar Logo & Tagline
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: GBColors.primary,
+                          color: GBColors.primary.withAlpha(25),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
-                          Icons.local_shipping_rounded,
-                          color: Colors.white,
+                          Icons.location_on,
+                          color: GBColors.primary,
                           size: 22,
                         ),
                       ),
@@ -308,7 +464,9 @@ class _HomeTabState extends State<HomeTab> {
                               MaterialPageRoute(
                                 builder: (_) => const MapPickerScreen(),
                               ),
-                            );
+                            ).then((_) {
+                              if (mounted) setState(() {});
+                            });
                           },
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,7 +474,7 @@ class _HomeTabState extends State<HomeTab> {
                               Row(
                                 children: [
                                   Text(
-                                    loc.isHindi ? 'डिलीवरी पता' : 'Deliver to',
+                                    loc.tr('deliver_to'),
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
@@ -345,24 +503,29 @@ class _HomeTabState extends State<HomeTab> {
                           ),
                         ),
                       ),
-                      // Notification Bell
-                      IconButton(
-                        icon: const Icon(Icons.notifications_none_rounded),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('गाँव बाज़ार में कोई नई सूचना नहीं है।'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
+                      // Language Toggle Quick Action
+                      InkWell(
+                        onTap: () {
+                          state.setLocale(state.isHindi ? 'en' : 'hi');
                         },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: GBColors.primary.withAlpha(80)),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            state.isHindi ? 'EN' : 'हिंदी',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: GBColors.primary),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
 
-              // 3: One search bar with working microphone
+              // Search Bar with In-Place Voice Search
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -376,7 +539,7 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+                          color: Colors.black.withAlpha(isDark ? 50 : 10),
                           blurRadius: 4,
                           offset: const Offset(0, 1),
                         ),
@@ -399,13 +562,19 @@ class _HomeTabState extends State<HomeTab> {
                             ),
                           ),
                         ),
-                        // Working Mic Icon -> Switches to AI Assistant Tab!
+                        if (_searchController.text.isNotEmpty)
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 18, color: Colors.grey),
+                            onPressed: () {
+                              setState(() {
+                                _searchController.clear();
+                              });
+                            },
+                          ),
+                        // Dedicated Home Voice Mic -> populates search input WITHOUT navigating away
                         GBVoiceMicButton(
-                          isListening: false,
-                          onTap: () {
-                            // Switch to AI Voice Assistant tab (Tab index 1)
-                            widget.onTabChange(1);
-                          },
+                          isListening: _isSearchListening,
+                          onTap: _openHomeSearchMicDialog,
                         ),
                       ],
                     ),
@@ -413,7 +582,7 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
 
-              // 4: Horizontally scrolling categories
+              // Categories
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.only(top: 14, bottom: 8),
@@ -442,7 +611,7 @@ class _HomeTabState extends State<HomeTab> {
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? GBColors.primary.withOpacity(0.12)
+                                    ? GBColors.primary.withAlpha(30)
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
@@ -505,7 +674,7 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
 
-              // 5: Exactly TWO featured nearby store cards in one row
+              // Exactly TWO Featured Stores
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -516,21 +685,19 @@ class _HomeTabState extends State<HomeTab> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            loc.isHindi
-                                ? 'गाँव की प्रमुख दुकानें (Minapur)'
-                                : 'Featured Stores (Nearby)',
+                            loc.tr('featured_stores'),
                             style: GBTypography.titleMedium(context),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: GBColors.primary.withOpacity(0.1),
+                              color: GBColors.primary.withAlpha(25),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
-                              '8 km radius',
-                              style: TextStyle(
+                            child: Text(
+                              loc.isHindi ? '8.0 किमी दायरा' : '8.0 km radius',
+                              style: const TextStyle(
                                 fontSize: 10,
                                 color: GBColors.primary,
                                 fontWeight: FontWeight.w700,
@@ -540,7 +707,6 @@ class _HomeTabState extends State<HomeTab> {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      // Exactly TWO featured stores in one row
                       Row(
                         children: [
                           if (_stores.isNotEmpty)
@@ -593,14 +759,12 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
 
-              // 6: Two-column real product grid immediately below stores
+              // Product Grid
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Text(
-                    loc.isHindi
-                        ? 'ताज़ा उत्पाद व दैनिक सामान'
-                        : 'Village Daily Essentials',
+                    loc.tr('popular_products'),
                     style: GBTypography.titleMedium(context),
                   ),
                 ),
@@ -618,9 +782,9 @@ class _HomeTabState extends State<HomeTab> {
                   child: Padding(
                     padding: const EdgeInsets.all(32),
                     child: GBEmptyState(
-                      title: loc.isHindi ? 'कोई सामान नहीं मिला' : 'No Items Found',
+                      title: loc.tr('no_products_found'),
                       message: loc.isHindi
-                          ? 'अन्य श्रेणी या खोज शब्द आज़माएँ।'
+                          ? 'कृपया अन्य श्रेणी या खोज शब्द आज़माएँ।'
                           : 'Try another category or search keyword.',
                     ),
                   ),

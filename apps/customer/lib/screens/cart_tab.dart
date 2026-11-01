@@ -24,7 +24,7 @@ class CartTab extends StatelessWidget {
         body: GBEmptyState(
           title: loc.tr('cart_empty'),
           message: loc.tr('cart_empty_msg'),
-          actionLabel: loc.isHindi ? 'खरीदारी शुरू करें (Start Shopping)' : 'Start Shopping',
+          actionLabel: loc.isHindi ? 'खरीदारी शुरू करें' : 'Start Shopping',
           onAction: () => onTabChange(0), // Switch to Home Tab
         ),
       );
@@ -64,13 +64,13 @@ class CartTab extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            state.currentCartStoreName ?? 'माँ शारदा किराना स्टोर',
+                            state.currentCartStoreName ?? (loc.isHindi ? 'माँ शारदा किराना स्टोर' : 'Maa Sharda Kirana Store'),
                             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                           ),
                         ),
-                        const Text(
-                          '~35 mins',
-                          style: TextStyle(
+                        Text(
+                          loc.isHindi ? '~35 मिनट' : '~35 mins',
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             color: GBColors.primary,
@@ -197,7 +197,7 @@ class CartTab extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '${state.selectedAddress.village}, ${state.selectedAddress.landmark != null ? 'Near ' + state.selectedAddress.landmark! + ', ' : ''}${state.selectedAddress.block}, ${state.selectedAddress.district}',
+                          '${state.selectedAddress.village}, ${state.selectedAddress.landmark != null ? "${loc.isHindi ? 'निकट ' : 'Near '}${state.selectedAddress.landmark!}, " : ""}${state.selectedAddress.block}, ${state.selectedAddress.district}',
                           style: TextStyle(
                             fontSize: 13,
                             color: isDark ? GBColors.textSecondaryDark : GBColors.textSecondaryLight,
@@ -232,7 +232,7 @@ class CartTab extends StatelessWidget {
                         _buildBillRow(loc.tr('delivery_fee'), '₹${state.cartDeliveryFee.toStringAsFixed(0)}'),
                         const SizedBox(height: 8),
                         _buildBillRow(
-                          loc.isHindi ? 'प्लेटफ़ॉर्म शुल्क (Platform Fee)' : 'Platform Fee',
+                          loc.isHindi ? 'प्लेटफ़ॉर्म शुल्क' : 'Platform Fee',
                           '₹${state.cartPlatformFee.toStringAsFixed(0)}', // Strict ₹3.00
                         ),
                         const Divider(height: 24),
@@ -283,7 +283,7 @@ class CartTab extends StatelessWidget {
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                       ),
                       Text(
-                        loc.isHindi ? 'कुल राशि (बिल)' : 'Total Bill',
+                        loc.isHindi ? 'कुल राशि' : 'Total Bill',
                         style: TextStyle(
                           fontSize: 11,
                           color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,

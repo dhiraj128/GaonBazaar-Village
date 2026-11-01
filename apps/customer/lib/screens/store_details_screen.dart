@@ -104,7 +104,10 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
                           children: [
                             const Icon(Icons.star, size: 14, color: Colors.amber),
                             const SizedBox(width: 4),
-                            Text('${widget.store.rating} • ${widget.store.distanceKm ?? 0.8} km away', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                            Text(
+                              '${widget.store.rating} • ${widget.store.distanceKm ?? 0.8} ${loc.isHindi ? "किमी दूर" : "km away"}',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                            ),
                           ],
                         ),
                       ],

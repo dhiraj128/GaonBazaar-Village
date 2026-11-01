@@ -21,6 +21,12 @@ class _GaonBazaarCustomerAppState extends State<GaonBazaarCustomerApp> {
   final CustomerAppState _appState = CustomerAppState();
 
   @override
+  void initState() {
+    super.initState();
+    _appState.init();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AppStateProvider(
       notifier: _appState,

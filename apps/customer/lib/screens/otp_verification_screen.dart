@@ -53,9 +53,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   }
 
   Future<void> _handleVerify() async {
+    final loc = GBLocalizations.of(context);
     final otp = _otpController.text.trim();
     if (otp.length < 4) {
-      setState(() => _errorMessage = 'कृपया सही ओटीपी दर्ज करें (Enter valid OTP)');
+      setState(() => _errorMessage = loc.tr('otp_invalid'));
       return;
     }
 
@@ -88,7 +89,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       );
     } else if (mounted) {
       setState(() {
-        _errorMessage = response.errorMessage ?? 'ओटीपी सत्यापन विफल (Verification failed)';
+        _errorMessage = response.errorMessage ?? loc.tr('otp_invalid');
       });
     }
   }
@@ -157,7 +158,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 const SizedBox(height: 10),
                 Text(
                   _errorMessage!,
-                  style: const TextStyle(color: GBColors.error, fontSize: 13),
+                  style: const TextStyle(color: GBColors.error, fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ],
               const SizedBox(height: 20),
@@ -166,8 +167,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 children: [
                   Text(
                     _secondsRemaining > 0
-                        ? '${loc.tr('resend_in')} ${_secondsRemaining}s'
-                        : 'ओटीपी नहीं मिला?',
+                        ? '${loc.tr('resend_in')} ${_secondsRemaining} ${loc.tr('seconds')}'
+                        : (loc.isHindi ? 'ओटीपी नहीं मिला?' : 'Didn\'t receive OTP?'),
                     style: GBTypography.bodySmall(context),
                   ),
                   TextButton(
@@ -189,6 +190,26 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: GBColors.primary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, size: 16, color: GBColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        loc.tr('otp_dev_note'),
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 24),
               GBPrimaryButton(

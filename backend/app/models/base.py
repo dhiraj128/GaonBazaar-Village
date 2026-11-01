@@ -16,6 +16,7 @@ class User(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     phone = Column(String(15), unique=True, index=True, nullable=False)
     name = Column(String(100), nullable=True)
+    email = Column(String(120), nullable=True)
     role = Column(String(20), nullable=False, default="customer") # customer, vendor, runner, admin
     preferred_language = Column(String(5), default="hi") # hi or en
     is_active = Column(Boolean, default=True)

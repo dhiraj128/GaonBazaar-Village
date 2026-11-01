@@ -6,7 +6,7 @@ from sqlalchemy.future import select
 from app.core.config import settings
 from app.db.session import async_engine, AsyncSessionLocal
 from app.models.base import Base, User, Store, StoreProduct, GlobalCatalogItem, Runner, Address
-from app.api.v1 import auth, addresses, stores, orders, ai, admin
+from app.api.v1 import auth, addresses, stores, orders, ai, admin, support
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -307,6 +307,7 @@ app.include_router(stores.router, prefix=settings.API_V1_STR)
 app.include_router(orders.router, prefix=settings.API_V1_STR)
 app.include_router(ai.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
+app.include_router(support.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
