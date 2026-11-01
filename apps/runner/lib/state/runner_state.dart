@@ -181,7 +181,7 @@ class RunnerAppState extends ChangeNotifier {
       orderId,
       action,
       deliveryOtp: deliveryOtp,
-      cashCollected: cashCollected ?? (action.toUpperCase() == 'DELIVER'),
+      cashCollected: cashCollected,
     );
     if (res.isSuccess) {
       await fetchJobs();
