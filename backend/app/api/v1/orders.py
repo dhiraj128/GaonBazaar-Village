@@ -1,0 +1,383 @@
+import random
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+from app.db.session import get_db
+from app.models.base import (
+    Order, OrderItem, OrderTimeline, Store, StoreProduct, Address, User, Runner
+)
+from app.schemas.order import (
+    CartSyncRequest, CartPriceBreakdown, CreateOrderRequest, OrderResponse,
+    OrderItemDetail, OrderTimelineDetail, OrderActionRequest
+)
+from app.core.security import get_current_user_payload
+from app.services.geo_service import calculate_haversine_distance, is_within_service_radius
+from app.services.pricing_service import calculate_order_totals
+from app.core.config import settings
+
+router = APIRouter(tags=["Orders & Checkout"])
+
+@router.post("/cart/sync", response_model=CartPriceBreakdown)
+async def sync_cart(data: CartSyncRequest, db: AsyncSession = Depends(get_db)):
+    # 1. Fetch store
+    res = await db.execute(select(Store).where(Store.id == data.store_id))
+    store = res.scalars().first()
+    if not store:
+        raise HTTPException(status_code=404, detail="Store not found")
+        
+    # 2. Check distance
+    distance_km = 2.5 # Default fallback estimate
+    is_serv = True
+    if data.delivery_latitude and data.delivery_longitude:
+        is_serv, distance_km = is_within_service_radius(
+            store.latitude, store.longitude, data.delivery_latitude, data.delivery_longitude
+        )
+        
+    # 3. Calculate subtotal from products in store
+    subtotal = 0.0
+    for itm in data.items:
+        pres = await db.execute(
+            select(StoreProduct).where(StoreProduct.id == itm.product_id, StoreProduct.store_id == data.store_id)
+        )
+        prod = pres.scalars().first()
+        if prod:
+            subtotal += prod.price * itm.quantity
+            
+    totals = calculate_order_totals(subtotal, distance_km)
+    
+    warning = None
+    if not is_serv:
+        warning = f"Delivery address is {distance_km} km away, exceeding maximum 8.0 km policy."
+        
+    return CartPriceBreakdown(
+        subtotal=totals["subtotal"],
+        delivery_fee=totals["delivery_fee"],
+        platform_fee=totals["platform_fee"], # Strict ₹3.00
+        total_amount=totals["total_amount"],
+        is_serviceable=is_serv,
+        distance_km=distance_km,
+        warning=warning
+    )
+
+@router.post("/orders", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
+async def create_order(
+    data: CreateOrderRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    customer_id = payload.get("sub")
+    
+    # Verify Store
+    s_res = await db.execute(select(Store).where(Store.id == data.store_id))
+    store = s_res.scalars().first()
+    if not store:
+        raise HTTPException(status_code=404, detail="Store not found")
+        
+    # Verify Address
+    a_res = await db.execute(
+        select(Address).where(Address.id == data.delivery_address_id, Address.user_id == customer_id)
+    )
+    address = a_res.scalars().first()
+    if not address:
+        raise HTTPException(status_code=404, detail="Delivery address not found")
+        
+    # Check 8.0 km distance limit
+    is_serv, dist_km = is_within_service_radius(store.latitude, store.longitude, address.latitude, address.longitude)
+    if not is_serv:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Store is {dist_km} km away. Maximum allowed delivery radius is 8.0 km."
+        )
+        
+    # Calculate prices and items
+    subtotal = 0.0
+    order_items_to_create = []
+    
+    for itm in data.items:
+        p_res = await db.execute(
+            select(StoreProduct).options(selectinload(StoreProduct.global_item)).where(StoreProduct.id == itm.product_id, StoreProduct.store_id == data.store_id)
+        )
+        prod = p_res.scalars().first()
+        if not prod:
+            raise HTTPException(status_code=400, detail=f"Product {itm.product_id} unavailable in selected store")
+            
+        line_total = prod.price * itm.quantity
+        subtotal += line_total
+        
+        name_en = prod.custom_name_en or (prod.global_item.name_en if prod.global_item else "Product")
+        name_hi = prod.custom_name_hi or (prod.global_item.name_hi if prod.global_item else "उत्पाद")
+        
+        order_items_to_create.append(OrderItem(
+            product_id=prod.id,
+            product_name_en=name_en,
+            product_name_hi=name_hi,
+            unit=prod.unit,
+            unit_price=prod.price,
+            quantity=itm.quantity,
+            total_price=line_total,
+            image_url=prod.image_url
+        ))
+        
+    totals = calculate_order_totals(subtotal, dist_km)
+    
+    now = datetime.now(timezone.utc)
+    cancel_until = now + timedelta(seconds=settings.CUSTOMER_CANCEL_WINDOW_SECONDS)
+    delivery_otp = str(random.randint(1000, 9999)) # 4-digit OTP
+    
+    order = Order(
+        customer_id=customer_id,
+        store_id=store.id,
+        delivery_address_id=address.id,
+        status="PLACED",
+        subtotal=totals["subtotal"],
+        delivery_fee=totals["delivery_fee"],
+        platform_fee=totals["platform_fee"], # Strict ₹3.00
+        total_amount=totals["total_amount"],
+        payment_method=data.payment_method,
+        payment_status="PENDING" if data.payment_method == "COD" else "PAID",
+        delivery_otp=delivery_otp,
+        placed_at=now,
+        cancel_until=cancel_until,
+        customer_notes=data.customer_notes
+    )
+    db.add(order)
+    await db.flush()
+    
+    # Attach order items
+    for oi in order_items_to_create:
+        oi.order_id = order.id
+        db.add(oi)
+        
+    # Initial timeline entry
+    timeline_entry = OrderTimeline(
+        order_id=order.id,
+        status="PLACED",
+        title="ऑर्डर दर्ज हुआ (Order Placed)",
+        description=f"Store: {store.shop_name}, Amount: ₹{totals['total_amount']}",
+        timestamp=now
+    )
+    db.add(timeline_entry)
+    
+    await db.commit()
+    await db.refresh(order)
+    
+    return await _format_order_response(order.id, db)
+
+@router.get("/orders", response_model=List[OrderResponse])
+async def list_customer_orders(
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    res = await db.execute(
+        select(Order.id).where(Order.customer_id == user_id).order_by(Order.placed_at.desc())
+    )
+    order_ids = res.scalars().all()
+    
+    out = []
+    for oid in order_ids:
+        resp = await _format_order_response(oid, db)
+        if resp:
+            out.append(resp)
+    return out
+
+@router.get("/orders/{order_id}", response_model=OrderResponse)
+async def get_order_details(order_id: str, db: AsyncSession = Depends(get_db)):
+    resp = await _format_order_response(order_id, db)
+    if not resp:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return resp
+
+@router.post("/orders/{order_id}/cancel")
+async def cancel_order(
+    order_id: str,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    res = await db.execute(select(Order).where(Order.id == order_id))
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+        
+    if order.customer_id != user_id and payload.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+        
+    now = datetime.now(timezone.utc)
+    # Ensure cancel_until is timezone-aware
+    cancel_deadline = order.cancel_until.replace(tzinfo=timezone.utc) if order.cancel_until.tzinfo is None else order.cancel_until
+    
+    if now > cancel_deadline:
+        diff = int((now - cancel_deadline).total_seconds())
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"रद्द करने की 180 सेकंड की समय सीमा समाप्त हो चुकी है ({diff}s ago). दुकान तैयारी शुरू कर चुकी है।"
+        )
+        
+    order.status = "CANCELLED"
+    db.add(OrderTimeline(
+        order_id=order.id,
+        status="CANCELLED",
+        title="ऑर्डर रद्द किया गया (Cancelled)",
+        description="Customer requested cancellation within 180-second window",
+        timestamp=now
+    ))
+    await db.commit()
+    return {"message": "Order successfully cancelled within 180s window", "status": "CANCELLED"}
+
+@router.post("/vendor/orders/{order_id}/action")
+async def vendor_order_action(
+    order_id: str,
+    action_data: OrderActionRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    res = await db.execute(select(Order).where(Order.id == order_id))
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+        
+    act = action_data.action.upper()
+    now = datetime.now(timezone.utc)
+    
+    if act == "ACCEPT":
+        order.status = "ACCEPTED"
+        title = "दुकानदार ने स्वीकार किया (Accepted)"
+    elif act == "PACKED":
+        order.status = "PACKED"
+        title = "सामान पैक हो गया (Packed & Ready)"
+    elif act == "REJECT":
+        order.status = "CANCELLED"
+        title = "दुकानदार द्वारा अस्वीकृत (Rejected)"
+    else:
+        raise HTTPException(status_code=400, detail="Invalid vendor action")
+        
+    db.add(OrderTimeline(order_id=order.id, status=order.status, title=title, timestamp=now))
+    await db.commit()
+    return {"message": f"Order status updated to {order.status}"}
+
+@router.post("/runner/jobs/{order_id}/action")
+async def runner_job_action(
+    order_id: str,
+    action_data: OrderActionRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    runner_user_id = payload.get("sub")
+    r_res = await db.execute(select(Runner).where(Runner.user_id == runner_user_id))
+    runner = r_res.scalars().first()
+    
+    res = await db.execute(select(Order).where(Order.id == order_id))
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+        
+    act = action_data.action.upper()
+    now = datetime.now(timezone.utc)
+    
+    if act == "ACCEPT":
+        order.status = "RUNNER_ASSIGNED"
+        if runner:
+            order.runner_id = runner.id
+        title = "डिलीवरी साथी तय हुआ (Runner Assigned)"
+    elif act == "PICKUP":
+        order.status = "PICKED_UP"
+        title = "सामान दुकान से उठाया (Picked Up)"
+    elif act == "OUT_FOR_DELIVERY":
+        order.status = "OUT_FOR_DELIVERY"
+        title = "डिलीवरी के लिए निकल चुके हैं (Out for Delivery)"
+    elif act == "DELIVER":
+        # Strict OTP verification
+        if not action_data.delivery_otp or action_data.delivery_otp.strip() != order.delivery_otp.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="गलत डिलीवरी ओटीपी (Invalid Customer Delivery OTP)"
+            )
+        order.status = "DELIVERED"
+        order.payment_status = "PAID"
+        order.delivered_at = now
+        title = "सफलतापूर्वक डिलीवर हुआ (Delivered)"
+    else:
+        raise HTTPException(status_code=400, detail="Invalid runner action")
+        
+    db.add(OrderTimeline(order_id=order.id, status=order.status, title=title, timestamp=now))
+    await db.commit()
+    return {"message": f"Order status updated to {order.status}"}
+
+async def _format_order_response(order_id: str, db: AsyncSession) -> Optional[OrderResponse]:
+    res = await db.execute(
+        select(Order)
+        .options(
+            selectinload(Order.store),
+            selectinload(Order.runner),
+            selectinload(Order.delivery_address),
+            selectinload(Order.items),
+            selectinload(Order.timeline)
+        )
+        .where(Order.id == order_id)
+    )
+    order = res.scalars().first()
+    if not order:
+        return None
+        
+    now = datetime.now(timezone.utc)
+    cancel_deadline = order.cancel_until.replace(tzinfo=timezone.utc) if order.cancel_until.tzinfo is None else order.cancel_until
+    
+    seconds_remaining = max(0, int((cancel_deadline - now).total_seconds()))
+    can_cancel = (order.status == "PLACED" and seconds_remaining > 0)
+    
+    items_out = [
+        OrderItemDetail(
+            id=i.id,
+            product_id=i.product_id,
+            name_en=i.product_name_en,
+            name_hi=i.product_name_hi,
+            unit=i.unit,
+            unit_price=i.unit_price,
+            quantity=i.quantity,
+            total_price=i.total_price,
+            image_url=i.image_url
+        )
+        for i in order.items
+    ]
+    
+    timeline_out = [
+        OrderTimelineDetail(
+            status=t.status,
+            title=t.title,
+            description=t.description,
+            timestamp=t.timestamp
+        )
+        for t in order.timeline
+    ]
+    
+    return OrderResponse(
+        id=order.id,
+        customer_id=order.customer_id,
+        store_id=order.store_id,
+        store_name=order.store.shop_name if order.store else "GaonBazaar Store",
+        runner_id=order.runner_id,
+        runner_name=order.runner.full_name if order.runner else None,
+        runner_phone="9876543210" if order.runner else None,
+        delivery_address=(
+            f"{order.delivery_address.village}, {order.delivery_address.landmark + ', ' if order.delivery_address.landmark else ''}{order.delivery_address.block}, {order.delivery_address.district}"
+            if order.delivery_address else "Minapur, Muzaffarpur"
+        ),
+        status=order.status,
+        subtotal=order.subtotal,
+        delivery_fee=order.delivery_fee,
+        platform_fee=order.platform_fee,
+        total_amount=order.total_amount,
+        payment_method=order.payment_method,
+        payment_status=order.payment_status,
+        delivery_otp=order.delivery_otp,
+        placed_at=order.placed_at,
+        cancel_until=order.cancel_until,
+        can_cancel=can_cancel,
+        cancel_seconds_remaining=seconds_remaining,
+        items=items_out,
+        timeline=timeline_out
+    )
