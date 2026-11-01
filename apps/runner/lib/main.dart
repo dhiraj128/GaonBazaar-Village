@@ -21,6 +21,12 @@ class _GaonBazaarRunnerAppState extends State<GaonBazaarRunnerApp> {
   final RunnerAppState _runnerState = RunnerAppState();
 
   @override
+  void initState() {
+    super.initState();
+    _runnerState.init();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return RunnerStateProvider(
       notifier: _runnerState,

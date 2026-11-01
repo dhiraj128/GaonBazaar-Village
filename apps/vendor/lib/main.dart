@@ -21,6 +21,12 @@ class _GaonBazaarVendorAppState extends State<GaonBazaarVendorApp> {
   final VendorAppState _vendorState = VendorAppState();
 
   @override
+  void initState() {
+    super.initState();
+    _vendorState.init();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return VendorStateProvider(
       notifier: _vendorState,

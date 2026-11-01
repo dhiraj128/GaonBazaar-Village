@@ -19,10 +19,16 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  Future<void> _handleSendOtp() async {
+  final RegExp _phoneRegex = RegExp(r'^[6-9]\d{9}$');
+
+  Future<void> _handleSendOtp(RunnerAppState state) async {
     final phone = _phoneController.text.trim();
-    if (phone.length != 10) {
-      setState(() => _errorMessage = 'कृपया सही 10-अंकीय मोबाइल नंबर दर्ज करें');
+    final isHi = state.isHindi;
+
+    if (!_phoneRegex.hasMatch(phone)) {
+      setState(() => _errorMessage = isHi
+          ? 'कृपया सही 10-अंकीय भारतीय मोबाइल नंबर दर्ज करें (6-9 से शुरू)'
+          : 'Please enter a valid 10-digit Indian mobile number (starts with 6-9)');
       return;
     }
 
@@ -31,37 +37,43 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
       _errorMessage = null;
     });
 
-    final state = RunnerStateProvider.of(context);
     final res = await state.apiClient.sendOtp(phone: phone, role: 'runner');
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (res.isSuccess) {
       setState(() => _otpSent = true);
     } else {
-      setState(() => _errorMessage = res.errorMessage ?? 'ओटीपी भेजने में विफल');
+      setState(() => _errorMessage = res.errorMessage ?? (isHi ? 'ओटीपी भेजने में विफल' : 'Failed to send OTP'));
     }
   }
 
-  Future<void> _handleVerifyOtp() async {
+  Future<void> _handleVerifyOtp(RunnerAppState state) async {
     final phone = _phoneController.text.trim();
     final otp = _otpController.text.trim();
+    final isHi = state.isHindi;
+
+    if (otp.length != 6) {
+      setState(() => _errorMessage = isHi ? 'कृपया 6-अंकीय ओटीपी दर्ज करें' : 'Please enter 6-digit OTP');
+      return;
+    }
 
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final state = RunnerStateProvider.of(context);
     final res = await state.apiClient.verifyOtp(
       phone: phone,
       otp: otp,
       role: 'runner',
     );
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (res.isSuccess && mounted) {
+    if (res.isSuccess) {
       final data = res.data!;
       final user = GBUser.fromJson(data['user'] as Map<String, dynamic>);
       final token = data['access_token'] as String;
@@ -71,18 +83,39 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const RunnerDashboardScreen()),
       );
-    } else if (mounted) {
-      setState(() => _errorMessage = res.errorMessage ?? 'ओटीपी सत्यापन विफल');
+    } else {
+      setState(() => _errorMessage = res.errorMessage ?? (isHi ? 'ओटीपी सत्यापन विफल' : 'OTP verification failed'));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = RunnerStateProvider.of(context);
+    final isHi = state.isHindi;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('डिलीवरी साथी लॉगिन (Runner Partner)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        title: Text(
+          isHi ? 'डिलीवरी साथी लॉगिन' : 'Delivery Partner Login',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: DropdownButton<String>(
+              value: state.currentLocale,
+              underline: const SizedBox(),
+              items: const [
+                DropdownMenuItem(value: 'hi', child: Text('हिंदी')),
+                DropdownMenuItem(value: 'en', child: Text('English')),
+              ],
+              onChanged: (lang) {
+                if (lang != null) state.setLocale(lang);
+              },
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -91,14 +124,20 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _otpSent ? 'ओटीपी कोड दर्ज करें' : 'डिलीवरी पार्टनर लॉगिन',
+                _otpSent
+                    ? (isHi ? 'ओटीपी कोड दर्ज करें' : 'Enter OTP Code')
+                    : (isHi ? 'डिलीवरी पार्टनर लॉगिन' : 'Delivery Partner Login'),
                 style: GBTypography.displayLarge(context),
               ),
               const SizedBox(height: 8),
               Text(
                 _otpSent
-                    ? '+91 ${_phoneController.text} पर भेजा गया 6-अंकीय कोड डालें'
-                    : 'गाँव में डिलीवरी शुरू करने के लिए अपना पंजीकृत मोबाइल नंबर डालें',
+                    ? (isHi
+                        ? '+91 ${_phoneController.text} पर भेजा गया 6-अंकीय कोड डालें'
+                        : 'Enter the 6-digit code sent to +91 ${_phoneController.text}')
+                    : (isHi
+                        ? 'गाँव में डिलीवरी शुरू करने के लिए अपना पंजीकृत मोबाइल नंबर डालें'
+                        : 'Enter your registered mobile number to start delivering in villages'),
                 style: GBTypography.bodyMedium(context),
               ),
               const SizedBox(height: 28),
@@ -120,8 +159,8 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
                           keyboardType: TextInputType.phone,
                           maxLength: 10,
                           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 1.0),
-                          decoration: const InputDecoration(
-                            hintText: 'मोबाइल नंबर',
+                          decoration: InputDecoration(
+                            hintText: isHi ? 'मोबाइल नंबर' : 'Mobile Number',
                             border: InputBorder.none,
                             counterText: '',
                           ),
@@ -132,9 +171,9 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
                 ),
                 const SizedBox(height: 24),
                 GBPrimaryButton(
-                  label: 'ओटीपी प्राप्त करें (Send OTP)',
+                  label: isHi ? 'ओटीपी प्राप्त करें' : 'Send OTP',
                   isLoading: _isLoading,
-                  onPressed: _handleSendOtp,
+                  onPressed: () => _handleSendOtp(state),
                 ),
               ] else ...[
                 Container(
@@ -159,14 +198,43 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
                 ),
                 const SizedBox(height: 24),
                 GBPrimaryButton(
-                  label: 'सत्यापित करें व शुरू करें (Login)',
+                  label: isHi ? 'सत्यापित करें व लॉगिन करें' : 'Verify & Login',
                   isLoading: _isLoading,
-                  onPressed: _handleVerifyOtp,
+                  onPressed: () => _handleVerifyOtp(state),
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: TextButton(
+                    onPressed: () => setState(() => _otpSent = false),
+                    child: Text(
+                      isHi ? 'मोबाइल नंबर बदलें' : 'Change Phone Number',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
                 ),
               ],
               if (_errorMessage != null) ...[
                 const SizedBox(height: 12),
-                Text(_errorMessage!, style: const TextStyle(color: GBColors.error, fontSize: 13)),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: GBColors.error.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: GBColors.error),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, size: 18, color: GBColors.error),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(color: GBColors.error, fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
               const Spacer(),
               Center(
@@ -176,9 +244,9 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
                       MaterialPageRoute(builder: (_) => const RunnerOnboardingWizard()),
                     );
                   },
-                  child: const Text(
-                    'नए डिलीवरी साथी? आवेदन फॉर्म भरें (Register Partner)',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: GBColors.primary),
+                  child: Text(
+                    isHi ? 'नए डिलीवरी साथी? आवेदन फॉर्म भरें' : 'New Delivery Partner? Register Here',
+                    style: const TextStyle(fontWeight: FontWeight.w700, color: GBColors.primary),
                   ),
                 ),
               ),

@@ -6,7 +6,8 @@ from sqlalchemy.orm import selectinload
 from app.db.session import get_db
 from app.models.base import Store, StoreProduct, GlobalCatalogItem, User
 from app.schemas.store import (
-    StoreResponse, StoreProductResponse, GlobalCatalogResponse, AddProductToStoreRequest, StoreRegistrationRequest
+    StoreResponse, StoreProductResponse, GlobalCatalogResponse, AddProductToStoreRequest, StoreRegistrationRequest,
+    StoreStatusUpdate, ProductStockUpdate
 )
 from app.services.geo_service import calculate_haversine_distance, is_within_service_radius
 from app.core.security import get_current_user_payload
@@ -145,6 +146,52 @@ async def get_nearby_stores(
         ))
     return stores_out
 
+@router.get("/stores/me", response_model=StoreResponse)
+async def get_my_store(
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    owner_id = payload.get("sub")
+    res = await db.execute(select(Store).where(Store.owner_id == owner_id))
+    st = res.scalars().first()
+    if not st:
+        raise HTTPException(status_code=404, detail="Store not found for this vendor")
+    return StoreResponse(
+        id=st.id,
+        owner_id=st.owner_id,
+        shop_name=st.shop_name,
+        owner_name=st.owner_name,
+        category=st.category,
+        latitude=st.latitude,
+        longitude=st.longitude,
+        village=st.village,
+        landmark=st.landmark,
+        block=st.block,
+        district=st.district,
+        is_online=st.is_online,
+        is_approved=st.is_approved,
+        is_featured=st.is_featured,
+        rating=st.rating,
+        banner_url=st.banner_url
+    )
+
+@router.patch("/stores/status")
+async def update_store_status(
+    data: StoreStatusUpdate,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    owner_id = payload.get("sub")
+    res = await db.execute(select(Store).where(Store.owner_id == owner_id))
+    st = res.scalars().first()
+    if not st:
+        raise HTTPException(status_code=404, detail="Store not found")
+    if not st.is_approved and data.is_online:
+        raise HTTPException(status_code=400, detail="Store must be approved by admin before going online")
+    st.is_online = data.is_online
+    await db.commit()
+    return {"message": f"Store is now {'online' if st.is_online else 'offline'}", "is_online": st.is_online}
+
 @router.get("/stores/{store_id}", response_model=StoreResponse)
 async def get_store_details(store_id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Store).where(Store.id == store_id))
@@ -280,3 +327,34 @@ async def add_vendor_product(
         in_stock=product.in_stock,
         stock_quantity=product.stock_quantity
     )
+
+@router.patch("/stores/products/{product_id}/stock")
+async def update_product_stock(
+    product_id: str,
+    data: ProductStockUpdate,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    owner_id = payload.get("sub")
+    res = await db.execute(select(Store).where(Store.owner_id == owner_id))
+    st = res.scalars().first()
+    if not st:
+        raise HTTPException(status_code=404, detail="Store not found")
+    pres = await db.execute(select(StoreProduct).where(StoreProduct.id == product_id, StoreProduct.store_id == st.id))
+    p = pres.scalars().first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Product not found in this store")
+    if data.in_stock is not None:
+        p.in_stock = data.in_stock
+    if data.stock_quantity is not None:
+        p.stock_quantity = data.stock_quantity
+    if data.price is not None:
+        p.price = data.price
+    await db.commit()
+    return {
+        "message": "Product updated successfully",
+        "product_id": p.id,
+        "in_stock": p.in_stock,
+        "stock_quantity": p.stock_quantity,
+        "price": p.price
+    }

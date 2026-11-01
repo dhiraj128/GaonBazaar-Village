@@ -483,4 +483,284 @@ class GBApiClient {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
   }
+
+  // --- Vendor APIs ---
+  Future<ApiResponse<GBStore>> getMyStore() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl${Endpoints.myStore}'), headers: _headers())
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return ApiResponse(isSuccess: true, data: GBStore.fromJson(data), statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: 'Failed to load store profile', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateStoreStatus(bool isOnline) async {
+    try {
+      final response = await http
+          .patch(
+            Uri.parse('$baseUrl${Endpoints.storeStatus}'),
+            headers: _headers(),
+            body: jsonEncode({'is_online': isOnline}),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: data['detail']?.toString() ?? 'Failed to update store status', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<GBStore>> onboardStore(Map<String, dynamic> storeData) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl${Endpoints.storeOnboard}'),
+            headers: _headers(),
+            body: jsonEncode(storeData),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return ApiResponse(isSuccess: true, data: GBStore.fromJson(data), statusCode: response.statusCode);
+      }
+      final err = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApiResponse(isSuccess: false, errorMessage: err['detail']?.toString() ?? 'Failed to onboard store', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<List<GBOrder>>> getVendorOrders() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl${Endpoints.vendorOrders}'), headers: _headers())
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final list = (jsonDecode(response.body) as List)
+            .map((item) => GBOrder.fromJson(item as Map<String, dynamic>))
+            .toList();
+        return ApiResponse(isSuccess: true, data: list, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch vendor orders', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> getVendorFinances() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl${Endpoints.vendorFinances}'), headers: _headers())
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch vendor finances', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> vendorOrderAction(String orderId, String action) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl${Endpoints.vendorOrderAction(orderId)}'),
+            headers: _headers(),
+            body: jsonEncode({'action': action}),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: data['detail']?.toString() ?? 'Action failed', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<GBProduct>> addVendorProduct(Map<String, dynamic> productData) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl${Endpoints.vendorProducts}'),
+            headers: _headers(),
+            body: jsonEncode(productData),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return ApiResponse(isSuccess: true, data: GBProduct.fromJson(data), statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: 'Failed to add product', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateProductStock(
+    String productId, {
+    bool? inStock,
+    int? stockQuantity,
+    double? price,
+  }) async {
+    try {
+      final body = <String, dynamic>{};
+      if (inStock != null) body['in_stock'] = inStock;
+      if (stockQuantity != null) body['stock_quantity'] = stockQuantity;
+      if (price != null) body['price'] = price;
+
+      final response = await http
+          .patch(
+            Uri.parse('$baseUrl${Endpoints.productStock(productId)}'),
+            headers: _headers(),
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: data['detail']?.toString() ?? 'Failed to update stock', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  // --- Runner APIs ---
+  Future<ApiResponse<Map<String, dynamic>>> onboardRunner(Map<String, dynamic> runnerData) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl${Endpoints.runnerOnboard}'),
+            headers: _headers(),
+            body: jsonEncode(runnerData),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: data['detail']?.toString() ?? 'Onboarding failed', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> getRunnerMe() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl${Endpoints.runnerMe}'), headers: _headers())
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch runner profile', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateRunnerStatus(bool isOnline) async {
+    try {
+      final response = await http
+          .patch(
+            Uri.parse('$baseUrl${Endpoints.runnerStatus}'),
+            headers: _headers(),
+            body: jsonEncode({'is_online': isOnline}),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: data['detail']?.toString() ?? 'Failed to update runner status', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<List<GBOrder>>> getRunnerJobs() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl${Endpoints.runnerJobs}'), headers: _headers())
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final list = (jsonDecode(response.body) as List)
+            .map((item) => GBOrder.fromJson(item as Map<String, dynamic>))
+            .toList();
+        return ApiResponse(isSuccess: true, data: list, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch runner jobs', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> getRunnerFinances() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl${Endpoints.runnerFinances}'), headers: _headers())
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch runner finances', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> runnerJobAction(
+    String orderId,
+    String action, {
+    String? deliveryOtp,
+  }) async {
+    try {
+      final body = <String, dynamic>{'action': action};
+      if (deliveryOtp != null) body['delivery_otp'] = deliveryOtp;
+
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl${Endpoints.runnerJobAction(orderId)}'),
+            headers: _headers(),
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: data['detail']?.toString() ?? 'Action failed', statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
 }

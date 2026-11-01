@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
-import 'package:shared_models/shared_models.dart';
+import 'package:localization/localization.dart';
 import '../state/vendor_state.dart';
 
 class ProductLibraryScreen extends StatefulWidget {
@@ -12,8 +12,10 @@ class ProductLibraryScreen extends StatefulWidget {
 
 class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
+  List<Map<String, dynamic>> _catalog = [];
+  bool _isLoading = true;
 
-  final List<Map<String, dynamic>> _centralLibrary = [
+  final List<Map<String, dynamic>> _defaultLibrary = [
     {
       'id': 'cat_atta',
       'name_en': 'Chakki Fresh Atta',
@@ -25,7 +27,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
     },
     {
       'id': 'cat_rice',
-      'name_en': 'Basmati Rice (Minapur)',
+      'name_en': 'Basmati Rice (Minapur Special)',
       'name_hi': 'बासमती चावल',
       'category': 'Grocery',
       'unit': '1 kg',
@@ -34,7 +36,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
     },
     {
       'id': 'cat_mustard_oil',
-      'name_en': 'Mustard Oil (Sarson Tel)',
+      'name_en': 'Kachhi Ghani Mustard Oil',
       'name_hi': 'कच्ची घानी सरसों तेल',
       'category': 'Grocery',
       'unit': '1 L',
@@ -52,7 +54,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
     },
     {
       'id': 'cat_potato',
-      'name_en': 'Local Potato (Aloo)',
+      'name_en': 'Fresh Local Potato (Aloo)',
       'name_hi': 'ताज़ा देशी आलू',
       'category': 'Vegetables',
       'unit': '1 kg',
@@ -89,7 +91,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
     {
       'id': 'cat_led_bulb',
       'name_en': '9W LED Bulb',
-      'name_hi': '९ वॉट एलईडी बल्ब',
+      'name_hi': '9W एलईडी बल्ब',
       'category': 'Electrical',
       'unit': '1 piece',
       'suggested_price': 85.0,
@@ -142,14 +144,53 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
     },
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadCatalog();
+  }
+
+  void _loadCatalog() async {
+    final state = VendorStateProvider.of(context);
+    final res = await state.apiClient.getGlobalCatalog();
+    if (res.isSuccess && res.data != null && res.data!.isNotEmpty) {
+      _catalog = res.data!.map((item) {
+        return {
+          'id': item['id'],
+          'name_en': item['name_en'] ?? 'Product',
+          'name_hi': item['name_hi'] ?? 'उत्पाद',
+          'category': item['category'] ?? 'Grocery',
+          'unit': item['default_unit'] ?? '1 kg',
+          'suggested_price': (item['suggested_mrp'] as num?)?.toDouble() ?? 50.0,
+          'image_url': item['image_url'] ?? 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400',
+        };
+      }).toList();
+    } else {
+      _catalog = List.from(_defaultLibrary);
+    }
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
   void _showAddPriceDialog(Map<String, dynamic> item) {
+    final state = VendorStateProvider.of(context);
+    final loc = GBLocalizations.of(context);
     final priceCtrl = TextEditingController(text: item['suggested_price'].toString());
     final stockCtrl = TextEditingController(text: '50');
+    final unitCtrl = TextEditingController(text: item['unit'].toString());
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('${item['name_hi']} जोड़ें'),
+        title: Text(
+          loc.isHindi ? '${item['name_hi']} दुकान में जोड़ें' : 'Add ${item['name_en']}',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,15 +199,26 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(item['image_url'] as String, width: 50, height: 50, fit: BoxFit.cover),
+                  child: Image.network(
+                    item['image_url'] as String,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item['name_hi'] as String, style: const TextStyle(fontWeight: FontWeight.w700)),
-                      Text('इकाई (Unit): ${item['unit']}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text(
+                        loc.isHindi ? (item['name_hi'] as String) : (item['name_en'] as String),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                      ),
+                      Text(
+                        'Category: ${item['category']}',
+                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
                     ],
                   ),
                 ),
@@ -175,45 +227,82 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: priceCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'आपका बिक्री मूल्य ₹ (Selling Price)'),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: loc.isHindi ? 'आपका विक्रय मूल्य (₹) *' : 'Your Selling Price (₹) *',
+                prefixText: '₹ ',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              ),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: stockCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'उपलब्ध स्टॉक मात्रा (Stock Quantity)'),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: unitCtrl,
+                    decoration: InputDecoration(
+                      labelText: loc.isHindi ? 'इकाई (Unit)' : 'Unit',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: stockCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: loc.isHindi ? 'स्टॉक मात्रा' : 'Stock Qty',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('रद्द करें')),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(loc.tr('cancel')),
+          ),
           ElevatedButton(
-            onPressed: () {
-              final price = double.tryParse(priceCtrl.text) ?? (item['suggested_price'] as double);
-              final stock = int.tryParse(stockCtrl.text) ?? 50;
+            style: ElevatedButton.styleFrom(
+              backgroundColor: GBColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final price = double.tryParse(priceCtrl.text.trim()) ?? (item['suggested_price'] as double);
+              final stock = int.tryParse(stockCtrl.text.trim()) ?? 50;
 
-              final prod = GBProduct(
-                id: 'prod_${DateTime.now().millisecondsSinceEpoch}',
-                storeId: 'str_01',
-                globalProductId: item['id'] as String,
-                nameEn: item['name_en'] as String,
-                nameHi: item['name_hi'] as String,
-                category: item['category'] as String,
-                unit: item['unit'] as String,
-                price: price,
-                imageUrl: item['image_url'] as String,
-                stockQuantity: stock,
-                inStock: true,
-              );
+              final productPayload = {
+                'global_product_id': item['id'],
+                'custom_name_en': item['name_en'],
+                'custom_name_hi': item['name_hi'],
+                'category': item['category'],
+                'unit': unitCtrl.text.trim(),
+                'price': price,
+                'mrp': price * 1.15,
+                'image_url': item['image_url'],
+                'stock_quantity': stock,
+                'in_stock': true,
+              };
 
-              VendorStateProvider.of(context).addProduct(prod);
               Navigator.of(ctx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${prod.nameHi} आपकी दुकान में जोड़ दिया गया!')),
-              );
+              final success = await state.addProduct(productPayload);
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success ? loc.tr('product_added_success') : 'Failed to add product to store',
+                    ),
+                    backgroundColor: success ? GBColors.success : GBColors.error,
+                  ),
+                );
+              }
             },
-            child: const Text('दुकान में जोड़ें (Add)'),
+            child: Text(loc.tr('add_to_my_store')),
           ),
         ],
       ),
@@ -222,82 +311,144 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _centralLibrary.where((item) {
-      if (_searchCtrl.text.isEmpty) return true;
-      final q = _searchCtrl.text.toLowerCase();
-      return (item['name_en'] as String).toLowerCase().contains(q) ||
-          (item['name_hi'] as String).toLowerCase().contains(q);
+    final state = VendorStateProvider.of(context);
+    final loc = GBLocalizations.of(context);
+    final query = _searchCtrl.text.trim().toLowerCase();
+
+    final filtered = _catalog.where((item) {
+      if (query.isEmpty) return true;
+      final en = (item['name_en'] as String).toLowerCase();
+      final hi = (item['name_hi'] as String).toLowerCase();
+      final cat = (item['category'] as String).toLowerCase();
+      return en.contains(query) || hi.contains(query) || cat.contains(query);
     }).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('केंद्रीय उत्पाद लाइब्रेरी (Product Catalog)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        title: Text(
+          loc.tr('menu_catalog'),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
       ),
       body: SafeArea(
         child: Column(
           children: [
+            // Search Input
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: TextField(
                 controller: _searchCtrl,
-                onChanged: (v) => setState(() {}),
+                onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  hintText: 'आलू, प्याज, आटा, दूध, तेल खोजें...',
-                  prefixIcon: const Icon(Icons.search, color: GBColors.primary),
+                  hintText: loc.isHindi ? 'सामग्री या श्रेणी खोजें...' : 'Search items or category...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchCtrl.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchCtrl.clear();
+                            setState(() {});
+                          },
+                        )
+                      : null,
                   filled: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ),
+
+            // Products List
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: filtered.length,
-                itemBuilder: (context, idx) {
-                  final item = filtered[idx];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(item['image_url'] as String, width: 56, height: 56, fit: BoxFit.cover),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(item['name_hi'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                              Text(item['name_en'] as String, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                              const SizedBox(height: 4),
-                              Text(
-                                'सुझाया गया मूल्य: ₹${item['suggested_price']} / ${item['unit']}',
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+              child: _isLoading
+                  ? const Center(child: GBLoadingState())
+                  : filtered.isEmpty
+                      ? Center(
+                          child: Text(
+                            loc.isHindi ? 'कोई उत्पाद नहीं मिला' : 'No products found',
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          itemCount: filtered.length,
+                          itemBuilder: (context, idx) {
+                            final item = filtered[idx];
+                            final alreadyAdded = state.myProducts.any(
+                              (p) => p.nameEn == item['name_en'] || p.nameHi == item['name_hi'],
+                            );
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).cardColor,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.withOpacity(0.2)),
                               ),
-                            ],
-                          ),
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      item['image_url'] as String,
+                                      width: 56,
+                                      height: 56,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (ctx, err, stack) => const Icon(
+                                        Icons.shopping_basket_outlined,
+                                        size: 32,
+                                        color: GBColors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          loc.isHindi ? (item['name_hi'] as String) : (item['name_en'] as String),
+                                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${item['category']} • ${item['unit']}',
+                                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '₹${(item['suggested_price'] as num).toStringAsFixed(0)}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 14,
+                                            color: GBColors.primary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: alreadyAdded ? Colors.grey.shade400 : GBColors.primary,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    ),
+                                    onPressed: alreadyAdded ? null : () => _showAddPriceDialog(item),
+                                    child: Text(
+                                      alreadyAdded
+                                          ? (loc.isHindi ? 'जोड़ा हुआ' : 'Added')
+                                          : (loc.isHindi ? 'जोड़ें' : 'Add'),
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
-                        ElevatedButton.icon(
-                          onPressed: () => _showAddPriceDialog(item),
-                          icon: const Icon(Icons.add, size: 16),
-                          label: const Text('चुनें'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: GBColors.primary,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
             ),
           ],
         ),
