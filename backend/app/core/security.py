@@ -60,10 +60,6 @@ async def get_current_admin(
         payload = decode_access_token(credentials.credentials)
         if payload and payload.get("role") == "admin":
             return payload
-            
-    # 3. Test mode bypass ONLY for automated test execution
-    if getattr(settings, "TESTING", False):
-        return {"sub": "test_admin", "role": "admin", "phone": "9800000099"}
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,

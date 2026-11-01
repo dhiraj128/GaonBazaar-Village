@@ -1,19 +1,13 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import app
+from tests.conftest import issue_and_verify_test_token
 
 @pytest.mark.asyncio
 async def test_full_order_and_delivery_lifecycle():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # 1. Customer login
-        cust_login = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": "9876543210",
-            "otp": "123456",
-            "role": "customer"
-        })
-        assert cust_login.status_code == 200
-        cust_token = cust_login.json()["access_token"]
-        cust_headers = {"Authorization": f"Bearer {cust_token}"}
+        cust_headers = await issue_and_verify_test_token(client, "9876543210", "customer")
         
         # 2. Get customer saved addresses
         addr_resp = await client.get("/api/v1/addresses", headers=cust_headers)
@@ -22,14 +16,14 @@ async def test_full_order_and_delivery_lifecycle():
         assert len(addresses) > 0
         address_id = addresses[0]["id"]
         
-        # 3. Get nearby stores
+        # 3. Get nearby stores and select Store 1 (str_01, owned by 9800000001)
         stores_resp = await client.get(
             f"/api/v1/stores/nearby?latitude={addresses[0]['latitude']}&longitude={addresses[0]['longitude']}"
         )
         assert stores_resp.status_code == 200
         stores = stores_resp.json()
-        assert len(stores) >= 2
-        store_id = stores[0]["id"]
+        store = next(s for s in stores if s["id"] == "str_01")
+        store_id = store["id"]
         
         # 4. Get store products
         prods_resp = await client.get(f"/api/v1/stores/{store_id}/products")
@@ -67,14 +61,8 @@ async def test_full_order_and_delivery_lifecycle():
         assert order["can_cancel"] is True
         assert order["cancel_seconds_remaining"] > 170 # Within 180s window
         
-        # 7. Vendor login & accepts order
-        vendor_login = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": "9800000001",
-            "otp": "123456",
-            "role": "vendor"
-        })
-        v_token = vendor_login.json()["access_token"]
-        v_headers = {"Authorization": f"Bearer {v_token}"}
+        # 7. Vendor 1 login & accepts order
+        v_headers = await issue_and_verify_test_token(client, "9800000001", "vendor")
         
         v_accept = await client.post(
             f"/api/v1/vendor/orders/{order_id}/action",
@@ -91,14 +79,8 @@ async def test_full_order_and_delivery_lifecycle():
         )
         assert v_pack.status_code == 200
         
-        # 8. Runner login & accepts job
-        runner_login = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": "9800000003",
-            "otp": "123456",
-            "role": "runner"
-        })
-        r_token = runner_login.json()["access_token"]
-        r_headers = {"Authorization": f"Bearer {r_token}"}
+        # 8. Runner 1 login & accepts job
+        r_headers = await issue_and_verify_test_token(client, "9800000003", "runner")
         
         r_accept = await client.post(
             f"/api/v1/runner/jobs/{order_id}/action",
@@ -114,6 +96,14 @@ async def test_full_order_and_delivery_lifecycle():
             json={"action": "PICKUP"}
         )
         assert r_pickup.status_code == 200
+
+        # Runner goes out for delivery
+        r_out = await client.post(
+            f"/api/v1/runner/jobs/{order_id}/action",
+            headers=r_headers,
+            json={"action": "OUT_FOR_DELIVERY"}
+        )
+        assert r_out.status_code == 200
         
         # Runner tests invalid OTP delivery -> should fail with 400
         r_bad_otp = await client.post(
@@ -123,15 +113,15 @@ async def test_full_order_and_delivery_lifecycle():
         )
         assert r_bad_otp.status_code == 400
         
-        # Runner delivers with correct OTP -> completes delivery
+        # Runner delivers with correct OTP and confirmed cash collection
         r_deliver = await client.post(
             f"/api/v1/runner/jobs/{order_id}/action",
             headers=r_headers,
-            json={"action": "DELIVER", "delivery_otp": delivery_otp}
+            json={"action": "DELIVER", "delivery_otp": delivery_otp, "cash_collected": True}
         )
         assert r_deliver.status_code == 200
         
-        # 9. Verify order status is DELIVERED
+        # 9. Verify order status is DELIVERED and payment_status is PAID
         final_order = await client.get(f"/api/v1/orders/{order_id}", headers=cust_headers)
         assert final_order.status_code == 200
         final_data = final_order.json()

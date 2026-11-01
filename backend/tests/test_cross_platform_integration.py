@@ -2,6 +2,8 @@ import time
 import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import app
+from app.core.config import settings
+from tests.conftest import issue_and_verify_test_token
 
 @pytest.mark.asyncio
 async def test_full_cross_platform_lifecycle():
@@ -9,18 +11,12 @@ async def test_full_cross_platform_lifecycle():
     vendor_phone = f"98{ts:08d}"
     customer_phone = f"97{ts:08d}"
     runner_phone = f"96{ts:08d}"
+    adm_headers = {"X-Admin-Key": settings.ADMIN_API_KEY}
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         # 1. Vendor Authentication & Onboarding
-        v_auth = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": vendor_phone,
-            "otp": "123456",
-            "role": "vendor"
-        })
-        assert v_auth.status_code == 200
-        vendor_token = v_auth.json()["access_token"]
-        vendor_headers = {"Authorization": f"Bearer {vendor_token}"}
+        vendor_headers = await issue_and_verify_test_token(client, vendor_phone, "vendor")
 
         onboard_store_res = await client.post(
             "/api/v1/stores/onboard",
@@ -51,7 +47,7 @@ async def test_full_cross_platform_lifecycle():
         assert online_fail.status_code == 400
 
         # 2. Admin Approves Vendor Store
-        admin_approve_store = await client.post(f"/api/v1/admin/vendors/{store_id}/approve")
+        admin_approve_store = await client.post(f"/api/v1/admin/vendors/{store_id}/approve", headers=adm_headers)
         assert admin_approve_store.status_code == 200
 
         # Now Vendor can go online
@@ -83,14 +79,7 @@ async def test_full_cross_platform_lifecycle():
         product_id = prod_res.json()["id"]
 
         # 3. Customer Authentication & Address Setup
-        c_auth = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": customer_phone,
-            "otp": "123456",
-            "role": "customer"
-        })
-        assert c_auth.status_code == 200
-        customer_token = c_auth.json()["access_token"]
-        cust_headers = {"Authorization": f"Bearer {customer_token}"}
+        cust_headers = await issue_and_verify_test_token(client, customer_phone, "customer")
 
         addr_res = await client.post(
             "/api/v1/addresses",
@@ -150,14 +139,7 @@ async def test_full_cross_platform_lifecycle():
         assert pack_res.json()["status"] == "PACKED"
 
         # 5. Runner Authentication & Onboarding
-        r_auth = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": runner_phone,
-            "otp": "123456",
-            "role": "runner"
-        })
-        assert r_auth.status_code == 200
-        runner_token = r_auth.json()["access_token"]
-        runner_headers = {"Authorization": f"Bearer {runner_token}"}
+        runner_headers = await issue_and_verify_test_token(client, runner_phone, "runner")
 
         onboard_runner_res = await client.post(
             "/api/v1/runner/onboard",
@@ -175,7 +157,7 @@ async def test_full_cross_platform_lifecycle():
         assert onboard_runner_res.json()["is_approved"] is False
 
         # Super Admin approves Runner
-        admin_approve_runner = await client.post(f"/api/v1/admin/runners/{runner_id}/approve")
+        admin_approve_runner = await client.post(f"/api/v1/admin/runners/{runner_id}/approve", headers=adm_headers)
         assert admin_approve_runner.status_code == 200
 
         # Runner goes Online
@@ -187,7 +169,7 @@ async def test_full_cross_platform_lifecycle():
         assert runner_duty.status_code == 200
         assert runner_duty.json()["is_online"] is True
 
-        # 6. Runner picks up and delivers
+        # 6. Runner accepts, picks up, out for delivery, and delivers
         accept_job_res = await client.post(
             f"/api/v1/runner/jobs/{order_id}/action",
             headers=runner_headers,
@@ -220,11 +202,11 @@ async def test_full_cross_platform_lifecycle():
         )
         assert bad_otp_res.status_code == 400
 
-        # Correct OTP succeeds
+        # Correct OTP succeeds with verified cash collection
         deliver_res = await client.post(
             f"/api/v1/runner/jobs/{order_id}/action",
             headers=runner_headers,
-            json={"action": "DELIVER", "delivery_otp": delivery_otp}
+            json={"action": "DELIVER", "delivery_otp": delivery_otp, "cash_collected": True}
         )
         assert deliver_res.status_code == 200
         assert deliver_res.json()["status"] == "DELIVERED"
@@ -245,7 +227,7 @@ async def test_full_cross_platform_lifecycle():
         assert r_fin["total_delivery_earnings"] >= 15.0
 
         # 9. Super Admin Overview
-        admin_overview_res = await client.get("/api/v1/admin/overview")
+        admin_overview_res = await client.get("/api/v1/admin/overview", headers=adm_headers)
         assert admin_overview_res.status_code == 200
         overview = admin_overview_res.json()
         assert "Minapur" in overview["pilot_area"]

@@ -24,10 +24,12 @@ async def test_otp_send_and_verify_flow():
         s_data = send_resp.json()
         assert "session_id" in s_data
         
-        # 2. Verify OTP
+        # 2. Verify OTP with issued challenge
+        from app.api.v1.auth import OTP_STORAGE
+        issued_otp = OTP_STORAGE["9876543210"]["otp"]
         verify_resp = await client.post("/api/v1/auth/otp/verify", json={
             "phone": "9876543210",
-            "otp": "123456"
+            "otp": issued_otp
         })
         assert verify_resp.status_code == 200
         v_data = verify_resp.json()

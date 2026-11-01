@@ -2,23 +2,19 @@ import time
 import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import app
+from app.core.config import settings
+from tests.conftest import issue_and_verify_test_token
 
 @pytest.mark.asyncio
 async def test_vendor_and_runner_endpoints_and_actions():
     ts = int(time.time() * 100) % 100000000
     vendor_phone = f"98{ts:08d}"
     runner_phone = f"96{ts:08d}"
+    adm_headers = {"X-Admin-Key": settings.ADMIN_API_KEY}
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # 1. Register Vendor
-        v_reg = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": vendor_phone,
-            "otp": "123456",
-            "role": "vendor"
-        })
-        assert v_reg.status_code == 200
-        v_token = v_reg.json()["access_token"]
-        v_headers = {"Authorization": f"Bearer {v_token}"}
+        v_headers = await issue_and_verify_test_token(client, vendor_phone, "vendor")
 
         # 2. Onboard Store
         store_res = await client.post("/api/v1/stores/onboard", headers=v_headers, json={
@@ -49,7 +45,7 @@ async def test_vendor_and_runner_endpoints_and_actions():
         assert online_fail.status_code == 400
 
         # 5. Admin approves Store
-        app_res = await client.post(f"/api/v1/admin/vendors/{store_id}/approve")
+        app_res = await client.post(f"/api/v1/admin/vendors/{store_id}/approve", headers=adm_headers)
         assert app_res.status_code == 200
 
         # 6. Now going online succeeds
@@ -82,29 +78,20 @@ async def test_vendor_and_runner_endpoints_and_actions():
         assert stock_patch.json()["price"] == 40.0
 
         # 9. Register Runner
-        r_reg = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": runner_phone,
-            "otp": "123456",
-            "role": "runner"
-        })
-        assert r_reg.status_code == 200
-        r_user_id = r_reg.json()["user"]["id"]
-        r_token = r_reg.json()["access_token"]
-        r_headers = {"Authorization": f"Bearer {r_token}"}
+        r_headers = await issue_and_verify_test_token(client, runner_phone, "runner")
 
         # 10. GET /runner/me returns runner profile (pending approval)
         r_me = await client.get("/api/v1/runner/me", headers=r_headers)
         assert r_me.status_code == 200
         assert r_me.json()["is_approved"] is False
+        r_id = r_me.json()["id"]
 
         # 11. Runner cannot go online before approval
         r_online_fail = await client.patch("/api/v1/runner/status", headers=r_headers, json={"is_online": True})
         assert r_online_fail.status_code == 400
 
         # 12. Admin approves runner
-        runners_all = await client.get("/api/v1/admin/runners")
-        r_id = [r["id"] for r in runners_all.json() if r.get("user_id") == r_user_id][0]
-        r_app = await client.post(f"/api/v1/admin/runners/{r_id}/approve")
+        r_app = await client.post(f"/api/v1/admin/runners/{r_id}/approve", headers=adm_headers)
         assert r_app.status_code == 200
 
         # 13. Runner can now go online

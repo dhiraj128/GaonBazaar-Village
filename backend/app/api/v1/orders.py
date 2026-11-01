@@ -139,6 +139,14 @@ async def create_order(
     if data.payment_method == "ONLINE" and is_test_user:
         effective_payment_method = "ONLINE_SIMULATED"
 
+    # Strict payment state machine
+    if effective_payment_method == "ONLINE_SIMULATED":
+        initial_payment_status = "SIMULATED"
+    elif effective_payment_method == "COD":
+        initial_payment_status = "PENDING"
+    else: # Genuine ONLINE
+        initial_payment_status = "PENDING" # Must be verified via payment gateway before marking PAID
+
     order = Order(
         customer_id=customer_id,
         store_id=store.id,
@@ -149,7 +157,7 @@ async def create_order(
         platform_fee=totals["platform_fee"], # Strict ₹3.00
         total_amount=totals["total_amount"],
         payment_method=effective_payment_method,
-        payment_status="PENDING" if "COD" in effective_payment_method else "PAID",
+        payment_status=initial_payment_status,
         delivery_otp=delivery_otp,
         placed_at=now,
         cancel_until=cancel_until,
@@ -487,19 +495,41 @@ async def vendor_order_action(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
         
+    vendor_user_id = payload.get("sub")
+    is_admin = payload.get("role") == "admin"
+    if not is_admin:
+        s_res = await db.execute(select(Store).where(Store.owner_id == vendor_user_id))
+        store = s_res.scalars().first()
+        if not store:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No store associated with this vendor account")
+        if not store.is_approved:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Store is pending administrative approval")
+        if not store.is_online:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Store is currently offline")
+        if order.store_id != store.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: You cannot modify orders belonging to another vendor's store")
+        
     act = action_data.action.upper()
     now = datetime.now(timezone.utc)
     
     if act == "ACCEPT":
+        if order.status != "PLACED":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot ACCEPT order in status '{order.status}'. Order must be 'PLACED'.")
         order.status = "ACCEPTED"
         title = "दुकानदार ने स्वीकार किया (Accepted)"
     elif act in ["PACK", "PACKED"]:
+        if order.status not in ["ACCEPTED", "PLACED"]:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot PACK order in status '{order.status}'. Order must be 'ACCEPTED' or 'PLACED'.")
         order.status = "PACKED"
         title = "सामान पैक हो गया (Packed & Ready)"
     elif act in ["HANDOFF", "HANDED_OFF"]:
+        if order.status not in ["PACKED", "RUNNER_ASSIGNED"]:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot hand off order from status '{order.status}'. Order must be 'PACKED' or 'RUNNER_ASSIGNED'.")
         order.status = "PICKED_UP"
         title = "डिलीवरी साथी को सौंपा (Handed off to Runner)"
     elif act == "REJECT":
+        if order.status not in ["PLACED", "ACCEPTED"]:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot REJECT order in status '{order.status}'. Order must be 'PLACED' or 'ACCEPTED'.")
         order.status = "CANCELLED"
         title = "दुकानदार द्वारा अस्वीकृत (Rejected)"
     else:
@@ -517,8 +547,15 @@ async def runner_job_action(
     db: AsyncSession = Depends(get_db)
 ):
     runner_user_id = payload.get("sub")
-    r_res = await db.execute(select(Runner).where(Runner.user_id == runner_user_id))
-    runner = r_res.scalars().first()
+    is_admin = payload.get("role") == "admin"
+    runner = None
+    if not is_admin:
+        r_res = await db.execute(select(Runner).where(Runner.user_id == runner_user_id))
+        runner = r_res.scalars().first()
+        if not runner:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Runner profile required to accept delivery jobs")
+        if not runner.is_approved:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Runner account is pending administrative approval")
     
     res = await db.execute(select(Order).where(Order.id == order_id))
     order = res.scalars().first()
@@ -529,17 +566,33 @@ async def runner_job_action(
     now = datetime.now(timezone.utc)
     
     if act == "ACCEPT":
-        order.status = "RUNNER_ASSIGNED"
+        if order.status not in ["PACKED", "ACCEPTED"]:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot ACCEPT job in status '{order.status}'. Order must be 'PACKED' or 'ACCEPTED'.")
+        if order.runner_id and runner and order.runner_id != runner.id and not is_admin:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Order has already been assigned to another delivery runner")
         if runner:
             order.runner_id = runner.id
+        order.status = "RUNNER_ASSIGNED"
         title = "डिलीवरी साथी तय हुआ (Runner Assigned)"
     elif act in ["PICKUP", "PICKED_UP"]:
+        if not is_admin and runner and order.runner_id != runner.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: Order is assigned to another delivery runner")
+        if order.status not in ["RUNNER_ASSIGNED", "PACKED"]:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot PICKUP order from status '{order.status}'. Order must be 'RUNNER_ASSIGNED' or 'PACKED'.")
         order.status = "PICKED_UP"
         title = "सामान दुकान से उठाया (Picked Up)"
     elif act in ["OUT_FOR_DELIVERY", "OUT"]:
+        if not is_admin and runner and order.runner_id != runner.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: Order is assigned to another delivery runner")
+        if order.status != "PICKED_UP":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot transition to OUT_FOR_DELIVERY from status '{order.status}'. Order must be 'PICKED_UP'.")
         order.status = "OUT_FOR_DELIVERY"
         title = "डिलीवरी के लिए निकल चुके हैं (Out for Delivery)"
     elif act in ["DELIVER", "DELIVERED"]:
+        if not is_admin and runner and order.runner_id != runner.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: Order is assigned to another delivery runner")
+        if order.status != "OUT_FOR_DELIVERY":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot DELIVER order from status '{order.status}'. Prerequisites not met: order must be 'OUT_FOR_DELIVERY'.")
         # Strict OTP verification
         if not action_data.delivery_otp or action_data.delivery_otp.strip() != order.delivery_otp.strip():
             raise HTTPException(
@@ -547,8 +600,17 @@ async def runner_job_action(
                 detail="गलत डिलीवरी ओटीपी (Invalid Customer Delivery OTP)"
             )
         order.status = "DELIVERED"
-        order.payment_status = "PAID"
         order.delivered_at = now
+        
+        # Payment State Machine Handling: require verified cash collection for COD
+        if order.payment_method == "COD":
+            if action_data.cash_collected is True:
+                order.payment_status = "PAID"
+            else:
+                order.payment_status = "PENDING"
+        elif order.payment_method == "ONLINE_SIMULATED":
+            order.payment_status = "SIMULATED"
+            
         title = "सफलतापूर्वक डिलीवर हुआ (Delivered)"
     else:
         raise HTTPException(status_code=400, detail="Invalid runner action")

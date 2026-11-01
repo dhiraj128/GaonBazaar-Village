@@ -1,20 +1,18 @@
 from datetime import datetime, timedelta, timezone
 import pytest
-import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.future import select
 from app.main import app
 from app.db.session import AsyncSessionLocal
 from app.models.base import Order
+from tests.conftest import issue_and_verify_test_token
 
 @pytest.mark.asyncio
 async def test_eight_km_radius_enforcement_on_order_creation():
     """Verify that orders exceeding the 8.0 km service radius are rejected by backend."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # Auth customer
-        c_auth = await client.post("/api/v1/auth/otp/verify", json={"phone": "9811122233", "otp": "123456", "role": "customer"})
-        c_token = c_auth.json()["access_token"]
-        headers = {"Authorization": f"Bearer {c_token}"}
+        headers = await issue_and_verify_test_token(client, "9811122233", "customer")
 
         # Address 15 km away from Minapur center (e.g., latitude 26.0500, longitude 85.3400)
         far_addr = await client.post("/api/v1/addresses", headers=headers, json={
@@ -45,9 +43,7 @@ async def test_eight_km_radius_enforcement_on_order_creation():
 async def test_price_manipulation_protection():
     """Verify that backend calculates prices exclusively from DB products and ignores client inputs."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        c_auth = await client.post("/api/v1/auth/otp/verify", json={"phone": "9822233344", "otp": "123456", "role": "customer"})
-        c_token = c_auth.json()["access_token"]
-        headers = {"Authorization": f"Bearer {c_token}"}
+        headers = await issue_and_verify_test_token(client, "9822233344", "customer")
 
         # Valid nearby address
         addr_res = await client.post("/api/v1/addresses", headers=headers, json={
@@ -66,12 +62,12 @@ async def test_price_manipulation_protection():
         prod = prod_res.json()[0]
         actual_price = prod["price"]
 
-        # Attempt to order 2 units
+        # Attempt to order 2 units with client injection
         order_res = await client.post("/api/v1/orders", headers=headers, json={
             "store_id": store_id,
             "delivery_address_id": addr_id,
             "payment_method": "COD",
-            "items": [{"product_id": prod["id"], "quantity": 2, "unit_price": 0.01}] # Attempt client injection
+            "items": [{"product_id": prod["id"], "quantity": 2, "unit_price": 0.01}]
         })
         assert order_res.status_code == 201
         order_data = order_res.json()
@@ -83,9 +79,7 @@ async def test_price_manipulation_protection():
 async def test_order_cancellation_enforces_180s_window():
     """Verify customer can cancel within 180 seconds, but cancellation fails once deadline passes."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-        c_auth = await client.post("/api/v1/auth/otp/verify", json={"phone": "9833344455", "otp": "123456", "role": "customer"})
-        c_token = c_auth.json()["access_token"]
-        headers = {"Authorization": f"Bearer {c_token}"}
+        headers = await issue_and_verify_test_token(client, "9833344455", "customer")
 
         addr_res = await client.post("/api/v1/addresses", headers=headers, json={
             "title": "Home",
@@ -130,14 +124,10 @@ async def test_delivery_otp_verification_security():
     """Verify runner cannot deliver an order with a wrong OTP, and must supply correct 4-digit customer OTP."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         # Customer
-        c_auth = await client.post("/api/v1/auth/otp/verify", json={"phone": "9844455566", "otp": "123456", "role": "customer"})
-        c_token = c_auth.json()["access_token"]
-        c_headers = {"Authorization": f"Bearer {c_token}"}
+        c_headers = await issue_and_verify_test_token(client, "9844455566", "customer")
 
-        # Runner
-        r_auth = await client.post("/api/v1/auth/otp/verify", json={"phone": "9855566677", "otp": "123456", "role": "runner"})
-        r_token = r_auth.json()["access_token"]
-        r_headers = {"Authorization": f"Bearer {r_token}"}
+        # Approved Pilot Runner (9800000003)
+        r_headers = await issue_and_verify_test_token(client, "9800000003", "runner")
 
         addr_res = await client.post("/api/v1/addresses", headers=c_headers, json={
             "title": "Home",
@@ -150,12 +140,12 @@ async def test_delivery_otp_verification_security():
         addr_id = addr_res.json()["id"]
 
         stores = (await client.get("/api/v1/stores/nearby?latitude=26.1950&longitude=85.3450")).json()
-        store_id = stores[0]["id"]
-        prod_res = await client.get(f"/api/v1/stores/{store_id}/products")
+        store_1 = next(s for s in stores if s["id"] == "str_01")
+        prod_res = await client.get(f"/api/v1/stores/{store_1['id']}/products")
         prod_id = prod_res.json()[0]["id"]
 
         order_res = await client.post("/api/v1/orders", headers=c_headers, json={
-            "store_id": store_id,
+            "store_id": store_1["id"],
             "delivery_address_id": addr_id,
             "payment_method": "COD",
             "items": [{"product_id": prod_id, "quantity": 1}]
@@ -163,6 +153,11 @@ async def test_delivery_otp_verification_security():
         order = order_res.json()
         order_id = order["id"]
         correct_otp = order["delivery_otp"]
+
+        # Vendor 1 accepts and packs order
+        v_headers = await issue_and_verify_test_token(client, "9800000001", "vendor")
+        await client.post(f"/api/v1/vendor/orders/{order_id}/action", headers=v_headers, json={"action": "ACCEPT"})
+        await client.post(f"/api/v1/vendor/orders/{order_id}/action", headers=v_headers, json={"action": "PACK"})
 
         # Runner accepts and advances
         await client.post(f"/api/v1/runner/jobs/{order_id}/action", headers=r_headers, json={"action": "ACCEPT"})
@@ -180,7 +175,8 @@ async def test_delivery_otp_verification_security():
         # 2. Correct OTP -> Success
         success_res = await client.post(f"/api/v1/runner/jobs/{order_id}/action", headers=r_headers, json={
             "action": "DELIVER",
-            "delivery_otp": correct_otp
+            "delivery_otp": correct_otp,
+            "cash_collected": True
         })
         assert success_res.status_code == 200
         assert success_res.json()["message"] == "Order status updated to DELIVERED"

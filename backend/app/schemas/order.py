@@ -72,4 +72,5 @@ class OrderResponse(BaseModel):
 class OrderActionRequest(BaseModel):
     action: str # ACCEPT, REJECT, PACKED, PICKUP, DELIVER
     delivery_otp: Optional[str] = None
+    cash_collected: Optional[bool] = None
     reason: Optional[str] = None

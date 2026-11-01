@@ -24,78 +24,89 @@ TEST_PHONE_WHITELIST = {
 }
 
 def is_whitelisted_test_phone(phone: str) -> bool:
-    """Returns True if the phone is an authorized test persona in staging/test mode, or running under test mode."""
+    """Returns True if the phone is an authorized test persona in non-production environment."""
     if getattr(settings, "ENVIRONMENT", "").lower() == "production":
         return False
-    if phone in TEST_PHONE_WHITELIST:
-        return True
-    if getattr(settings, "TESTING", False):
-        return True
-    return False
+    return phone in TEST_PHONE_WHITELIST
 
 # In-memory OTP storage for rapid verification in dev/staging
 OTP_STORAGE = {}
 
 @router.post("/otp/send", response_model=SendOTPResponse)
 async def send_otp(payload: SendOTPRequest):
-    session_id = f"sess_{payload.phone}_{int(datetime.now(timezone.utc).timestamp())}"
     now_ts = datetime.now(timezone.utc).timestamp()
-    
-    # Restrict test OTP to whitelisted test phones only
+    stored = OTP_STORAGE.get(payload.phone)
+
+    # Rate limiting: minimum 15 seconds between OTP requests per phone (bypassed in pytest if testing)
+    if not getattr(settings, "TESTING", False) and stored and (now_ts - stored.get("last_sent_at", 0)) < 15:
+        wait_sec = int(15 - (now_ts - stored["last_sent_at"]))
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"कृपया पुनः प्रयास करने से पहले {wait_sec} सेकंड प्रतीक्षा करें (Please wait before requesting another OTP)"
+        )
+
+    # Generate challenge: fixed challenge for 5 pilot test personas in dev/staging, crypto-random for public
     if is_whitelisted_test_phone(payload.phone):
         otp_code = "123456"
-        mock_otp_return = "123456"
     else:
-        # Secure cryptographically strong 6-digit random code for public numbers
         otp_code = f"{secrets.SystemRandom().randint(100000, 999999)}"
-        mock_otp_return = None # NEVER leak OTP in API response for real public numbers
-    
+
+    session_id = f"sess_{payload.phone}_{int(now_ts)}"
     OTP_STORAGE[payload.phone] = {
         "otp": otp_code,
         "role": payload.role,
-        "expires_at": now_ts + 300
+        "expires_at": now_ts + 300,
+        "attempts": 0,
+        "last_sent_at": now_ts
     }
-    
+
+    # CRITICAL: Never return usable authentication codes in public response
     return SendOTPResponse(
-        message=f"OTP sent to +91 {payload.phone}",
+        message=f"OTP challenge issued to +91 {payload.phone}",
         session_id=session_id,
         expires_in=300,
-        mock_otp=mock_otp_return
+        mock_otp=None
     )
 
 @router.post("/otp/verify", response_model=TokenResponse)
 async def verify_otp(payload: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
     now_ts = datetime.now(timezone.utc).timestamp()
     stored = OTP_STORAGE.get(payload.phone)
-    
-    # 1. Enforce 5-minute expiry
-    if stored and stored.get("expires_at", 0) < now_ts:
+
+    # 1. Challenge issuance check: Must have requested an OTP first
+    if not stored:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="कोई सक्रिय ओटीपी अनुरोध नहीं मिला। कृपया पहले ओटीपी भेजें (No active OTP challenge found. Please request an OTP first)"
+        )
+
+    # 2. Enforce 5-minute expiry
+    if stored.get("expires_at", 0) < now_ts:
         OTP_STORAGE.pop(payload.phone, None)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="ओटीपी की समय सीमा समाप्त हो गई है (OTP has expired. Please request a new OTP)"
         )
-        
-    # 2. Strict OTP validation
-    is_test = is_whitelisted_test_phone(payload.phone)
-    if is_test and payload.otp == "123456":
-        is_valid = True
-    elif stored and stored.get("otp") == payload.otp:
-        is_valid = True
-    else:
-        is_valid = False
-        
-    if not is_valid:
+
+    # 3. Rate-limit invalid attempts (max 3 before lockout)
+    stored["attempts"] = stored.get("attempts", 0) + 1
+    if stored["attempts"] > 3:
+        OTP_STORAGE.pop(payload.phone, None)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="अधिकतम प्रयास सीमा समाप्त। कृपया नया ओटीपी अनुरोध करें (Maximum OTP verification attempts exceeded)"
+        )
+
+    # 4. Strict constant-time OTP validation
+    if not secrets.compare_digest(str(stored.get("otp")), str(payload.otp)):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="गलत ओटीपी दर्ज किया गया है (Invalid OTP code)"
         )
-        
-    # Prevent replay attacks: invalidate once verified
-    if payload.phone in OTP_STORAGE:
-        OTP_STORAGE.pop(payload.phone, None)
-            
-    role = stored.get("role", payload.role or "customer") if stored else (payload.role or "customer")
+
+    # 5. Prevent replay attacks: invalidate challenge immediately upon success
+    role = stored.get("role", payload.role or "customer")
+    OTP_STORAGE.pop(payload.phone, None)
     
     # Query or create user in DB
     result = await db.execute(select(User).where(User.phone == payload.phone))

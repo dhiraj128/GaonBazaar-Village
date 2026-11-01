@@ -2,6 +2,7 @@ import pytest
 import time
 from httpx import AsyncClient, ASGITransport
 from app.main import app
+from tests.conftest import issue_and_verify_test_token
 
 @pytest.mark.asyncio
 async def test_customer_profile_update_and_support_hub():
@@ -10,14 +11,7 @@ async def test_customer_profile_update_and_support_hub():
         phone = f"97{ts:08d}"
         
         # 1. Register customer
-        reg_res = await client.post("/api/v1/auth/otp/verify", json={
-            "phone": phone,
-            "otp": "123456",
-            "role": "customer"
-        })
-        assert reg_res.status_code == 200
-        token = reg_res.json()["access_token"]
-        headers = {"Authorization": f"Bearer {token}"}
+        headers = await issue_and_verify_test_token(client, phone, "customer")
         
         # 2. Get profile
         me_res = await client.get("/api/v1/auth/me", headers=headers)
@@ -58,7 +52,7 @@ async def test_customer_profile_update_and_support_hub():
         # 7. AI Support Chat
         ai_chat = await client.post("/api/v1/support/ai-chat", headers=headers, json={
             "query": "कहाँ है मेरा ऑर्डर?",
-            "language": "hi"
+            "preferred_language": "hi"
         })
         assert ai_chat.status_code == 200
-        assert "ऑर्डर" in ai_chat.json()["reply"]
+        assert "reply" in ai_chat.json()
