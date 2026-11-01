@@ -1,0 +1,113 @@
+name: GaonBazaar Android Review Builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_app:
+        description: 'Application to build'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - customer
+          - vendor
+          - runner
+      build_mode:
+        description: 'Build distribution format'
+        required: true
+        default: 'split-per-abi'
+        type: choice
+        options:
+          - split-per-abi (Target 15-25MB per ABI)
+          - universal (Single universal APK ~50MB)
+
+jobs:
+  build-apks:
+    name: Build & Verify Android Release APKs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK & NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.x'
+          channel: 'stable'
+          cache: true
+
+      # Build Customer APK
+      - name: Build Customer Release APK
+        if: ${{ inputs.target_app == 'all' || inputs.target_app == 'customer' }}
+        run: |
+          cd apps/customer
+          flutter pub get
+          if [ "${{ inputs.build_mode }}" == "universal" ]; then
+            flutter build apk --release
+          else
+            flutter build apk --release --split-per-abi
+          fi
+          echo "=== Customer APK Sizes ==="
+          ls -lh build/app/outputs/flutter-apk/*.apk
+
+      - name: Upload Customer APK Artifact
+        if: ${{ inputs.target_app == 'all' || inputs.target_app == 'customer' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaonbazaar-customer-review-apk
+          path: apps/customer/build/app/outputs/flutter-apk/*.apk
+          retention-days: 30
+
+      # Build Vendor APK
+      - name: Build Vendor Release APK
+        if: ${{ inputs.target_app == 'all' || inputs.target_app == 'vendor' }}
+        run: |
+          cd apps/vendor
+          flutter pub get
+          if [ "${{ inputs.build_mode }}" == "universal" ]; then
+            flutter build apk --release
+          else
+            flutter build apk --release --split-per-abi
+          fi
+          echo "=== Vendor APK Sizes ==="
+          ls -lh build/app/outputs/flutter-apk/*.apk
+
+      - name: Upload Vendor APK Artifact
+        if: ${{ inputs.target_app == 'all' || inputs.target_app == 'vendor' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaonbazaar-vendor-review-apk
+          path: apps/vendor/build/app/outputs/flutter-apk/*.apk
+          retention-days: 30
+
+      # Build Runner APK
+      - name: Build Runner Release APK
+        if: ${{ inputs.target_app == 'all' || inputs.target_app == 'runner' }}
+        run: |
+          cd apps/runner
+          flutter pub get
+          if [ "${{ inputs.build_mode }}" == "universal" ]; then
+            flutter build apk --release
+          else
+            flutter build apk --release --split-per-abi
+          fi
+          echo "=== Runner APK Sizes ==="
+          ls -lh build/app/outputs/flutter-apk/*.apk
+
+      - name: Upload Runner APK Artifact
+        if: ${{ inputs.target_app == 'all' || inputs.target_app == 'runner' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaonbazaar-runner-review-apk
+          path: apps/runner/build/app/outputs/flutter-apk/*.apk
+          retention-days: 30
