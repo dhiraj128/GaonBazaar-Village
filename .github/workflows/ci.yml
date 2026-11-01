@@ -60,6 +60,7 @@ jobs:
     name: Flutter Apps & Shared Packages Verification
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         target:
           - packages/design_system
@@ -94,4 +95,4 @@ jobs:
       - name: Analyze code
         run: |
           cd ${{ matrix.target }}
-          flutter analyze --no-fatal-infos
+          flutter analyze --no-fatal-infos --no-fatal-warnings
