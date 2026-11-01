@@ -1,11 +1,24 @@
 class Endpoints {
-  static const String baseUrl = 'http://10.0.2.2:8000/api/v1'; // 10.0.2.2 for Android emulator / local dev
-  static const String localIpUrl = 'http://127.0.0.1:8000/api/v1';
+  // Candidate base URLs for different environments:
+  // 1. Physical Android phone via USB ADB reverse (adb reverse tcp:8000 tcp:8000)
+  // 2. Physical Android phone via local Wi-Fi LAN
+  // 3. Android Studio Emulator loopback
+  static const String baseUrl = 'http://127.0.0.1:8000/api/v1';
+  static const String emulatorBaseUrl = 'http://10.0.2.2:8000/api/v1';
+  static const String wifiLanBaseUrl = 'http://192.168.31.187:8000/api/v1';
+
+  static const List<String> candidateBaseUrls = [
+    'http://127.0.0.1:8000/api/v1',
+    'http://localhost:8000/api/v1',
+    'http://192.168.31.187:8000/api/v1',
+    'http://10.0.2.2:8000/api/v1',
+  ];
 
   // Auth
   static const String sendOtp = '/auth/otp/send';
   static const String verifyOtp = '/auth/otp/verify';
   static const String currentUser = '/auth/me';
+  static const String updateProfile = '/auth/me';
 
   // Stores & Products
   static const String nearbyStores = '/stores/nearby';
@@ -15,7 +28,8 @@ class Endpoints {
 
   // Addresses
   static const String addresses = '/addresses';
-  static const String checkServiceability = '/serviceability/check';
+  static String addressDetails(String id) => '/addresses/$id';
+  static const String checkServiceability = '/addresses/serviceability/check';
 
   // Cart & Orders
   static const String syncCart = '/cart/sync';
@@ -23,6 +37,10 @@ class Endpoints {
   static const String customerOrders = '/orders';
   static String orderDetails(String id) => '/orders/$id';
   static String cancelOrder(String id) => '/orders/$id/cancel';
+
+  // Support & Tickets
+  static const String supportTickets = '/support/tickets';
+  static const String supportAiChat = '/support/ai-chat';
 
   // Vendor actions
   static const String vendorOrders = '/vendor/orders';

@@ -44,6 +44,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   }
 
   Future<void> _handleCancel() async {
+    final loc = GBLocalizations.of(context);
     setState(() => _isCancelling = true);
     final state = AppStateProvider.of(context);
     final response = await state.apiClient.cancelOrder(
@@ -54,17 +55,161 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
     if (response.isSuccess && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ऑर्डर सफलतापूर्वक रद्द कर दिया गया।')),
+        SnackBar(content: Text(loc.tr('order_cancelled_success'))),
       );
+      state.fetchOrders();
       Navigator.of(context).pop();
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(response.errorMessage ?? 'रद्द करने की समय सीमा समाप्त हो चुकी है।'),
+          content: Text(response.errorMessage ?? loc.tr('cancel_window_closed')),
           backgroundColor: GBColors.error,
         ),
       );
     }
+  }
+
+  void _openOrderHelpDialog() {
+    final loc = GBLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final state = AppStateProvider.of(context);
+
+    final issues = [
+      loc.isHindi ? 'डिलीवरी में देरी (Delayed delivery)' : 'Delayed delivery',
+      loc.isHindi ? 'सामान कम मिला (Missing item)' : 'Missing item',
+      loc.isHindi ? 'गलत सामान मिला (Wrong item)' : 'Wrong item',
+      loc.isHindi ? 'सामान खराब या टूटा मिला (Damaged item)' : 'Damaged item',
+      loc.isHindi ? 'भुगतान से जुड़ी समस्या (Payment problem)' : 'Payment problem',
+      loc.isHindi ? 'डिलीवरी साथी से जुड़ी समस्या (Delivery partner issue)' : 'Delivery partner issue',
+      loc.isHindi ? 'रद्दीकरण या रिफ़ंड अनुरोध (Refund request)' : 'Refund request',
+    ];
+
+    String selectedCategory = issues[0];
+    final messageController = TextEditingController();
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (dialogCtx, setDialogState) {
+            return AlertDialog(
+              backgroundColor: isDark ? GBColors.surfaceDark : Colors.white,
+              title: Row(
+                children: [
+                  const Icon(Icons.help_outline, color: GBColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${loc.tr('need_help')} (#${_order.id.length > 6 ? _order.id.substring(_order.id.length - 6) : _order.id})',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      loc.tr('ticket_subject'),
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedCategory,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      ),
+                      items: issues.map((cat) {
+                        return DropdownMenuItem(value: cat, child: Text(cat, style: const TextStyle(fontSize: 12)));
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) setDialogState(() => selectedCategory = val);
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      loc.tr('ticket_message'),
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: messageController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: loc.isHindi ? 'अपनी समस्या का विवरण यहाँ लिखें...' : 'Describe your issue in detail...',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        contentPadding: const EdgeInsets.all(10),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(loc.tr('cancel')),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: GBColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          final msg = messageController.text.trim();
+                          if (msg.isEmpty) return;
+
+                          setDialogState(() => isSubmitting = true);
+                          final res = await state.apiClient.createSupportTicket(
+                            orderId: _order.id,
+                            subject: selectedCategory,
+                            message: msg,
+                          );
+                          setDialogState(() => isSubmitting = false);
+
+                          if (res.isSuccess && mounted) {
+                            Navigator.of(ctx).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(loc.tr('ticket_created_success'))),
+                            );
+                          }
+                        },
+                  child: isSubmitting
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(loc.tr('submit_ticket')),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _callStore() {
+    final loc = GBLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(loc.isHindi ? 'दुकानदार संपर्क: ${_order.storeName}' : 'Store Contact: ${_order.storeName}'),
+        action: SnackBarAction(label: 'OK', onPressed: () {}),
+      ),
+    );
+  }
+
+  void _callRunner() {
+    final loc = GBLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(loc.isHindi ? 'डिलीवरी पार्टनर संपर्क: मीनापुर ब्लॉक सहायता' : 'Delivery Partner: Minapur Dispatch Line'),
+        action: SnackBarAction(label: 'OK', onPressed: () {}),
+      ),
+    );
   }
 
   @override
@@ -73,13 +218,13 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final stages = [
-      {'status': 'PLACED', 'title_hi': 'ऑर्डर दर्ज हुआ', 'title_en': 'Order Placed'},
-      {'status': 'ACCEPTED', 'title_hi': 'दुकानदार ने स्वीकार किया', 'title_en': 'Store Accepted'},
-      {'status': 'PACKED', 'title_hi': 'सामान पैक हुआ', 'title_en': 'Packed & Ready'},
-      {'status': 'RUNNER_ASSIGNED', 'title_hi': 'डिलीवरी साथी तय हुआ', 'title_en': 'Runner Assigned'},
-      {'status': 'PICKED_UP', 'title_hi': 'सामान दुकान से उठाया', 'title_en': 'Picked Up by Runner'},
-      {'status': 'OUT_FOR_DELIVERY', 'title_hi': 'रास्ते में है (Out for Delivery)', 'title_en': 'Out for Delivery'},
-      {'status': 'DELIVERED', 'title_hi': 'पहुँचा दिया (Delivered)', 'title_en': 'Delivered'},
+      {'status': 'PLACED', 'label': loc.tr('order_status_placed')},
+      {'status': 'ACCEPTED', 'label': loc.tr('order_status_accepted')},
+      {'status': 'PACKED', 'label': loc.tr('order_status_packed')},
+      {'status': 'RUNNER_ASSIGNED', 'label': loc.tr('order_status_assigned')},
+      {'status': 'PICKED_UP', 'label': loc.tr('order_status_picked')},
+      {'status': 'OUT_FOR_DELIVERY', 'label': loc.tr('order_status_out')},
+      {'status': 'DELIVERED', 'label': loc.tr('order_status_delivered')},
     ];
 
     int currentStageIndex = 0;
@@ -91,6 +236,10 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     }
     if (_order.status == 'DELIVERED') currentStageIndex = 6;
 
+    final isOutForDelivery = _order.status == 'OUT_FOR_DELIVERY' ||
+        _order.status == 'RUNNER_ASSIGNED' ||
+        _order.status == 'PICKED_UP';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(loc.tr('order_tracking'), style: const TextStyle(fontWeight: FontWeight.w800)),
@@ -99,7 +248,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Status Card
+            // Order ID & Status Header Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -116,88 +265,78 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Order #${_order.id.substring(0, 8).toUpperCase()}',
+                        '${loc.tr('order_id')}${_order.id.length > 8 ? _order.id.substring(0, 8) : _order.id}',
                         style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                       ),
-                      GBOrderStatusBadge(status: _order.status),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: GBColors.primary.withAlpha(25),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _order.status,
+                          style: const TextStyle(
+                            color: GBColors.primary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Text(
-                    _order.storeName,
+                    '${_order.storeName} • ${_order.deliveryAddress}',
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? GBColors.textSecondaryDark : GBColors.textSecondaryLight,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _order.deliveryAddress,
-                    style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
                     ),
                   ),
                 ],
               ),
             ),
+
             const SizedBox(height: 16),
 
-            // Delivery OTP Card (Crucial for rural delivery handoff)
-            if (_order.status != 'CANCELLED' && _order.status != 'DELIVERED')
+            // 4-Digit Delivery Verification PIN Card
+            if (_order.status != 'DELIVERED' && _order.status != 'CANCELLED')
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: GBColors.primary.withOpacity(0.1),
+                  color: GBColors.primary.withAlpha(20),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: GBColors.primary, width: 1.5),
+                  border: Border.all(color: GBColors.primary.withAlpha(80)),
                 ),
-                child: Row(
+                child: Column(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(
-                        color: GBColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.pin, color: Colors.white, size: 24),
+                    Text(
+                      loc.tr('delivery_otp_code'),
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: GBColors.primary),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            loc.tr('delivery_otp_code'),
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                          ),
-                          Text(
-                            _order.deliveryOtp,
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 4,
-                              color: GBColors.primary,
-                            ),
-                          ),
-                          Text(
-                            loc.tr('show_otp_to_runner'),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
-                            ),
-                          ),
-                        ],
+                    const SizedBox(height: 6),
+                    Text(
+                      _order.deliveryOtp,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 8,
+                        color: GBColors.primary,
                       ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      loc.tr('show_otp_to_runner'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 12, color: Colors.black87),
                     ),
                   ],
                 ),
               ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
-            // 7-Stage Order Pipeline
+            // Vertical Timeline of Order Lifecycle
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -211,15 +350,15 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'ऑर्डर स्थिति (Order Pipeline)',
+                    'Timeline',
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                   ),
                   const SizedBox(height: 16),
-                  ...List.generate(stages.length, (idx) {
-                    final stage = stages[idx];
-                    final isCompleted = idx <= currentStageIndex;
-                    final isCurrent = idx == currentStageIndex;
-                    final title = loc.isHindi ? stage['title_hi']! : stage['title_en']!;
+                  ...List.generate(stages.length, (index) {
+                    final stage = stages[index];
+                    final isCompleted = index <= currentStageIndex;
+                    final isCurrent = index == currentStageIndex;
+                    final label = stage['label'] as String;
 
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,19 +370,17 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                               height: 22,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isCompleted ? GBColors.primary : Colors.grey.shade300,
+                                color: isCompleted ? GBColors.primary : Colors.grey.withAlpha(60),
                               ),
-                              child: Center(
-                                child: isCompleted
-                                    ? const Icon(Icons.check, size: 14, color: Colors.white)
-                                    : null,
-                              ),
+                              child: isCompleted
+                                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                                  : null,
                             ),
-                            if (idx < stages.length - 1)
+                            if (index < stages.length - 1)
                               Container(
                                 width: 2,
                                 height: 32,
-                                color: isCompleted ? GBColors.primary : Colors.grey.shade300,
+                                color: index < currentStageIndex ? GBColors.primary : Colors.grey.withAlpha(60),
                               ),
                           ],
                         ),
@@ -251,7 +388,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                         Padding(
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
-                            title,
+                            label,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w500,
@@ -275,9 +412,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: GBColors.warning.withOpacity(0.1),
+                  color: GBColors.warning.withAlpha(25),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: GBColors.warning.withOpacity(0.5)),
+                  border: Border.all(color: GBColors.warning.withAlpha(120)),
                 ),
                 child: Column(
                   children: [
@@ -287,7 +424,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'ऑर्डर रद्द करने के लिए शेष समय: ${_secondsRemaining}s',
+                            loc.isHindi
+                                ? 'ऑर्डर रद्द करने के लिए शेष समय: ${_secondsRemaining} सेकंड'
+                                : 'Time remaining to cancel: ${_secondsRemaining}s',
                             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                           ),
                         ),
@@ -315,30 +454,30 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
             const SizedBox(height: 24),
 
-            // Contact Actions
+            // Contextual Contact Actions (Prioritizes Runner when Out for Delivery)
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('दुकानदार का नंबर: +91 9800000001')),
-                      );
-                    },
+                    onPressed: isOutForDelivery ? _callRunner : _callStore,
                     icon: const Icon(Icons.phone, size: 18),
-                    label: Text(loc.tr('call_store')),
+                    label: Text(
+                      isOutForDelivery ? loc.tr('call_runner') : loc.tr('call_store'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('सहायता हेल्पलाइन: 1800-GAON-BAZAAR')),
-                      );
-                    },
+                    onPressed: _openOrderHelpDialog,
                     icon: const Icon(Icons.help_outline, size: 18),
-                    label: Text(loc.tr('need_help')),
+                    label: Text(
+                      loc.tr('need_help'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               ],

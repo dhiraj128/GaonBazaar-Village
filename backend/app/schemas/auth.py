@@ -22,9 +22,15 @@ class UserInfo(BaseModel):
     id: str
     phone: str
     name: Optional[str]
+    email: Optional[str] = None
     role: str
     preferred_language: str
     is_active: bool
+
+class UpdateProfileRequest(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    preferred_language: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str

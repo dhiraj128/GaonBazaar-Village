@@ -2,6 +2,7 @@ class GBUser {
   final String id;
   final String phone;
   final String? name;
+  final String? email;
   final String role; // customer, vendor, runner, admin
   final String preferredLanguage;
   final bool isActive;
@@ -10,6 +11,7 @@ class GBUser {
     required this.id,
     required this.phone,
     this.name,
+    this.email,
     required this.role,
     this.preferredLanguage = 'hi',
     this.isActive = true,
@@ -20,6 +22,7 @@ class GBUser {
       id: json['id'] as String,
       phone: json['phone'] as String,
       name: json['name'] as String?,
+      email: json['email'] as String?,
       role: json['role'] as String? ?? 'customer',
       preferredLanguage: json['preferred_language'] as String? ?? 'hi',
       isActive: json['is_active'] as bool? ?? true,
@@ -31,6 +34,7 @@ class GBUser {
       'id': id,
       'phone': phone,
       'name': name,
+      'email': email,
       'role': role,
       'preferred_language': preferredLanguage,
       'is_active': isActive,

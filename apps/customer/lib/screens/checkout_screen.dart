@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:localization/localization.dart';
-import 'package:shared_models/shared_models.dart';
 import '../state/app_state.dart';
 import 'order_tracking_screen.dart';
 
@@ -26,6 +25,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     });
 
     final state = AppStateProvider.of(context);
+    final loc = GBLocalizations.of(context);
     final itemsPayload = state.cartItems
         .map((i) => {'product_id': i.product.id, 'quantity': i.quantity})
         .toList();
@@ -67,14 +67,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: const Icon(Icons.check, size: 40, color: Colors.white),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'ऑर्डर सफलतापूर्वक दर्ज हुआ!',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              Text(
+                loc.tr('order_success'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Order Placed Successfully (30-60 min delivery target)',
-                style: TextStyle(fontSize: 13, color: Colors.grey),
+              Text(
+                loc.isHindi
+                    ? 'आपका ऑर्डर दर्ज कर लिया गया है (30-60 मिनट में डिलीवरी)'
+                    : 'Your order has been placed (30-60 min delivery target)',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, color: Colors.grey),
               ),
               const SizedBox(height: 16),
               Container(
@@ -84,13 +88,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  'डिलीवरी ओटीपी (Delivery OTP): ${order.deliveryOtp}',
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: GBColors.primary),
+                  loc.isHindi
+                      ? 'डिलीवरी पिन: ${order.deliveryOtp}'
+                      : 'Delivery PIN: ${order.deliveryOtp}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                    color: GBColors.primary,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
               GBPrimaryButton(
-                label: 'लाइव ट्रैकिंग देखें (Track Order)',
+                label: loc.isHindi ? 'लाइव ट्रैकिंग देखें' : 'Track Live Order',
                 onPressed: () {
                   Navigator.of(ctx).pop();
                   Navigator.of(context).pushReplacement(
@@ -106,7 +116,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
     } else if (mounted) {
       setState(() {
-        _errorMessage = response.errorMessage ?? 'ऑर्डर दर्ज करने में समस्या (Failed to place order)';
+        _errorMessage = response.errorMessage ?? loc.tr('order_failed');
       });
     }
   }
@@ -120,7 +130,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          loc.isHindi ? 'चेकआउट (Checkout)' : 'Checkout',
+          loc.isHindi ? 'चेकआउट' : 'Checkout',
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
@@ -158,7 +168,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${state.selectedAddress.village}, ${state.selectedAddress.landmark ?? ""}, ${state.selectedAddress.block}, ${state.selectedAddress.district}',
+                    '${state.selectedAddress.village}, ${state.selectedAddress.landmark != null ? (loc.isHindi ? "निकट " : "Near ") + state.selectedAddress.landmark! + ", " : ""}${state.selectedAddress.block}, ${state.selectedAddress.district}',
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark ? GBColors.textSecondaryDark : GBColors.textSecondaryLight,
@@ -216,7 +226,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       loc.tr('pay_online'),
                       style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                     ),
-                    subtitle: const Text('PhonePe, Google Pay, Paytm UPI', style: TextStyle(fontSize: 12)),
+                    subtitle: const Text('PhonePe, Google Pay, Paytm, BHIM', style: TextStyle(fontSize: 12)),
                     onChanged: (val) {
                       setState(() => _selectedPaymentMethod = val!);
                     },
@@ -240,7 +250,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'सामान सूची (${state.cartCount} items)',
+                    loc.isHindi
+                        ? 'सामान सूची (${state.cartCount} सामग्री)'
+                        : 'Item Summary (${state.cartCount} items)',
                     style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                   ),
                   const SizedBox(height: 10),
@@ -264,7 +276,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('सामान का मूल्य (Subtotal)', style: TextStyle(fontSize: 13)),
+                      Text(loc.tr('subtotal'), style: const TextStyle(fontSize: 13)),
                       Text('₹${state.cartSubtotal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 13)),
                     ],
                   ),
@@ -272,7 +284,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('डिलीवरी साथी शुल्क (Delivery)', style: TextStyle(fontSize: 13)),
+                      Text(loc.tr('delivery_fee'), style: const TextStyle(fontSize: 13)),
                       Text('₹${state.cartDeliveryFee.toStringAsFixed(0)}', style: const TextStyle(fontSize: 13)),
                     ],
                   ),
@@ -280,7 +292,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('प्लेटफ़ॉर्म शुल्क (Platform Fee)', style: TextStyle(fontSize: 13)),
+                      Text(loc.isHindi ? 'प्लेटफ़ॉर्म शुल्क' : 'Platform Fee', style: const TextStyle(fontSize: 13)),
                       Text('₹${state.cartPlatformFee.toStringAsFixed(0)}', style: const TextStyle(fontSize: 13)), // Strict ₹3
                     ],
                   ),
@@ -288,7 +300,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('कुल देय राशि (Total Amount)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900)),
+                      Text(
+                        loc.tr('total_to_pay'),
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+                      ),
                       Text(
                         '₹${state.cartTotal.toStringAsFixed(0)}',
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: GBColors.primary),

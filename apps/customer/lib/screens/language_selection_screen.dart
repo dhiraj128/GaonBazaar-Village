@@ -50,7 +50,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
               // Option 1: Hindi
               _buildLangCard(
                 langCode: 'hi',
-                title: 'हिंदी (Hindi)',
+                title: 'हिंदी',
                 subtitle: 'गाँव का अपना बाज़ार हिंदी में चलाएं',
                 isSelected: selected == 'hi',
                 isDark: isDark,
@@ -66,7 +66,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
               ),
               const Spacer(),
               GBPrimaryButton(
-                label: selected == 'hi' ? 'आगे बढ़ें (Continue)' : 'Continue',
+                label: selected == 'hi' ? 'आगे बढ़ें' : 'Continue',
                 onPressed: () {
                   state.setLocale(selected);
                   Navigator.of(context).push(

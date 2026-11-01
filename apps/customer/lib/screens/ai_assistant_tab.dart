@@ -19,22 +19,38 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
   bool _isListening = false;
   bool _isLoading = false;
 
-  final List<String> _quickSuggestions = [
-    '२ किलो आटा जोड़ो (Add 2 kg Atta)',
-    '१ लीटर दूध चाहिए (1L Milk)',
-    'कार्ट दिखाओ (Show Cart)',
-    '१ किलो सरसों तेल (Mustard Oil)',
-    'देशी टमाटर जोड़ो (Add Tomato)',
-  ];
-
   @override
   void initState() {
     super.initState();
-    _messages.add({
-      'isUser': false,
-      'text':
-          'नमस्ते! मैं गाँव बाज़ार का एआई सहायक हूँ।\nआप हिंदी, English या Hinglish में बोलकर या लिखकर सामान मंगा सकते हैं।\n\nउदाहरण: "दो किलो आटा जोड़ो", "1 litre milk", "Cart dikhao"',
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final loc = GBLocalizations.of(context);
+      _messages.add({
+        'isUser': false,
+        'text': loc.tr('ai_welcome_msg'),
+      });
+      if (mounted) setState(() {});
     });
+  }
+
+  List<String> _getSuggestions(bool isHindi) {
+    if (isHindi) {
+      return [
+        '2 किलो आटा जोड़ो',
+        '1 लीटर गाय का दूध जोड़ो',
+        'मेरा कार्ट दिखाओ',
+        '1 लीटर सरसों तेल जोड़ो',
+        'ताज़ा टमाटर जोड़ो',
+        'दूध हटा दो',
+      ];
+    }
+    return [
+      'Add 2 kg atta',
+      'Add 1 litre milk',
+      'Show my cart',
+      'Add 1L mustard oil',
+      'Add fresh tomato',
+      'Remove milk',
+    ];
   }
 
   Future<void> _handleUserMessage(String query) async {
@@ -51,6 +67,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
     final response = await state.apiClient.queryAI(
       query: text,
       storeId: state.currentCartStoreId,
+      language: state.isHindi ? 'hi' : 'en',
     );
 
     setState(() => _isLoading = false);
@@ -66,7 +83,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
         _messages.add({'isUser': false, 'text': reply});
       });
 
-      // Execute Cart Mutator
+      // Execute Cart Actions
       if (intent == 'ADD_TO_CART' && data['matched_product'] != null) {
         final prodJson = data['matched_product'] as Map<String, dynamic>;
         final qty = (data['quantity'] as num?)?.toInt() ?? 1;
@@ -98,22 +115,108 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
           'isUser': false,
           'text': state.isHindi
               ? 'क्षमा करें, मैं समझ नहीं पाया। कृपया दोबारा बोलें या नीचे दिए गए विकल्पों में से चुनें।'
-              : 'Sorry, I did not catch that. Please try again or tap a suggestion below.',
+              : 'Sorry, I did not catch that. Please try again or tap one of the suggested items below.',
         });
       });
     }
   }
 
-  void _simulateVoiceInput() {
-    // Toggles microphone listening mode
-    setState(() => _isListening = !_isListening);
-    if (_isListening) {
-      Future.delayed(const Duration(milliseconds: 1400), () {
-        if (!mounted || !_isListening) return;
-        setState(() => _isListening = false);
-        _handleUserMessage('दो किलो आटा जोड़ो');
-      });
-    }
+  void _openVoiceInputDialog() {
+    final loc = GBLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final state = AppStateProvider.of(context);
+
+    setState(() => _isListening = true);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          decoration: BoxDecoration(
+            color: isDark ? GBColors.surfaceDark : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withAlpha(80),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                loc.tr('ai_listening'),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                loc.isHindi
+                    ? 'हिंदी या English में बोलें: "2 किलो आटा", "1 लीटर दूध", "कार्ट दिखाओ"'
+                    : 'Speak in English or Hindi: "Add 2 kg atta", "1 litre milk", "Show cart"',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Animated Pulsing Mic
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: GBColors.primary.withAlpha(30),
+                  border: Border.all(color: GBColors.primary, width: 2),
+                ),
+                child: const Center(
+                  child: Icon(Icons.mic, color: GBColors.primary, size: 36),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Spoken action suggestions
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: _getSuggestions(state.isHindi).map((phrase) {
+                  return ActionChip(
+                    avatar: const Icon(Icons.mic_none, size: 16, color: GBColors.primary),
+                    label: Text(phrase, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    backgroundColor: GBColors.primary.withAlpha(15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(color: GBColors.primary.withAlpha(50)),
+                    ),
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      _handleUserMessage(phrase);
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(
+                  loc.tr('cancel'),
+                  style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ).whenComplete(() {
+      if (mounted) setState(() => _isListening = false);
+    });
   }
 
   @override
@@ -121,6 +224,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
     final state = AppStateProvider.of(context);
     final loc = GBLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final suggestions = _getSuggestions(state.isHindi);
 
     return Scaffold(
       appBar: AppBar(
@@ -139,11 +243,11 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  loc.isHindi ? 'गाँव बाज़ार एआई सहायक' : 'GaonBazaar AI',
+                  loc.tr('ai_assistant_title'),
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                 ),
                 Text(
-                  loc.isHindi ? 'हिंदी, English व Hinglish सपोर्ट' : 'Multilingual Voice & Text',
+                  loc.tr('ai_subtitle'),
                   style: TextStyle(
                     fontSize: 11,
                     color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
@@ -160,7 +264,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
             // Chat message list
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 itemCount: _messages.length,
                 itemBuilder: (context, index) {
                   final msg = _messages[index];
@@ -170,7 +274,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
                     alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       constraints: BoxConstraints(
                         maxWidth: MediaQuery.of(context).size.width * 0.78,
                       ),
@@ -191,7 +295,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
                               ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                            color: Colors.black.withAlpha(isDark ? 40 : 10),
                             blurRadius: 4,
                             offset: const Offset(0, 1),
                           ),
@@ -229,13 +333,13 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: _quickSuggestions.length,
+                itemCount: suggestions.length,
                 itemBuilder: (context, index) {
-                  final s = _quickSuggestions[index];
+                  final s = suggestions[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: ActionChip(
-                      label: Text(s, style: const TextStyle(fontSize: 12)),
+                      label: Text(s, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                       backgroundColor: isDark ? GBColors.surfaceDark : Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18),
@@ -251,7 +355,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
             ),
             const SizedBox(height: 8),
 
-            // Bottom Input Bar with Microphone
+            // Bottom Input Bar with Working Microphone
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
@@ -264,26 +368,40 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
               ),
               child: Row(
                 children: [
-                  GBVoiceMicButton(
-                    isListening: _isListening,
-                    onTap: _simulateVoiceInput,
-                  ),
-                  const SizedBox(width: 10),
                   Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      onSubmitted: _handleUserMessage,
-                      decoration: InputDecoration(
-                        hintText: _isListening
-                            ? (loc.isHindi ? 'सुन रहे हैं... बोलिए' : 'Listening... speak now')
-                            : (loc.isHindi ? 'लिखें या माइक से बोलें...' : 'Type or speak your order...'),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: isDark ? GBColors.cardDark : GBColors.surfaceLight,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: isDark ? GBColors.borderDark : GBColors.borderLight,
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _textController,
+                        onSubmitted: _handleUserMessage,
+                        decoration: InputDecoration(
+                          hintText: loc.isHindi
+                              ? 'यहाँ लिखें या माइक दबाकर बोलें...'
+                              : 'Type message or tap mic to speak...',
+                          hintStyle: TextStyle(
+                            fontSize: 13,
+                            color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  // Dedicated AI Microphone
+                  GBVoiceMicButton(
+                    isListening: _isListening,
+                    onTap: _openVoiceInputDialog,
+                  ),
+                  const SizedBox(width: 6),
                   IconButton(
                     icon: const Icon(Icons.send_rounded, color: GBColors.primary),
                     onPressed: () => _handleUserMessage(_textController.text),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:localization/localization.dart';
-import 'package:shared_models/shared_models.dart';
 import '../state/app_state.dart';
 import 'order_tracking_screen.dart';
 
@@ -15,124 +14,45 @@ class OrdersTab extends StatefulWidget {
 }
 
 class _OrdersTabState extends State<OrdersTab> {
-  bool _isLoading = true;
-  List<GBOrder> _orders = [];
-
   @override
   void initState() {
     super.initState();
-    _fetchOrders();
-  }
-
-  Future<void> _fetchOrders() async {
-    setState(() => _isLoading = true);
-    final state = AppStateProvider.of(context);
-    final response = await state.apiClient.createOrder(
-      storeId: 'dummy',
-      deliveryAddressId: 'dummy',
-      paymentMethod: 'dummy',
-      items: [],
-    ); // Just to verify client connectivity, or fetch directly
-
-    // Load from AppState
-    _orders = state.myOrders;
-    if (_orders.isEmpty) {
-      // Baseline sample order for Minapur customer
-      _orders = [
-        GBOrder(
-          id: 'ord_sample_01',
-          customerId: 'usr_c1',
-          storeId: 'str_01',
-          storeName: 'माँ शारदा किराना स्टोर (Chaturshi)',
-          deliveryAddress: 'Chaturshi, Near Gram Panchayat Bhavan, Minapur',
-          status: 'OUT_FOR_DELIVERY',
-          subtotal: 180.0,
-          deliveryFee: 15.0,
-          platformFee: 3.0,
-          totalAmount: 198.0,
-          paymentMethod: 'COD',
-          paymentStatus: 'PENDING',
-          deliveryOtp: '4821',
-          placedAt: DateTime.now().subtract(const Duration(minutes: 25)),
-          cancelUntil: DateTime.now().subtract(const Duration(minutes: 22)),
-          canCancel: false,
-          cancelSecondsRemaining: 0,
-          items: [
-            GBOrderItem(
-              id: 'oi_1',
-              productId: 'prd_01',
-              nameEn: 'Chakki Fresh Atta',
-              nameHi: 'ताज़ा चक्की आटा',
-              unit: '1 kg',
-              unitPrice: 38.0,
-              quantity: 2,
-              totalPrice: 76.0,
-            ),
-            GBOrderItem(
-              id: 'oi_2',
-              productId: 'prd_03',
-              nameEn: 'Fresh Cow Milk',
-              nameHi: 'ताज़ा गाय का दूध',
-              unit: '1 L',
-              unitPrice: 56.0,
-              quantity: 1,
-              totalPrice: 56.0,
-            ),
-          ],
-          timeline: [
-            GBOrderTimelineItem(
-              status: 'PLACED',
-              title: 'ऑर्डर दर्ज हुआ',
-              timestamp: DateTime.now().subtract(const Duration(minutes: 25)),
-            ),
-            GBOrderTimelineItem(
-              status: 'PACKED',
-              title: 'सामान पैक हुआ',
-              timestamp: DateTime.now().subtract(const Duration(minutes: 18)),
-            ),
-            GBOrderTimelineItem(
-              status: 'OUT_FOR_DELIVERY',
-              title: 'डिलीवरी के लिए निकल चुके हैं',
-              timestamp: DateTime.now().subtract(const Duration(minutes: 8)),
-            ),
-          ],
-        )
-      ];
-    }
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppStateProvider.of(context).fetchOrders();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = AppStateProvider.of(context);
     final loc = GBLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final orders = state.myOrders;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(loc.tr('tab_orders'), style: const TextStyle(fontWeight: FontWeight.w800)),
       ),
-      body: _isLoading
+      body: state.isLoadingOrders
           ? const Center(child: GBLoadingState())
-          : _orders.isEmpty
+          : orders.isEmpty
               ? GBEmptyState(
-                  title: loc.isHindi ? 'कोई ऑर्डर नहीं मिला' : 'No Orders Found',
-                  message: loc.isHindi
-                      ? 'आपने अभी तक कोई सामान ऑर्डर नहीं किया है।'
-                      : 'You have not placed any orders yet.',
+                  title: loc.tr('no_orders'),
+                  message: loc.tr('no_orders_msg'),
                   actionLabel: loc.isHindi ? 'खरीदारी शुरू करें' : 'Start Shopping',
                   onAction: () => widget.onTabChange(0),
                 )
               : RefreshIndicator(
-                  onRefresh: _fetchOrders,
+                  onRefresh: state.fetchOrders,
                   color: GBColors.primary,
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
-                    itemCount: _orders.length,
+                    itemCount: orders.length,
                     itemBuilder: (context, index) {
-                      final order = _orders[index];
+                      final order = orders[index];
+                      final shortId = order.id.length > 8 ? order.id.substring(0, 8) : order.id;
+
                       return Container(
                         margin: const EdgeInsets.only(bottom: 14),
                         decoration: BoxDecoration(
@@ -143,7 +63,7 @@ class _OrdersTabState extends State<OrdersTab> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
+                              color: Colors.black.withAlpha(10),
                               blurRadius: 4,
                               offset: const Offset(0, 1),
                             ),
@@ -155,7 +75,7 @@ class _OrdersTabState extends State<OrdersTab> {
                               MaterialPageRoute(
                                 builder: (_) => OrderTrackingScreen(order: order),
                               ),
-                            );
+                            ).then((_) => state.fetchOrders());
                           },
                           borderRadius: BorderRadius.circular(14),
                           child: Padding(
@@ -166,16 +86,20 @@ class _OrdersTabState extends State<OrdersTab> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      order.storeName,
-                                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                                    Expanded(
+                                      child: Text(
+                                        order.storeName,
+                                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
+                                    const SizedBox(width: 8),
                                     GBOrderStatusBadge(status: order.status),
                                   ],
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  '₹${order.totalAmount.toStringAsFixed(0)} • ${order.paymentMethod}',
+                                  '₹${order.totalAmount.toStringAsFixed(2)} • ${order.paymentMethod}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 14,
@@ -196,27 +120,30 @@ class _OrdersTabState extends State<OrdersTab> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
+                                    Text(
+                                      '${loc.tr('order_id')}$shortId',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
+                                      ),
+                                    ),
                                     Row(
                                       children: [
-                                        const Icon(Icons.pin, size: 16, color: GBColors.primary),
-                                        const SizedBox(width: 4),
                                         Text(
-                                          'OTP: ${order.deliveryOtp}',
+                                          loc.tr('order_tracking'),
                                           style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 13,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
                                             color: GBColors.primary,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                    const Row(
-                                      children: [
-                                        Text(
-                                          'ट्रैक करें (Track)',
-                                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                        const SizedBox(width: 4),
+                                        const Icon(
+                                          Icons.arrow_forward_ios_rounded,
+                                          size: 12,
+                                          color: GBColors.primary,
                                         ),
-                                        Icon(Icons.chevron_right, size: 18),
                                       ],
                                     ),
                                   ],

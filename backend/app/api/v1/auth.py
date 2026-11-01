@@ -6,7 +6,7 @@ from sqlalchemy.future import select
 from app.db.session import get_db
 from app.models.base import User, Store, Runner
 from app.schemas.auth import (
-    SendOTPRequest, SendOTPResponse, VerifyOTPRequest, TokenResponse, UserInfo
+    SendOTPRequest, SendOTPResponse, VerifyOTPRequest, TokenResponse, UserInfo, UpdateProfileRequest
 )
 from app.core.security import create_access_token, get_current_user_payload
 
@@ -128,6 +128,39 @@ async def get_current_user(
         id=user.id,
         phone=user.phone,
         name=user.name,
+        email=user.email,
+        role=user.role,
+        preferred_language=user.preferred_language,
+        is_active=user.is_active
+    )
+
+@router.patch("/me", response_model=UserInfo)
+async def update_current_user(
+    req: UpdateProfileRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if req.name is not None:
+        user.name = req.name.strip()
+    if req.email is not None:
+        user.email = req.email.strip()
+    if req.preferred_language is not None:
+        user.preferred_language = req.preferred_language.strip()
+        
+    await db.commit()
+    await db.refresh(user)
+    
+    return UserInfo(
+        id=user.id,
+        phone=user.phone,
+        name=user.name,
+        email=user.email,
         role=user.role,
         preferred_language=user.preferred_language,
         is_active=user.is_active

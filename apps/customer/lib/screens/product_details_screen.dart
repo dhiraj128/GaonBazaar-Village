@@ -23,7 +23,10 @@ class ProductDetailsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(product.getLocalizedName(loc.isHindi), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        title: Text(
+          product.getLocalizedName(loc.isHindi),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -79,11 +82,14 @@ class ProductDetailsScreen extends StatelessWidget {
                           color: GBColors.success.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(Icons.check_circle, size: 12, color: GBColors.success),
-                            SizedBox(width: 4),
-                            Text('उपलब्ध है (In Stock)', style: TextStyle(color: GBColors.success, fontSize: 11, fontWeight: FontWeight.w700)),
+                            const Icon(Icons.check_circle, size: 12, color: GBColors.success),
+                            const SizedBox(width: 4),
+                            Text(
+                              loc.isHindi ? 'उपलब्ध है' : 'In Stock',
+                              style: const TextStyle(color: GBColors.success, fontSize: 11, fontWeight: FontWeight.w700),
+                            ),
                           ],
                         ),
                       ),
@@ -98,7 +104,9 @@ class ProductDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Unit: ${product.unit} • Store: $storeName',
+                    loc.isHindi
+                        ? 'इकाई: ${product.unit} • दुकान: $storeName'
+                        : 'Unit: ${product.unit} • Store: $storeName',
                     style: TextStyle(fontSize: 13, color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight),
                   ),
                   const SizedBox(height: 16),
@@ -133,14 +141,24 @@ class ProductDetailsScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: isDark ? GBColors.borderDark : GBColors.borderLight),
                     ),
-                    child: const Column(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('गाँव बाज़ार सेवा गारंटी (GaonBazaar Promise)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                        SizedBox(height: 6),
-                        Text('• ताज़ा एवं जाँचा-परखा सामान सीधे स्थानीय गाँव की दुकान से।', style: TextStyle(fontSize: 12)),
-                        Text('• ३०-६० मिनट के अंदर गाँव डिलीवरी।', style: TextStyle(fontSize: 12)),
-                        Text('• केवल ₹३ प्लेटफ़ॉर्म शुल्क।', style: TextStyle(fontSize: 12)),
+                        Text(
+                          loc.isHindi ? 'गाँव बाज़ार सेवा गारंटी' : 'GaonBazaar Rural Guarantee',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          loc.isHindi
+                              ? '• ताज़ा एवं जाँचा-परखा सामान सीधे स्थानीय गाँव की दुकान से।\n• 30-60 मिनट के अंदर गाँव डिलीवरी।\n• केवल ₹3.00 प्लेटफ़ॉर्म शुल्क।'
+                              : '• Fresh, quality-checked items directly from local village stores.\n• Village doorstep delivery in 30-60 minutes.\n• Flat ₹3.00 platform fee with 180s cancellation protection.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 1.5,
+                            color: isDark ? GBColors.textSecondaryDark : GBColors.textSecondaryLight,
+                          ),
+                        ),
                       ],
                     ),
                   ),
