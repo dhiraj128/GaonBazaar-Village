@@ -36,7 +36,7 @@ services:
       - key: ADMIN_API_KEY
         value: [REDACTED_ADMIN_KEY]
       - key: DATABASE_URL
-        sync: false # Connect to the dedicated new PostgreSQL database (e.g. gaonbazaar-village-db)
+        value: postgresql://gaonbazaar.vxewgvrjhjpntfvsmuez:[REDACTED_POSTGRES_PASSWORD]@aws-0-ap-south-1.pooler.supabase.com:5432/postgres
 
   # ----------------------------------------------------------------------
   # B. GaonBazaar-Village Super Admin Dashboard Static Site
