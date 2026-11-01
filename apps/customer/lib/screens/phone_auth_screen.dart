@@ -70,98 +70,100 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                loc.tr('enter_phone'),
-                style: GBTypography.displayLarge(context),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                loc.tr('phone_subtitle'),
-                style: GBTypography.bodyMedium(context),
-              ),
-              const SizedBox(height: 32),
-              // Phone input container
-              Container(
-                decoration: BoxDecoration(
-                  color: isDark ? GBColors.surfaceDark : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _errorMessage != null
-                        ? GBColors.error
-                        : (isDark ? GBColors.borderDark : GBColors.borderLight),
-                    width: 1.5,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  loc.tr('enter_phone'),
+                  style: GBTypography.displayLarge(context),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  loc.tr('phone_subtitle'),
+                  style: GBTypography.bodyMedium(context),
+                ),
+                const SizedBox(height: 32),
+                // Phone input container
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? GBColors.surfaceDark : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _errorMessage != null
+                          ? GBColors.error
+                          : (isDark ? GBColors.borderDark : GBColors.borderLight),
+                      width: 1.5,
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  child: Row(
+                    children: [
+                      const Text(
+                        '+91',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        width: 1,
+                        height: 24,
+                        color: isDark ? GBColors.borderDark : GBColors.borderLight,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
+                          maxLength: 10,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.0,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: loc.tr('phone_hint'),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            counterText: '',
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                child: Row(
-                  children: [
-                    const Text(
-                      '+91',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      width: 1,
-                      height: 24,
-                      color: isDark ? GBColors.borderDark : GBColors.borderLight,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        controller: _phoneController,
-                        keyboardType: TextInputType.phone,
-                        maxLength: 10,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.0,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: loc.tr('phone_hint'),
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          counterText: '',
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ),
-                  ],
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: GBColors.error, fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                GBPrimaryButton(
+                  label: loc.tr('get_otp'),
+                  isLoading: _isLoading,
+                  onPressed: _handleGetOtp,
                 ),
-              ),
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 10),
-                Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: GBColors.error, fontSize: 13, fontWeight: FontWeight.w500),
+                const SizedBox(height: 48),
+                Center(
+                  child: Text(
+                    loc.isHindi
+                        ? 'आगे बढ़ने पर आप गाँव बाज़ार की सेवा शर्तों से सहमत होते हैं।'
+                        : 'By continuing, you agree to GaonBazaar Terms of Service.',
+                    textAlign: TextAlign.center,
+                    style: GBTypography.bodySmall(context),
+                  ),
                 ),
+                const SizedBox(height: 12),
               ],
-              const SizedBox(height: 24),
-              GBPrimaryButton(
-                label: loc.tr('get_otp'),
-                isLoading: _isLoading,
-                onPressed: _handleGetOtp,
-              ),
-              const Spacer(),
-              Center(
-                child: Text(
-                  loc.isHindi
-                      ? 'आगे बढ़ने पर आप गाँव बाज़ार की सेवा शर्तों से सहमत होते हैं।'
-                      : 'By continuing, you agree to GaonBazaar Terms of Service.',
-                  textAlign: TextAlign.center,
-                  style: GBTypography.bodySmall(context),
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
+            ),
           ),
         ),
       ),

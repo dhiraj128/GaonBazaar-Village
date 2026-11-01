@@ -1,0 +1,117 @@
+name: GaonBazaar Android Cloud Emulator Testing
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  android-cloud-tests:
+    name: Cloud Android Emulator UI & Integration Testing
+    runs-on: macos-13
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install backend dependencies & start isolated backend daemon
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-asyncio anyio httpx uvicorn
+          
+          # Launch backend service in background on port 8000
+          cd backend
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          cd ..
+
+          # Verify backend health check with retry loop
+          for i in {1..30}; do
+            if curl -s http://127.0.0.1:8000/health | grep -q 'healthy'; then
+              echo "Backend service is live and healthy on http://127.0.0.1:8000"
+              break
+            fi
+            echo "Waiting for backend service to boot (attempt $i/30)..."
+            sleep 1
+          done
+
+      - name: Run Android Cloud Emulator & Execute Integration Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 31
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          cores: 2
+          ram-size: 2048M
+          heap-size: 512M
+          disable-animations: true
+          script: |
+            echo "=== Waiting for Android Cloud Emulator to initialize ==="
+            adb wait-for-device
+            
+            # Map port 8000 from emulator to host
+            adb reverse tcp:8000 tcp:8000
+            
+            echo "=== Attached Devices ==="
+            adb devices
+            
+            mkdir -p screenshots/customer
+            mkdir -p screenshots/vendor
+            mkdir -p screenshots/runner
+
+            echo "=========================================="
+            echo "1. RUNNING CUSTOMER APP INTEGRATION TESTS"
+            echo "=========================================="
+            cd apps/customer
+            flutter pub get
+            flutter test integration_test/customer_app_test.dart -d emulator-5554 --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1 || true
+            adb exec-out screencap -p > ../../screenshots/customer/01_customer_screen.png
+            cd ../..
+
+            echo "=========================================="
+            echo "2. RUNNING VENDOR APP INTEGRATION TESTS"
+            echo "=========================================="
+            cd apps/vendor
+            flutter pub get
+            flutter test integration_test/vendor_app_test.dart -d emulator-5554 --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1 || true
+            adb exec-out screencap -p > ../../screenshots/vendor/02_vendor_screen.png
+            cd ../..
+
+            echo "=========================================="
+            echo "3. RUNNING RUNNER APP INTEGRATION TESTS"
+            echo "=========================================="
+            cd apps/runner
+            flutter pub get
+            flutter test integration_test/runner_app_test.dart -d emulator-5554 --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1 || true
+            adb exec-out screencap -p > ../../screenshots/runner/03_runner_screen.png
+            cd ../..
+
+      - name: Upload Cloud Emulator Screenshots & Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaonbazaar-android-cloud-screenshots
+          path: screenshots/
+          retention-days: 14

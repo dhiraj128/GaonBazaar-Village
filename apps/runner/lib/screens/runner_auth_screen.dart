@@ -118,140 +118,142 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _otpSent
-                    ? (isHi ? 'ओटीपी कोड दर्ज करें' : 'Enter OTP Code')
-                    : (isHi ? 'डिलीवरी पार्टनर लॉगिन' : 'Delivery Partner Login'),
-                style: GBTypography.displayLarge(context),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _otpSent
-                    ? (isHi
-                        ? '+91 ${_phoneController.text} पर भेजा गया 6-अंकीय कोड डालें'
-                        : 'Enter the 6-digit code sent to +91 ${_phoneController.text}')
-                    : (isHi
-                        ? 'गाँव में डिलीवरी शुरू करने के लिए अपना पंजीकृत मोबाइल नंबर डालें'
-                        : 'Enter your registered mobile number to start delivering in villages'),
-                style: GBTypography.bodyMedium(context),
-              ),
-              const SizedBox(height: 28),
-              if (!_otpSent) ...[
-                Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? GBColors.surfaceDark : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDark ? GBColors.borderDark : GBColors.borderLight, width: 1.5),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                  child: Row(
-                    children: [
-                      const Text('🇮🇳 +91', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          maxLength: 10,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 1.0),
-                          decoration: InputDecoration(
-                            hintText: isHi ? 'मोबाइल नंबर' : 'Mobile Number',
-                            border: InputBorder.none,
-                            counterText: '',
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _otpSent
+                      ? (isHi ? 'ओटीपी कोड दर्ज करें' : 'Enter OTP Code')
+                      : (isHi ? 'डिलीवरी पार्टनर लॉगिन' : 'Delivery Partner Login'),
+                  style: GBTypography.displayLarge(context),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _otpSent
+                      ? (isHi
+                          ? '+91 ${_phoneController.text} पर भेजा गया 6-अंकीय कोड डालें'
+                          : 'Enter the 6-digit code sent to +91 ${_phoneController.text}')
+                      : (isHi
+                          ? 'गाँव में डिलीवरी शुरू करने के लिए अपना पंजीकृत मोबाइल नंबर डालें'
+                          : 'Enter your registered mobile number to start delivering in villages'),
+                  style: GBTypography.bodyMedium(context),
+                ),
+                const SizedBox(height: 28),
+                if (!_otpSent) ...[
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? GBColors.surfaceDark : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isDark ? GBColors.borderDark : GBColors.borderLight, width: 1.5),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    child: Row(
+                      children: [
+                        const Text('🇮🇳 +91', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            maxLength: 10,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 1.0),
+                            decoration: InputDecoration(
+                              hintText: isHi ? 'मोबाइल नंबर' : 'Mobile Number',
+                              border: InputBorder.none,
+                              counterText: '',
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                GBPrimaryButton(
-                  label: isHi ? 'ओटीपी प्राप्त करें' : 'Send OTP',
-                  isLoading: _isLoading,
-                  onPressed: () => _handleSendOtp(state),
-                ),
-              ] else ...[
-                Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? GBColors.surfaceDark : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDark ? GBColors.borderDark : GBColors.borderLight, width: 1.5),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: TextField(
-                    controller: _otpController,
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: 10),
-                    decoration: const InputDecoration(
-                      hintText: '------',
-                      border: InputBorder.none,
-                      counterText: '',
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                GBPrimaryButton(
-                  label: isHi ? 'सत्यापित करें व लॉगिन करें' : 'Verify & Login',
-                  isLoading: _isLoading,
-                  onPressed: () => _handleVerifyOtp(state),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 24),
+                  GBPrimaryButton(
+                    label: isHi ? 'ओटीपी प्राप्त करें' : 'Send OTP',
+                    isLoading: _isLoading,
+                    onPressed: () => _handleSendOtp(state),
+                  ),
+                ] else ...[
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? GBColors.surfaceDark : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isDark ? GBColors.borderDark : GBColors.borderLight, width: 1.5),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: TextField(
+                      controller: _otpController,
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: 10),
+                      decoration: const InputDecoration(
+                        hintText: '------',
+                        border: InputBorder.none,
+                        counterText: '',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  GBPrimaryButton(
+                    label: isHi ? 'सत्यापित करें व लॉगिन करें' : 'Verify & Login',
+                    isLoading: _isLoading,
+                    onPressed: () => _handleVerifyOtp(state),
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => setState(() => _otpSent = false),
+                      child: Text(
+                        isHi ? 'मोबाइल नंबर बदलें' : 'Change Phone Number',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: GBColors.error.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: GBColors.error),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline, size: 18, color: GBColors.error),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(color: GBColors.error, fontSize: 13, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 36),
                 Center(
                   child: TextButton(
-                    onPressed: () => setState(() => _otpSent = false),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const RunnerOnboardingWizard()),
+                      );
+                    },
                     child: Text(
-                      isHi ? 'मोबाइल नंबर बदलें' : 'Change Phone Number',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      isHi ? 'नए डिलीवरी साथी? आवेदन फॉर्म भरें' : 'New Delivery Partner? Register Here',
+                      style: const TextStyle(fontWeight: FontWeight.w700, color: GBColors.primary),
                     ),
                   ),
                 ),
-              ],
-              if (_errorMessage != null) ...[
                 const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: GBColors.error.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: GBColors.error),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.error_outline, size: 18, color: GBColors.error),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(color: GBColors.error, fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ],
-              const Spacer(),
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const RunnerOnboardingWizard()),
-                    );
-                  },
-                  child: Text(
-                    isHi ? 'नए डिलीवरी साथी? आवेदन फॉर्म भरें' : 'New Delivery Partner? Register Here',
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: GBColors.primary),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
+            ),
           ),
         ),
       ),

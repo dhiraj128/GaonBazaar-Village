@@ -107,118 +107,120 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                loc.tr('verify_otp'),
-                style: GBTypography.displayLarge(context),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${loc.tr('otp_sent_to')} +91 ${widget.phone}',
-                style: GBTypography.bodyMedium(context),
-              ),
-              const SizedBox(height: 28),
-              // OTP Input field
-              Container(
-                decoration: BoxDecoration(
-                  color: isDark ? GBColors.surfaceDark : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _errorMessage != null
-                        ? GBColors.error
-                        : (isDark ? GBColors.borderDark : GBColors.borderLight),
-                    width: 1.5,
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: TextField(
-                  controller: _otpController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 10,
-                  ),
-                  decoration: const InputDecoration(
-                    hintText: '------',
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    counterText: '',
-                  ),
-                ),
-              ),
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 10),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: GBColors.error, fontSize: 13, fontWeight: FontWeight.w500),
+                  loc.tr('verify_otp'),
+                  style: GBTypography.displayLarge(context),
                 ),
-              ],
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _secondsRemaining > 0
-                        ? '${loc.tr('resend_in')} ${_secondsRemaining} ${loc.tr('seconds')}'
-                        : (loc.isHindi ? 'ओटीपी नहीं मिला?' : 'Didn\'t receive OTP?'),
-                    style: GBTypography.bodySmall(context),
-                  ),
-                  TextButton(
-                    onPressed: _secondsRemaining == 0
-                        ? () {
-                            _startCountdown();
-                            AppStateProvider.of(context).apiClient.sendOtp(
-                                  phone: widget.phone,
-                                  role: 'customer',
-                                );
-                          }
-                        : null,
-                    child: Text(
-                      loc.tr('resend_otp'),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: _secondsRemaining == 0 ? GBColors.primary : Colors.grey,
-                      ),
+                const SizedBox(height: 8),
+                Text(
+                  '${loc.tr('otp_sent_to')} +91 ${widget.phone}',
+                  style: GBTypography.bodyMedium(context),
+                ),
+                const SizedBox(height: 28),
+                // OTP Input field
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? GBColors.surfaceDark : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _errorMessage != null
+                          ? GBColors.error
+                          : (isDark ? GBColors.borderDark : GBColors.borderLight),
+                      width: 1.5,
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: GBColors.primary.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: GBColors.primary.withOpacity(0.2)),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: TextField(
+                    controller: _otpController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 10,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: '------',
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      counterText: '',
+                    ),
+                  ),
                 ),
-                child: Row(
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: GBColors.error, fontSize: 13, fontWeight: FontWeight.w500),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(Icons.shield_outlined, size: 18, color: GBColors.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
+                    Text(
+                      _secondsRemaining > 0
+                          ? '${loc.tr('resend_in')} ${_secondsRemaining} ${loc.tr('seconds')}'
+                          : (loc.isHindi ? 'ओटीपी नहीं मिला?' : 'Didn\'t receive OTP?'),
+                      style: GBTypography.bodySmall(context),
+                    ),
+                    TextButton(
+                      onPressed: _secondsRemaining == 0
+                          ? () {
+                              _startCountdown();
+                              AppStateProvider.of(context).apiClient.sendOtp(
+                                    phone: widget.phone,
+                                    role: 'customer',
+                                  );
+                            }
+                          : null,
                       child: Text(
-                        loc.tr('otp_dev_note'),
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+                        loc.tr('resend_otp'),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: _secondsRemaining == 0 ? GBColors.primary : Colors.grey,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 24),
-              GBPrimaryButton(
-                label: loc.tr('verify_and_proceed'),
-                isLoading: _isLoading,
-                onPressed: _handleVerify,
-              ),
-            ],
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: GBColors.primary.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: GBColors.primary.withOpacity(0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.shield_outlined, size: 18, color: GBColors.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          loc.tr('otp_dev_note'),
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                GBPrimaryButton(
+                  label: loc.tr('verify_and_proceed'),
+                  isLoading: _isLoading,
+                  onPressed: _handleVerify,
+                ),
+              ],
+            ),
           ),
         ),
       ),

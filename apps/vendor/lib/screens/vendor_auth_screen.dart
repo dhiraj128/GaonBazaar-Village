@@ -112,130 +112,132 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _otpSent
-                    ? (loc.isHindi ? 'ओटीपी दर्ज करें' : 'Enter Verification PIN')
-                    : (loc.isHindi ? 'मोबाइल नंबर दर्ज करें' : 'Enter Mobile Number'),
-                style: GBTypography.displayLarge(context),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                _otpSent
-                    ? (loc.isHindi
-                        ? '+91 ${_phoneController.text} पर भेजा गया 6-अंकीय कोड डालें'
-                        : 'Enter the 6-digit code sent to +91 ${_phoneController.text}')
-                    : (loc.isHindi
-                        ? 'गाँव बाज़ार में अपनी दुकान से ऑनलाइन बिक्री शुरू करने के लिए नंबर डालें'
-                        : 'Enter your registered mobile number to manage your village store'),
-                style: GBTypography.bodyMedium(context),
-              ),
-              const SizedBox(height: 28),
-              if (!_otpSent) ...[
-                Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? GBColors.surfaceDark : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isDark ? GBColors.borderDark : GBColors.borderLight,
-                      width: 1.5,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _otpSent
+                      ? (loc.isHindi ? 'ओटीपी दर्ज करें' : 'Enter Verification PIN')
+                      : (loc.isHindi ? 'मोबाइल नंबर दर्ज करें' : 'Enter Mobile Number'),
+                  style: GBTypography.displayLarge(context),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _otpSent
+                      ? (loc.isHindi
+                          ? '+91 ${_phoneController.text} पर भेजा गया 6-अंकीय कोड डालें'
+                          : 'Enter the 6-digit code sent to +91 ${_phoneController.text}')
+                      : (loc.isHindi
+                          ? 'गाँव बाज़ार में अपनी दुकान से ऑनलाइन बिक्री शुरू करने के लिए नंबर डालें'
+                          : 'Enter your registered mobile number to manage your village store'),
+                  style: GBTypography.bodyMedium(context),
+                ),
+                const SizedBox(height: 28),
+                if (!_otpSent) ...[
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? GBColors.surfaceDark : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDark ? GBColors.borderDark : GBColors.borderLight,
+                        width: 1.5,
+                      ),
                     ),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                  child: Row(
-                    children: [
-                      const Text('🇮🇳 +91', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _phoneController,
-                          keyboardType: TextInputType.phone,
-                          maxLength: 10,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 1.0),
-                          decoration: InputDecoration(
-                            hintText: loc.isHindi ? 'मोबाइल नंबर' : '10-Digit Mobile',
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            counterText: '',
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                    child: Row(
+                      children: [
+                        const Text('🇮🇳 +91', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            maxLength: 10,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 1.0),
+                            decoration: InputDecoration(
+                              hintText: loc.isHindi ? 'मोबाइल नंबर' : '10-Digit Mobile',
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              counterText: '',
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  GBPrimaryButton(
+                    label: loc.isHindi ? 'ओटीपी प्राप्त करें' : 'Send OTP',
+                    isLoading: _isLoading,
+                    onPressed: _handleSendOtp,
+                  ),
+                ] else ...[
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? GBColors.surfaceDark : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isDark ? GBColors.borderDark : GBColors.borderLight,
+                        width: 1.5,
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                GBPrimaryButton(
-                  label: loc.isHindi ? 'ओटीपी प्राप्त करें' : 'Send OTP',
-                  isLoading: _isLoading,
-                  onPressed: _handleSendOtp,
-                ),
-              ] else ...[
-                Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? GBColors.surfaceDark : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isDark ? GBColors.borderDark : GBColors.borderLight,
-                      width: 1.5,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: TextField(
+                      controller: _otpController,
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: 10),
+                      decoration: const InputDecoration(
+                        hintText: '------',
+                        border: InputBorder.none,
+                        counterText: '',
+                      ),
                     ),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: TextField(
-                    controller: _otpController,
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: 10),
-                    decoration: const InputDecoration(
-                      hintText: '------',
-                      border: InputBorder.none,
-                      counterText: '',
+                  const SizedBox(height: 24),
+                  GBPrimaryButton(
+                    label: loc.isHindi ? 'सत्यापित करें व लॉगिन करें' : 'Verify & Login',
+                    isLoading: _isLoading,
+                    onPressed: _handleVerifyOtp,
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => setState(() => _otpSent = false),
+                      child: Text(
+                        loc.isHindi ? 'मोबाइल नंबर बदलें' : 'Change Mobile Number',
+                        style: const TextStyle(color: GBColors.primary, fontWeight: FontWeight.w700),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                GBPrimaryButton(
-                  label: loc.isHindi ? 'सत्यापित करें व लॉगिन करें' : 'Verify & Login',
-                  isLoading: _isLoading,
-                  onPressed: _handleVerifyOtp,
-                ),
-                const SizedBox(height: 12),
+                ],
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(_errorMessage!, style: const TextStyle(color: GBColors.error, fontSize: 13)),
+                ],
+                const SizedBox(height: 36),
+                // New store registration wizard link
                 Center(
                   child: TextButton(
-                    onPressed: () => setState(() => _otpSent = false),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const VendorOnboardingWizard()),
+                      );
+                    },
                     child: Text(
-                      loc.isHindi ? 'मोबाइल नंबर बदलें' : 'Change Mobile Number',
-                      style: const TextStyle(color: GBColors.primary, fontWeight: FontWeight.w700),
+                      loc.tr('vendor_register_store'),
+                      style: const TextStyle(fontWeight: FontWeight.w700, color: GBColors.primary),
                     ),
                   ),
                 ),
-              ],
-              if (_errorMessage != null) ...[
                 const SizedBox(height: 12),
-                Text(_errorMessage!, style: const TextStyle(color: GBColors.error, fontSize: 13)),
               ],
-              const Spacer(),
-              // New store registration wizard link
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const VendorOnboardingWizard()),
-                    );
-                  },
-                  child: Text(
-                    loc.tr('vendor_register_store'),
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: GBColors.primary),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
+            ),
           ),
         ),
       ),
