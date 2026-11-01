@@ -30,7 +30,7 @@ export const ZonesView: React.FC<ZonesViewProps> = ({ settings }) => {
               {settings.pilot_block}, {settings.pilot_district} ({settings.pilot_state})
             </h3>
             <p className="text-xs text-slate-500 mt-1">
-              Active operating boundary strictly enforced by the GaonBazaar shared backend. Orders beyond{' '}
+              Active operating boundary for village quick delivery. Orders beyond{' '}
               <b className="text-slate-800">8.0 km</b> from fulfilling kirana GPS are blocked.
             </p>
           </div>
@@ -155,7 +155,7 @@ export const ZonesView: React.FC<ZonesViewProps> = ({ settings }) => {
                 <td className="py-3 px-4 font-bold text-rose-800">&gt; 8.0 km (Out of Pilot Area)</td>
                 <td className="py-3 px-4 text-rose-700 font-bold">BLOCKED</td>
                 <td className="py-3 px-4 text-rose-700 font-medium">N/A</td>
-                <td className="py-3 px-4 text-rose-700 font-bold">Strictly Blocked by Backend</td>
+                <td className="py-3 px-4 text-rose-700 font-bold">Outside Service Radius</td>
               </tr>
             </tbody>
           </table>

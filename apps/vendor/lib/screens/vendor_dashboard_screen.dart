@@ -313,52 +313,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
       return false;
     }).toList();
 
-    // Fallback sample orders if live state is empty for demonstration
-    final List<Map<String, dynamic>> fallbackOrders = [
-      {
-        'id': 'ord_101',
-        'customer': 'Ramesh Singh (Chaturshi)',
-        'items': isHi ? 'चक्की आटा x 2 kg, गाय का दूध x 1 L' : 'Chakki Atta x 2 kg, Fresh Milk x 1 L',
-        'amount': 132.0,
-        'status': 'PLACED',
-        'time': isHi ? '2 मिनट पहले' : '2 mins ago',
-        'phone': '+91 9876543210',
-      },
-      {
-        'id': 'ord_102',
-        'customer': 'Suresh Kumar (Tubanaghara)',
-        'items': isHi ? 'सरसों तेल x 1 L, आलू x 2 kg' : 'Mustard Oil x 1 L, Potato x 2 kg',
-        'amount': 190.0,
-        'status': 'ACCEPTED',
-        'time': isHi ? '12 मिनट पहले' : '12 mins ago',
-        'phone': '+91 9876543211',
-      },
-      {
-        'id': 'ord_103',
-        'customer': 'Sunil Sah (Sivay Patti)',
-        'items': isHi ? 'एलईडी बल्ब x 2, अगरबत्ती x 1' : 'LED Bulb x 2, Agarbatti x 1',
-        'amount': 190.0,
-        'status': 'PACKED',
-        'time': isHi ? '25 मिनट पहले' : '25 mins ago',
-        'phone': '+91 9876543212',
-        'runnerName': 'Amit Kumar',
-        'runnerPhone': '+91 9876543220',
-      },
-    ];
-
     if (orders.isEmpty) {
-      final matchingFallbacks = fallbackOrders.where((f) => f['status'] == statusFilter).toList();
-      if (matchingFallbacks.isNotEmpty) {
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: matchingFallbacks.length,
-          itemBuilder: (context, idx) {
-            final f = matchingFallbacks[idx];
-            return _buildFallbackOrderCard(state, f);
-          },
-        );
-      }
-
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -503,82 +458,6 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                 ],
               ),
               _buildOrderActions(state, order.id, order.status, isHi),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFallbackOrderCard(VendorAppState state, Map<String, dynamic> f) {
-    final isHi = state.isHindi;
-    final status = f['status'] as String;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('#${f['id']}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
-              Text(f['time'] as String, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(f['customer'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-          const SizedBox(height: 4),
-          Text(f['items'] as String, style: const TextStyle(fontSize: 12, color: Colors.black87)),
-          if (f.containsKey('runnerName')) ...[
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: GBColors.primaryLight.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.two_wheeler, size: 16, color: GBColors.primary),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${isHi ? "डिलीवरी पार्टनर" : "Delivery Partner"}: ${f['runnerName']}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${isHi ? "कॉलिंग पार्टनर" : "Calling partner"}: ${f['runnerPhone']}')),
-                      );
-                    },
-                    child: Text(
-                      isHi ? 'कॉल करें' : 'Call',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: GBColors.primary),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          const Divider(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('₹${(f['amount'] as double).toStringAsFixed(0)}',
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: GBColors.primary)),
-              _buildOrderActions(state, f['id'] as String, status, isHi),
             ],
           ),
         ],

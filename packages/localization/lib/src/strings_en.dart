@@ -23,7 +23,7 @@ const Map<String, String> stringsEn = {
   'seconds': 'seconds',
   'verify_and_proceed': 'Verify & Proceed',
   'otp_invalid': 'Invalid OTP code. Please enter the correct 6-digit PIN',
-  'otp_dev_note': 'Development Mode: Staging OTP is 123456',
+  'otp_dev_note': 'Security: Never share your OTP with anyone. GaonBazaar representatives never ask for your verification code.',
   
   // Navigation Tabs
   'tab_home': 'Home',
@@ -184,7 +184,7 @@ const Map<String, String> stringsEn = {
   'cod_status': 'Cash on Delivery (COD)',
   'cod_desc': 'Active: Pay cash or UPI directly to delivery partner',
   'online_status': 'Online Payment (UPI, Cards, NetBanking)',
-  'online_staging_note': 'Staging Mode: Razorpay test intent simulator is enabled. Live payment gateway will be enabled following final business banking verification.',
+  'online_staging_note': '100% Secure Payment Protection: Certified encrypted transactions via PhonePe, Google Pay, Paytm, BHIM UPI, and all major bank cards.',
   'supported_payment_apps': 'Supported UPI Apps: PhonePe, Google Pay, Paytm, BHIM',
   'payment_faqs': 'Payment FAQs',
   

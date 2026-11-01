@@ -96,13 +96,13 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                 fillColor: Theme.of(context).cardColor,
               ),
             ),
-            if (expectedOtp.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                '${isHi ? "सत्यापन कोड (डेमो हेतु)" : "Customer OTP (Demo hint)"}: $expectedOtp',
-                style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
-              ),
-            ],
+            const SizedBox(height: 10),
+            Text(
+              isHi
+                  ? 'सुरक्षा नियम: ग्राहक के फोन पर प्रदर्शित 4-अंकीय कोड ही दर्ज करें।'
+                  : 'Security policy: Enter the 4-digit code provided verbally by the customer.',
+              style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w500),
+            ),
             if (isCod) ...[
               const SizedBox(height: 10),
               Container(
@@ -472,43 +472,41 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
     final isHi = state.isHindi;
 
     if (state.activeJobs.isEmpty) {
-      // Fallback sample job so runner can test interaction in demo mode
-      final fallbackJob = {
-        'id': 'ord_run_101',
-        'store_name': isHi ? 'माँ शारदा किराना स्टोर' : 'Maa Sharda Kirana Store',
-        'store_village': 'Chaturshi, Minapur',
-        'store_landmark': isHi ? 'ग्राम पंचायत भवन के पास' : 'Near Gram Panchayat Bhavan',
-        'customer_name': 'Ramesh Singh',
-        'customer_phone': '9876543210',
-        'customer_village': 'Chaturshi, Near Shiv Mandir',
-        'items_summary': isHi ? 'चक्की आटा x 2 kg, गाय का दूध x 1 L' : 'Chakki Atta x 2 kg, Fresh Milk x 1 L',
-        'payout': 25.0,
-        'status': 'PACKED',
-        'delivery_otp': '4821',
-        'is_cod': true,
-        'cod_amount': 132.0,
-      };
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      return Container(
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
+              Icon(Icons.two_wheeler_outlined, size: 52, color: Colors.grey.shade400),
+              const SizedBox(height: 14),
               Text(
-                isHi ? 'उपलब्ध डिलीवरी कार्य' : 'Available Delivery Jobs',
+                isHi ? 'वर्तमान में कोई नया डिलीवरी कार्य नहीं है' : 'No Active Delivery Tasks',
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
               ),
+              const SizedBox(height: 6),
+              Text(
+                isHi
+                    ? 'जब किराना दुकानदार आर्डर तैयार करेंगे, कार्य यहाँ तुरंत दिखाई देंगे।'
+                    : 'New delivery assignments will appear here as soon as stores pack orders.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: () => state.fetchJobs(),
-                icon: const Icon(Icons.refresh, size: 14),
-                label: Text(isHi ? 'ताज़ा करें' : 'Refresh', style: const TextStyle(fontSize: 12)),
+                icon: const Icon(Icons.refresh, size: 16),
+                label: Text(isHi ? 'ताज़ा करें' : 'Refresh'),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          _buildFallbackJobCard(state, fallbackJob),
-        ],
+        ),
       );
     }
 
@@ -632,116 +630,6 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
 
           // Action Buttons
           _buildActionButtons(state, order.id, order.status, order.deliveryOtp, order.deliveryFee, isCod, order.totalAmount, isHi),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFallbackJobCard(RunnerAppState state, Map<String, dynamic> f) {
-    final isHi = state.isHindi;
-    final status = f['status'] as String;
-    final isCod = f['is_cod'] as bool;
-    final codAmount = (f['cod_amount'] as num).toDouble();
-    final payout = (f['payout'] as num).toDouble();
-    final otp = f['delivery_otp'] as String;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade300),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 1)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('#${f['id']}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: GBColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '${isHi ? "कमाई" : "Earn"}: ₹${payout.toStringAsFixed(0)}',
-                  style: const TextStyle(fontWeight: FontWeight.w800, color: GBColors.primary, fontSize: 12),
-                ),
-              ),
-            ],
-          ),
-          const Divider(height: 18),
-
-          // Pickup Store
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(Icons.storefront, color: GBColors.primary, size: 20),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(isHi ? 'पिकअप दुकान' : 'Pickup Store', style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                    Text(f['store_name'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                    Text('${f['store_village']}, ${f['store_landmark']}', style: const TextStyle(fontSize: 12)),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.call, color: GBColors.primary),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${isHi ? "दुकानदार से संपर्क" : "Store"}: +91 9800000001')),
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Drop Customer
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(Icons.person_pin_circle, color: GBColors.secondary, size: 20),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(isHi ? 'ग्राहक का पता' : 'Drop Address', style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                    Text(f['customer_name'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                    Text(f['customer_village'] as String, style: const TextStyle(fontSize: 12)),
-                    if (isCod)
-                      Text(
-                        '${isHi ? "नकद संग्रह" : "Collect Cash"}: ₹${codAmount.toStringAsFixed(0)}',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.red),
-                      ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.call, color: GBColors.primary),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${isHi ? "ग्राहक को कॉल करें" : "Customer"}: +91 ${f['customer_phone']}')),
-                  );
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(f['items_summary'] as String, style: const TextStyle(fontSize: 12, color: Colors.black87)),
-          const SizedBox(height: 14),
-
-          _buildActionButtons(state, f['id'] as String, status, otp, payout, isCod, codAmount, isHi),
         ],
       ),
     );

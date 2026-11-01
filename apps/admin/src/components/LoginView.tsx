@@ -24,7 +24,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
         setError(result.error || 'Authentication failed. Please verify admin credentials.');
       }
     } catch (err: any) {
-      setError(err?.message || 'Network error occurred while contacting backend');
+      setError(err?.message || 'Unable to connect to administrative services. Please check your network connection.');
     } finally {
       setIsLoading(false);
     }
@@ -182,7 +182,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
           fontSize: '0.75rem',
           color: '#6B7280'
         }}>
-          🔒 256-bit JWT Protected • Staging Verified Platform
+          🔒 256-bit Encrypted • Official GaonBazaar Operations Portal
         </div>
       </div>
     </div>

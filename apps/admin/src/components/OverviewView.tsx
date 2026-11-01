@@ -149,7 +149,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       <div className="bg-slate-900 text-white rounded-xl p-6 border border-slate-800 shadow-md">
         <div className="flex items-center space-x-2 text-emerald-400 mb-2 font-bold text-sm">
           <ShieldAlert className="w-4 h-4" />
-          <span>Core System Invariants (Enforced on Backend)</span>
+          <span>Platform Operating Policies</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
           <div className="bg-slate-800/80 p-3.5 rounded-lg border border-slate-700">

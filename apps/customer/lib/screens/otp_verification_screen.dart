@@ -193,14 +193,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               ),
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: GBColors.primary.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: GBColors.primary.withOpacity(0.2)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline, size: 16, color: GBColors.primary),
+                    const Icon(Icons.shield_outlined, size: 18, color: GBColors.primary),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(

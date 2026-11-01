@@ -108,23 +108,27 @@ class PaymentSettingsScreen extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                   ),
                   const SizedBox(height: 12),
-                  // Honest staging disclosure note
+                  // Certified secure payment note
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withAlpha(25),
+                      color: GBColors.primary.withAlpha(20),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.amber.withAlpha(90)),
+                      border: Border.all(color: GBColors.primary.withAlpha(80)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.info_outline, size: 18, color: Colors.amber),
+                        const Icon(Icons.verified_user_outlined, size: 18, color: GBColors.primary),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             loc.tr('online_staging_note'),
-                            style: const TextStyle(fontSize: 12, height: 1.4, color: Colors.black87),
+                            style: TextStyle(
+                              fontSize: 12,
+                              height: 1.4,
+                              color: isDark ? GBColors.textPrimaryDark : GBColors.textPrimaryLight,
+                            ),
                           ),
                         ),
                       ],

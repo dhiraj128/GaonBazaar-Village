@@ -59,6 +59,65 @@ class GBApiClient {
     return 'अनपेक्षित त्रुटि हुई। कृपया दोबारा प्रयास करें (Something went wrong. Please try again)';
   }
 
+  String _sanitizeErrorMessage(int statusCode, dynamic detail) {
+    if (detail is String && detail.trim().isNotEmpty) {
+      final low = detail.toLowerCase();
+      // Mask all internal database, framework, or syntax traces
+      if (low.contains('traceback') ||
+          low.contains('sqlalchemy') ||
+          low.contains('psycopg') ||
+          low.contains('foreignkey') ||
+          low.contains('integrityerror') ||
+          low.contains('syntaxerror') ||
+          low.contains('operationalerror') ||
+          low.contains('internal server error') ||
+          low.contains('stack trace')) {
+        return 'सेवा वर्तमान में व्यस्त है। कृपया कुछ क्षण बाद पुनः प्रयास करें (Service temporarily busy. Please retry)';
+      }
+      return detail.trim();
+    }
+
+    if (detail is List && detail.isNotEmpty) {
+      final first = detail.first;
+      if (first is Map && first.containsKey('msg')) {
+        return '${first['msg']}';
+      }
+      return 'कृपया दर्ज की गई जानकारी की जांच करें (Please check the entered details)';
+    }
+
+    switch (statusCode) {
+      case 400:
+        return 'अमान्य अनुरोध। कृपया पुनः प्रयास करें (Invalid request. Please retry)';
+      case 401:
+        return 'सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें (Session expired. Please sign in again)';
+      case 403:
+        return 'इस कार्रवाई की अनुमति नहीं है (You do not have permission for this action)';
+      case 404:
+        return 'अनुरोधित जानकारी उपलब्ध नहीं है (Requested information not found)';
+      case 409:
+        return 'ऑर्डर स्थिति बदल चुकी है। कृपया स्क्रीन ताज़ा करें (Status updated. Please refresh)';
+      case 422:
+        return 'कृपया दर्ज की गई जानकारी जांचें (Please verify entered details)';
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        return 'सर्वर सेवा वर्तमान में व्यस्त है। कृपया कुछ देर बाद प्रयास करें (Service temporarily busy. Please retry shortly)';
+      default:
+        return 'अनपेक्षित समस्या हुई। कृपया दोबारा प्रयास करें (Unable to complete request. Please try again)';
+    }
+  }
+
+  String _extractErrorMessage(http.Response response) {
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic> && decoded.containsKey('detail')) {
+        return _sanitizeErrorMessage(response.statusCode, decoded['detail']);
+      }
+    } catch (_) {}
+    return _sanitizeErrorMessage(response.statusCode, null);
+  }
+
   /// Automatically verifies backend host connectivity.
   /// If the configured baseUrl is HTTPS (e.g. Render Staging), it validates that endpoint
   /// with cold-start allowance. Otherwise, it probes local candidates.
@@ -107,7 +166,7 @@ class GBApiClient {
       }
       return ApiResponse(
         isSuccess: false,
-        errorMessage: data['detail']?.toString() ?? 'Failed to send OTP',
+        errorMessage: _extractErrorMessage(response),
         statusCode: response.statusCode,
       );
     } catch (e) {
@@ -142,7 +201,7 @@ class GBApiClient {
       }
       return ApiResponse(
         isSuccess: false,
-        errorMessage: data['detail']?.toString() ?? 'अमान्य ओटीपी कोड (Invalid OTP)',
+        errorMessage: _extractErrorMessage(response),
         statusCode: response.statusCode,
       );
     } catch (e) {
@@ -160,7 +219,7 @@ class GBApiClient {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return ApiResponse(isSuccess: true, data: GBUser.fromJson(data), statusCode: 200);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'User profile not found', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -187,7 +246,7 @@ class GBApiClient {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return ApiResponse(isSuccess: true, data: GBUser.fromJson(data), statusCode: 200);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to update profile', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -213,7 +272,7 @@ class GBApiClient {
             .toList();
         return ApiResponse(isSuccess: true, data: list, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch stores', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -231,7 +290,7 @@ class GBApiClient {
             .toList();
         return ApiResponse(isSuccess: true, data: list, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch products', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -247,7 +306,7 @@ class GBApiClient {
         final list = (jsonDecode(response.body) as List).cast<Map<String, dynamic>>();
         return ApiResponse(isSuccess: true, data: list, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch catalog', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -284,7 +343,7 @@ class GBApiClient {
       }
       return ApiResponse(
         isSuccess: false,
-        errorMessage: data['detail']?.toString() ?? 'Order placement failed',
+        errorMessage: _extractErrorMessage(response),
         statusCode: response.statusCode,
       );
     } catch (e) {
@@ -304,7 +363,7 @@ class GBApiClient {
             .toList();
         return ApiResponse(isSuccess: true, data: list, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch orders', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -324,7 +383,7 @@ class GBApiClient {
           statusCode: response.statusCode,
         );
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Order not found', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -344,7 +403,7 @@ class GBApiClient {
       }
       return ApiResponse(
         isSuccess: false,
-        errorMessage: data['detail']?.toString() ?? 'रद्दीकरण की समय सीमा समाप्त हो चुकी है (Cancellation expired)',
+        errorMessage: _extractErrorMessage(response),
         statusCode: response.statusCode,
       );
     } catch (e) {
@@ -365,7 +424,7 @@ class GBApiClient {
             .toList();
         return ApiResponse(isSuccess: true, data: list, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch addresses', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -383,7 +442,7 @@ class GBApiClient {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return ApiResponse(isSuccess: true, data: GBAddress.fromJson(data), statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to save address', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -398,7 +457,7 @@ class GBApiClient {
       if (response.statusCode == 204 || response.statusCode == 200) {
         return ApiResponse(isSuccess: true, data: true, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to delete address', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -425,7 +484,7 @@ class GBApiClient {
       if (response.statusCode == 200) {
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'AI parse failed', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -452,7 +511,7 @@ class GBApiClient {
       if (response.statusCode == 201 || response.statusCode == 200) {
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to submit ticket', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -468,7 +527,7 @@ class GBApiClient {
         final list = (jsonDecode(response.body) as List).cast<Map<String, dynamic>>();
         return ApiResponse(isSuccess: true, data: list, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to load tickets', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -494,7 +553,7 @@ class GBApiClient {
       if (response.statusCode == 200) {
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Support AI failed', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -511,7 +570,7 @@ class GBApiClient {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return ApiResponse(isSuccess: true, data: GBStore.fromJson(data), statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to load store profile', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -531,7 +590,7 @@ class GBApiClient {
       if (response.statusCode == 200) {
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: data['detail']?.toString() ?? 'Failed to update store status', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -551,8 +610,7 @@ class GBApiClient {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return ApiResponse(isSuccess: true, data: GBStore.fromJson(data), statusCode: response.statusCode);
       }
-      final err = jsonDecode(response.body) as Map<String, dynamic>;
-      return ApiResponse(isSuccess: false, errorMessage: err['detail']?.toString() ?? 'Failed to onboard store', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -570,7 +628,7 @@ class GBApiClient {
             .toList();
         return ApiResponse(isSuccess: true, data: list, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch vendor orders', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -586,7 +644,7 @@ class GBApiClient {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch vendor finances', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -606,7 +664,7 @@ class GBApiClient {
       if (response.statusCode == 200) {
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: data['detail']?.toString() ?? 'Action failed', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -626,7 +684,7 @@ class GBApiClient {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return ApiResponse(isSuccess: true, data: GBProduct.fromJson(data), statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to add product', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -656,7 +714,7 @@ class GBApiClient {
       if (response.statusCode == 200) {
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: data['detail']?.toString() ?? 'Failed to update stock', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -677,7 +735,7 @@ class GBApiClient {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: data['detail']?.toString() ?? 'Onboarding failed', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -693,7 +751,7 @@ class GBApiClient {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch runner profile', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -713,7 +771,7 @@ class GBApiClient {
       if (response.statusCode == 200) {
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: data['detail']?.toString() ?? 'Failed to update runner status', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -731,7 +789,7 @@ class GBApiClient {
             .toList();
         return ApiResponse(isSuccess: true, data: list, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch runner jobs', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -747,7 +805,7 @@ class GBApiClient {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: 'Failed to fetch runner finances', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
@@ -776,7 +834,7 @@ class GBApiClient {
       if (response.statusCode == 200) {
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
-      return ApiResponse(isSuccess: false, errorMessage: data['detail']?.toString() ?? 'Action failed', statusCode: response.statusCode);
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
