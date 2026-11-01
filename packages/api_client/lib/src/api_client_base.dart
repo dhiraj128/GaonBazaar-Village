@@ -45,24 +45,40 @@ class GBApiClient {
 
   String _cleanErrorMessage(dynamic e) {
     final str = e.toString().toLowerCase();
+    if (str.contains('timed out') || str.contains('timeout')) {
+      return 'सर्वर से संपर्क में समय लग रहा है। कृपया कुछ सेकंड बाद पुनः प्रयास करें (Server response timed out. Please retry)';
+    }
     if (str.contains('socketexception') ||
         str.contains('operation not permitted') ||
         str.contains('connection refused') ||
-        str.contains('timed out') ||
         str.contains('clientexception') ||
-        str.contains('network is unreachable')) {
-      return 'सर्वर से संपर्क नहीं हो पा रहा है। कृपया अपना इंटरनेट कनेक्शन जांचें (Unable to connect. Please check your internet connection)';
+        str.contains('network is unreachable') ||
+        str.contains('failed host lookup')) {
+      return 'इंटरनेट कनेक्शन नहीं मिल पा रहा है। कृपया नेटवर्क जांचें (Unable to connect. Please check network)';
     }
     return 'अनपेक्षित त्रुटि हुई। कृपया दोबारा प्रयास करें (Something went wrong. Please try again)';
   }
 
-  /// Automatically tests candidate hosts (ADB reverse localhost, Wi-Fi LAN, Emulator loopback)
-  /// and selects the first active responsive backend host.
+  /// Automatically verifies backend host connectivity.
+  /// If the configured baseUrl is HTTPS (e.g. Render Staging), it validates that endpoint
+  /// with cold-start allowance. Otherwise, it probes local candidates.
   Future<void> probeAndSelectHost() async {
+    if (baseUrl.startsWith('https://')) {
+      try {
+        final healthUri = Uri.parse(baseUrl.replaceAll('/api/v1', '/health'));
+        final response = await http.get(healthUri).timeout(const Duration(seconds: 10));
+        if (response.statusCode == 200) {
+          return;
+        }
+      } catch (_) {
+        // Cold-start or transient network glitch; baseUrl remains unchanged
+      }
+    }
+
     for (final candidate in Endpoints.candidateBaseUrls) {
       try {
         final healthUri = Uri.parse(candidate.replaceAll('/api/v1', '/health'));
-        final response = await http.get(healthUri).timeout(const Duration(milliseconds: 1200));
+        final response = await http.get(healthUri).timeout(const Duration(milliseconds: 1500));
         if (response.statusCode == 200) {
           baseUrl = candidate;
           return;

@@ -1,16 +1,22 @@
 class Endpoints {
-  // Candidate base URLs for different environments:
-  // 1. Physical Android phone via USB ADB reverse (adb reverse tcp:8000 tcp:8000)
-  // 2. Physical Android phone via local Wi-Fi LAN
-  // 3. Android Studio Emulator loopback
-  static const String baseUrl = 'http://127.0.0.1:8000/api/v1';
+  // Staging Cloud Render Backend URL (Default for Release builds)
+  static const String stagingBaseUrl = 'https://gaonbazaar-village-api.onrender.com/api/v1';
+
+  // Configured at build time via --dart-define=API_BASE_URL=https://...
+  // Defaults to the staging Render HTTPS URL for real internet access on mobile data / Wi-Fi
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: stagingBaseUrl,
+  );
+
+  static const String localBaseUrl = 'http://127.0.0.1:8000/api/v1';
   static const String emulatorBaseUrl = 'http://10.0.2.2:8000/api/v1';
-  static const String wifiLanBaseUrl = 'http://192.168.31.187:8000/api/v1';
 
   static const List<String> candidateBaseUrls = [
+    baseUrl,
+    'https://gaonbazaar-village-api.onrender.com/api/v1',
     'http://127.0.0.1:8000/api/v1',
     'http://localhost:8000/api/v1',
-    'http://192.168.31.187:8000/api/v1',
     'http://10.0.2.2:8000/api/v1',
   ];
 

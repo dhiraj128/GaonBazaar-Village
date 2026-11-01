@@ -5,7 +5,7 @@ from app.core.config import settings
 
 # Async engine for FastAPI endpoints
 async_engine = create_async_engine(
-    settings.DATABASE_URL,
+    settings.ASYNC_DATABASE_URL,
     echo=False,
     future=True
 )
@@ -20,7 +20,7 @@ AsyncSessionLocal = async_sessionmaker(
 
 # Sync engine for seed scripts / migrations
 sync_engine = create_engine(
-    settings.SYNC_DATABASE_URL,
+    settings.RESOLVED_SYNC_DATABASE_URL,
     echo=False,
     future=True
 )
