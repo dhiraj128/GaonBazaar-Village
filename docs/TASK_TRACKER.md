@@ -19,16 +19,16 @@
 | `TSK-015` | Phase 2 | Order Lifecycle & 180s Cancel API | **PASS** | Strict backend state transition & timer verified |
 | `TSK-016` | Phase 2 | AI Voice Assistant NLP Engine | **PASS** | Multilingual text/speech parse & cart mutation verified |
 | `TSK-017` | Phase 2 | Backend Automated Tests | **PASS** | 13/13 pytest test suite passed in 0.47s |
-| `TSK-018` | Phase 3 | Customer App Structure & Onboarding | **IN PROGRESS** | Flutter customer app project initialization |
-| `TSK-019` | Phase 3 | Customer Home Screen | **PENDING** | 2 featured stores, 2-col product grid, mic search |
-| `TSK-020` | Phase 3 | Customer Cart & Checkout | **PENDING** | COD, address select, delivery breakdown |
-| `TSK-021` | Phase 3 | Customer Live Order Tracking | **PENDING** | 7-stage order status, OTP display |
-| `TSK-022` | Phase 3 | Customer Account (7 items) | **PENDING** | Profile, addresses, theme/lang settings |
-| `TSK-023` | Phase 4 | Vendor App Structure & KYC | **PENDING** | Shop details, GPS pin, bank payout |
-| `TSK-024` | Phase 4 | Vendor Dashboard & Order Actions | **PENDING** | Online toggle, Accept/Reject, Pack, Handoff |
-| `TSK-025` | Phase 4 | Vendor Central Product Library UI | **PENDING** | Fast product selection with preset images |
-| `TSK-026` | Phase 5 | Runner App Structure & Licence | **PENDING** | Simple phone OTP, vehicle, payout |
-| `TSK-027` | Phase 5 | Runner Dashboard & Delivery Flow | **PENDING** | Job broadcast, store navigation, delivery OTP |
-| `TSK-028` | Phase 6 | Super Admin Web Dashboard | **PENDING** | React/TypeScript dashboard with KYC, Ops & Maps |
+| `TSK-018` | Phase 3 | Customer App Structure & Onboarding | **PASS** | Flutter customer app, bilingual onboarding, OTP login |
+| `TSK-019` | Phase 3 | Customer Home Screen | **PASS** | 2 featured stores, 2-col product grid, mic search bar |
+| `TSK-020` | Phase 3 | Customer Cart & Checkout | **PASS** | COD, interactive map address picker, delivery fee breakdown |
+| `TSK-021` | Phase 3 | Customer Live Order Tracking | **PASS** | 7-stage order status, 180s cancel timer, 4-digit OTP display |
+| `TSK-022` | Phase 3 | Customer Account (7 items) | **PASS** | Profile, addresses, payment, app settings, support, legal, logout |
+| `TSK-023` | Phase 4 | Vendor App Structure & KYC | **PASS** | Shop details, GPS pin, owner KYC, bank payout details |
+| `TSK-024` | Phase 4 | Vendor Dashboard & Order Actions | **PASS** | Online toggle, 4-stage order pipeline (Accept, Pack, Ready, Handoff) |
+| `TSK-025` | Phase 4 | Vendor Central Product Library UI | **PASS** | Fast product selection with preset images & custom pricing |
+| `TSK-026` | Phase 5 | Runner App Structure & Onboarding | **PASS** | Phone OTP, vehicle type, emergency contact, payout UPI |
+| `TSK-027` | Phase 5 | Runner Dashboard & Delivery Flow | **PASS** | Duty toggle, job broadcast, navigation, 4-digit delivery OTP |
+| `TSK-028` | Phase 6 | Super Admin Web Dashboard | **PASS** | React 19 + TypeScript + Vite + Tailwind, 7 views, compiled cleanly |
 | `TSK-029` | Phase 7 | Full End-to-End Integration Flow | **PASS** | E2E order creation -> pack -> runner -> deliver verified in tests |
-| `TSK-030` | Phase 8 | Build Android APKs | **PENDING** | Customer, Vendor, Runner APK generation |
+| `TSK-030` | Phase 8 | Build Android APKs | **PASS** | Customer, Vendor, and Runner installable APKs generated |
