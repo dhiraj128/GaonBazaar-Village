@@ -19,8 +19,8 @@ async def lifespan(app: FastAPI):
     async with AsyncSessionLocal() as session:
         # 1. Global catalog items
         cat_check = await session.execute(select(GlobalCatalogItem))
-        if not cat_check.scalars().first():
-            items = [
+        existing_item_ids = {c.id for c in cat_check.scalars().all()}
+        items = [
                 GlobalCatalogItem(
                     id="cat_atta",
                     name_en="Chakki Fresh Atta",
@@ -160,9 +160,182 @@ async def lifespan(app: FastAPI):
                     suggested_mrp=145.0,
                     image_url="https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400",
                     tags="dal,toor,arhar,दाल"
+                ),
+                GlobalCatalogItem(
+                    id="cat_chana_dal",
+                    name_en="Desi Chana Dal",
+                    name_hi="देशी चना दाल",
+                    category="Grocery",
+                    default_unit="1 kg",
+                    suggested_mrp=95.0,
+                    image_url="https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=400",
+                    tags="chana,dal,चना दाल"
+                ),
+                GlobalCatalogItem(
+                    id="cat_moong_dal",
+                    name_en="Dhuli Moong Dal",
+                    name_hi="धुली मूंग दाल",
+                    category="Grocery",
+                    default_unit="1 kg",
+                    suggested_mrp=120.0,
+                    image_url="https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400",
+                    tags="moong,dal,मूंग दाल"
+                ),
+                GlobalCatalogItem(
+                    id="cat_soy_oil",
+                    name_en="Fortune Refined Soyabean Oil",
+                    name_hi="रिफाइंड सोयाबीन तेल",
+                    category="Grocery",
+                    default_unit="1 L",
+                    suggested_mrp=135.0,
+                    image_url="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+                    tags="oil,soyabean,refined,तेल"
+                ),
+                GlobalCatalogItem(
+                    id="cat_haldi",
+                    name_en="Pure Turmeric Powder (Haldi)",
+                    name_hi="शुद्ध हल्दी पाउडर",
+                    category="Grocery",
+                    default_unit="200 g",
+                    suggested_mrp=45.0,
+                    image_url="https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400",
+                    tags="haldi,turmeric,masala,हल्दी"
+                ),
+                GlobalCatalogItem(
+                    id="cat_mirch_powder",
+                    name_en="Lal Mirch Powder",
+                    name_hi="लाल मिर्च पाउडर",
+                    category="Grocery",
+                    default_unit="200 g",
+                    suggested_mrp=55.0,
+                    image_url="https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400",
+                    tags="mirch,chili,masala,मिर्च पाउडर"
+                ),
+                GlobalCatalogItem(
+                    id="cat_buff_milk",
+                    name_en="Fresh Buffalo Milk (Bhains Doodh)",
+                    name_hi="ताज़ा भैंस का गाढ़ा दूध",
+                    category="Dairy",
+                    default_unit="1 L",
+                    suggested_mrp=75.0,
+                    image_url="https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400",
+                    tags="milk,buffalo,doodh,भैंस दूध"
+                ),
+                GlobalCatalogItem(
+                    id="cat_paneer",
+                    name_en="Fresh Malai Paneer",
+                    name_hi="ताज़ा मलाई पनीर",
+                    category="Dairy",
+                    default_unit="250 g",
+                    suggested_mrp=95.0,
+                    image_url="https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400",
+                    tags="paneer,dairy,पनीर"
+                ),
+                GlobalCatalogItem(
+                    id="cat_dahi",
+                    name_en="Fresh Village Curd (Mitha Dahi)",
+                    name_hi="ताज़ा देशी दही",
+                    category="Dairy",
+                    default_unit="500 g",
+                    suggested_mrp=45.0,
+                    image_url="https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400",
+                    tags="dahi,curd,दही"
+                ),
+                GlobalCatalogItem(
+                    id="cat_ghee",
+                    name_en="Pure Desi Danedar Ghee",
+                    name_hi="शुद्ध देशी दानेदार घी",
+                    category="Dairy",
+                    default_unit="500 g",
+                    suggested_mrp=380.0,
+                    image_url="https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=400",
+                    tags="ghee,desi,घी"
+                ),
+                GlobalCatalogItem(
+                    id="cat_cauliflower",
+                    name_en="Fresh Farm Cauliflower (Gobhi)",
+                    name_hi="ताज़ा देशी फूलगोभी",
+                    category="Vegetables",
+                    default_unit="1 piece",
+                    suggested_mrp=25.0,
+                    image_url="https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?w=400",
+                    tags="gobhi,cauliflower,गोभी"
+                ),
+                GlobalCatalogItem(
+                    id="cat_ginger",
+                    name_en="Fresh Ginger (Adrak)",
+                    name_hi="ताज़ा देशी अदरक",
+                    category="Vegetables",
+                    default_unit="250 g",
+                    suggested_mrp=35.0,
+                    image_url="https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400",
+                    tags="ginger,adrak,अदरक"
+                ),
+                GlobalCatalogItem(
+                    id="cat_garlic",
+                    name_en="Desi Garlic (Lahsun)",
+                    name_hi="देशी लहसुन",
+                    category="Vegetables",
+                    default_unit="250 g",
+                    suggested_mrp=65.0,
+                    image_url="https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?w=400",
+                    tags="garlic,lahsun,लहसुन"
+                ),
+                GlobalCatalogItem(
+                    id="cat_pooja_kapur",
+                    name_en="Pure Bhimseni Camphor (Kapur)",
+                    name_hi="शुद्ध भीमसेनी कपूर",
+                    category="Pooja",
+                    default_unit="50 g",
+                    suggested_mrp=50.0,
+                    image_url="https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400",
+                    tags="kapur,camphor,pooja,कपूर"
+                ),
+                GlobalCatalogItem(
+                    id="cat_pooja_batti",
+                    name_en="Round Cotton Wicks (Diya Batti)",
+                    name_hi="पूजा रुई बत्ती",
+                    category="Pooja",
+                    default_unit="1 pack",
+                    suggested_mrp=15.0,
+                    image_url="https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400",
+                    tags="batti,cotton,diya,रुई बत्ती"
+                ),
+                GlobalCatalogItem(
+                    id="cat_toast_rusk",
+                    name_en="Crispy Suji Toast Rusk",
+                    name_hi="सूजी टोस्ट रस्क",
+                    category="Snacks",
+                    default_unit="250 g",
+                    suggested_mrp=35.0,
+                    image_url="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400",
+                    tags="toast,rusk,snacks,टोस्ट"
+                ),
+                GlobalCatalogItem(
+                    id="cat_bath_soap",
+                    name_en="Dettol / Lifebuoy Bathing Soap",
+                    name_hi="नहाने का साबुन (लाइफबॉय/डेटॉल)",
+                    category="Household",
+                    default_unit="1 piece (100g)",
+                    suggested_mrp=35.0,
+                    image_url="https://images.unsplash.com/photo-1607006314144-8849b2f67232?w=400",
+                    tags="soap,bath,साबुन"
+                ),
+                GlobalCatalogItem(
+                    id="cat_detergent",
+                    name_en="Ghadi / Surf Washing Powder",
+                    name_hi="डिटर्जेंट पाउडर (घड़ी/सर्फ)",
+                    category="Household",
+                    default_unit="1 kg",
+                    suggested_mrp=75.0,
+                    image_url="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400",
+                    tags="detergent,washing,powder,सर्फ"
                 )
-            ]
-            session.add_all(items)
+        ]
+        new_items = [itm for itm in items if itm.id not in existing_item_ids]
+        if new_items:
+            for itm in new_items:
+                session.add(itm)
             await session.commit()
             
         # 2. Pilot Stores in Minapur
