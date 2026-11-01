@@ -63,7 +63,7 @@ async def verify_otp(payload: VerifyOTPRequest, db: AsyncSession = Depends(get_d
         await db.commit()
         await db.refresh(user)
         
-        # If Vendor, create linked Store entry
+        # If Vendor, create linked Store entry (Pending Admin Approval)
         if role == "vendor":
             store = Store(
                 owner_id=user.id,
@@ -73,19 +73,19 @@ async def verify_otp(payload: VerifyOTPRequest, db: AsyncSession = Depends(get_d
                 latitude=26.2230,
                 longitude=85.3520,
                 village="Chaturshi",
-                is_approved=True # Auto-approved for pilot baseline
+                is_approved=False # Strict Admin Approval Required
             )
             db.add(store)
             await db.commit()
             
-        # If Runner, create linked Runner entry
+        # If Runner, create linked Runner entry (Pending Admin Approval)
         elif role == "runner":
             runner = Runner(
                 user_id=user.id,
                 full_name=user.name or "Runner Partner",
                 vehicle_type="Motorcycle",
-                is_approved=True,
-                is_online=True,
+                is_approved=False, # Strict Admin Approval Required
+                is_online=False,
                 current_latitude=26.2230,
                 current_longitude=85.3520
             )

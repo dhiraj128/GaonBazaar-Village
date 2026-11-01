@@ -9,6 +9,9 @@ import { OrdersView } from './components/OrdersView';
 import { ZonesView } from './components/ZonesView';
 import { CatalogView } from './components/CatalogView';
 import { SettlementsView } from './components/SettlementsView';
+import { CustomersView } from './components/CustomersView';
+import { TicketsView } from './components/TicketsView';
+import { AuditLogsView } from './components/AuditLogsView';
 import { adminApi } from './api';
 import type {
   AdminOverview,
@@ -18,6 +21,9 @@ import type {
   CatalogItem,
   PlatformSettings,
   SettlementLedger,
+  CustomerItem,
+  SupportTicketItem,
+  AuditLogItem,
 } from './types';
 
 export function App() {
@@ -30,11 +36,14 @@ export function App() {
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [settlements, setSettlements] = useState<SettlementLedger | null>(null);
+  const [customers, setCustomers] = useState<CustomerItem[]>([]);
+  const [tickets, setTickets] = useState<SupportTicketItem[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [ov, st, rn, ord, cat, sett, stt] = await Promise.all([
+      const [ov, st, rn, ord, cat, sett, stt, cust, tck, logs] = await Promise.all([
         adminApi.getOverview(),
         adminApi.getVendors(),
         adminApi.getRunners(),
@@ -42,6 +51,9 @@ export function App() {
         adminApi.getCatalog(),
         adminApi.getSettings(),
         adminApi.getSettlements(),
+        adminApi.getCustomers(),
+        adminApi.getTickets(),
+        adminApi.getAuditLogs(),
       ]);
       setOverview(ov);
       setStores(st);
@@ -50,6 +62,9 @@ export function App() {
       setCatalog(cat);
       setSettings(sett);
       setSettlements(stt);
+      setCustomers(cust);
+      setTickets(tck);
+      setAuditLogs(logs);
     } catch (err) {
       console.error('Failed to fetch admin data', err);
     } finally {
@@ -91,11 +106,17 @@ export function App() {
     await fetchData();
   };
 
+  const handleUpdateTicketStatus = async (id: string, status: 'OPEN' | 'RESOLVED' | 'CLOSED') => {
+    await adminApi.updateTicketStatus(id, status);
+    await fetchData();
+  };
+
   const pendingVendorsCount = stores.filter((s) => !s.is_approved).length;
   const pendingRunnersCount = runners.filter((r) => !r.is_approved).length;
   const activeOrdersCount = orders.filter(
     (o) => o.status !== 'DELIVERED' && o.status !== 'CANCELLED'
   ).length;
+  const openTicketsCount = tickets.filter((t) => t.status === 'OPEN').length;
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans">
@@ -106,6 +127,7 @@ export function App() {
         pendingVendorsCount={pendingVendorsCount}
         pendingRunnersCount={pendingRunnersCount}
         activeOrdersCount={activeOrdersCount}
+        openTicketsCount={openTicketsCount}
       />
 
       {/* Main Content Area */}
@@ -141,6 +163,12 @@ export function App() {
             <OrdersView orders={orders} onUpdateStatus={handleUpdateOrderStatus} />
           )}
 
+          {currentTab === 'customers' && <CustomersView customers={customers} />}
+
+          {currentTab === 'tickets' && (
+            <TicketsView tickets={tickets} onUpdateStatus={handleUpdateTicketStatus} />
+          )}
+
           {currentTab === 'zones' && <ZonesView settings={settings} />}
 
           {currentTab === 'catalog' && (
@@ -148,6 +176,8 @@ export function App() {
           )}
 
           {currentTab === 'settlements' && <SettlementsView ledger={settlements} />}
+
+          {currentTab === 'audit' && <AuditLogsView logs={auditLogs} />}
         </main>
       </div>
     </div>

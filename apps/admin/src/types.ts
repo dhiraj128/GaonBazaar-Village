@@ -109,3 +109,36 @@ export interface SettlementLedger {
   platform_fee_collected: number;
   total_delivered_orders: number;
 }
+
+export interface CustomerItem {
+  id: string;
+  phone: string;
+  name: string;
+  preferred_language: string;
+  is_active: boolean;
+  addresses_count: number;
+  orders_count: number;
+  created_at: string;
+}
+
+export interface SupportTicketItem {
+  id: string;
+  user_id: string;
+  order_id?: string;
+  subject: string;
+  message: string;
+  status: 'OPEN' | 'RESOLVED' | 'CLOSED';
+  created_at: string;
+}
+
+export interface AuditLogItem {
+  id: string;
+  actor_id?: string;
+  actor_role: string;
+  action: string;
+  target_type: string;
+  target_id?: string;
+  details?: string;
+  created_at: string;
+}
+

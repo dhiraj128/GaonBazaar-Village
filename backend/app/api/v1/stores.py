@@ -6,12 +6,86 @@ from sqlalchemy.orm import selectinload
 from app.db.session import get_db
 from app.models.base import Store, StoreProduct, GlobalCatalogItem, User
 from app.schemas.store import (
-    StoreResponse, StoreProductResponse, GlobalCatalogResponse, AddProductToStoreRequest
+    StoreResponse, StoreProductResponse, GlobalCatalogResponse, AddProductToStoreRequest, StoreRegistrationRequest
 )
 from app.services.geo_service import calculate_haversine_distance, is_within_service_radius
 from app.core.security import get_current_user_payload
 
 router = APIRouter(tags=["Stores & Products"])
+
+@router.post("/stores/onboard", response_model=StoreResponse)
+async def onboard_store(
+    req: StoreRegistrationRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    owner_id = payload.get("sub")
+    
+    # Check if store already exists for user
+    res = await db.execute(select(Store).where(Store.owner_id == owner_id))
+    existing = res.scalars().first()
+    if existing:
+        return StoreResponse(
+            id=existing.id,
+            owner_id=existing.owner_id,
+            shop_name=existing.shop_name,
+            owner_name=existing.owner_name,
+            category=existing.category,
+            latitude=existing.latitude,
+            longitude=existing.longitude,
+            village=existing.village,
+            landmark=existing.landmark,
+            block=existing.block,
+            district=existing.district,
+            is_online=existing.is_online,
+            is_approved=existing.is_approved,
+            is_featured=existing.is_featured,
+            rating=existing.rating,
+            banner_url=existing.banner_url
+        )
+        
+    new_store = Store(
+        owner_id=owner_id,
+        shop_name=req.shop_name,
+        owner_name=req.owner_name,
+        category=req.category,
+        latitude=req.latitude,
+        longitude=req.longitude,
+        village=req.village,
+        landmark=req.landmark,
+        block=req.block,
+        district=req.district,
+        is_online=True,
+        is_approved=False, # Requires Admin approval
+        is_featured=False,
+        rating=5.0,
+        banner_url=req.banner_url or "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500",
+        commission_rate=0.0,
+        upi_id=req.upi_id
+    )
+    db.add(new_store)
+    await db.commit()
+    await db.refresh(new_store)
+    
+    return StoreResponse(
+        id=new_store.id,
+        owner_id=new_store.owner_id,
+        shop_name=new_store.shop_name,
+        owner_name=new_store.owner_name,
+        category=new_store.category,
+        latitude=new_store.latitude,
+        longitude=new_store.longitude,
+        village=new_store.village,
+        landmark=new_store.landmark,
+        block=new_store.block,
+        district=new_store.district,
+        is_online=new_store.is_online,
+        is_approved=new_store.is_approved,
+        is_featured=new_store.is_featured,
+        rating=new_store.rating,
+        banner_url=new_store.banner_url
+    )
+
 
 @router.get("/stores/nearby", response_model=List[StoreResponse])
 async def get_nearby_stores(

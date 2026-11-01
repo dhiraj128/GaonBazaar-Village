@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.db.session import get_db
-from app.models.base import Store, Runner, Order, User, GlobalCatalogItem, OrderItem
+from app.models.base import Store, Runner, Order, User, GlobalCatalogItem, OrderItem, SupportTicket, AuditLog, Address
 from app.core.config import settings
 
 router = APIRouter(prefix="/admin", tags=["Super Admin Operations"])
@@ -13,6 +13,13 @@ router = APIRouter(prefix="/admin", tags=["Super Admin Operations"])
 class SettingsUpdate(BaseModel):
     max_delivery_radius_km: Optional[float] = None
     platform_fee: Optional[float] = None
+    vendor_commission_pct: Optional[float] = None
+
+class TicketStatusUpdate(BaseModel):
+    status: str # OPEN, RESOLVED, CLOSED
+
+class AssignRunnerRequest(BaseModel):
+    runner_id: str
     vendor_commission_pct: Optional[float] = None
 
 class CatalogItemCreate(BaseModel):
@@ -229,3 +236,108 @@ async def get_settlements_ledger(db: AsyncSession = Depends(get_db)):
         "platform_fee_collected": len(delivered_orders) * settings.PLATFORM_FEE,
         "total_delivered_orders": len(delivered_orders)
     }
+
+@router.get("/customers")
+async def get_all_customers(db: AsyncSession = Depends(get_db)):
+    res = await db.execute(
+        select(User).options(selectinload(User.addresses), selectinload(User.orders)).where(User.role == "customer")
+    )
+    users = res.scalars().all()
+    results = []
+    for u in users:
+        results.append({
+            "id": u.id,
+            "phone": u.phone,
+            "name": u.name or "Rural Customer",
+            "preferred_language": u.preferred_language,
+            "is_active": u.is_active,
+            "addresses_count": len(u.addresses),
+            "orders_count": len(u.orders),
+            "created_at": u.created_at.isoformat() if u.created_at else None
+        })
+    return results
+
+@router.patch("/settings")
+async def update_platform_settings(req: SettingsUpdate, db: AsyncSession = Depends(get_db)):
+    if req.max_delivery_radius_km is not None:
+        settings.MAX_DELIVERY_RADIUS_KM = req.max_delivery_radius_km
+    if req.platform_fee is not None:
+        settings.PLATFORM_FEE = req.platform_fee
+    if req.vendor_commission_pct is not None:
+        settings.DEFAULT_VENDOR_COMMISSION_PCT = req.vendor_commission_pct
+
+    audit = AuditLog(
+        action="SETTINGS_UPDATED",
+        target_type="PLATFORM_SETTINGS",
+        target_id="global",
+        details=f"Radius: {settings.MAX_DELIVERY_RADIUS_KM}km, PlatformFee: ₹{settings.PLATFORM_FEE}, Commission: {settings.DEFAULT_VENDOR_COMMISSION_PCT}%"
+    )
+    db.add(audit)
+    await db.commit()
+
+    return {
+        "message": "Platform settings updated successfully",
+        "max_delivery_radius_km": settings.MAX_DELIVERY_RADIUS_KM,
+        "platform_fee": settings.PLATFORM_FEE,
+        "vendor_commission_pct": settings.DEFAULT_VENDOR_COMMISSION_PCT
+    }
+
+@router.post("/orders/{order_id}/assign-runner")
+async def assign_runner_to_order(order_id: str, req: AssignRunnerRequest, db: AsyncSession = Depends(get_db)):
+    res_order = await db.execute(select(Order).where(Order.id == order_id))
+    order = res_order.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    res_runner = await db.execute(select(Runner).where(Runner.id == req.runner_id))
+    runner = res_runner.scalars().first()
+    if not runner:
+        raise HTTPException(status_code=404, detail="Runner not found")
+
+    order.runner_id = runner.id
+    order.status = "RUNNER_ASSIGNED"
+
+    audit = AuditLog(
+        action="RUNNER_ASSIGNED",
+        target_type="ORDER",
+        target_id=order.id,
+        details=f"Assigned runner {runner.full_name} ({runner.id}) to order {order.id}"
+    )
+    db.add(audit)
+    await db.commit()
+
+    return {
+        "message": f"Runner {runner.full_name} assigned to order {order.id}",
+        "order_id": order.id,
+        "runner_id": runner.id,
+        "status": order.status
+    }
+
+@router.get("/tickets")
+async def get_support_tickets(db: AsyncSession = Depends(get_db)):
+    res = await db.execute(select(SupportTicket).order_by(SupportTicket.created_at.desc()))
+    return res.scalars().all()
+
+@router.patch("/tickets/{ticket_id}")
+async def update_ticket_status(ticket_id: str, req: TicketStatusUpdate, db: AsyncSession = Depends(get_db)):
+    res = await db.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))
+    ticket = res.scalars().first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Support ticket not found")
+    ticket.status = req.status
+
+    audit = AuditLog(
+        action="TICKET_STATUS_UPDATED",
+        target_type="SUPPORT_TICKET",
+        target_id=ticket.id,
+        details=f"Ticket {ticket.id} status changed to {req.status}"
+    )
+    db.add(audit)
+    await db.commit()
+    return {"message": f"Ticket {ticket.id} updated to {req.status}", "status": ticket.status}
+
+@router.get("/audit-logs")
+async def get_audit_logs(db: AsyncSession = Depends(get_db)):
+    res = await db.execute(select(AuditLog).order_by(AuditLog.created_at.desc()))
+    return res.scalars().all()
+
