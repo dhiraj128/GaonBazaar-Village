@@ -757,10 +757,12 @@ class GBApiClient {
     String orderId,
     String action, {
     String? deliveryOtp,
+    bool? cashCollected,
   }) async {
     try {
       final body = <String, dynamic>{'action': action};
       if (deliveryOtp != null) body['delivery_otp'] = deliveryOtp;
+      if (cashCollected != null) body['cash_collected'] = cashCollected;
 
       final response = await http
           .post(
