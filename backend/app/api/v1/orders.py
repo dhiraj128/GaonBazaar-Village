@@ -260,6 +260,106 @@ async def cancel_order(
     await db.commit()
     return {"message": "Order successfully cancelled within 180s window", "status": "CANCELLED"}
 
+@router.get("/vendor/orders", response_model=List[OrderResponse])
+async def list_vendor_orders(
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    res = await db.execute(select(Store).where(Store.owner_id == user_id))
+    store = res.scalars().first()
+    if not store:
+        return []
+    
+    orders_res = await db.execute(
+        select(Order.id).where(Order.store_id == store.id).order_by(Order.placed_at.desc())
+    )
+    order_ids = orders_res.scalars().all()
+    out = []
+    for oid in order_ids:
+        resp = await _format_order_response(oid, db)
+        if resp:
+            out.append(resp)
+    return out
+
+@router.get("/vendor/finances")
+async def get_vendor_finances(
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    res = await db.execute(select(Store).where(Store.owner_id == user_id))
+    store = res.scalars().first()
+    if not store:
+        raise HTTPException(status_code=404, detail="Store not found")
+        
+    orders_res = await db.execute(
+        select(Order).where(Order.store_id == store.id, Order.status == "DELIVERED")
+    )
+    delivered_orders = orders_res.scalars().all()
+    total_sales = sum(o.subtotal for o in delivered_orders)
+    
+    return {
+        "store_id": store.id,
+        "total_sales": total_sales,
+        "commission_rate": store.commission_rate,
+        "commission_deducted": round(total_sales * (store.commission_rate / 100.0), 2),
+        "net_payout_due": total_sales - round(total_sales * (store.commission_rate / 100.0), 2),
+        "total_delivered_orders": len(delivered_orders),
+        "upi_id": store.upi_id
+    }
+
+@router.get("/runner/jobs", response_model=List[OrderResponse])
+async def list_runner_jobs(
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    r_res = await db.execute(select(Runner).where(Runner.user_id == user_id))
+    runner = r_res.scalars().first()
+    
+    # Available jobs (PACKED or assigned to this runner)
+    if runner:
+        query = select(Order.id).where(
+            (Order.status == "PACKED") | (Order.runner_id == runner.id)
+        ).order_by(Order.placed_at.desc())
+    else:
+        query = select(Order.id).where(Order.status == "PACKED").order_by(Order.placed_at.desc())
+        
+    orders_res = await db.execute(query)
+    order_ids = orders_res.scalars().all()
+    out = []
+    for oid in order_ids:
+        resp = await _format_order_response(oid, db)
+        if resp:
+            out.append(resp)
+    return out
+
+@router.get("/runner/finances")
+async def get_runner_finances(
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    r_res = await db.execute(select(Runner).where(Runner.user_id == user_id))
+    runner = r_res.scalars().first()
+    if not runner:
+        raise HTTPException(status_code=404, detail="Runner profile not found")
+        
+    orders_res = await db.execute(
+        select(Order).where(Order.runner_id == runner.id, Order.status == "DELIVERED")
+    )
+    delivered_orders = orders_res.scalars().all()
+    total_delivery_fees = sum(o.delivery_fee for o in delivered_orders)
+    
+    return {
+        "runner_id": runner.id,
+        "total_delivery_earnings": total_delivery_fees,
+        "total_deliveries_count": len(delivered_orders),
+        "cash_collected_to_remit": sum(o.total_amount for o in delivered_orders if o.payment_mode == "COD"),
+        "upi_id": runner.upi_id
+    }
+
 @router.post("/vendor/orders/{order_id}/action")
 async def vendor_order_action(
     order_id: str,
@@ -289,7 +389,7 @@ async def vendor_order_action(
         
     db.add(OrderTimeline(order_id=order.id, status=order.status, title=title, timestamp=now))
     await db.commit()
-    return {"message": f"Order status updated to {order.status}"}
+    return {"message": f"Order status updated to {order.status}", "status": order.status}
 
 @router.post("/runner/jobs/{order_id}/action")
 async def runner_job_action(
@@ -337,7 +437,7 @@ async def runner_job_action(
         
     db.add(OrderTimeline(order_id=order.id, status=order.status, title=title, timestamp=now))
     await db.commit()
-    return {"message": f"Order status updated to {order.status}"}
+    return {"message": f"Order status updated to {order.status}", "status": order.status}
 
 async def _format_order_response(order_id: str, db: AsyncSession) -> Optional[OrderResponse]:
     res = await db.execute(

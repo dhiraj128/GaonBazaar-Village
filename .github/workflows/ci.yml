@@ -27,7 +27,7 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pytest pytest-asyncio anyio httpx
 
-      - name: Run pytest test suite (23 integration & security tests)
+      - name: Run pytest test suite (24 integration, security & 20-step lifecycle tests)
         run: |
           cd backend
           pytest tests -v --tb=short

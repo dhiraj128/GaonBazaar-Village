@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime, timezone
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -128,11 +129,15 @@ async def reject_runner(runner_id: str, db: AsyncSession = Depends(get_db)):
 @router.get("/orders")
 async def get_all_orders(db: AsyncSession = Depends(get_db)):
     res = await db.execute(
-        select(Order).options(selectinload(Order.items), selectinload(Order.store)).order_by(Order.created_at.desc())
+        select(Order).options(selectinload(Order.items), selectinload(Order.store)).order_by(Order.placed_at.desc())
     )
     orders = res.scalars().all()
     results = []
+    now = datetime.now(timezone.utc)
     for o in orders:
+        c_until = o.cancel_until if o.cancel_until is not None else None
+        if c_until and c_until.tzinfo is None:
+            c_until = c_until.replace(tzinfo=timezone.utc)
         results.append({
             "id": o.id,
             "customer_id": o.customer_id,
@@ -144,12 +149,12 @@ async def get_all_orders(db: AsyncSession = Depends(get_db)):
             "delivery_fee": o.delivery_fee,
             "platform_fee": o.platform_fee,
             "total_amount": o.total_amount,
-            "payment_mode": o.payment_mode,
+            "payment_mode": o.payment_method,
             "payment_status": o.payment_status,
             "delivery_otp": o.delivery_otp,
             "items_count": len(o.items),
-            "created_at": o.created_at.isoformat() if o.created_at else None,
-            "is_cancellable": o.is_cancellable
+            "created_at": o.placed_at.isoformat() if o.placed_at else None,
+            "is_cancellable": o.status == "PLACED" and c_until is not None and c_until > now
         })
     return results
 
@@ -163,7 +168,7 @@ async def update_order_status(order_id: str, req: OrderStatusUpdate, db: AsyncSe
     if req.status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
     order.status = req.status
-    if req.status == "DELIVERED" and order.payment_mode == "COD":
+    if req.status == "DELIVERED" and order.payment_method == "COD":
         order.payment_status = "PAID"
     await db.commit()
     return {"message": f"Order {order_id} status updated to {req.status}", "status": order.status}
@@ -233,6 +238,8 @@ async def get_settlements_ledger(db: AsyncSession = Depends(get_db)):
     return {
         "vendor_settlements": list(vendor_totals.values()),
         "runner_settlements": list(runner_totals.values()),
+        "vendor_payouts_due": sum(v["total_payout"] for v in vendor_totals.values()),
+        "runner_payouts_due": sum(r["total_payout"] for r in runner_totals.values()),
         "platform_fee_collected": len(delivered_orders) * settings.PLATFORM_FEE,
         "total_delivered_orders": len(delivered_orders)
     }
