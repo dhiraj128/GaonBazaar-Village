@@ -261,7 +261,29 @@ async def lifespan(app: FastAPI):
             )
             session.add(runner)
             
-            # 4. Pilot Customer
+            # 4. Pilot Customer (Test Persona 9800000000)
+            u_c0 = User(id="usr_c0", phone="9800000000", name="Ramesh Singh", role="customer", preferred_language="hi")
+            session.add(u_c0)
+            await session.flush()
+            
+            addr0 = Address(
+                id="addr_c0",
+                user_id=u_c0.id,
+                title="Home",
+                recipient_name="Ramesh Singh",
+                phone="9800000000",
+                latitude=26.2210,
+                longitude=85.3500,
+                village="Chaturshi",
+                landmark="Near Shiv Mandir",
+                block="Minapur",
+                district="Muzaffarpur",
+                state="Bihar",
+                is_default=True
+            )
+            session.add(addr0)
+
+            # Pilot Customer 2
             u_c = User(id="usr_c1", phone="9876543210", name="Ramesh Singh", role="customer", preferred_language="hi")
             session.add(u_c)
             await session.flush()
@@ -282,6 +304,17 @@ async def lifespan(app: FastAPI):
                 is_default=True
             )
             session.add(addr)
+
+            # 5. Super Admin (Test Persona 9800000099)
+            u_admin = User(
+                id="usr_admin_01",
+                phone="9800000099",
+                name="GaonBazaar Super Admin",
+                role="admin",
+                preferred_language="en",
+                is_active=True
+            )
+            session.add(u_admin)
             
             await session.commit()
             

@@ -1,8 +1,10 @@
 import random
+import secrets
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from app.core.config import settings
 from app.db.session import get_db
 from app.models.base import User, Store, Runner
 from app.schemas.auth import (
@@ -12,39 +14,86 @@ from app.core.security import create_access_token, get_current_user_payload
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+# Designated test phone personas whitelist
+TEST_PHONE_WHITELIST = {
+    "9800000000", # Customer
+    "9800000001", # Vendor 1
+    "9800000002", # Vendor 2
+    "9800000003", # Runner 1
+    "9800000099", # Super Admin
+}
+
+def is_whitelisted_test_phone(phone: str) -> bool:
+    """Returns True if the phone is an authorized test persona or running under test mode."""
+    if phone in TEST_PHONE_WHITELIST:
+        return True
+    if phone.startswith("98000000"):
+        return True
+    if getattr(settings, "TESTING", False):
+        return True
+    return False
+
 # In-memory OTP storage for rapid verification in dev/staging
 OTP_STORAGE = {}
 
 @router.post("/otp/send", response_model=SendOTPResponse)
 async def send_otp(payload: SendOTPRequest):
-    # Fixed deterministic OTP for pilot testing: '123456'
-    # In live production with SMS provider, random 6 digits will be sent
-    mock_otp = "123456"
     session_id = f"sess_{payload.phone}_{int(datetime.now(timezone.utc).timestamp())}"
+    now_ts = datetime.now(timezone.utc).timestamp()
+    
+    # Restrict test OTP to whitelisted test phones only
+    if is_whitelisted_test_phone(payload.phone):
+        otp_code = "123456"
+        mock_otp_return = "123456"
+    else:
+        # Secure cryptographically strong 6-digit random code for public numbers
+        otp_code = f"{secrets.SystemRandom().randint(100000, 999999)}"
+        mock_otp_return = None # NEVER leak OTP in API response for real public numbers
     
     OTP_STORAGE[payload.phone] = {
-        "otp": mock_otp,
+        "otp": otp_code,
         "role": payload.role,
-        "expires_at": datetime.now(timezone.utc).timestamp() + 300
+        "expires_at": now_ts + 300
     }
     
     return SendOTPResponse(
         message=f"OTP sent to +91 {payload.phone}",
         session_id=session_id,
         expires_in=300,
-        mock_otp=mock_otp
+        mock_otp=mock_otp_return
     )
 
 @router.post("/otp/verify", response_model=TokenResponse)
 async def verify_otp(payload: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
+    now_ts = datetime.now(timezone.utc).timestamp()
     stored = OTP_STORAGE.get(payload.phone)
-    if not stored or stored["otp"] != payload.otp:
-        # Also allow universal test OTP 123456 for robust automated test suite
-        if payload.otp != "123456":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="गलत ओटीपी दर्ज किया गया है (Invalid OTP code)"
-            )
+    
+    # 1. Enforce 5-minute expiry
+    if stored and stored.get("expires_at", 0) < now_ts:
+        OTP_STORAGE.pop(payload.phone, None)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="ओटीपी की समय सीमा समाप्त हो गई है (OTP has expired. Please request a new OTP)"
+        )
+        
+    # 2. Strict OTP validation
+    is_test = is_whitelisted_test_phone(payload.phone)
+    if is_test and payload.otp == "123456":
+        is_valid = True
+    elif stored and stored.get("otp") == payload.otp:
+        is_valid = True
+    else:
+        is_valid = False
+        
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="गलत ओटीपी दर्ज किया गया है (Invalid OTP code)"
+        )
+        
+    # Prevent replay attacks: invalidate once verified
+    if payload.phone in OTP_STORAGE:
+        OTP_STORAGE.pop(payload.phone, None)
             
     role = stored.get("role", payload.role or "customer") if stored else (payload.role or "customer")
     

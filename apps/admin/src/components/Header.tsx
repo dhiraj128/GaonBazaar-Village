@@ -5,9 +5,10 @@ interface HeaderProps {
   currentTab: NavTab;
   onRefresh: () => void;
   isLoading: boolean;
+  onLogout?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentTab, onRefresh, isLoading }) => {
+export const Header: React.FC<HeaderProps> = ({ currentTab, onRefresh, isLoading, onLogout }) => {
   const getTabTitle = (tab: NavTab) => {
     switch (tab) {
       case 'overview':
@@ -58,6 +59,15 @@ export const Header: React.FC<HeaderProps> = ({ currentTab, onRefresh, isLoading
             <div className="text-xs font-bold text-slate-800">Super Admin</div>
             <div className="text-[10px] text-slate-500">Muzaffarpur Operations</div>
           </div>
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="ml-2 px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded border border-rose-200 transition-colors"
+              title="Sign Out"
+            >
+              लॉग आउट
+            </button>
+          )}
         </div>
       </div>
     </header>

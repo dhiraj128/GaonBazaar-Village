@@ -133,6 +133,12 @@ async def create_order(
     cancel_until = now + timedelta(seconds=settings.CUSTOMER_CANCEL_WINDOW_SECONDS)
     delivery_otp = str(random.randint(1000, 9999)) # 4-digit OTP
     
+    # Staging & test security: ensure test accounts cannot trigger real financial transactions
+    is_test_user = payload.get("phone", "").startswith("98000000") or str(customer_id).startswith("usr_c")
+    effective_payment_method = data.payment_method
+    if data.payment_method == "ONLINE" and is_test_user:
+        effective_payment_method = "ONLINE_SIMULATED"
+
     order = Order(
         customer_id=customer_id,
         store_id=store.id,
@@ -142,8 +148,8 @@ async def create_order(
         delivery_fee=totals["delivery_fee"],
         platform_fee=totals["platform_fee"], # Strict ₹3.00
         total_amount=totals["total_amount"],
-        payment_method=data.payment_method,
-        payment_status="PENDING" if data.payment_method == "COD" else "PAID",
+        payment_method=effective_payment_method,
+        payment_status="PENDING" if "COD" in effective_payment_method else "PAID",
         delivery_otp=delivery_otp,
         placed_at=now,
         cancel_until=cancel_until,

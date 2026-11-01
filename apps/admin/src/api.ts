@@ -13,6 +13,39 @@ import type {
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'https://gaonbazaar-village-api.onrender.com/api/v1') + '/admin';
 
+const TOKEN_STORAGE_KEY = 'gaonbazaar_admin_jwt_token';
+
+export const getAdminToken = (): string | null => {
+  try {
+    return localStorage.getItem(TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+
+export const setAdminToken = (token: string): void => {
+  try {
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  } catch {}
+};
+
+export const clearAdminToken = (): void => {
+  try {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  } catch {}
+};
+
+const getAuthHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  const token = getAdminToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 // Fallback initial in-memory state
 let initialStores: StoreItem[] = [
   {
@@ -339,9 +372,42 @@ let initialCatalog: CatalogItem[] = [
 ];
 
 export const adminApi = {
+  async login(phone: string, secretKeyOrOtp: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: phone.trim(),
+          secret_key: secretKeyOrOtp.trim(),
+          otp: secretKeyOrOtp.trim(),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.access_token) {
+          setAdminToken(data.access_token);
+          return { success: true };
+        }
+      }
+      const err = await res.json().catch(() => ({}));
+      return { success: false, error: err.detail || 'Invalid admin credentials' };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error connecting to API' };
+    }
+  },
+
+  logout(): void {
+    clearAdminToken();
+  },
+
+  isAuthenticated(): boolean {
+    return !!getAdminToken();
+  },
+
   async getOverview(): Promise<AdminOverview> {
     try {
-      const res = await fetch(`${API_BASE}/overview`);
+      const res = await fetch(`${API_BASE}/overview`, { headers: getAuthHeaders() });
       if (res.ok) return await res.json();
     } catch {}
     
@@ -374,7 +440,7 @@ export const adminApi = {
 
   async getVendors(): Promise<StoreItem[]> {
     try {
-      const res = await fetch(`${API_BASE}/vendors`);
+      const res = await fetch(`${API_BASE}/vendors`, { headers: getAuthHeaders() });
       if (res.ok) return await res.json();
     } catch {}
     return [...initialStores];
@@ -382,21 +448,21 @@ export const adminApi = {
 
   async approveVendor(id: string): Promise<void> {
     try {
-      await fetch(`${API_BASE}/vendors/${id}/approve`, { method: 'POST' });
+      await fetch(`${API_BASE}/vendors/${id}/approve`, { method: 'POST', headers: getAuthHeaders() });
     } catch {}
     initialStores = initialStores.map((s) => (s.id === id ? { ...s, is_approved: true } : s));
   },
 
   async rejectVendor(id: string): Promise<void> {
     try {
-      await fetch(`${API_BASE}/vendors/${id}/reject`, { method: 'POST' });
+      await fetch(`${API_BASE}/vendors/${id}/reject`, { method: 'POST', headers: getAuthHeaders() });
     } catch {}
     initialStores = initialStores.map((s) => (s.id === id ? { ...s, is_approved: false } : s));
   },
 
   async getRunners(): Promise<RunnerItem[]> {
     try {
-      const res = await fetch(`${API_BASE}/runners`);
+      const res = await fetch(`${API_BASE}/runners`, { headers: getAuthHeaders() });
       if (res.ok) return await res.json();
     } catch {}
     return [...initialRunners];
@@ -404,21 +470,21 @@ export const adminApi = {
 
   async approveRunner(id: string): Promise<void> {
     try {
-      await fetch(`${API_BASE}/runners/${id}/approve`, { method: 'POST' });
+      await fetch(`${API_BASE}/runners/${id}/approve`, { method: 'POST', headers: getAuthHeaders() });
     } catch {}
     initialRunners = initialRunners.map((r) => (r.id === id ? { ...r, is_approved: true } : r));
   },
 
   async rejectRunner(id: string): Promise<void> {
     try {
-      await fetch(`${API_BASE}/runners/${id}/reject`, { method: 'POST' });
+      await fetch(`${API_BASE}/runners/${id}/reject`, { method: 'POST', headers: getAuthHeaders() });
     } catch {}
     initialRunners = initialRunners.map((r) => (r.id === id ? { ...r, is_approved: false } : r));
   },
 
   async getOrders(): Promise<OrderItemRecord[]> {
     try {
-      const res = await fetch(`${API_BASE}/orders`);
+      const res = await fetch(`${API_BASE}/orders`, { headers: getAuthHeaders() });
       if (res.ok) return await res.json();
     } catch {}
     return [...initialOrders];
@@ -428,7 +494,7 @@ export const adminApi = {
     try {
       await fetch(`${API_BASE}/orders/${id}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status }),
       });
     } catch {}
@@ -437,7 +503,7 @@ export const adminApi = {
 
   async getCatalog(): Promise<CatalogItem[]> {
     try {
-      const res = await fetch(`${API_BASE}/catalog`);
+      const res = await fetch(`${API_BASE}/catalog`, { headers: getAuthHeaders() });
       if (res.ok) return await res.json();
     } catch {}
     return [...initialCatalog];
@@ -447,7 +513,7 @@ export const adminApi = {
     try {
       const res = await fetch(`${API_BASE}/catalog`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(item),
       });
       if (res.ok) return await res.json();
@@ -459,7 +525,7 @@ export const adminApi = {
 
   async getSettings(): Promise<PlatformSettings> {
     try {
-      const res = await fetch(`${API_BASE}/settings`);
+      const res = await fetch(`${API_BASE}/settings`, { headers: getAuthHeaders() });
       if (res.ok) return await res.json();
     } catch {}
     return {
@@ -481,7 +547,7 @@ export const adminApi = {
 
   async getSettlements(): Promise<SettlementLedger> {
     try {
-      const res = await fetch(`${API_BASE}/settlements`);
+      const res = await fetch(`${API_BASE}/settlements`, { headers: getAuthHeaders() });
       if (res.ok) return await res.json();
     } catch {}
     const delivered = initialOrders.filter((o) => o.status === 'DELIVERED');
@@ -508,7 +574,7 @@ export const adminApi = {
 
   async getCustomers(): Promise<CustomerItem[]> {
     try {
-      const res = await fetch(`${API_BASE}/customers`);
+      const res = await fetch(`${API_BASE}/customers`, { headers: getAuthHeaders() });
       if (res.ok) return await res.json();
     } catch {}
     return [
@@ -537,7 +603,7 @@ export const adminApi = {
 
   async getTickets(): Promise<SupportTicketItem[]> {
     try {
-      const res = await fetch(`${API_BASE}/tickets`);
+      const res = await fetch(`${API_BASE}/tickets`, { headers: getAuthHeaders() });
       if (res.ok) return await res.json();
     } catch {}
     return [
@@ -565,7 +631,7 @@ export const adminApi = {
     try {
       await fetch(`${API_BASE}/tickets/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status }),
       });
     } catch {}
@@ -573,7 +639,7 @@ export const adminApi = {
 
   async getAuditLogs(): Promise<AuditLogItem[]> {
     try {
-      const res = await fetch(`${API_BASE}/audit-logs`);
+      const res = await fetch(`${API_BASE}/audit-logs`, { headers: getAuthHeaders() });
       if (res.ok) return await res.json();
     } catch {}
     return [
@@ -602,7 +668,7 @@ export const adminApi = {
     try {
       const res = await fetch(`${API_BASE}/settings`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(settings),
       });
       if (res.ok) return await res.json();

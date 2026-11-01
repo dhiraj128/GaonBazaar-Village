@@ -11,7 +11,7 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
-    autoDeploy: false
+    autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7
@@ -33,6 +33,8 @@ services:
         value: "0.0"
       - key: SECRET_KEY
         generateValue: true
+      - key: ADMIN_API_KEY
+        value: gb_admin_live_sec_minapur_2026
       - key: DATABASE_URL
         sync: false # Connect to the dedicated new PostgreSQL database (e.g. gaonbazaar-village-db)
 
@@ -47,7 +49,7 @@ services:
     rootDir: apps/admin
     buildCommand: npm install && npm run build
     staticPublishPath: dist
-    autoDeploy: false
+    autoDeploy: true
     routes:
       - type: rewrite
         source: /*
