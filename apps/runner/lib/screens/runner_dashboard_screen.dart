@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:shared_models/shared_models.dart';
 import '../state/runner_state.dart';
 import 'runner_auth_screen.dart';
 
@@ -11,108 +12,240 @@ class RunnerDashboardScreen extends StatefulWidget {
 }
 
 class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
-  final TextEditingController _otpCtrl = TextEditingController();
-  bool _isVerifyingOtp = false;
+  bool _isActing = false;
 
-  void _confirmPickup() {
-    final state = RunnerStateProvider.of(context);
-    state.updateJobStatus('PICKED_UP');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('सामान दुकान से उठाया गया। अब ग्राहक के पास डिलीवरी के लिए निकलें।')),
-    );
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = RunnerStateProvider.of(context);
+      state.fetchProfile();
+      state.fetchJobs();
+      state.fetchFinances();
+    });
   }
 
-  void _markOutForDelivery() {
-    final state = RunnerStateProvider.of(context);
-    state.updateJobStatus('OUT_FOR_DELIVERY');
-  }
+  Future<void> _handleAction(
+    RunnerAppState state,
+    String orderId,
+    String action, {
+    String? otp,
+  }) async {
+    setState(() => _isActing = true);
+    final res = await state.handleJobAction(orderId, action, deliveryOtp: otp);
+    if (!mounted) return;
+    setState(() => _isActing = false);
 
-  void _completeDelivery() {
-    final state = RunnerStateProvider.of(context);
-    final job = state.activeJob;
-    if (job == null) return;
+    final isHi = state.isHindi;
+    final success = res['success'] == true;
 
-    final enteredOtp = _otpCtrl.text.trim();
-    if (enteredOtp != job['delivery_otp']) {
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('गलत डिलीवरी ओटीपी! कृपया ग्राहक से सही 4-अंकीय कोड लें।'),
+        SnackBar(
+          content: Text(
+            isHi
+                ? 'कार्रवाई सफल रही: ${res['message'] ?? action}'
+                : 'Action successful: ${res['message'] ?? action}',
+          ),
+          backgroundColor: GBColors.success,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res['error']?.toString() ?? (isHi ? 'कार्रवाई विफल रही' : 'Action failed')),
           backgroundColor: GBColors.error,
         ),
       );
-      return;
     }
+  }
 
-    setState(() => _isVerifyingOtp = true);
+  void _showDeliveryOtpDialog(RunnerAppState state, String orderId, String expectedOtp, double payout, bool isCod, double codAmount) {
+    final isHi = state.isHindi;
+    final ctrl = TextEditingController();
 
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (!mounted) return;
-      setState(() => _isVerifyingOtp = false);
-      state.updateJobStatus('DELIVERED');
-
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('डिलीवरी सफल! (Delivered)'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('सामान सफलतापूर्वक सुपुर्द कर दिया गया है।'),
-              const SizedBox(height: 10),
-              Text('आपकी कमाई: ₹${job['payout']}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: GBColors.primary)),
-              if (job['is_cod'] == true) ...[
-                const SizedBox(height: 8),
-                Text('नकद संग्रह (COD Cash Collected): ₹${job['cod_amount']}', style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.blue)),
-              ],
-            ],
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                state.clearJob();
-              },
-              child: const Text('अगला काम देखें'),
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          isHi ? 'ग्राहक डिलीवरी ओटीपी दर्ज करें' : 'Enter Customer Delivery OTP',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isHi
+                  ? 'सामान सौंपते समय ग्राहक से 4-अंकीय ओटीपी कोड प्राप्त करें:'
+                  : 'Ask the customer for their 4-digit delivery PIN upon handing over items:',
+              style: const TextStyle(fontSize: 13),
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ctrl,
+              keyboardType: TextInputType.number,
+              maxLength: 4,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: 8),
+              decoration: InputDecoration(
+                hintText: '----',
+                counterText: '',
+                border: const OutlineInputBorder(),
+                filled: true,
+                fillColor: Theme.of(context).cardColor,
+              ),
+            ),
+            if (expectedOtp.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                '${isHi ? "सत्यापन कोड (डेमो हेतु)" : "Customer OTP (Demo hint)"}: $expectedOtp',
+                style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
+              ),
+            ],
+            if (isCod) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.payments_outlined, color: Colors.red, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        isHi
+                            ? 'नकद भुगतान (COD): ₹${codAmount.toStringAsFixed(0)} एकत्र करें'
+                            : 'Collect Cash (COD): ₹${codAmount.toStringAsFixed(0)}',
+                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w800, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
-      );
-    });
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(isHi ? 'रद्द करें' : 'Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
+            onPressed: () async {
+              final entered = ctrl.text.trim();
+              if (entered.length != 4) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(isHi ? 'कृपया 4-अंकीय ओटीपी दर्ज करें' : 'Please enter 4-digit OTP')),
+                );
+                return;
+              }
+              Navigator.of(ctx).pop();
+              await _handleAction(state, orderId, 'DELIVER', otp: entered);
+
+              if (mounted) {
+                showDialog(
+                  context: context,
+                  builder: (c) => AlertDialog(
+                    icon: const Icon(Icons.celebration, color: GBColors.primary, size: 48),
+                    title: Text(
+                      isHi ? 'डिलीवरी सफलतापूर्वक संपन्न!' : 'Delivery Completed Successfully!',
+                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                    ),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isHi ? 'आपकी डिलीवरी शुल्क कमाई:' : 'Your delivery earning:',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        Text(
+                          '₹${payout.toStringAsFixed(0)}',
+                          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: GBColors.primary),
+                        ),
+                        if (isCod) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            isHi
+                                ? 'एकत्रित नकद राशि: ₹${codAmount.toStringAsFixed(0)} (आज रात कंपनी को जमा करें)'
+                                : 'Collected Cash: ₹${codAmount.toStringAsFixed(0)} (Remit tonight)',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.blue),
+                          ),
+                        ],
+                      ],
+                    ),
+                    actions: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
+                        onPressed: () => Navigator.of(c).pop(),
+                        child: Text(isHi ? 'ठीक है' : 'OK'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
+            child: Text(isHi ? 'डिलीवर करें' : 'Confirm Deliver'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final state = RunnerStateProvider.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final job = state.activeJob;
+    final isHi = state.isHindi;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('गाँव बाज़ार डिलीवरी साथी', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-            Text('मीनापुर पायलट (Minapur Zone)', style: TextStyle(fontSize: 11, color: Colors.grey)),
+            Text(
+              isHi ? 'गाँव बाज़ार डिलीवरी साथी' : 'GaonBazaar Runner',
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            ),
+            Text(
+              isHi ? 'मीनापुर पायलट ज़ोन (मुजफ्फरपुर)' : 'Minapur Pilot Zone (Muzaffarpur)',
+              style: const TextStyle(fontSize: 11, color: Colors.grey),
+            ),
           ],
         ),
         actions: [
-          Row(
-            children: [
-              Text(
-                state.isOnline ? 'ड्यूटी ऑन' : 'ड्यूटी ऑफ',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: state.isOnline ? GBColors.success : GBColors.error,
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Row(
+              children: [
+                Text(
+                  state.isOnline
+                      ? (isHi ? 'ड्यूटी ऑन' : 'Online')
+                      : (isHi ? 'ड्यूटी ऑफ' : 'Offline'),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: state.isOnline ? GBColors.success : GBColors.error,
+                  ),
                 ),
-              ),
-              Switch(
-                value: state.isOnline,
-                activeColor: GBColors.success,
-                onChanged: (v) => state.toggleOnline(),
-              ),
-            ],
+                Switch(
+                  value: state.isOnline,
+                  activeColor: GBColors.success,
+                  onChanged: (v) async {
+                    final err = await state.toggleDutyOnline();
+                    if (err != null && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(err), backgroundColor: GBColors.error),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -121,35 +254,82 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF1B5E20)),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   const Icon(Icons.two_wheeler, color: Colors.white, size: 36),
                   const SizedBox(height: 8),
-                  Text(state.currentUser?.name ?? 'Santosh Kumar', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
-                  const Text('बाइक नंबर: BR-06-AB-1234', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text(
+                    state.runnerProfile?['full_name'] as String? ?? state.currentUser?.name ?? 'Santosh Kumar',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+                  ),
+                  Text(
+                    '${isHi ? "वाहन" : "Vehicle"}: ${state.runnerProfile?["vehicle_number"] ?? "BR-06-AB-1234"} • ⭐ 4.9',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
                 ],
               ),
             ),
             ListTile(
               leading: const Icon(Icons.currency_rupee),
-              title: const Text('कमाई व ट्रिप हिस्ट्री'),
-              subtitle: Text('आज की कमाई: ₹${state.todayEarnings.toStringAsFixed(0)}'),
-              onTap: () => Navigator.of(context).pop(),
+              title: Text(isHi ? 'कमाई व ट्रिप हिस्ट्री' : 'Earnings & Trips'),
+              subtitle: Text('${isHi ? "आज की कमाई" : "Today"}: ₹${state.todayEarnings.toStringAsFixed(0)}'),
+              onTap: () {
+                Navigator.of(context).pop();
+                state.fetchFinances();
+              },
             ),
             ListTile(
-              leading: const Icon(Icons.headset_mic_outlined),
-              title: const Text('डिलीवरी हेल्पलाइन'),
-              subtitle: const Text('1800-GAON-BAZAAR'),
-              onTap: () => Navigator.of(context).pop(),
+              leading: const Icon(Icons.language),
+              title: Text(isHi ? 'भाषा (Language)' : 'Language'),
+              trailing: DropdownButton<String>(
+                value: state.currentLocale,
+                underline: const SizedBox(),
+                items: const [
+                  DropdownMenuItem(value: 'hi', child: Text('हिंदी')),
+                  DropdownMenuItem(value: 'en', child: Text('English')),
+                ],
+                onChanged: (lang) {
+                  if (lang != null) state.setLocale(lang);
+                },
+              ),
+            ),
+            ListTile(
+              leading: Icon(state.themeMode == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode),
+              title: Text(isHi ? 'डार्क थीम' : 'Dark Theme'),
+              trailing: Switch(
+                value: state.themeMode == ThemeMode.dark,
+                onChanged: (val) {
+                  state.setTheme(val ? ThemeMode.dark : ThemeMode.light);
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.support_agent, color: GBColors.primary),
+              title: Text(isHi ? 'इमरजेंसी डिलीवरी हेल्पलाइन' : 'Emergency Helpline'),
+              subtitle: const Text('+91 9800000000'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(isHi ? 'कॉलिंग हेल्पलाइन: +91 9800000000' : 'Calling helpline: +91 9800000000'),
+                  ),
+                );
+              },
             ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: GBColors.error),
-              title: const Text('लॉग आउट (Logout)', style: TextStyle(color: GBColors.error, fontWeight: FontWeight.w700)),
+              title: Text(isHi ? 'लॉग आउट' : 'Logout', style: const TextStyle(color: GBColors.error, fontWeight: FontWeight.w700)),
               onTap: () {
+                state.logout();
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const RunnerAuthScreen()),
                   (r) => false,
@@ -160,203 +340,459 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
         ),
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+        child: Column(
           children: [
-            // Daily Earnings Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+            // Approval Warning Banner if runner not yet approved
+            if (!state.isApproved)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                color: Colors.amber.shade100,
+                child: Row(
+                  children: [
+                    Icon(Icons.pending_actions, color: Colors.amber.shade900, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        isHi
+                            ? 'आपकी प्रोफ़ाइल सत्यापन प्रक्रियाधीन है। सुपर एडमिन द्वारा अनुमोदन के बाद ही आप ड्यूटी ऑनलाइन कर सकेंगे।'
+                            : 'Your profile is pending admin approval. You can go online on duty once approved.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.amber.shade900,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.12), blurRadius: 6, offset: const Offset(0, 2)),
-                ],
               ),
+
+            // Duty Status Bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              color: state.isOnline ? GBColors.success.withValues(alpha: 0.08) : GBColors.error.withValues(alpha: 0.08),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('आज की कमाई (Today)', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                      const SizedBox(height: 4),
-                      Text('₹${state.todayEarnings.toStringAsFixed(0)}', style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900)),
-                    ],
+                  Icon(
+                    state.isOnline ? Icons.check_circle : Icons.pause_circle,
+                    size: 16,
+                    color: state.isOnline ? GBColors.success : GBColors.error,
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const Text('पूरी की गई डिलीवरी', style: TextStyle(color: Colors.white70, fontSize: 12)),
-                      const SizedBox(height: 4),
-                      Text('${state.completedTrips} Trips', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
-                    ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      state.isOnline
+                          ? (isHi ? 'ड्यूटी ऑन है — नए ऑर्डर स्वीकार किए जा रहे हैं।' : 'Duty is Online — Accepting orders.')
+                          : (isHi ? 'ड्यूटी ऑफ है — आप नए ऑर्डर प्राप्त नहीं कर सकते।' : 'Duty is Offline — Not accepting orders.'),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: state.isOnline ? GBColors.success : GBColors.error,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
 
-            // Active Job Section
-            if (job != null) ...[
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? GBColors.cardDark : Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: isDark ? GBColors.borderDark : GBColors.borderLight),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            // Pull to refresh body
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  await state.fetchJobs();
+                  await state.fetchFinances();
+                },
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('सक्रिय डिलीवरी #${job['id']}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: GBColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'कमाई: ₹${job['payout']}',
-                            style: const TextStyle(fontWeight: FontWeight.w800, color: GBColors.primary, fontSize: 12),
-                          ),
+                    // Daily Earnings Card
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                      ],
-                    ),
-                    const Divider(height: 20),
-
-                    // Pickup Store Information
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.storefront, color: GBColors.primary, size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 6, offset: const Offset(0, 2)),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('पिकअप दुकान (Pickup Store):', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                              Text(job['store_name'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                              Text('${job['store_village']}, ${job['store_landmark']}', style: const TextStyle(fontSize: 12)),
+                              Text(
+                                isHi ? 'आज की डिलीवरी कमाई' : "Today's Earnings",
+                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '₹${state.todayEarnings.toStringAsFixed(0)}',
+                                style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900),
+                              ),
                             ],
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.call, color: GBColors.primary),
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('दुकानदार: +91 9800000001')));
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Drop Customer Information
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.person_pin_circle, color: GBColors.secondary, size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              const Text('ग्राहक का पता (Drop Customer):', style: TextStyle(fontSize: 11, color: Colors.grey)),
-                              Text(job['customer_name'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                              Text(job['customer_village'] as String, style: const TextStyle(fontSize: 12)),
-                              if (job['is_cod'] == true)
-                                Text('नकद संग्रह (Collect Cash): ₹${job['cod_amount']}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.red)),
+                              Text(
+                                isHi ? 'पूरी की गई ट्रिप' : 'Completed Trips',
+                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${state.completedTrips} ${isHi ? "ट्रिप्स" : "Trips"}',
+                                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+                              ),
                             ],
                           ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.call, color: GBColors.primary),
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('ग्राहक: +91 ${job['customer_phone']}')));
-                          },
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
 
-                    // Actions based on job stage
-                    if (job['status'] == 'ASSIGNED') ...[
-                      GBPrimaryButton(
-                        label: 'सामान दुकान से उठाया (Confirm Pickup)',
-                        onPressed: _confirmPickup,
-                      ),
-                    ] else if (job['status'] == 'PICKED_UP') ...[
-                      GBPrimaryButton(
-                        label: 'ग्राहक की ओर रवाना (Out for Delivery)',
-                        backgroundColor: GBColors.secondary,
-                        onPressed: _markOutForDelivery,
-                      ),
-                    ] else if (job['status'] == 'OUT_FOR_DELIVERY') ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: GBColors.primary.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: GBColors.primary),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('ग्राहक का 4-अंकीय ओटीपी दर्ज करें (Enter OTP):', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                            const SizedBox(height: 8),
-                            TextField(
-                              controller: _otpCtrl,
-                              keyboardType: TextInputType.number,
-                              maxLength: 4,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: 8),
-                              decoration: const InputDecoration(
-                                hintText: '----',
-                                counterText: '',
-                                filled: true,
-                                fillColor: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      GBPrimaryButton(
-                        label: 'डिलीवरी पूर्ण करें (Complete Delivery)',
-                        isLoading: _isVerifyingOtp,
-                        onPressed: _completeDelivery,
+                    // Active Jobs List
+                    _buildJobsSection(state),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildJobsSection(RunnerAppState state) {
+    final isHi = state.isHindi;
+
+    if (state.activeJobs.isEmpty) {
+      // Fallback sample job so runner can test interaction in demo mode
+      final fallbackJob = {
+        'id': 'ord_run_101',
+        'store_name': isHi ? 'माँ शारदा किराना स्टोर' : 'Maa Sharda Kirana Store',
+        'store_village': 'Chaturshi, Minapur',
+        'store_landmark': isHi ? 'ग्राम पंचायत भवन के पास' : 'Near Gram Panchayat Bhavan',
+        'customer_name': 'Ramesh Singh',
+        'customer_phone': '9876543210',
+        'customer_village': 'Chaturshi, Near Shiv Mandir',
+        'items_summary': isHi ? 'चक्की आटा x 2 kg, गाय का दूध x 1 L' : 'Chakki Atta x 2 kg, Fresh Milk x 1 L',
+        'payout': 25.0,
+        'status': 'PACKED',
+        'delivery_otp': '4821',
+        'is_cod': true,
+        'cod_amount': 132.0,
+      };
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                isHi ? 'उपलब्ध डिलीवरी कार्य' : 'Available Delivery Jobs',
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => state.fetchJobs(),
+                icon: const Icon(Icons.refresh, size: 14),
+                label: Text(isHi ? 'ताज़ा करें' : 'Refresh', style: const TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _buildFallbackJobCard(state, fallbackJob),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          isHi ? 'सक्रिय डिलीवरी कार्य' : 'Active Delivery Jobs',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+        ),
+        const SizedBox(height: 10),
+        ...state.activeJobs.map((order) => _buildLiveJobCard(state, order)),
+      ],
+    );
+  }
+
+  Widget _buildLiveJobCard(RunnerAppState state, GBOrder order) {
+    final isHi = state.isHindi;
+    final displayId = order.id.length > 8 ? order.id.substring(0, 8) : order.id;
+    final isCod = order.paymentMethod.toUpperCase() == 'COD';
+    final itemsSummary = order.items.map((i) => '${isHi ? i.nameHi : i.nameEn} x ${i.quantity}').join(', ');
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 1)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('#$displayId', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: GBColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '${isHi ? "कमाई" : "Earn"}: ₹${order.deliveryFee.toStringAsFixed(0)}',
+                  style: const TextStyle(fontWeight: FontWeight.w800, color: GBColors.primary, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+          const Divider(height: 18),
+
+          // Pickup Store Info
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.storefront, color: GBColors.primary, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isHi ? 'पिकअप दुकान' : 'Pickup Store',
+                      style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
+                    ),
+                    Text(order.storeName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.call, color: GBColors.primary, size: 20),
+                visualDensity: VisualDensity.compact,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${isHi ? "दुकानदार से संपर्क" : "Contact Store"}: +91 9800000001')),
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Customer Delivery Info
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.person_pin_circle, color: GBColors.secondary, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isHi ? 'ग्राहक ड्रॉप पता' : 'Drop Address',
+                      style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
+                    ),
+                    Text(order.deliveryAddress, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                    if (isCod) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        '${isHi ? "नकद संग्रह" : "Collect Cash"}: ₹${order.totalAmount.toStringAsFixed(0)}',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.red),
                       ),
                     ],
                   ],
                 ),
               ),
-            ] else ...[
-              // No active job state
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  child: Column(
-                    children: [
-                      Icon(Icons.radar, size: 60, color: GBColors.primary.withOpacity(0.6)),
-                      const SizedBox(height: 14),
-                      const Text('नई डिलीवरी की प्रतीक्षा में...', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                      const SizedBox(height: 4),
-                      const Text('मीनापुर ८ किमी दायरे में नया ऑर्डर आने पर तुरंत सूचना दी जाएगी।', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    ],
-                  ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          Text(
+            itemsSummary.isNotEmpty ? itemsSummary : (isHi ? 'सामग्री विवरण' : 'Items'),
+            style: const TextStyle(fontSize: 12, color: Colors.black87),
+          ),
+          const SizedBox(height: 14),
+
+          // Action Buttons
+          _buildActionButtons(state, order.id, order.status, order.deliveryOtp, order.deliveryFee, isCod, order.totalAmount, isHi),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFallbackJobCard(RunnerAppState state, Map<String, dynamic> f) {
+    final isHi = state.isHindi;
+    final status = f['status'] as String;
+    final isCod = f['is_cod'] as bool;
+    final codAmount = (f['cod_amount'] as num).toDouble();
+    final payout = (f['payout'] as num).toDouble();
+    final otp = f['delivery_otp'] as String;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 1)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('#${f['id']}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: GBColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '${isHi ? "कमाई" : "Earn"}: ₹${payout.toStringAsFixed(0)}',
+                  style: const TextStyle(fontWeight: FontWeight.w800, color: GBColors.primary, fontSize: 12),
                 ),
               ),
             ],
-          ],
-        ),
+          ),
+          const Divider(height: 18),
+
+          // Pickup Store
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.storefront, color: GBColors.primary, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(isHi ? 'पिकअप दुकान' : 'Pickup Store', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    Text(f['store_name'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                    Text('${f['store_village']}, ${f['store_landmark']}', style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.call, color: GBColors.primary),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${isHi ? "दुकानदार से संपर्क" : "Store"}: +91 9800000001')),
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Drop Customer
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.person_pin_circle, color: GBColors.secondary, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(isHi ? 'ग्राहक का पता' : 'Drop Address', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    Text(f['customer_name'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                    Text(f['customer_village'] as String, style: const TextStyle(fontSize: 12)),
+                    if (isCod)
+                      Text(
+                        '${isHi ? "नकद संग्रह" : "Collect Cash"}: ₹${codAmount.toStringAsFixed(0)}',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.red),
+                      ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.call, color: GBColors.primary),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${isHi ? "ग्राहक को कॉल करें" : "Customer"}: +91 ${f['customer_phone']}')),
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(f['items_summary'] as String, style: const TextStyle(fontSize: 12, color: Colors.black87)),
+          const SizedBox(height: 14),
+
+          _buildActionButtons(state, f['id'] as String, status, otp, payout, isCod, codAmount, isHi),
+        ],
       ),
     );
+  }
+
+  Widget _buildActionButtons(
+    RunnerAppState state,
+    String orderId,
+    String status,
+    String deliveryOtp,
+    double payout,
+    bool isCod,
+    double codAmount,
+    bool isHi,
+  ) {
+    if (_isActing) {
+      return const Center(child: Padding(padding: EdgeInsets.all(8), child: CircularProgressIndicator(strokeWidth: 2)));
+    }
+
+    if (status == 'PACKED') {
+      return GBPrimaryButton(
+        label: isHi ? 'डिलीवरी स्वीकार करें' : 'Accept Delivery Job',
+        onPressed: () => _handleAction(state, orderId, 'ACCEPT'),
+      );
+    } else if (status == 'RUNNER_ASSIGNED') {
+      return GBPrimaryButton(
+        label: isHi ? 'सामान दुकान से उठाया' : 'Picked Up from Store',
+        backgroundColor: GBColors.primary,
+        onPressed: () => _handleAction(state, orderId, 'PICKUP'),
+      );
+    } else if (status == 'PICKED_UP') {
+      return GBPrimaryButton(
+        label: isHi ? 'ग्राहक की ओर रवाना' : 'Out for Delivery',
+        backgroundColor: GBColors.secondary,
+        onPressed: () => _handleAction(state, orderId, 'OUT_FOR_DELIVERY'),
+      );
+    } else if (status == 'OUT_FOR_DELIVERY') {
+      return GBPrimaryButton(
+        label: isHi ? 'ओटीपी सत्यापित कर डिलीवर करें' : 'Verify OTP & Complete Delivery',
+        backgroundColor: GBColors.primaryDark,
+        onPressed: () => _showDeliveryOtpDialog(state, orderId, deliveryOtp, payout, isCod, codAmount),
+      );
+    } else {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        alignment: Alignment.center,
+        child: Text(
+          isHi ? 'डिलीवरी संपन्न' : 'Delivered',
+          style: const TextStyle(color: GBColors.success, fontWeight: FontWeight.w800),
+        ),
+      );
+    }
   }
 }

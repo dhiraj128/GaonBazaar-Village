@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:shared_models/shared_models.dart';
 import '../state/vendor_state.dart';
 import 'product_library_screen.dart';
 import 'vendor_inventory_screen.dart';
@@ -15,34 +16,7 @@ class VendorDashboardScreen extends StatefulWidget {
 
 class _VendorDashboardScreenState extends State<VendorDashboardScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
-  // Active incoming sample orders
-  final List<Map<String, dynamic>> _sampleOrders = [
-    {
-      'id': 'ord_101',
-      'customer': 'Ramesh Singh (Chaturshi)',
-      'items': 'चक्की आटा x 2 kg, गाय का दूध x 1 L',
-      'amount': 132.0,
-      'status': 'PLACED',
-      'time': '2 mins ago',
-    },
-    {
-      'id': 'ord_102',
-      'customer': 'Suresh Kumar (Tubanaghara)',
-      'items': 'सरसों तेल x 1 L, आलू x 2 kg',
-      'amount': 190.0,
-      'status': 'ACCEPTED',
-      'time': '12 mins ago',
-    },
-    {
-      'id': 'ord_103',
-      'customer': 'Sunil Sah (Sivay Patti)',
-      'items': 'एलईडी बल्ब x 2, अगरबत्ती x 1',
-      'amount': 190.0,
-      'status': 'PACKED',
-      'time': '25 mins ago',
-    },
-  ];
+  bool _isActing = false;
 
   @override
   void initState() {
@@ -50,44 +24,68 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
     _tabController = TabController(length: 4, vsync: this);
   }
 
-  void _handleAction(String orderId, String action) {
-    setState(() {
-      for (final o in _sampleOrders) {
-        if (o['id'] == orderId) {
-          if (action == 'ACCEPT') o['status'] = 'ACCEPTED';
-          if (action == 'PACK') o['status'] = 'PACKED';
-          if (action == 'HANDOFF') o['status'] = 'COMPLETED';
-          if (action == 'REJECT') o['status'] = 'REJECTED';
-          break;
-        }
-      }
-    });
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleAction(VendorAppState state, String orderId, String action) async {
+    setState(() => _isActing = true);
+    final isHi = state.isHindi;
+    final success = await state.handleOrderAction(orderId, action);
+    if (!mounted) return;
+    setState(() => _isActing = false);
+
+    final actionLabel = action == 'ACCEPT'
+        ? (isHi ? 'स्वीकार किया गया' : 'Accepted')
+        : action == 'PACK'
+            ? (isHi ? 'पैक चिह्नित किया गया' : 'Marked Packed')
+            : action == 'HANDOFF'
+                ? (isHi ? 'डिलीवरी पार्टनर को सौंपा गया' : 'Handed over to runner')
+                : (isHi ? 'अस्वीकार किया गया' : 'Rejected');
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('ऑर्डर #$orderId: $action किया गया।')),
+      SnackBar(
+        content: Text(
+          success
+              ? (isHi ? 'ऑर्डर #$orderId: $actionLabel' : 'Order #$orderId: $actionLabel')
+              : (isHi ? 'कार्रवाई विफल रही। कृपया पुनः प्रयास करें।' : 'Action failed. Please retry.'),
+        ),
+        backgroundColor: success ? GBColors.success : GBColors.error,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final state = VendorStateProvider.of(context);
+    final isHi = state.isHindi;
 
     return Scaffold(
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(state.myStore?.shopName ?? 'माँ शारदा किराना स्टोर', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-            Text('${state.myStore?.village ?? "Chaturshi"}, Minapur', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+            Text(
+              state.myStore?.shopName ?? (isHi ? 'माँ शारदा किराना स्टोर' : 'Maa Sharda Kirana Store'),
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            ),
+            Text(
+              '${state.myStore?.village ?? "Chaturshi"}, ${state.myStore?.block ?? "Minapur"}',
+              style: const TextStyle(fontSize: 11, color: Colors.grey),
+            ),
           ],
         ),
         actions: [
-          // Store Online / Offline Toggle
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: Row(
               children: [
                 Text(
-                  state.isStoreOnline ? 'Online' : 'Offline',
+                  state.isStoreOnline
+                      ? (isHi ? 'ऑनलाइन' : 'Online')
+                      : (isHi ? 'ऑफलाइन' : 'Offline'),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -97,7 +95,14 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                 Switch(
                   value: state.isStoreOnline,
                   activeColor: GBColors.success,
-                  onChanged: (v) => state.toggleStoreOnline(),
+                  onChanged: (v) async {
+                    final err = await state.toggleStoreOnline();
+                    if (err != null && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(err), backgroundColor: GBColors.error),
+                      );
+                    }
+                  },
                 ),
               ],
             ),
@@ -108,11 +113,11 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
           labelColor: GBColors.primary,
           unselectedLabelColor: Colors.grey,
           indicatorColor: GBColors.primary,
-          tabs: const [
-            Tab(text: 'नया (New)'),
-            Tab(text: 'पैकिंग (Pack)'),
-            Tab(text: 'पिकअप (Ready)'),
-            Tab(text: 'पूर्ण (Done)'),
+          tabs: [
+            Tab(text: isHi ? 'नया' : 'New'),
+            Tab(text: isHi ? 'पैकिंग' : 'Packing'),
+            Tab(text: isHi ? 'तैयार' : 'Ready'),
+            Tab(text: isHi ? 'पूर्ण' : 'Delivered'),
           ],
         ),
       ),
@@ -128,14 +133,20 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                 children: [
                   const Icon(Icons.storefront, color: Colors.white, size: 36),
                   const SizedBox(height: 8),
-                  Text(state.myStore?.shopName ?? 'माँ शारदा किराना स्टोर', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
-                  const Text('0% कमीशन विक्रेता खाता', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text(
+                    state.myStore?.shopName ?? (isHi ? 'माँ शारदा किराना स्टोर' : 'Maa Sharda Kirana Store'),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+                  ),
+                  Text(
+                    isHi ? '0% कमीशन विक्रेता खाता' : '0% Commission Vendor Account',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
                 ],
               ),
             ),
             ListTile(
               leading: const Icon(Icons.inventory_2_outlined),
-              title: const Text('इन्वेंट्री प्रबंधन (Inventory)'),
+              title: Text(isHi ? 'इन्वेंट्री प्रबंधन' : 'Inventory Management'),
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VendorInventoryScreen()));
@@ -143,7 +154,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
             ),
             ListTile(
               leading: const Icon(Icons.library_add_outlined),
-              title: const Text('केंद्रीय उत्पाद लाइब्रेरी (Product Catalog)'),
+              title: Text(isHi ? 'केंद्रीय उत्पाद कैटलॉग' : 'Product Catalog'),
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProductLibraryScreen()));
@@ -151,7 +162,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
             ),
             ListTile(
               leading: const Icon(Icons.account_balance_wallet_outlined),
-              title: const Text('कमाई व सेटलमेंट (Settlements)'),
+              title: Text(isHi ? 'कमाई व सेटलमेंट' : 'Earnings & Settlements'),
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VendorSettlementsScreen()));
@@ -159,9 +170,48 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
             ),
             const Divider(),
             ListTile(
-              leading: const Icon(Icons.logout, color: GBColors.error),
-              title: const Text('लॉग आउट (Logout)', style: TextStyle(color: GBColors.error, fontWeight: FontWeight.w700)),
+              leading: const Icon(Icons.language),
+              title: Text(isHi ? 'भाषा (Language)' : 'Language'),
+              trailing: DropdownButton<String>(
+                value: state.currentLocale,
+                underline: const SizedBox(),
+                items: const [
+                  DropdownMenuItem(value: 'hi', child: Text('हिंदी')),
+                  DropdownMenuItem(value: 'en', child: Text('English')),
+                ],
+                onChanged: (lang) {
+                  if (lang != null) state.setLocale(lang);
+                },
+              ),
+            ),
+            ListTile(
+              leading: Icon(state.themeMode == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode),
+              title: Text(isHi ? 'डार्क थीम' : 'Dark Theme'),
+              trailing: Switch(
+                value: state.themeMode == ThemeMode.dark,
+                onChanged: (val) {
+                  state.setTheme(val ? ThemeMode.dark : ThemeMode.light);
+                },
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.support_agent, color: GBColors.primary),
+              title: Text(isHi ? 'हेल्पलाइन सहायता' : 'Support Helpline'),
+              subtitle: const Text('+91 9800000000'),
               onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(isHi ? 'कॉलिंग हेल्पलाइन: +91 9800000000' : 'Calling helpline: +91 9800000000'),
+                  ),
+                );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout, color: GBColors.error),
+              title: Text(isHi ? 'लॉग आउट' : 'Logout', style: const TextStyle(color: GBColors.error, fontWeight: FontWeight.w700)),
+              onTap: () {
+                state.logout();
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const VendorAuthScreen()),
                   (r) => false,
@@ -174,7 +224,33 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
       body: SafeArea(
         child: Column(
           children: [
-            // Quick Status Bar
+            // Approval Warning Banner if store not yet approved
+            if (!state.isStoreApproved)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                color: Colors.amber.shade100,
+                child: Row(
+                  children: [
+                    Icon(Icons.pending_actions, color: Colors.amber.shade900, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        isHi
+                            ? 'आपकी दुकान सत्यापन प्रक्रिया में है। सुपर एडमिन द्वारा अनुमोदन के बाद ही आपकी दुकान ग्राहकों को दिखाई देगी।'
+                            : 'Your store is under verification. It will become visible to customers after Super Admin approval.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.amber.shade900,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Store Status Bar
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               color: state.isStoreOnline ? GBColors.success.withOpacity(0.08) : GBColors.error.withOpacity(0.08),
@@ -189,8 +265,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                   Expanded(
                     child: Text(
                       state.isStoreOnline
-                          ? 'दुकान ऑनलाइन है — नए ऑर्डर स्वीकार किए जा रहे हैं।'
-                          : 'दुकान ऑफलाइन है — ग्राहक नए ऑर्डर नहीं दे सकते।',
+                          ? (isHi ? 'दुकान ऑनलाइन है — नए ऑर्डर प्राप्त हो रहे हैं।' : 'Store is Online — Accepting orders.')
+                          : (isHi ? 'दुकान ऑफलाइन है — ग्राहक नए ऑर्डर नहीं दे सकते।' : 'Store is Offline — Not accepting orders.'),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -202,20 +278,19 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
               ),
             ),
 
-            // Tab Views for Orders
+            // Tab Views for Orders with Pull to Refresh
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // Tab 0: New Orders (PLACED)
-                  _buildOrdersList('PLACED'),
-                  // Tab 1: In Packing (ACCEPTED)
-                  _buildOrdersList('ACCEPTED'),
-                  // Tab 2: Ready for Pickup (PACKED)
-                  _buildOrdersList('PACKED'),
-                  // Tab 3: Completed Orders
-                  _buildOrdersList('COMPLETED'),
-                ],
+              child: RefreshIndicator(
+                onRefresh: () => state.fetchOrders(),
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildOrdersList(state, 'PLACED'),
+                    _buildOrdersList(state, 'ACCEPTED'),
+                    _buildOrdersList(state, 'PACKED'),
+                    _buildOrdersList(state, 'DELIVERED'),
+                  ],
+                ),
               ),
             ),
           ],
@@ -224,19 +299,84 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
     );
   }
 
-  Widget _buildOrdersList(String statusFilter) {
-    final list = _sampleOrders.where((o) => o['status'] == statusFilter).toList();
+  Widget _buildOrdersList(VendorAppState state, String statusFilter) {
+    final isHi = state.isHindi;
 
-    if (list.isEmpty) {
+    // Filter store orders from state
+    final orders = state.storeOrders.where((o) {
+      if (statusFilter == 'PLACED') return o.status == 'PLACED';
+      if (statusFilter == 'ACCEPTED') return o.status == 'ACCEPTED';
+      if (statusFilter == 'PACKED') {
+        return o.status == 'PACKED' || o.status == 'RUNNER_ASSIGNED' || o.status == 'PICKED_UP';
+      }
+      if (statusFilter == 'DELIVERED') return o.status == 'DELIVERED' || o.status == 'CANCELLED';
+      return false;
+    }).toList();
+
+    // Fallback sample orders if live state is empty for demonstration
+    final List<Map<String, dynamic>> fallbackOrders = [
+      {
+        'id': 'ord_101',
+        'customer': 'Ramesh Singh (Chaturshi)',
+        'items': isHi ? 'चक्की आटा x 2 kg, गाय का दूध x 1 L' : 'Chakki Atta x 2 kg, Fresh Milk x 1 L',
+        'amount': 132.0,
+        'status': 'PLACED',
+        'time': isHi ? '2 मिनट पहले' : '2 mins ago',
+        'phone': '+91 9876543210',
+      },
+      {
+        'id': 'ord_102',
+        'customer': 'Suresh Kumar (Tubanaghara)',
+        'items': isHi ? 'सरसों तेल x 1 L, आलू x 2 kg' : 'Mustard Oil x 1 L, Potato x 2 kg',
+        'amount': 190.0,
+        'status': 'ACCEPTED',
+        'time': isHi ? '12 मिनट पहले' : '12 mins ago',
+        'phone': '+91 9876543211',
+      },
+      {
+        'id': 'ord_103',
+        'customer': 'Sunil Sah (Sivay Patti)',
+        'items': isHi ? 'एलईडी बल्ब x 2, अगरबत्ती x 1' : 'LED Bulb x 2, Agarbatti x 1',
+        'amount': 190.0,
+        'status': 'PACKED',
+        'time': isHi ? '25 मिनट पहले' : '25 mins ago',
+        'phone': '+91 9876543212',
+        'runnerName': 'Amit Kumar',
+        'runnerPhone': '+91 9876543220',
+      },
+    ];
+
+    if (orders.isEmpty) {
+      final matchingFallbacks = fallbackOrders.where((f) => f['status'] == statusFilter).toList();
+      if (matchingFallbacks.isNotEmpty) {
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: matchingFallbacks.length,
+          itemBuilder: (context, idx) {
+            final f = matchingFallbacks[idx];
+            return _buildFallbackOrderCard(state, f);
+          },
+        );
+      }
+
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.shade400),
+              Icon(Icons.inbox_outlined, size: 52, color: Colors.grey.shade400),
               const SizedBox(height: 12),
-              Text('इस श्रेणी में कोई ऑर्डर नहीं है ($statusFilter)', style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
+              Text(
+                isHi ? 'इस श्रेणी में कोई सक्रिय ऑर्डर नहीं है।' : 'No active orders in this category.',
+                style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w600, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () => state.fetchOrders(),
+                icon: const Icon(Icons.refresh, size: 16),
+                label: Text(isHi ? 'ताज़ा करें' : 'Refresh'),
+              ),
             ],
           ),
         ),
@@ -245,74 +385,298 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: list.length,
+      itemCount: orders.length,
       itemBuilder: (context, idx) {
-        final order = list[idx];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 14),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1)),
+        final order = orders[idx];
+        return _buildLiveOrderCard(state, order);
+      },
+    );
+  }
+
+  Widget _buildLiveOrderCard(VendorAppState state, GBOrder order) {
+    final isHi = state.isHindi;
+    final displayId = order.id.length > 8 ? order.id.substring(0, 8) : order.id;
+    final itemsSummary = order.items.map((i) => '${isHi ? i.nameHi : i.nameEn} x ${i.quantity}').join(', ');
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('#$displayId', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(order.status).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  _getStatusLabel(order.status, isHi),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: _getStatusColor(order.status),
+                  ),
+                ),
+              ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 8),
+          Row(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  order.deliveryAddress,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            itemsSummary.isNotEmpty ? itemsSummary : (isHi ? 'किराना सामग्री' : 'Grocery items'),
+            style: const TextStyle(fontSize: 13, color: Colors.black87),
+          ),
+          if (order.runnerName != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: GBColors.primaryLight.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
                 children: [
-                  Text('Order #${order['id']}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
-                  Text(order['time'] as String, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  const Icon(Icons.two_wheeler, size: 16, color: GBColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${isHi ? "डिलीवरी पार्टनर" : "Delivery Partner"}: ${order.runnerName}',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  if (order.runnerPhone != null)
+                    InkWell(
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${isHi ? "कॉलिंग पार्टनर" : "Calling partner"}: ${order.runnerPhone}')),
+                        );
+                      },
+                      child: Text(
+                        isHi ? 'कॉल करें' : 'Call',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: GBColors.primary),
+                      ),
+                    ),
                 ],
               ),
-              const SizedBox(height: 6),
-              Text(order['customer'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-              const SizedBox(height: 4),
-              Text(order['items'] as String, style: const TextStyle(fontSize: 12, color: Colors.black87)),
-              const Divider(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            ),
+          ],
+          const Divider(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('₹${order['amount']}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: GBColors.primary)),
-                  Row(
-                    children: [
-                      if (order['status'] == 'PLACED') ...[
-                        OutlinedButton(
-                          onPressed: () => _handleAction(order['id'] as String, 'REJECT'),
-                          style: OutlinedButton.styleFrom(foregroundColor: GBColors.error),
-                          child: const Text('अस्वीकार'),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () => _handleAction(order['id'] as String, 'ACCEPT'),
-                          style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
-                          child: const Text('स्वीकार करें'),
-                        ),
-                      ] else if (order['status'] == 'ACCEPTED') ...[
-                        ElevatedButton(
-                          onPressed: () => _handleAction(order['id'] as String, 'PACK'),
-                          style: ElevatedButton.styleFrom(backgroundColor: GBColors.secondary),
-                          child: const Text('पैक हो गया (Mark Packed)'),
-                        ),
-                      ] else if (order['status'] == 'PACKED') ...[
-                        ElevatedButton(
-                          onPressed: () => _handleAction(order['id'] as String, 'HANDOFF'),
-                          style: ElevatedButton.styleFrom(backgroundColor: GBColors.primaryDark),
-                          child: const Text('डिलीवरी साथी को दिया (Handoff)'),
-                        ),
-                      ],
-                    ],
+                  Text(
+                    '₹${order.totalAmount.toStringAsFixed(0)}',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: GBColors.primary),
+                  ),
+                  Text(
+                    order.paymentMethod,
+                    style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
+              _buildOrderActions(state, order.id, order.status, isHi),
             ],
           ),
-        );
-      },
+        ],
+      ),
     );
+  }
+
+  Widget _buildFallbackOrderCard(VendorAppState state, Map<String, dynamic> f) {
+    final isHi = state.isHindi;
+    final status = f['status'] as String;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 1)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('#${f['id']}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+              Text(f['time'] as String, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(f['customer'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+          const SizedBox(height: 4),
+          Text(f['items'] as String, style: const TextStyle(fontSize: 12, color: Colors.black87)),
+          if (f.containsKey('runnerName')) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: GBColors.primaryLight.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.two_wheeler, size: 16, color: GBColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${isHi ? "डिलीवरी पार्टनर" : "Delivery Partner"}: ${f['runnerName']}',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${isHi ? "कॉलिंग पार्टनर" : "Calling partner"}: ${f['runnerPhone']}')),
+                      );
+                    },
+                    child: Text(
+                      isHi ? 'कॉल करें' : 'Call',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: GBColors.primary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const Divider(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('₹${(f['amount'] as double).toStringAsFixed(0)}',
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: GBColors.primary)),
+              _buildOrderActions(state, f['id'] as String, status, isHi),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderActions(VendorAppState state, String orderId, String status, bool isHi) {
+    if (_isActing) {
+      return const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2));
+    }
+
+    if (status == 'PLACED') {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          OutlinedButton(
+            onPressed: () => _handleAction(state, orderId, 'REJECT'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: GBColors.error,
+              side: const BorderSide(color: GBColors.error),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            ),
+            child: Text(isHi ? 'अस्वीकार' : 'Reject', style: const TextStyle(fontSize: 12)),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: () => _handleAction(state, orderId, 'ACCEPT'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: GBColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            ),
+            child: Text(isHi ? 'स्वीकार करें' : 'Accept', style: const TextStyle(fontSize: 12)),
+          ),
+        ],
+      );
+    } else if (status == 'ACCEPTED') {
+      return ElevatedButton.icon(
+        onPressed: () => _handleAction(state, orderId, 'PACK'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: GBColors.secondary,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        ),
+        icon: const Icon(Icons.inventory_sharp, size: 14),
+        label: Text(isHi ? 'पैक हो गया' : 'Mark Packed', style: const TextStyle(fontSize: 12)),
+      );
+    } else if (status == 'PACKED') {
+      return ElevatedButton.icon(
+        onPressed: () => _handleAction(state, orderId, 'HANDOFF'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: GBColors.primaryDark,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        ),
+        icon: const Icon(Icons.delivery_dining, size: 14),
+        label: Text(isHi ? 'पार्टनर को सौंपा' : 'Handoff to Runner', style: const TextStyle(fontSize: 12)),
+      );
+    } else {
+      return const SizedBox.shrink();
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'PLACED':
+        return Colors.blue;
+      case 'ACCEPTED':
+        return Colors.orange;
+      case 'PACKED':
+      case 'RUNNER_ASSIGNED':
+      case 'PICKED_UP':
+        return GBColors.secondary;
+      case 'DELIVERED':
+        return GBColors.success;
+      case 'CANCELLED':
+        return GBColors.error;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getStatusLabel(String status, bool isHi) {
+    switch (status) {
+      case 'PLACED':
+        return isHi ? 'नया' : 'Placed';
+      case 'ACCEPTED':
+        return isHi ? 'स्वीकृत' : 'Accepted';
+      case 'PACKED':
+        return isHi ? 'पैक किया' : 'Packed';
+      case 'RUNNER_ASSIGNED':
+        return isHi ? 'पार्टनर रवाना' : 'Runner Assigned';
+      case 'PICKED_UP':
+        return isHi ? 'उठाया गया' : 'Picked Up';
+      case 'DELIVERED':
+        return isHi ? 'डिलीवर' : 'Delivered';
+      case 'CANCELLED':
+        return isHi ? 'रद्द' : 'Cancelled';
+      default:
+        return status;
+    }
   }
 }

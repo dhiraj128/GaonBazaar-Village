@@ -16,6 +16,8 @@ class GBStore {
   final double rating;
   final String? bannerUrl;
   final double? distanceKm;
+  final String? upiId;
+  final double commissionRate;
 
   GBStore({
     required this.id,
@@ -35,6 +37,8 @@ class GBStore {
     this.rating = 4.8,
     this.bannerUrl,
     this.distanceKm,
+    this.upiId,
+    this.commissionRate = 0.0,
   });
 
   factory GBStore.fromJson(Map<String, dynamic> json) {
@@ -56,6 +60,8 @@ class GBStore {
       rating: (json['rating'] as num?)?.toDouble() ?? 4.8,
       bannerUrl: json['banner_url'] as String?,
       distanceKm: (json['distance_km'] as num?)?.toDouble(),
+      upiId: json['upi_id'] as String?,
+      commissionRate: (json['commission_rate'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
@@ -78,6 +84,8 @@ class GBStore {
       'rating': rating,
       'banner_url': bannerUrl,
       'distance_km': distanceKm,
+      'upi_id': upiId,
+      'commission_rate': commissionRate,
     };
   }
 }

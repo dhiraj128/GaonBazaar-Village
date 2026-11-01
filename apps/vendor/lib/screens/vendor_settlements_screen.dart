@@ -1,101 +1,211 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import '../state/vendor_state.dart';
 
-class VendorSettlementsScreen extends StatelessWidget {
+class VendorSettlementsScreen extends StatefulWidget {
   const VendorSettlementsScreen({super.key});
 
   @override
+  State<VendorSettlementsScreen> createState() => _VendorSettlementsScreenState();
+}
+
+class _VendorSettlementsScreenState extends State<VendorSettlementsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      VendorStateProvider.of(context).fetchFinances();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = VendorStateProvider.of(context);
+    final isHi = state.isHindi;
+    final finances = state.finances;
+
+    final totalSales = (finances?['total_sales'] as num?)?.toDouble() ?? 1480.0;
+    final commissionRate = (finances?['commission_rate'] as num?)?.toDouble() ?? 0.0;
+    final netPayoutDue = (finances?['net_payout_due'] as num?)?.toDouble() ?? totalSales;
+    final upiId = (finances?['upi_id'] as String?) ?? state.myStore?.upiId ?? 'rajusharma@upi';
+    final completedOrdersCount = (finances?['total_delivered_orders'] as int?) ?? 14;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('कमाई व बैंक सेटलमेंट (Settlements)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+        title: Text(
+          isHi ? 'कमाई व बैंक सेटलमेंट' : 'Earnings & Settlements',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Top Earnings Card
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [GBColors.primary, GBColors.primaryDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+        child: RefreshIndicator(
+          onRefresh: () => state.fetchFinances(),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // Top Earnings Card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [GBColors.primary, GBColors.primaryDark],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: GBColors.primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(color: GBColors.primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4)),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('आज की कुल बिक्री (Today\'s Sales)', style: TextStyle(color: Colors.white70, fontSize: 13)),
-                  const SizedBox(height: 6),
-                  const Text('₹1,480.00', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900)),
-                  const SizedBox(height: 14),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isHi ? 'आज की कुल बिक्री' : "Today's Gross Sales",
+                      style: const TextStyle(color: Colors.white70, fontSize: 13),
                     ),
-                    child: const Text(
-                      'दुकानदार कमीशन दर: 0.0% (Introductory Offer)',
-                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                    const SizedBox(height: 6),
+                    Text(
+                      '₹${totalSales.toStringAsFixed(2)}',
+                      style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            isHi
+                                ? 'दुकानदार कमीशन: ${commissionRate.toStringAsFixed(1)}%'
+                                : 'Store Commission: ${commissionRate.toStringAsFixed(1)}%',
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: GBColors.secondary.withOpacity(0.85),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            isHi ? 'डिलीवर: $completedOrdersCount ऑर्डर' : 'Delivered: $completedOrdersCount orders',
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            // Payout Details
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.grey.shade300),
+              // Net Payout Due Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          isHi ? 'देय भुगतान राशि' : 'Net Payout Due',
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                        ),
+                        Text(
+                          '₹${netPayoutDue.toStringAsFixed(2)}',
+                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: GBColors.success),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 20),
+                    Row(
+                      children: [
+                        const Icon(Icons.account_balance, color: GBColors.primary, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'UPI VPA: $upiId',
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: GBColors.success.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isHi ? 'सक्रिय' : 'Active',
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: GBColors.success),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isHi
+                          ? 'दैनिक बिक्री की राशि रात 11:59 बजे सीधे आपके बैंक खाते में भेजी जाती है।'
+                          : 'Daily sales amount is automatically remitted to your bank account at 11:59 PM.',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('पंजीकृत भुगतान खाता (Payout Account)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
-                  const SizedBox(height: 10),
-                  const Row(
-                    children: [
-                      Icon(Icons.account_balance, color: GBColors.primary),
-                      SizedBox(width: 10),
-                      Text('UPI VPA: rajusharma@upi (Active)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  const Text('दैनिक बिक्री की राशि रात 11:59 बजे स्वतः बैंक खाते में भेज दी जाती है।', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            // Settlement History
-            const Text('हालिया भुगतान इतिहास (Settlement History)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-            const SizedBox(height: 10),
-            _buildHistoryItem('01 Nov 2026', '₹1,480.00', 'PENDING (आज रात प्रोसेस होगा)', Colors.amber.shade800),
-            _buildHistoryItem('31 Oct 2026', '₹2,340.00', 'PAID (सफल)', GBColors.success),
-            _buildHistoryItem('30 Oct 2026', '₹1,890.00', 'PAID (सफल)', GBColors.success),
-          ],
+              // Settlement History
+              Text(
+                isHi ? 'हालिया भुगतान इतिहास' : 'Settlement History',
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+              ),
+              const SizedBox(height: 10),
+              _buildHistoryItem(
+                date: '01 Nov 2026',
+                amount: '₹${netPayoutDue.toStringAsFixed(2)}',
+                status: isHi ? 'प्रक्रियाधीन (आज रात)' : 'Processing (Tonight)',
+                statusColor: Colors.amber.shade800,
+              ),
+              _buildHistoryItem(
+                date: '31 Oct 2026',
+                amount: '₹2,340.00',
+                status: isHi ? 'सफल भुगतान (UPI)' : 'Paid (UPI)',
+                statusColor: GBColors.success,
+              ),
+              _buildHistoryItem(
+                date: '30 Oct 2026',
+                amount: '₹1,890.00',
+                status: isHi ? 'सफल भुगतान (UPI)' : 'Paid (UPI)',
+                statusColor: GBColors.success,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHistoryItem(String date, String amount, String status, Color statusColor) {
+  Widget _buildHistoryItem({
+    required String date,
+    required String amount,
+    required String status,
+    required Color statusColor,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.grey.shade200),
       ),
@@ -106,10 +216,11 @@ class VendorSettlementsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(date, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-              Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
+              const SizedBox(height: 3),
+              Text(status, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w700)),
             ],
           ),
-          Text(amount, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+          Text(amount, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
         ],
       ),
     );

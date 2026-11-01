@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:design_system/design_system.dart';
 import '../state/runner_state.dart';
 import 'runner_auth_screen.dart';
 import 'runner_dashboard_screen.dart';

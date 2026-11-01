@@ -69,3 +69,11 @@ class StoreRegistrationRequest(BaseModel):
     banner_url: Optional[str] = None
     upi_id: Optional[str] = None
 
+class StoreStatusUpdate(BaseModel):
+    is_online: bool
+
+class ProductStockUpdate(BaseModel):
+    in_stock: Optional[bool] = None
+    stock_quantity: Optional[int] = None
+    price: Optional[float] = None
+

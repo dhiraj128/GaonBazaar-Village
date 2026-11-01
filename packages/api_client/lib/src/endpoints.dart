@@ -43,12 +43,21 @@ class Endpoints {
   static const String supportAiChat = '/support/ai-chat';
 
   // Vendor actions
+  static const String myStore = '/stores/me';
+  static const String storeStatus = '/stores/status';
+  static const String storeOnboard = '/stores/onboard';
   static const String vendorOrders = '/vendor/orders';
+  static const String vendorFinances = '/vendor/finances';
   static String vendorOrderAction(String id) => '/vendor/orders/$id/action';
   static const String vendorProducts = '/vendor/products';
+  static String productStock(String id) => '/stores/products/$id/stock';
 
   // Runner actions
-  static const String runnerAvailableJobs = '/runner/jobs/available';
+  static const String runnerMe = '/runner/me';
+  static const String runnerStatus = '/runner/status';
+  static const String runnerOnboard = '/runner/onboard';
+  static const String runnerJobs = '/runner/jobs';
+  static const String runnerFinances = '/runner/finances';
   static String runnerJobAction(String id) => '/runner/jobs/$id/action';
 
   // AI Assistant

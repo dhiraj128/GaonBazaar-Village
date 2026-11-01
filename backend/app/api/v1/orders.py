@@ -356,9 +356,118 @@ async def get_runner_finances(
         "runner_id": runner.id,
         "total_delivery_earnings": total_delivery_fees,
         "total_deliveries_count": len(delivered_orders),
-        "cash_collected_to_remit": sum(o.total_amount for o in delivered_orders if o.payment_mode == "COD"),
+        "cash_collected_to_remit": sum(o.total_amount for o in delivered_orders if o.payment_method == "COD"),
         "upi_id": runner.upi_id
     }
+
+class RunnerStatusUpdate(BaseModel):
+    is_online: bool
+
+class RunnerOnboardRequest(BaseModel):
+    full_name: str
+    vehicle_type: str = "Motorcycle"
+    vehicle_number: Optional[str] = None
+    driving_licence_no: Optional[str] = None
+    upi_id: Optional[str] = None
+
+@router.post("/runner/onboard")
+async def onboard_runner(
+    data: RunnerOnboardRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    r_res = await db.execute(select(Runner).where(Runner.user_id == user_id))
+    runner = r_res.scalars().first()
+    
+    if runner:
+        runner.full_name = data.full_name
+        runner.vehicle_type = data.vehicle_type
+        runner.vehicle_number = data.vehicle_number
+        runner.driving_licence_no = data.driving_licence_no
+        runner.upi_id = data.upi_id
+        runner.is_approved = False # Under Admin review
+    else:
+        runner = Runner(
+            user_id=user_id,
+            full_name=data.full_name,
+            vehicle_type=data.vehicle_type,
+            vehicle_number=data.vehicle_number,
+            driving_licence_no=data.driving_licence_no,
+            upi_id=data.upi_id,
+            is_approved=False,
+            is_online=False,
+            current_latitude=26.2230,
+            current_longitude=85.3520
+        )
+        db.add(runner)
+
+    await db.commit()
+    await db.refresh(runner)
+
+    return {
+        "id": runner.id,
+        "user_id": runner.user_id,
+        "full_name": runner.full_name,
+        "vehicle_type": runner.vehicle_type,
+        "vehicle_number": runner.vehicle_number,
+        "dl_number": runner.driving_licence_no,
+        "is_online": runner.is_online,
+        "is_approved": runner.is_approved,
+        "rating": 4.9,
+        "upi_id": runner.upi_id,
+        "today_earnings": 0.0,
+        "completed_trips": 0
+    }
+
+@router.get("/runner/me")
+async def get_runner_profile(
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    r_res = await db.execute(select(Runner).where(Runner.user_id == user_id))
+    runner = r_res.scalars().first()
+    if not runner:
+        raise HTTPException(status_code=404, detail="Runner profile not found")
+    
+    orders_res = await db.execute(
+        select(Order).where(Order.runner_id == runner.id, Order.status == "DELIVERED")
+    )
+    delivered_orders = orders_res.scalars().all()
+    total_delivery_fees = sum(o.delivery_fee for o in delivered_orders)
+
+    return {
+        "id": runner.id,
+        "user_id": runner.user_id,
+        "full_name": runner.full_name,
+        "vehicle_type": runner.vehicle_type,
+        "vehicle_number": runner.vehicle_number,
+        "dl_number": runner.driving_licence_no,
+        "is_online": runner.is_online,
+        "is_approved": runner.is_approved,
+        "rating": 4.9,
+        "upi_id": runner.upi_id,
+        "today_earnings": total_delivery_fees,
+        "completed_trips": len(delivered_orders)
+    }
+
+@router.patch("/runner/status")
+async def update_runner_status(
+    data: RunnerStatusUpdate,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    r_res = await db.execute(select(Runner).where(Runner.user_id == user_id))
+    runner = r_res.scalars().first()
+    if not runner:
+        raise HTTPException(status_code=404, detail="Runner profile not found")
+    if not runner.is_approved and data.is_online:
+        raise HTTPException(status_code=400, detail="Runner must be approved by admin before going on duty")
+    runner.is_online = data.is_online
+    await db.commit()
+    return {"message": f"Runner duty is now {'online' if runner.is_online else 'offline'}", "is_online": runner.is_online}
 
 @router.post("/vendor/orders/{order_id}/action")
 async def vendor_order_action(
@@ -378,9 +487,12 @@ async def vendor_order_action(
     if act == "ACCEPT":
         order.status = "ACCEPTED"
         title = "दुकानदार ने स्वीकार किया (Accepted)"
-    elif act == "PACKED":
+    elif act in ["PACK", "PACKED"]:
         order.status = "PACKED"
         title = "सामान पैक हो गया (Packed & Ready)"
+    elif act in ["HANDOFF", "HANDED_OFF"]:
+        order.status = "PICKED_UP"
+        title = "डिलीवरी साथी को सौंपा (Handed off to Runner)"
     elif act == "REJECT":
         order.status = "CANCELLED"
         title = "दुकानदार द्वारा अस्वीकृत (Rejected)"
@@ -415,13 +527,13 @@ async def runner_job_action(
         if runner:
             order.runner_id = runner.id
         title = "डिलीवरी साथी तय हुआ (Runner Assigned)"
-    elif act == "PICKUP":
+    elif act in ["PICKUP", "PICKED_UP"]:
         order.status = "PICKED_UP"
         title = "सामान दुकान से उठाया (Picked Up)"
-    elif act == "OUT_FOR_DELIVERY":
+    elif act in ["OUT_FOR_DELIVERY", "OUT"]:
         order.status = "OUT_FOR_DELIVERY"
         title = "डिलीवरी के लिए निकल चुके हैं (Out for Delivery)"
-    elif act == "DELIVER":
+    elif act in ["DELIVER", "DELIVERED"]:
         # Strict OTP verification
         if not action_data.delivery_otp or action_data.delivery_otp.strip() != order.delivery_otp.strip():
             raise HTTPException(

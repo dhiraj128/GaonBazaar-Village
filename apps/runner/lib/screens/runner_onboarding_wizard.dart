@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import '../state/runner_state.dart';
 import 'runner_dashboard_screen.dart';
 
 class RunnerOnboardingWizard extends StatefulWidget {
@@ -11,6 +12,7 @@ class RunnerOnboardingWizard extends StatefulWidget {
 
 class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
   int _currentStep = 0;
+  bool _isSubmitting = false;
 
   final _fullNameCtrl = TextEditingController(text: 'Santosh Kumar');
   final _phoneCtrl = TextEditingController(text: '9800000003');
@@ -18,45 +20,118 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
   final _dlCtrl = TextEditingController(text: 'DL-062024009876');
   final _upiCtrl = TextEditingController(text: 'santosh@upi');
   String _vehicleType = 'Motorcycle';
-  bool _digiLockerConsented = false;
+  bool _digiLockerConsented = true;
 
-  void _nextStep() {
+  @override
+  void dispose() {
+    _fullNameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _bikeNoCtrl.dispose();
+    _dlCtrl.dispose();
+    _upiCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitApplication(RunnerAppState state) async {
+    final isHi = state.isHindi;
+
+    if (_fullNameCtrl.text.trim().isEmpty) {
+      _showError(isHi ? 'कृपया अपना पूरा नाम दर्ज करें' : 'Please enter your full name');
+      return;
+    }
+    if (_bikeNoCtrl.text.trim().isEmpty) {
+      _showError(isHi ? 'कृपया वाहन पंजीकरण संख्या दर्ज करें' : 'Please enter vehicle registration number');
+      return;
+    }
+    if (_dlCtrl.text.trim().isEmpty) {
+      _showError(isHi ? 'कृपया ड्राइविंग लाइसेंस संख्या दर्ज करें' : 'Please enter driving licence number');
+      return;
+    }
+    if (!_digiLockerConsented) {
+      _showError(isHi ? 'कृपया डिजीलॉकर सत्यापन सहमति स्वीकार करें' : 'Please accept DigiLocker verification consent');
+      return;
+    }
+    if (_upiCtrl.text.trim().isEmpty) {
+      _showError(isHi ? 'कृपया यूपीआई आईडी दर्ज करें' : 'Please enter UPI ID for payouts');
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    final payload = {
+      'full_name': _fullNameCtrl.text.trim(),
+      'vehicle_type': _vehicleType,
+      'vehicle_number': _bikeNoCtrl.text.trim().toUpperCase(),
+      'driving_licence_no': _dlCtrl.text.trim().toUpperCase(),
+      'upi_id': _upiCtrl.text.trim().toLowerCase(),
+    };
+
+    await state.onboardRunner(payload);
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.check_circle_outline, color: GBColors.primary, size: 48),
+        title: Text(
+          isHi ? 'आवेदन सफलतापूर्वक जमा हुआ' : 'Application Submitted',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+        ),
+        content: Text(
+          isHi
+              ? 'आपका डिलीवरी साथी आवेदन सुपर एडमिन के पास समीक्षा के लिए जमा कर दिया गया है। अनुमोदन के बाद आप ड्यूटी ऑनलाइन कर सकेंगे।'
+              : 'Your delivery partner application has been submitted to Super Admin for verification. You can go on duty once approved.',
+          style: const TextStyle(fontSize: 13),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const RunnerDashboardScreen()),
+              );
+            },
+            child: Text(isHi ? 'डैशबोर्ड पर जाएँ' : 'Go to Dashboard'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: GBColors.error),
+    );
+  }
+
+  void _nextStep(RunnerAppState state) {
     if (_currentStep < 3) {
       setState(() => _currentStep++);
     } else {
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('आवेदन समीक्षाधीन है (Under Review)'),
-          content: const Text(
-            'आपका डिलीवरी पार्टनर आवेदन सुपर एडमिन के पास समीक्षा के लिए जमा कर दिया गया है। अनुमोदन के बाद आप डिलीवरी जॉब्स प्राप्त कर सकेंगे।',
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const RunnerDashboardScreen()),
-                );
-              },
-              child: const Text('डैशबोर्ड पर जाएँ'),
-            ),
-          ],
-        ),
-      );
+      _submitApplication(state);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = RunnerStateProvider.of(context);
+    final isHi = state.isHindi;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('डिलीवरी साथी पंजीकरण (Partner Registration)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+        title: Text(
+          isHi ? 'डिलीवरी साथी पंजीकरण' : 'Delivery Partner Registration',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
       ),
       body: SafeArea(
         child: Stepper(
           currentStep: _currentStep,
-          onStepContinue: _nextStep,
+          onStepContinue: () => _nextStep(state),
           onStepCancel: () {
             if (_currentStep > 0) setState(() => _currentStep--);
           },
@@ -67,13 +142,19 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
                 children: [
                   Expanded(
                     child: GBPrimaryButton(
-                      label: _currentStep == 3 ? 'आवेदन जमा करें (Submit)' : 'आगे बढ़ें (Next)',
+                      label: _currentStep == 3
+                          ? (isHi ? 'आवेदन जमा करें' : 'Submit Application')
+                          : (isHi ? 'आगे बढ़ें' : 'Next Step'),
+                      isLoading: _isSubmitting,
                       onPressed: details.onStepContinue,
                     ),
                   ),
                   if (_currentStep > 0) ...[
                     const SizedBox(width: 12),
-                    OutlinedButton(onPressed: details.onStepCancel, child: const Text('पीछे')),
+                    OutlinedButton(
+                      onPressed: details.onStepCancel,
+                      child: Text(isHi ? 'पीछे' : 'Back'),
+                    ),
                   ],
                 ],
               ),
@@ -82,54 +163,118 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
           steps: [
             // Step 1: Personal Details
             Step(
-              title: const Text('व्यक्तिगत जानकारी'),
+              title: Text(isHi ? 'व्यक्तिगत जानकारी' : 'Personal Details'),
               isActive: _currentStep >= 0,
               content: Column(
                 children: [
-                  TextField(controller: _fullNameCtrl, decoration: const InputDecoration(labelText: 'पूरा नाम (Full Name)')),
-                  const SizedBox(height: 12),
-                  TextField(controller: _phoneCtrl, decoration: const InputDecoration(labelText: 'मोबाइल नंबर (Phone Number)')),
+                  TextFormField(
+                    controller: _fullNameCtrl,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'पूरा नाम' : 'Full Name',
+                      hintText: 'Santosh Kumar',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextFormField(
+                    controller: _phoneCtrl,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'मोबाइल नंबर' : 'Phone Number',
+                      prefixText: '+91 ',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
                 ],
               ),
             ),
 
             // Step 2: Vehicle & Driving Licence
             Step(
-              title: const Text('वाहन व ड्राइविंग लाइसेंस'),
+              title: Text(isHi ? 'वाहन व ड्राइविंग लाइसेंस' : 'Vehicle & Licence'),
               isActive: _currentStep >= 1,
               content: Column(
                 children: [
                   DropdownButtonFormField<String>(
                     value: _vehicleType,
-                    items: const [
-                      DropdownMenuItem(value: 'Motorcycle', child: Text('मोटरसाइकिल / बाइक (Motorcycle)')),
-                      DropdownMenuItem(value: 'Bicycle', child: Text('साइकिल (Bicycle)')),
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'वाहन का प्रकार' : 'Vehicle Type',
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'Motorcycle',
+                        child: Text(isHi ? 'मोटरसाइकिल / बाइक' : 'Motorcycle / Bike'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Bicycle',
+                        child: Text(isHi ? 'साइकिल' : 'Bicycle'),
+                      ),
                     ],
                     onChanged: (v) => setState(() => _vehicleType = v!),
-                    decoration: const InputDecoration(labelText: 'वाहन का प्रकार (Vehicle Type)'),
                   ),
-                  const SizedBox(height: 12),
-                  TextField(controller: _bikeNoCtrl, decoration: const InputDecoration(labelText: 'बाइक रजिस्ट्रेशन नंबर (e.g. BR-06-AB-1234)')),
-                  const SizedBox(height: 12),
-                  TextField(controller: _dlCtrl, decoration: const InputDecoration(labelText: 'ड्राइविंग लाइसेंस नंबर (Driving Licence No.)')),
+                  const SizedBox(height: 14),
+                  TextFormField(
+                    controller: _bikeNoCtrl,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'बाइक पंजीकरण संख्या' : 'Vehicle Registration Number',
+                      hintText: 'BR-06-AB-1234',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextFormField(
+                    controller: _dlCtrl,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'ड्राइविंग लाइसेंस नंबर' : 'Driving Licence Number',
+                      hintText: 'DL-062024009876',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
                 ],
               ),
             ),
 
             // Step 3: Identity & DigiLocker
             Step(
-              title: const Text('आधार व पहचान सत्यापन'),
+              title: Text(isHi ? 'पहचान व डिजीलॉकर सत्यापन' : 'Identity Verification'),
               isActive: _currentStep >= 2,
               content: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('डिजिटल आधार / डिजीलॉकर सत्यापन सहमति:'),
-                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: GBColors.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: GBColors.primary.withValues(alpha: 0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.verified_user_outlined, color: GBColors.primary, size: 28),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            isHi
+                                ? 'सरकारी डिजीलॉकर द्वारा सुरक्षित एवं तुरंत दस्तावेज़ सत्यापन'
+                                : 'Secure instant document verification via Government DigiLocker',
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   CheckboxListTile(
                     value: _digiLockerConsented,
                     activeColor: GBColors.primary,
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('मैं अपने ड्राइविंग लाइसेंस एवं आधार सत्यापन हेतु सहमति प्रदान करता हूँ।'),
+                    title: Text(
+                      isHi
+                          ? 'मैं अपने ड्राइविंग लाइसेंस एवं आधार सत्यापन हेतु सहमति प्रदान करता हूँ।'
+                          : 'I authorize verification of my driving licence and Aadhaar via DigiLocker.',
+                      style: const TextStyle(fontSize: 13),
+                    ),
                     onChanged: (v) => setState(() => _digiLockerConsented = v ?? false),
                   ),
                 ],
@@ -138,13 +283,26 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
 
             // Step 4: Payout Details
             Step(
-              title: const Text('कमाई भुगतान खाता (Payout)'),
+              title: Text(isHi ? 'कमाई भुगतान खाता' : 'Earnings Payout Account'),
               isActive: _currentStep >= 3,
               content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(controller: _upiCtrl, decoration: const InputDecoration(labelText: 'यूपीआई आईडी (UPI ID for Payouts)')),
-                  const SizedBox(height: 8),
-                  const Text('प्रति डिलीवरी शुल्क सीधे आपके बैंक / यूपीआई खाते में बिना किसी कटौती के भेजा जाता है।', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  TextFormField(
+                    controller: _upiCtrl,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'यूपीआई आईडी' : 'UPI ID',
+                      hintText: 'santosh@upi',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    isHi
+                        ? 'प्रति डिलीवरी मिलने वाला शुल्क सीधे आपके बैंक / यूपीआई खाते में बिना किसी देरी के भेजा जाता है।'
+                        : 'Your delivery fees are transferred directly to your bank account / UPI ID without delays.',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                 ],
               ),
             ),
