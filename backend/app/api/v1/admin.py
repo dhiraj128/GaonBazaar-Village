@@ -42,13 +42,16 @@ class OrderStatusUpdate(BaseModel):
 
 @router.post("/auth/login")
 async def admin_login(req: AdminLoginRequest, db: AsyncSession = Depends(get_db)):
-    is_key_match = req.secret_key and req.secret_key.strip() == settings.ADMIN_API_KEY
-    is_otp_match = req.phone == "9800000099" and req.otp == "123456"
+    # Strict Admin Security: Must supply matching ADMIN_API_KEY
+    is_key_match = bool(req.secret_key and req.secret_key.strip() == settings.ADMIN_API_KEY)
     
-    if not (is_key_match or is_otp_match):
+    # Allow automated testing suite only when settings.TESTING is explicitly enabled
+    is_test_auth = bool(getattr(settings, "TESTING", False) and req.phone == "9800000099" and req.otp == "123456")
+    
+    if not (is_key_match or is_test_auth):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="गलत क्रेडेंशियल्स (Invalid Admin credentials. Check Secret Key or OTP)"
+            detail="प्रशासनिक क्रेडेंशियल्स अमान्य हैं (Invalid Admin credentials. Authorized Admin Key required)"
         )
         
     res = await db.execute(select(User).where(User.phone == req.phone))

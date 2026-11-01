@@ -7,10 +7,10 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Security
-    SECRET_KEY: str = "gaonbazaar-super-secret-rural-hyperlocal-key-2026"
+    SECRET_KEY: str = "dev-insecure-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
-    ADMIN_API_KEY: str = "gb_admin_live_sec_minapur_2026"
+    ADMIN_API_KEY: str = "dev-insecure-admin-key-change-in-production"
     TESTING: bool = False
     
     # Database (Default to SQLite file for robust local testing without external daemon)
