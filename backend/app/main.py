@@ -19,6 +19,26 @@ async def init_db_and_seed():
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         
+        # Upgrade existing PostgreSQL columns to TIMESTAMPTZ to eliminate offset-naive/aware mismatch
+        if "postgresql" in settings.ASYNC_DATABASE_URL:
+            alter_stmts = [
+                "ALTER TABLE users ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+                "ALTER TABLE users ALTER COLUMN updated_at TYPE TIMESTAMPTZ USING updated_at AT TIME ZONE 'UTC';",
+                "ALTER TABLE addresses ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+                "ALTER TABLE stores ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+                "ALTER TABLE orders ALTER COLUMN placed_at TYPE TIMESTAMPTZ USING placed_at AT TIME ZONE 'UTC';",
+                "ALTER TABLE orders ALTER COLUMN cancel_until TYPE TIMESTAMPTZ USING cancel_until AT TIME ZONE 'UTC';",
+                "ALTER TABLE orders ALTER COLUMN delivered_at TYPE TIMESTAMPTZ USING delivered_at AT TIME ZONE 'UTC';",
+                "ALTER TABLE order_timeline ALTER COLUMN timestamp TYPE TIMESTAMPTZ USING timestamp AT TIME ZONE 'UTC';",
+                "ALTER TABLE support_tickets ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+                "ALTER TABLE audit_logs ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+            ]
+            for stmt in alter_stmts:
+                try:
+                    await conn.execute(text(stmt))
+                except Exception:
+                    pass
+        
     # Seed pilot data for Minapur Block, Muzaffarpur, Bihar
     async with AsyncSessionLocal() as session:
         # 1. Global catalog items
@@ -590,7 +610,8 @@ async def health_db():
                 "status": "connected",
                 "database_engine": "postgresql" if "postgresql" in settings.ASYNC_DATABASE_URL else "sqlite",
                 "ping": val == 1,
-                "schema_seeded": getattr(app.state, "db_healthy", False)
+                "schema_seeded": getattr(app.state, "db_healthy", False),
+                "init_error": getattr(app.state, "db_error", None)
             }
     except Exception as exc:
         return {
@@ -598,3 +619,17 @@ async def health_db():
             "error": str(exc),
             "detail": "Database connection attempt failed"
         }
+
+@app.post("/api/v1/system/seed-database")
+async def seed_database():
+    """Manual endpoint to trigger and verify schema seeding and pilot data insertion."""
+    try:
+        await init_db_and_seed()
+        app.state.db_healthy = True
+        app.state.db_error = None
+        return {"status": "success", "message": "Database schema and pilot records seeded successfully"}
+    except Exception as exc:
+        app.state.db_healthy = False
+        app.state.db_error = str(exc)
+        logger.error("Manual seed-database error: %s", exc, exc_info=True)
+        return {"status": "error", "error": str(exc), "type": type(exc).__name__}

@@ -1,9 +1,9 @@
 class Endpoints {
-  // Staging Cloud Render Backend URL (Default for Release builds)
-  static const String stagingBaseUrl = 'https://gaonbazaar-village-api.onrender.com/api/v1';
+  // Live Cloud Render Backend URL (Default for Release builds and Web Previews)
+  static const String stagingBaseUrl = 'https://gaonbazaar-village.onrender.com/api/v1';
 
   // Configured at build time via --dart-define=API_BASE_URL=https://...
-  // Defaults to the staging Render HTTPS URL for real internet access on mobile data / Wi-Fi
+  // Defaults to the Render HTTPS URL for real internet access on mobile data / Wi-Fi / Web
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: stagingBaseUrl,
@@ -14,7 +14,7 @@ class Endpoints {
 
   static const List<String> candidateBaseUrls = [
     baseUrl,
-    'https://gaonbazaar-village-api.onrender.com/api/v1',
+    'https://gaonbazaar-village.onrender.com/api/v1',
     'http://127.0.0.1:8000/api/v1',
     'http://localhost:8000/api/v1',
     'http://10.0.2.2:8000/api/v1',

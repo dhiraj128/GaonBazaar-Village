@@ -11,7 +11,7 @@ import type {
   AuditLogItem,
 } from './types';
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'https://gaonbazaar-village-api.onrender.com/api/v1') + '/admin';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || 'https://gaonbazaar-village.onrender.com/api/v1') + '/admin';
 
 const TOKEN_STORAGE_KEY = 'gaonbazaar_admin_jwt_token';
 

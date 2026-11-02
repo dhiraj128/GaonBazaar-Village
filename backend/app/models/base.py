@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import uuid
 from sqlalchemy import (
-    Column, String, Boolean, Float, Integer, ForeignKey, DateTime, Text, Enum, Numeric
+    Column, String, Boolean, Float, Integer, ForeignKey, DateTime, Text, Enum, Numeric, TypeDecorator
 )
 from sqlalchemy.orm import declarative_base, relationship
 
@@ -9,6 +9,36 @@ Base = declarative_base()
 
 def generate_uuid() -> str:
     return str(uuid.uuid4())
+
+class UTCDateTime(TypeDecorator):
+    """
+    Ensures datetime objects are always stored and retrieved timezone-aware (UTC).
+    Prevents 'can't subtract offset-naive and offset-aware datetimes' in asyncpg and SQLite.
+    """
+    impl = DateTime(timezone=True)
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            if not isinstance(value, datetime):
+                return value
+            if value.tzinfo is None:
+                value = value.replace(tzinfo=timezone.utc)
+            else:
+                value = value.astimezone(timezone.utc)
+            if dialect.name == "sqlite":
+                return value.replace(tzinfo=None)
+            return value
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            if not isinstance(value, datetime):
+                return value
+            if value.tzinfo is None:
+                return value.replace(tzinfo=timezone.utc)
+            return value.astimezone(timezone.utc)
+        return value
 
 class User(Base):
     __tablename__ = "users"
@@ -20,8 +50,8 @@ class User(Base):
     role = Column(String(20), nullable=False, default="customer") # customer, vendor, runner, admin
     preferred_language = Column(String(5), default="hi") # hi or en
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     addresses = relationship("Address", back_populates="user", cascade="all, delete-orphan")
     orders = relationship("Order", foreign_keys="[Order.customer_id]", back_populates="customer")
@@ -44,7 +74,7 @@ class Address(Base):
     district = Column(String(100), default="Muzaffarpur")
     state = Column(String(50), default="Bihar")
     is_default = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     
     user = relationship("User", back_populates="addresses")
 
@@ -70,7 +100,7 @@ class Store(Base):
     commission_rate = Column(Float, default=0.0) # Strict 0% introductory rate
     upi_id = Column(String(100), nullable=True)
     bank_account_info = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     
     owner = relationship("User", back_populates="store")
     products = relationship("StoreProduct", back_populates="store", cascade="all, delete-orphan")
@@ -90,7 +120,7 @@ class Runner(Base):
     current_latitude = Column(Float, nullable=True)
     current_longitude = Column(Float, nullable=True)
     upi_id = Column(String(100), nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     
     user = relationship("User", back_populates="runner")
     orders = relationship("Order", back_populates="runner")
@@ -146,9 +176,9 @@ class Order(Base):
     payment_status = Column(String(20), default="PENDING") # PENDING, PAID, REFUNDED
     delivery_otp = Column(String(6), nullable=False) # 4 or 6 digit verification code
     
-    placed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    cancel_until = Column(DateTime, nullable=False) # placed_at + 180s strict window
-    delivered_at = Column(DateTime, nullable=True)
+    placed_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
+    cancel_until = Column(UTCDateTime, nullable=False) # placed_at + 180s strict window
+    delivered_at = Column(UTCDateTime, nullable=True)
     customer_notes = Column(Text, nullable=True)
     
     customer = relationship("User", foreign_keys=[customer_id], back_populates="orders")
@@ -183,7 +213,7 @@ class OrderTimeline(Base):
     status = Column(String(30), nullable=False)
     title = Column(String(100), nullable=False)
     description = Column(String(255), nullable=True)
-    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    timestamp = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     
     order = relationship("Order", back_populates="timeline")
 
@@ -196,7 +226,7 @@ class SupportTicket(Base):
     subject = Column(String(150), nullable=False)
     message = Column(Text, nullable=False)
     status = Column(String(30), default="OPEN") # OPEN, RESOLVED, CLOSED
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
@@ -208,5 +238,5 @@ class AuditLog(Base):
     target_type = Column(String(50), nullable=False)
     target_id = Column(String(50), nullable=True)
     details = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
 
