@@ -37,6 +37,11 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_GET(self):
+        # Strip subpath prefix if present from GitHub Pages base href
+        for prefix in ['/GaonBazaar-Village/customer', '/GaonBazaar-Village/vendor', '/GaonBazaar-Village/runner', '/GaonBazaar-Village/admin']:
+            if self.path.startswith(prefix):
+                self.path = self.path[len(prefix):] or '/'
+                break
         # Serve index.html for SPA routes if file doesn't exist
         path = self.translate_path(self.path)
         if not os.path.exists(path) and not '.' in os.path.basename(self.path):
