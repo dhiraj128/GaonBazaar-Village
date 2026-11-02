@@ -264,11 +264,13 @@ async def cancel_order(
         )
         
     order.status = "CANCELLED"
+    if order.payment_status == "PAID":
+        order.payment_status = "REFUNDED"
     db.add(OrderTimeline(
         order_id=order.id,
         status="CANCELLED",
         title="ऑर्डर रद्द किया गया (Cancelled)",
-        description="Customer requested cancellation within 180-second window",
+        description="Customer requested cancellation within 180-second window" + (" - Refund initiated" if order.payment_status == "REFUNDED" else ""),
         timestamp=now
     ))
     await db.commit()
@@ -313,6 +315,17 @@ async def get_vendor_finances(
     delivered_orders = orders_res.scalars().all()
     total_sales = sum(o.subtotal for o in delivered_orders)
     
+    recent_settlements = [
+        {
+            "order_id": o.id,
+            "date": o.delivered_at.strftime("%d %b %Y, %I:%M %p") if o.delivered_at else o.placed_at.strftime("%d %b %Y"),
+            "amount": f"₹{o.subtotal:.2f}",
+            "status": "Settled (UPI)" if o.payment_status == "PAID" else "Processing (Tonight)",
+            "payment_method": o.payment_method
+        }
+        for o in delivered_orders[:10]
+    ]
+    
     return {
         "store_id": store.id,
         "total_sales": total_sales,
@@ -320,7 +333,8 @@ async def get_vendor_finances(
         "commission_deducted": round(total_sales * (store.commission_rate / 100.0), 2),
         "net_payout_due": total_sales - round(total_sales * (store.commission_rate / 100.0), 2),
         "total_delivered_orders": len(delivered_orders),
-        "upi_id": store.upi_id
+        "upi_id": store.upi_id or "Not configured",
+        "recent_settlements": recent_settlements
     }
 
 @router.get("/runner/jobs", response_model=List[OrderResponse])
@@ -685,6 +699,8 @@ async def _format_order_response(order_id: str, db: AsyncSession) -> Optional[Or
         total_amount=order.total_amount,
         payment_method=order.payment_method,
         payment_status=order.payment_status,
+        payment_order_id=getattr(order, "payment_order_id", None),
+        transaction_id=getattr(order, "transaction_id", None),
         delivery_otp=order.delivery_otp,
         placed_at=order.placed_at,
         cancel_until=order.cancel_until,

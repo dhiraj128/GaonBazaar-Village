@@ -10,7 +10,7 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.db.session import async_engine, AsyncSessionLocal
 from app.models.base import Base, User, Store, StoreProduct, GlobalCatalogItem, Runner, Address
-from app.api.v1 import auth, addresses, stores, orders, ai, admin, support
+from app.api.v1 import auth, addresses, stores, orders, ai, admin, support, payments
 
 logger = logging.getLogger("gaonbazaar")
 
@@ -40,6 +40,37 @@ async def init_db_and_seed():
                     await conn.execute(text(stmt))
                 except Exception:
                     pass
+
+        # Ensure order columns exist across both PostgreSQL and SQLite
+        for col_stmt in [
+            "ALTER TABLE orders ADD COLUMN payment_order_id VARCHAR(100);",
+            "ALTER TABLE orders ADD COLUMN transaction_id VARCHAR(100);",
+        ]:
+            try:
+                await conn.execute(text(col_stmt))
+            except Exception:
+                pass
+
+        # Update verified product image URLs in existing database rows
+        url_updates = [
+            ("cat_atta", "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400"),
+            ("cat_mustard_oil", "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400"),
+            ("cat_led_bulb", "https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=400"),
+            ("cat_soy_oil", "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400"),
+            ("cat_moong_dal", "https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400"),
+        ]
+        for cat_id, new_url in url_updates:
+            try:
+                await conn.execute(
+                    text("UPDATE global_catalog SET image_url = :url WHERE id = :id"),
+                    {"url": new_url, "id": cat_id}
+                )
+                await conn.execute(
+                    text("UPDATE store_products SET image_url = :url WHERE global_product_id = :id"),
+                    {"url": new_url, "id": cat_id}
+                )
+            except Exception:
+                pass
         
     # Seed pilot data for Minapur Block, Muzaffarpur, Bihar
     async with AsyncSessionLocal() as session:
@@ -54,7 +85,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 kg",
                     suggested_mrp=45.0,
-                    image_url="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400",
+                    image_url="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400",
                     tags="atta,aata,wheat,flour,आटा"
                 ),
                 GlobalCatalogItem(
@@ -74,7 +105,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 L",
                     suggested_mrp=155.0,
-                    image_url="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+                    image_url="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400",
                     tags="oil,mustard,tel,सरसों तेल"
                 ),
                 GlobalCatalogItem(
@@ -134,7 +165,7 @@ async def init_db_and_seed():
                     category="Electrical",
                     default_unit="1 piece",
                     suggested_mrp=99.0,
-                    image_url="https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=400",
+                    image_url="https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=400",
                     tags="bulb,led,light,बल्ब"
                 ),
                 GlobalCatalogItem(
@@ -204,7 +235,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 kg",
                     suggested_mrp=120.0,
-                    image_url="https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400",
+                    image_url="https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400",
                     tags="moong,dal,मूंग दाल"
                 ),
                 GlobalCatalogItem(
@@ -214,7 +245,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 L",
                     suggested_mrp=135.0,
-                    image_url="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+                    image_url="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400",
                     tags="oil,soyabean,refined,तेल"
                 ),
                 GlobalCatalogItem(
@@ -422,13 +453,13 @@ async def init_db_and_seed():
             
             # Products for Store 1
             st1_products = [
-                StoreProduct(store_id="str_01", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=38.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400"),
+                StoreProduct(store_id="str_01", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=38.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400"),
                 StoreProduct(store_id="str_01", global_product_id="cat_rice", category="Grocery", unit="1 kg", price=54.0, mrp=65.0, image_url="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400"),
-                StoreProduct(store_id="str_01", global_product_id="cat_mustard_oil", category="Grocery", unit="1 L", price=142.0, mrp=155.0, image_url="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400"),
+                StoreProduct(store_id="str_01", global_product_id="cat_mustard_oil", category="Grocery", unit="1 L", price=142.0, mrp=155.0, image_url="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400"),
                 StoreProduct(store_id="str_01", global_product_id="cat_potato", category="Vegetables", unit="1 kg", price=24.0, mrp=30.0, image_url="https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400"),
                 StoreProduct(store_id="str_01", global_product_id="cat_onion", category="Vegetables", unit="1 kg", price=32.0, mrp=40.0, image_url="https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400"),
                 StoreProduct(store_id="str_01", global_product_id="cat_pooja_agarbatti", category="Pooja", unit="1 pack", price=20.0, mrp=25.0, image_url="https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400"),
-                StoreProduct(store_id="str_01", global_product_id="cat_led_bulb", category="Electrical", unit="1 piece", price=85.0, mrp=99.0, image_url="https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=400"),
+                StoreProduct(store_id="str_01", global_product_id="cat_led_bulb", category="Electrical", unit="1 piece", price=85.0, mrp=99.0, image_url="https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=400"),
             ]
             session.add_all(st1_products)
             
@@ -437,7 +468,7 @@ async def init_db_and_seed():
                 StoreProduct(store_id="str_02", global_product_id="cat_milk", category="Dairy", unit="1 L", price=56.0, mrp=60.0, image_url="https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400"),
                 StoreProduct(store_id="str_02", global_product_id="cat_potato", category="Vegetables", unit="1 kg", price=25.0, mrp=30.0, image_url="https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400"),
                 StoreProduct(store_id="str_02", global_product_id="cat_tomato", category="Vegetables", unit="1 kg", price=28.0, mrp=35.0, image_url="https://images.unsplash.com/photo-1546470427-227c7369a941?w=400"),
-                StoreProduct(store_id="str_02", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=39.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400"),
+                StoreProduct(store_id="str_02", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=39.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400"),
             ]
             session.add_all(st2_products)
             
@@ -579,6 +610,7 @@ app.include_router(orders.router, prefix=settings.API_V1_STR)
 app.include_router(ai.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(support.router, prefix=settings.API_V1_STR)
+app.include_router(payments.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():

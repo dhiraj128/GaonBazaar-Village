@@ -866,4 +866,56 @@ class GBApiClient {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
   }
+
+
+  // --- Razorpay Payment Gateway ---
+  Future<ApiResponse<Map<String, dynamic>>> createRazorpayOrder(String orderId) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl${Endpoints.razorpayOrder}'),
+            headers: _headers(),
+            body: jsonEncode({'order_id': orderId}),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> verifyRazorpayPayment({
+    required String orderId,
+    required String razorpayOrderId,
+    required String razorpayPaymentId,
+    required String razorpaySignature,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl${Endpoints.razorpayVerify}'),
+            headers: _headers(),
+            body: jsonEncode({
+              'order_id': orderId,
+              'razorpay_order_id': razorpayOrderId,
+              'razorpay_payment_id': razorpayPaymentId,
+              'razorpay_signature': razorpaySignature,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
 }

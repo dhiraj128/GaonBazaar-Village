@@ -24,11 +24,12 @@ class _VendorSettlementsScreenState extends State<VendorSettlementsScreen> {
     final isHi = state.isHindi;
     final finances = state.finances;
 
-    final totalSales = (finances?['total_sales'] as num?)?.toDouble() ?? 1480.0;
+    final totalSales = (finances?['total_sales'] as num?)?.toDouble() ?? 0.0;
     final commissionRate = (finances?['commission_rate'] as num?)?.toDouble() ?? 0.0;
     final netPayoutDue = (finances?['net_payout_due'] as num?)?.toDouble() ?? totalSales;
-    final upiId = (finances?['upi_id'] as String?) ?? state.myStore?.upiId ?? 'rajusharma@upi';
-    final completedOrdersCount = (finances?['total_delivered_orders'] as int?) ?? 14;
+    final upiId = (finances?['upi_id'] as String?) ?? state.myStore?.upiId ?? 'Not Configured';
+    final completedOrdersCount = (finances?['total_delivered_orders'] as int?) ?? 0;
+    final recentSettlements = (finances?['recent_settlements'] as List<dynamic>?) ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -170,24 +171,35 @@ class _VendorSettlementsScreenState extends State<VendorSettlementsScreen> {
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
               ),
               const SizedBox(height: 10),
-              _buildHistoryItem(
-                date: '01 Nov 2026',
-                amount: '₹${netPayoutDue.toStringAsFixed(2)}',
-                status: isHi ? 'प्रक्रियाधीन (आज रात)' : 'Processing (Tonight)',
-                statusColor: Colors.amber.shade800,
-              ),
-              _buildHistoryItem(
-                date: '31 Oct 2026',
-                amount: '₹2,340.00',
-                status: isHi ? 'सफल भुगतान (UPI)' : 'Paid (UPI)',
-                statusColor: GBColors.success,
-              ),
-              _buildHistoryItem(
-                date: '30 Oct 2026',
-                amount: '₹1,890.00',
-                status: isHi ? 'सफल भुगतान (UPI)' : 'Paid (UPI)',
-                statusColor: GBColors.success,
-              ),
+              if (recentSettlements.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Center(
+                    child: Text(
+                      isHi
+                          ? 'अभी कोई पूर्ण ऑर्डर या सेटलमेंट नहीं है। ऑर्डर डिलीवर होने पर राशि स्वतः सेटल होगी।'
+                          : 'No completed orders or settlements yet. Completed orders will appear here automatically.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ),
+                )
+              else
+                ...recentSettlements.map((item) {
+                  final s = item as Map<String, dynamic>;
+                  final isSettled = s['status'].toString().contains('Settled') || s['status'].toString().contains('Paid');
+                  return _buildHistoryItem(
+                    date: s['date'] as String? ?? 'Today',
+                    amount: s['amount'] as String? ?? '₹0.00',
+                    status: s['status'] as String? ?? 'Pending',
+                    statusColor: isSettled ? GBColors.success : Colors.amber.shade800,
+                  );
+                }),
             ],
           ),
         ),

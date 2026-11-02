@@ -143,6 +143,11 @@ class Settings(BaseSettings):
     CUSTOMER_CANCEL_WINDOW_SECONDS: int = 180 # Strict 180-second cancellation
     DEFAULT_VENDOR_COMMISSION_PCT: float = 0.0 # Strict 0% introductory rate
     
+    # Razorpay Payment Gateway Configuration (Test Mode Supported)
+    RAZORPAY_KEY_ID: str = "rzp_test_GaonBazaarVillage"
+    RAZORPAY_KEY_SECRET: str = "test_secret_GaonBazaar_Village"
+    RAZORPAY_WEBHOOK_SECRET: str = "webhook_secret_GaonBazaar"
+    
     # Pilot Geography: Minapur Block, Muzaffarpur, Bihar
     PILOT_BLOCK: str = "Minapur"
     PILOT_DISTRICT: str = "Muzaffarpur"

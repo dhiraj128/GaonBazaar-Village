@@ -68,4 +68,8 @@ class Endpoints {
 
   // AI Assistant
   static const String aiQuery = '/ai/query';
+
+  // Payments
+  static const String razorpayOrder = '/payments/razorpay/order';
+  static const String razorpayVerify = '/payments/razorpay/verify';
 }

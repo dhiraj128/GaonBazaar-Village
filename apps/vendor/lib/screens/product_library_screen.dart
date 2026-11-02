@@ -23,7 +23,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
       'category': 'Grocery',
       'unit': '1 kg',
       'suggested_price': 38.0,
-      'image_url': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400',
+      'image_url': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400',
     },
     {
       'id': 'cat_rice',
@@ -41,7 +41,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
       'category': 'Grocery',
       'unit': '1 L',
       'suggested_price': 142.0,
-      'image_url': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400',
+      'image_url': 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400',
     },
     {
       'id': 'cat_milk',
@@ -95,7 +95,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
       'category': 'Electrical',
       'unit': '1 piece',
       'suggested_price': 85.0,
-      'image_url': 'https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=400',
+      'image_url': 'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=400',
     },
     {
       'id': 'cat_sugar',
@@ -406,42 +406,64 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          loc.isHindi ? (item['name_hi'] as String) : (item['name_en'] as String),
-                                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          '${item['category']} • ${item['unit']}',
-                                          style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '₹${(item['suggested_price'] as num).toStringAsFixed(0)}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 14,
-                                            color: GBColors.primary,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            loc.isHindi ? (item['name_hi'] as String) : (item['name_en'] as String),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            softWrap: true,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 14,
+                                              height: 1.25,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            '${item['category']} • ${item['unit']}',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '₹${(item['suggested_price'] as num).toStringAsFixed(0)}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 14,
+                                              color: GBColors.primary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                  ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: alreadyAdded ? Colors.grey.shade400 : GBColors.primary,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    ),
-                                    onPressed: alreadyAdded ? null : () => _showAddPriceDialog(item),
-                                    child: Text(
-                                      alreadyAdded
-                                          ? (loc.isHindi ? 'जोड़ा हुआ' : 'Added')
-                                          : (loc.isHindi ? 'जोड़ें' : 'Add'),
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                                  SizedBox(
+                                    width: 84,
+                                    height: 34,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: alreadyAdded ? Colors.grey.shade300 : GBColors.primary,
+                                        foregroundColor: alreadyAdded ? Colors.grey.shade700 : Colors.white,
+                                        padding: EdgeInsets.zero,
+                                        elevation: 0,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                      onPressed: alreadyAdded ? null : () => _showAddPriceDialog(item),
+                                      child: Text(
+                                        alreadyAdded
+                                            ? (loc.isHindi ? 'जोड़ा गया' : 'Added')
+                                            : (loc.isHindi ? '+ जोड़ें' : '+ Add'),
+                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
                                   ),
                                 ],

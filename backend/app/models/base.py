@@ -187,6 +187,8 @@ class Order(Base):
     
     payment_method = Column(String(20), default="COD") # COD, ONLINE
     payment_status = Column(String(20), default="PENDING") # PENDING, PAID, REFUNDED
+    payment_order_id = Column(String(100), nullable=True) # Razorpay Order ID
+    transaction_id = Column(String(100), nullable=True) # Razorpay Payment ID
     delivery_otp = Column(String(6), nullable=False) # 4 or 6 digit verification code
     
     placed_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))

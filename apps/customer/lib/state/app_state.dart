@@ -49,7 +49,15 @@ class CustomerAppState extends ChangeNotifier {
 
   double get cartSubtotal =>
       _cartItems.values.fold(0.0, (sum, i) => sum + i.totalPrice);
-  double get cartDeliveryFee => _cartItems.isEmpty ? 0.0 : 15.0;
+  double get cartDeliveryFee {
+    if (_cartItems.isEmpty) return 0.0;
+    // Default pilot distance 0.8 km (Tier 1: 0-2 km is ₹15.0)
+    const dist = 0.8;
+    if (dist <= 2.0) return 15.0;
+    if (dist <= 4.0) return 20.0;
+    if (dist <= 5.0) return 25.0;
+    return 35.0;
+  }
   double get cartPlatformFee => _cartItems.isEmpty ? 0.0 : 3.0; // Strict ₹3 fee
   double get cartTotal =>
       _cartItems.isEmpty ? 0.0 : cartSubtotal + cartDeliveryFee + cartPlatformFee;

@@ -3,13 +3,21 @@ from app.services.pricing_service import calculate_delivery_fee, calculate_order
 from app.core.config import settings
 
 def test_delivery_fee_tiering():
-    # <= 3 km should be base ₹15.0
+    # 0 - 2 km -> ₹15.0
     assert calculate_delivery_fee(1.5) == 15.0
-    assert calculate_delivery_fee(3.0) == 15.0
+    assert calculate_delivery_fee(2.0) == 15.0
     
-    # > 3 km should add ₹5.0 per km
-    # 5.0 km -> 15 + (2.0 * 5) = ₹25.0
+    # > 2 - 4 km -> ₹20.0
+    assert calculate_delivery_fee(2.5) == 20.0
+    assert calculate_delivery_fee(4.0) == 20.0
+    
+    # > 4 - 5 km -> ₹25.0
+    assert calculate_delivery_fee(4.5) == 25.0
     assert calculate_delivery_fee(5.0) == 25.0
+    
+    # > 5 - 8 km -> ₹35.0
+    assert calculate_delivery_fee(6.0) == 35.0
+    assert calculate_delivery_fee(8.0) == 35.0
 
 def test_strict_platform_fee_and_totals():
     # Verify strict ₹3 platform fee

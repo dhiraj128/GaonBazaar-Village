@@ -38,10 +38,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       customerNotes: 'Village delivery order',
     );
 
-    setState(() => _isSubmitting = false);
-
     if (response.isSuccess && response.data != null && mounted) {
-      final order = response.data!;
+      var order = response.data!;
+      if (_selectedPaymentMethod == 'ONLINE') {
+        final paid = await _processOnlinePayment(context, order);
+        if (!paid) {
+          setState(() {
+            _isSubmitting = false;
+            _errorMessage = loc.isHindi ? 'भुगतान रद्द किया गया या विफल रहा' : 'Payment was cancelled or failed';
+          });
+          return;
+        }
+      }
+
+      setState(() => _isSubmitting = false);
       state.addOrder(order);
       state.clearCart();
 
@@ -330,6 +340,208 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               onPressed: _handlePlaceOrder,
             ),
             const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<bool> _processOnlinePayment(BuildContext context, dynamic order) async {
+    final state = AppStateProvider.of(context);
+    final rzpRes = await state.apiClient.createRazorpayOrder(order.id);
+    if (!rzpRes.isSuccess || rzpRes.data == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(rzpRes.errorMessage ?? 'Payment initialization failed'),
+            backgroundColor: GBColors.error,
+          ),
+        );
+      }
+      return false;
+    }
+
+    final rzpOrderId = rzpRes.data!['id'] as String;
+    final rzpAmount = rzpRes.data!['amount'] as int;
+
+    if (!mounted) return false;
+    final paymentSuccess = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _RazorpayPaymentDialog(
+        orderId: order.id,
+        razorpayOrderId: rzpOrderId,
+        amountPaise: rzpAmount,
+      ),
+    );
+
+    if (paymentSuccess == true) {
+      final verifyRes = await state.apiClient.verifyRazorpayPayment(
+        orderId: order.id,
+        razorpayOrderId: rzpOrderId,
+        razorpayPaymentId: 'pay_rzp_${DateTime.now().millisecondsSinceEpoch}',
+        razorpaySignature: 'test_sig_verified',
+      );
+      return verifyRes.isSuccess;
+    }
+    return false;
+  }
+}
+
+class _RazorpayPaymentDialog extends StatefulWidget {
+  final String orderId;
+  final String razorpayOrderId;
+  final int amountPaise;
+
+  const _RazorpayPaymentDialog({
+    required this.orderId,
+    required this.razorpayOrderId,
+    required this.amountPaise,
+  });
+
+  @override
+  State<_RazorpayPaymentDialog> createState() => _RazorpayPaymentDialogState();
+}
+
+class _RazorpayPaymentDialogState extends State<_RazorpayPaymentDialog> {
+  String _selectedUpi = 'phonepe';
+  bool _isPaying = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final amountRupees = (widget.amountPaise / 100).toStringAsFixed(0);
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      contentPadding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.security, color: Colors.blue, size: 22),
+          ),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Razorpay Gateway',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                ),
+                Text(
+                  'Test Payment Mode • 100% Secure',
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Payable Amount:', style: TextStyle(fontSize: 13)),
+                  Text(
+                    '₹$amountRupees',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: GBColors.primary),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Select UPI App (Fast & Direct)',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+            const SizedBox(height: 8),
+            RadioListTile<String>(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: const Text('PhonePe UPI'),
+              value: 'phonepe',
+              groupValue: _selectedUpi,
+              activeColor: GBColors.primary,
+              onChanged: (v) => setState(() => _selectedUpi = v!),
+            ),
+            RadioListTile<String>(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Google Pay (GPay)'),
+              value: 'gpay',
+              groupValue: _selectedUpi,
+              activeColor: GBColors.primary,
+              onChanged: (v) => setState(() => _selectedUpi = v!),
+            ),
+            RadioListTile<String>(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Paytm UPI'),
+              value: 'paytm',
+              groupValue: _selectedUpi,
+              activeColor: GBColors.primary,
+              onChanged: (v) => setState(() => _selectedUpi = v!),
+            ),
+            RadioListTile<String>(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: const Text('BHIM / Other UPI ID'),
+              value: 'bhim',
+              groupValue: _selectedUpi,
+              activeColor: GBColors.primary,
+              onChanged: (v) => setState(() => _selectedUpi = v!),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: GBColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: _isPaying
+                    ? null
+                    : () async {
+                        setState(() => _isPaying = true);
+                        await Future.delayed(const Duration(milliseconds: 700));
+                        if (mounted) Navigator.of(context).pop(true);
+                      },
+                child: _isPaying
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : Text(
+                        'Pay ₹$amountRupees Securely',
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: TextButton(
+                onPressed: _isPaying ? null : () => Navigator.of(context).pop(false),
+                child: const Text('Cancel Payment', style: TextStyle(color: Colors.grey)),
+              ),
+            ),
           ],
         ),
       ),

@@ -181,40 +181,49 @@ class VendorInventoryScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    loc.isHindi ? p.nameHi : p.nameEn,
-                                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '₹${p.price.toStringAsFixed(0)} / ${p.unit} • ${loc.isHindi ? "स्टॉक" : "Stock"}: ${p.stockQuantity}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 6),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      loc.isHindi ? p.nameHi : p.nameEn,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: true,
+                                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, height: 1.25),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: p.inStock
-                                          ? Colors.green.withOpacity(0.1)
-                                          : Colors.red.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      p.inStock ? loc.tr('in_stock') : loc.tr('out_of_stock'),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '₹${p.price.toStringAsFixed(0)} / ${p.unit} • ${loc.isHindi ? "स्टॉक" : "Stock"}: ${p.stockQuantity}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w700,
-                                        color: p.inStock ? GBColors.success : GBColors.error,
+                                        fontSize: 12,
+                                        color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
                                       ),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: p.inStock
+                                            ? Colors.green.withOpacity(0.1)
+                                            : Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        p.inStock ? loc.tr('in_stock') : loc.tr('out_of_stock'),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: p.inStock ? GBColors.success : GBColors.error,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                             // Stock Toggle Switch

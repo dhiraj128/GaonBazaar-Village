@@ -61,6 +61,8 @@ class OrderResponse(BaseModel):
     total_amount: float
     payment_method: str
     payment_status: str
+    payment_order_id: Optional[str] = None
+    transaction_id: Optional[str] = None
     delivery_otp: str
     placed_at: datetime
     cancel_until: datetime
