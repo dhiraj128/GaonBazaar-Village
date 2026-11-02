@@ -296,6 +296,39 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
           ],
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        onTap: (idx) {
+          if (idx == 1) {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VendorInventoryScreen()));
+          } else if (idx == 2) {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProductLibraryScreen()));
+          } else if (idx == 3) {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VendorSettlementsScreen()));
+          }
+        },
+        selectedItemColor: GBColors.primary,
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        items: [
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.receipt_long_outlined),
+            label: isHi ? 'ऑर्डर' : 'Orders',
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.inventory_2_outlined),
+            label: isHi ? 'इन्वेंट्री' : 'Inventory',
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.library_add_outlined),
+            label: isHi ? 'कैटलॉग' : 'Catalog',
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            label: isHi ? 'सेटलमेंट' : 'Settlements',
+          ),
+        ],
+      ),
     );
   }
 

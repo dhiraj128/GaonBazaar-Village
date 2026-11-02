@@ -18,7 +18,7 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
   // Form controllers
   final _ownerNameCtrl = TextEditingController();
   final _shopNameCtrl = TextEditingController();
-  final _villageCtrl = TextEditingController(text: 'Chaturshi');
+  final _villageCtrl = TextEditingController();
   final _landmarkCtrl = TextEditingController();
   final _blockCtrl = TextEditingController(text: 'Minapur');
   final _districtCtrl = TextEditingController(text: 'Muzaffarpur');
@@ -26,7 +26,7 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
   final _panCtrl = TextEditingController();
   final _upiCtrl = TextEditingController();
   String _category = 'Grocery';
-  bool _digiLockerConsented = true;
+  bool _digiLockerConsented = false;
 
   final List<String> _categories = [
     'Grocery',
@@ -282,7 +282,7 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
                           : 'Consent to verify identity via DigiLocker Government Gateway',
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                     ),
-                    onChanged: (v) => setState(() => _digiLockerConsented = v ?? true),
+                    onChanged: (v) => setState(() => _digiLockerConsented = v ?? false),
                   ),
                 ],
               ),

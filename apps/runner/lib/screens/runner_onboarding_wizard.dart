@@ -20,7 +20,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
   final _dlCtrl = TextEditingController();
   final _upiCtrl = TextEditingController();
   String _vehicleType = 'Motorcycle';
-  bool _digiLockerConsented = true;
+  bool _digiLockerConsented = false;
 
   @override
   void dispose() {
