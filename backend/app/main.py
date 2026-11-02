@@ -495,10 +495,7 @@ async def init_db_and_seed():
             
             await session.commit()
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    app.state.db_healthy = False
-    app.state.db_error = None
+async def run_resilient_init_db(app: FastAPI):
     max_retries = 3
     retry_delay = 2
     for attempt in range(1, max_retries + 1):
@@ -508,7 +505,7 @@ async def lifespan(app: FastAPI):
             app.state.db_healthy = True
             app.state.db_error = None
             logger.info("Database schema initialized and pilot records seeded successfully.")
-            break
+            return
         except Exception as exc:
             app.state.db_healthy = False
             app.state.db_error = str(exc)
@@ -520,7 +517,23 @@ async def lifespan(app: FastAPI):
                     "Database initialization could not complete during startup. "
                     "Web server will remain online to serve health checks and retry queries."
                 )
-    yield
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.db_healthy = False
+    app.state.db_error = None
+    
+    if settings.TESTING:
+        # In test environments, synchronously initialize schema and seed data
+        await run_resilient_init_db(app)
+        yield
+    else:
+        # In production/staging, launch database initialization asynchronously in the background
+        # so FastAPI immediately binds to $PORT and satisfies Render platform health checks
+        init_task = asyncio.create_task(run_resilient_init_db(app))
+        yield
+        if not init_task.done():
+            init_task.cancel()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
