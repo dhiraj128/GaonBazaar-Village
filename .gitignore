@@ -35,6 +35,9 @@ apps/admin/build/
 .npm
 *.log
 
+# Web builds
+public_web/
+
 # Flutter / Dart
 .dart_tool/
 .flutter-plugins
