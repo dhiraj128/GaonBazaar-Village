@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:design_system/design_system.dart';
@@ -50,6 +51,33 @@ class _GaonBazaarVendorAppState extends State<GaonBazaarVendorApp> {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
+            builder: (context, child) {
+              if (kIsWeb) {
+                return Container(
+                  color: const Color(0xFF0F172A),
+                  alignment: Alignment.center,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 430, maxHeight: 900),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        border: Border.all(color: Colors.white24, width: 2),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black54,
+                            blurRadius: 30,
+                            spreadRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: child,
+                    ),
+                  ),
+                );
+              }
+              return child ?? const SizedBox();
+            },
             home: const VendorSplashScreen(),
           );
         },
