@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:localization/localization.dart';
 import 'package:shared_models/shared_models.dart';
+import '../services/voice_service.dart';
 import '../state/app_state.dart';
 
 class AiAssistantTab extends StatefulWidget {
@@ -125,6 +126,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
     final loc = GBLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final state = AppStateProvider.of(context);
+    final voice = VoiceService.instance;
 
     setState(() => _isListening = true);
 
@@ -133,88 +135,125 @@ class _AiAssistantTabState extends State<AiAssistantTab> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-          decoration: BoxDecoration(
-            color: isDark ? GBColors.surfaceDark : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withAlpha(80),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+        String liveTranscript = '';
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            voice.startListening(
+              localeId: state.isHindi ? 'hi_IN' : 'en_IN',
+              onResult: (text, isFinal) {
+                if (ctx.mounted) {
+                  setSheetState(() => liveTranscript = text);
+                  if (isFinal && text.trim().isNotEmpty) {
+                    voice.stopListening();
+                    Navigator.of(ctx).pop();
+                    _handleUserMessage(text.trim());
+                  }
+                }
+              },
+            );
+
+            return Container(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+              decoration: BoxDecoration(
+                color: isDark ? GBColors.surfaceDark : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              const SizedBox(height: 20),
-              Text(
-                loc.tr('ai_listening'),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                loc.isHindi
-                    ? 'हिंदी या English में बोलें: "2 किलो आटा", "1 लीटर दूध", "कार्ट दिखाओ"'
-                    : 'Speak in English or Hindi: "Add 2 kg atta", "1 litre milk", "Show cart"',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Animated Pulsing Mic
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: GBColors.primary.withAlpha(30),
-                  border: Border.all(color: GBColors.primary, width: 2),
-                ),
-                child: const Center(
-                  child: Icon(Icons.mic, color: GBColors.primary, size: 36),
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Spoken action suggestions
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                alignment: WrapAlignment.center,
-                children: _getSuggestions(state.isHindi).map((phrase) {
-                  return ActionChip(
-                    avatar: const Icon(Icons.mic_none, size: 16, color: GBColors.primary),
-                    label: Text(phrase, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                    backgroundColor: GBColors.primary.withAlpha(15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(color: GBColors.primary.withAlpha(50)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withAlpha(80),
+                      borderRadius: BorderRadius.circular(2),
                     ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    loc.tr('ai_listening'),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    loc.isHindi
+                        ? 'हिंदी या English में बोलें: "2 किलो आटा", "1 लीटर दूध", "कार्ट दिखाओ"'
+                        : 'Speak in English or Hindi: "Add 2 kg atta", "1 litre milk", "Show cart"',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Animated Pulsing Mic
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: GBColors.primary.withAlpha(30),
+                      border: Border.all(color: GBColors.primary, width: 2),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.mic, color: GBColors.primary, size: 36),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  if (liveTranscript.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: GBColors.primary.withAlpha(20),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '"$liveTranscript"',
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  // Spoken action suggestions
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: _getSuggestions(state.isHindi).map((phrase) {
+                      return ActionChip(
+                        avatar: const Icon(Icons.mic_none, size: 16, color: GBColors.primary),
+                        label: Text(phrase, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                        backgroundColor: GBColors.primary.withAlpha(15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(color: GBColors.primary.withAlpha(50)),
+                        ),
+                        onPressed: () {
+                          voice.stopListening();
+                          Navigator.of(ctx).pop();
+                          _handleUserMessage(phrase);
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+                  TextButton(
                     onPressed: () {
+                      voice.stopListening();
                       Navigator.of(ctx).pop();
-                      _handleUserMessage(phrase);
                     },
-                  );
-                }).toList(),
+                    child: Text(
+                      loc.tr('cancel'),
+                      style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 20),
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(
-                  loc.tr('cancel'),
-                  style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     ).whenComplete(() {
+      voice.stopListening();
       if (mounted) setState(() => _isListening = false);
     });
   }

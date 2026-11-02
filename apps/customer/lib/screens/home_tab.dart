@@ -3,6 +3,7 @@ import 'package:design_system/design_system.dart';
 import 'package:localization/localization.dart';
 import 'package:shared_models/shared_models.dart';
 import '../state/app_state.dart';
+import '../services/voice_service.dart';
 import 'store_details_screen.dart';
 import 'product_details_screen.dart';
 import 'map_picker_screen.dart';
@@ -268,6 +269,7 @@ class _HomeTabState extends State<HomeTab> {
   void _openHomeSearchMicDialog() {
     final loc = GBLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final voice = VoiceService.instance;
 
     setState(() => _isSearchListening = true);
 
@@ -279,6 +281,22 @@ class _HomeTabState extends State<HomeTab> {
         String liveTranscript = '';
         return StatefulBuilder(
           builder: (context, setSheetState) {
+            // Initiate live speech recognition
+            voice.startListening(
+              localeId: loc.isHindi ? 'hi_IN' : 'en_IN',
+              onResult: (recognizedText, isFinal) {
+                if (ctx.mounted) {
+                  setSheetState(() => liveTranscript = recognizedText);
+                  if (isFinal && recognizedText.trim().isNotEmpty) {
+                    _applySearchText(recognizedText.trim());
+                    if (Navigator.of(ctx).canPop()) {
+                      Navigator.of(ctx).pop();
+                    }
+                  }
+                }
+              },
+            );
+
             return Container(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
               decoration: BoxDecoration(
@@ -363,6 +381,7 @@ class _HomeTabState extends State<HomeTab> {
                   const SizedBox(height: 20),
                   TextButton(
                     onPressed: () {
+                      voice.stopListening();
                       Navigator.of(ctx).pop();
                     },
                     child: Text(
@@ -377,6 +396,7 @@ class _HomeTabState extends State<HomeTab> {
         );
       },
     ).whenComplete(() {
+      voice.stopListening();
       if (mounted) {
         setState(() => _isSearchListening = false);
       }

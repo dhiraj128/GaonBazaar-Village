@@ -21,6 +21,7 @@ dependencies:
     path: ../../packages/shared_models
   api_client:
     path: ../../packages/api_client
+  speech_to_text: ^7.5.0
 
 dev_dependencies:
   flutter_test:
