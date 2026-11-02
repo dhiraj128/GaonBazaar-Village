@@ -218,8 +218,6 @@ async def update_order_status(order_id: str, req: OrderStatusUpdate, db: AsyncSe
                 order.payment_status = "PAID"
             else:
                 order.payment_status = "PENDING"
-        elif order.payment_method == "ONLINE_SIMULATED":
-            order.payment_status = "SIMULATED"
     await db.commit()
     return {"message": f"Order {order_id} status updated to {req.status}", "status": order.status}
 

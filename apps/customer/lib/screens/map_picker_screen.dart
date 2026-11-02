@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:design_system/design_system.dart';
 import 'package:localization/localization.dart';
 import 'package:shared_models/shared_models.dart';
@@ -14,6 +16,8 @@ class MapPickerScreen extends StatefulWidget {
 
 class _MapPickerScreenState extends State<MapPickerScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  GoogleMapController? _mapController;
+  bool _isLocating = false;
 
   // Reference Minapur Hub coordinates
   static const double hubLat = 26.2200;
@@ -143,14 +147,73 @@ class _MapPickerScreenState extends State<MapPickerScreen> with SingleTickerProv
     });
   }
 
-  void _selectPilotLocation(Map<String, dynamic> loc) {
+  void _updateCoordinates(double lat, double lng) {
     setState(() {
-      _currentLat = loc['lat'] as double;
-      _currentLng = loc['lng'] as double;
-      _selectedVillage = loc['village'] as String;
-      _landmark = loc['landmark'] as String;
+      _currentLat = lat;
+      _currentLng = lng;
+      String nearestVillage = 'Minapur Rural Field';
+      String nearestLandmark = 'Near Agricultural Field Pin';
+      double minD = 9999.0;
+      for (final p in _pilotLocations) {
+        final d = _haversineKm(lat, lng, p['lat'] as double, p['lng'] as double);
+        if (d < minD) {
+          minD = d;
+          if (d <= 2.0) {
+            nearestVillage = p['village'] as String;
+            nearestLandmark = p['landmark'] as String;
+          }
+        }
+      }
+      _selectedVillage = nearestVillage;
+      _landmark = nearestLandmark;
       _calculateServiceability();
     });
+    if (_mapController != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLng(LatLng(lat, lng)),
+      );
+    }
+  }
+
+  void _selectPilotLocation(Map<String, dynamic> loc) {
+    _updateCoordinates(loc['lat'] as double, loc['lng'] as double);
+  }
+
+  Future<void> _fetchDeviceGpsLocation() async {
+    setState(() => _isLocating = true);
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enable GPS / Location services on your device')),
+        );
+      }
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+        final pos = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 6),
+        );
+        _updateCoordinates(pos.latitude, pos.longitude);
+      } else {
+        _updateCoordinates(26.2230, 85.3520);
+      }
+    } catch (_) {
+      _updateCoordinates(26.2230, 85.3520);
+    } finally {
+      if (mounted) {
+        setState(() => _isLocating = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('GPS Pin: ${_currentLat.toStringAsFixed(4)}, ${_currentLng.toStringAsFixed(4)} (${_distanceKm} km)'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   void _confirmAndSaveCurrent() async {
@@ -356,63 +419,60 @@ class _MapPickerScreenState extends State<MapPickerScreen> with SingleTickerProv
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
-            icon: const Icon(Icons.refresh, size: 18),
-            label: Text(loc.isHindi ? 'जीपीएस रिफ्रेश करें' : 'Refresh GPS Coordinates'),
+            icon: _isLocating
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.my_location, size: 18),
+            label: Text(
+              _isLocating
+                  ? (loc.isHindi ? 'जीपीएस स्थान खोज रहे हैं...' : 'Detecting GPS Location...')
+                  : (loc.isHindi ? 'वर्तमान डिवाइस जीपीएस स्थान प्राप्त करें' : 'Get Real Device GPS Location'),
+            ),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(46),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            onPressed: () {
-              _selectPilotLocation(_pilotLocations[0]);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('GPS coordinates refreshed (26.2230, 85.3520)'),
-                  duration: Duration(seconds: 1),
-                ),
-              );
-            },
+            onPressed: _isLocating ? null : _fetchDeviceGpsLocation,
           ),
         ],
       ),
     );
   }
 
-  // TAB 2: Map Pin Simulation & Localities
+  // TAB 2: Interactive Google Map Pin & Localities
   Widget _buildMapPinTab(GBLocalizations loc, bool isDark) {
     return Column(
       children: [
-        // Map Representation
+        // Interactive Google Map
         Expanded(
           flex: 4,
           child: Stack(
-            alignment: Alignment.center,
             children: [
-              Container(
-                width: double.infinity,
-                color: isDark ? const Color(0xFF1B2838) : const Color(0xFFE5F0E6),
-                child: CustomPaint(painter: _MapGridPainter(isDark: isDark)),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      _selectedVillage,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
+              GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(_currentLat, _currentLng),
+                  zoom: 14.5,
+                ),
+                onMapCreated: (ctrl) => _mapController = ctrl,
+                markers: {
+                  Marker(
+                    markerId: const MarkerId('delivery_pin'),
+                    position: LatLng(_currentLat, _currentLng),
+                    draggable: true,
+                    onDragEnd: (pos) => _updateCoordinates(pos.latitude, pos.longitude),
+                    infoWindow: InfoWindow(
+                      title: _selectedVillage,
+                      snippet: '${_currentLat.toStringAsFixed(4)}, ${_currentLng.toStringAsFixed(4)} (${_distanceKm} km)',
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Icon(Icons.location_pin, size: 48, color: GBColors.primary),
-                ],
+                },
+                onTap: (pos) => _updateCoordinates(pos.latitude, pos.longitude),
+                myLocationEnabled: true,
+                myLocationButtonEnabled: true,
+                zoomControlsEnabled: true,
               ),
               Positioned(
                 left: 14,
@@ -426,6 +486,9 @@ class _MapPickerScreenState extends State<MapPickerScreen> with SingleTickerProv
                       color: _isServiceable ? GBColors.success : GBColors.error,
                       width: 1.5,
                     ),
+                    boxShadow: const [
+                      BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -939,26 +1002,4 @@ class _MapPickerScreenState extends State<MapPickerScreen> with SingleTickerProv
       ],
     );
   }
-}
-
-class _MapGridPainter extends CustomPainter {
-  final bool isDark;
-  _MapGridPainter({required this.isDark});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.04)
-      ..strokeWidth = 1;
-
-    for (double i = 0; i < size.width; i += 30) {
-      canvas.drawLine(Offset(i, 0), Offset(i, size.height), paint);
-    }
-    for (double j = 0; j < size.height; j += 30) {
-      canvas.drawLine(Offset(0, j), Offset(size.width, j), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

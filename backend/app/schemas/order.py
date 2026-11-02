@@ -63,7 +63,7 @@ class OrderResponse(BaseModel):
     payment_status: str
     payment_order_id: Optional[str] = None
     transaction_id: Optional[str] = None
-    delivery_otp: str
+    delivery_otp: Optional[str] = None
     placed_at: datetime
     cancel_until: datetime
     can_cancel: bool

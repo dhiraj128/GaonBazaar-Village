@@ -348,13 +348,47 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   Future<bool> _processOnlinePayment(BuildContext context, dynamic order) async {
     final state = AppStateProvider.of(context);
+    final loc = GBLocalizations.of(context);
     final rzpRes = await state.apiClient.createRazorpayOrder(order.id);
     if (!rzpRes.isSuccess || rzpRes.data == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(rzpRes.errorMessage ?? 'Payment initialization failed'),
-            backgroundColor: GBColors.error,
+        await showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                const Icon(Icons.info_outline, color: GBColors.primary),
+                const SizedBox(width: 8),
+                Text(
+                  loc.isHindi ? 'ऑनलाइन गेटवे अनुपलब्ध' : 'Online Gateway Unavailable',
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                ),
+              ],
+            ),
+            content: Text(
+              rzpRes.errorMessage ??
+                  (loc.isHindi
+                      ? 'ऑनलाइन गेटवे वर्तमान में सक्रिय नहीं है। कृपया नकद (COD) से ऑर्डर करें।'
+                      : 'Online payment gateway is not active with merchant credentials. Please choose Cash on Delivery (COD).'),
+              style: const TextStyle(fontSize: 13),
+            ),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: GBColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  setState(() {
+                    _selectedPaymentMethod = 'COD';
+                  });
+                },
+                child: Text(loc.isHindi ? 'नकद (COD) से ऑर्डर करें' : 'Switch to COD'),
+              ),
+            ],
           ),
         );
       }
@@ -375,16 +409,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
     );
 
-    if (paymentSuccess == true) {
-      final verifyRes = await state.apiClient.verifyRazorpayPayment(
-        orderId: order.id,
-        razorpayOrderId: rzpOrderId,
-        razorpayPaymentId: 'pay_rzp_${DateTime.now().millisecondsSinceEpoch}',
-        razorpaySignature: 'test_sig_verified',
-      );
-      return verifyRes.isSuccess;
-    }
-    return false;
+    return paymentSuccess == true;
   }
 }
 

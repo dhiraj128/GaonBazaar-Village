@@ -15,6 +15,10 @@ class CreateTicketRequest(BaseModel):
     subject: str
     message: str
     order_id: Optional[str] = None
+
+class RunnerLocationUpdate(BaseModel):
+    latitude: float
+    longitude: float
 from app.schemas.order import (
     CartSyncRequest, CartPriceBreakdown, CreateOrderRequest, OrderResponse,
     OrderItemDetail, OrderTimelineDetail, OrderActionRequest
@@ -133,19 +137,8 @@ async def create_order(
     cancel_until = now + timedelta(seconds=settings.CUSTOMER_CANCEL_WINDOW_SECONDS)
     delivery_otp = str(random.randint(1000, 9999)) # 4-digit OTP
     
-    # Staging & test security: ensure test accounts cannot trigger real financial transactions
-    is_test_user = payload.get("phone", "").startswith("98000000") or str(customer_id).startswith("usr_c")
-    effective_payment_method = data.payment_method
-    if data.payment_method == "ONLINE" and is_test_user:
-        effective_payment_method = "ONLINE_SIMULATED"
-
-    # Strict payment state machine
-    if effective_payment_method == "ONLINE_SIMULATED":
-        initial_payment_status = "SIMULATED"
-    elif effective_payment_method == "COD":
-        initial_payment_status = "PENDING"
-    else: # Genuine ONLINE
-        initial_payment_status = "PENDING" # Must be verified via payment gateway before marking PAID
+    # Genuine payment methods: COD or ONLINE
+    payment_method = data.payment_method.upper() if data.payment_method in ["COD", "ONLINE"] else "COD"
 
     order = Order(
         customer_id=customer_id,
@@ -156,8 +149,8 @@ async def create_order(
         delivery_fee=totals["delivery_fee"],
         platform_fee=totals["platform_fee"], # Strict ₹3.00
         total_amount=totals["total_amount"],
-        payment_method=effective_payment_method,
-        payment_status=initial_payment_status,
+        payment_method=payment_method,
+        payment_status="PENDING",
         delivery_otp=delivery_otp,
         placed_at=now,
         cancel_until=cancel_until,
@@ -184,7 +177,7 @@ async def create_order(
     await db.commit()
     await db.refresh(order)
     
-    return await _format_order_response(order.id, db)
+    return await _format_order_response(order.id, db, current_user_id=customer_id, role="customer")
 
 @router.get("/orders", response_model=List[OrderResponse])
 async def list_customer_orders(
@@ -199,17 +192,82 @@ async def list_customer_orders(
     
     out = []
     for oid in order_ids:
-        resp = await _format_order_response(oid, db)
+        resp = await _format_order_response(oid, db, current_user_id=user_id, role="customer")
         if resp:
             out.append(resp)
     return out
 
 @router.get("/orders/{order_id}", response_model=OrderResponse)
-async def get_order_details(order_id: str, db: AsyncSession = Depends(get_db)):
-    resp = await _format_order_response(order_id, db)
-    if not resp:
+async def get_order_details(
+    order_id: str,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    role = payload.get("role")
+
+    res = await db.execute(
+        select(Order)
+        .options(selectinload(Order.store), selectinload(Order.runner))
+        .where(Order.id == order_id)
+    )
+    order = res.scalars().first()
+    if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    is_cust = order.customer_id == user_id
+    is_owner = order.store and order.store.owner_id == user_id
+    is_runner = order.runner and order.runner.user_id == user_id
+    is_admin = role == "admin"
+
+    if not (is_cust or is_owner or is_runner or is_admin):
+        raise HTTPException(status_code=403, detail="Not authorized to access this order")
+
+    resp = await _format_order_response(order_id, db, current_user_id=user_id, role=role)
     return resp
+
+@router.get("/orders/{order_id}/tracking")
+async def track_order_delivery(
+    order_id: str,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Authenticated live tracking endpoint.
+    Only the customer who placed the order or an admin can access tracking.
+    Runner live coordinates are only shared during active transit (PICKED_UP / OUT_FOR_DELIVERY).
+    """
+    user_id = payload.get("sub")
+    role = payload.get("role")
+
+    res = await db.execute(
+        select(Order)
+        .options(selectinload(Order.runner), selectinload(Order.store), selectinload(Order.delivery_address))
+        .where(Order.id == order_id)
+    )
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if order.customer_id != user_id and role != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to track this order")
+
+    runner = order.runner
+    is_live = order.status in ["PICKED_UP", "OUT_FOR_DELIVERY"] and runner is not None
+
+    return {
+        "order_id": order.id,
+        "status": order.status,
+        "is_live_tracking_active": is_live,
+        "runner_name": runner.full_name if runner else None,
+        "runner_phone": "9876543210" if runner else None,
+        "runner_latitude": runner.current_latitude if is_live else None,
+        "runner_longitude": runner.current_longitude if is_live else None,
+        "destination_latitude": order.delivery_address.latitude if order.delivery_address else None,
+        "destination_longitude": order.delivery_address.longitude if order.delivery_address else None,
+        "store_latitude": order.store.latitude if order.store else None,
+        "store_longitude": order.store.longitude if order.store else None,
+    }
 
 @router.post("/orders/tickets")
 async def create_support_ticket(
@@ -293,7 +351,7 @@ async def list_vendor_orders(
     order_ids = orders_res.scalars().all()
     out = []
     for oid in order_ids:
-        resp = await _format_order_response(oid, db)
+        resp = await _format_order_response(oid, db, current_user_id=user_id, role="vendor")
         if resp:
             out.append(resp)
     return out
@@ -358,7 +416,7 @@ async def list_runner_jobs(
     order_ids = orders_res.scalars().all()
     out = []
     for oid in order_ids:
-        resp = await _format_order_response(oid, db)
+        resp = await _format_order_response(oid, db, current_user_id=user_id, role="runner")
         if resp:
             out.append(resp)
     return out
@@ -464,6 +522,7 @@ async def get_runner_profile(
     )
     delivered_orders = orders_res.scalars().all()
     total_delivery_fees = sum(o.delivery_fee for o in delivered_orders)
+    cash_to_remit = sum(o.total_amount for o in delivered_orders if o.payment_method == "COD" and o.payment_status == "PAID")
 
     return {
         "id": runner.id,
@@ -477,6 +536,7 @@ async def get_runner_profile(
         "rating": 4.9,
         "upi_id": runner.upi_id,
         "today_earnings": total_delivery_fees,
+        "cash_to_remit": cash_to_remit,
         "completed_trips": len(delivered_orders)
     }
 
@@ -496,6 +556,26 @@ async def update_runner_status(
     runner.is_online = data.is_online
     await db.commit()
     return {"message": f"Runner duty is now {'online' if runner.is_online else 'offline'}", "is_online": runner.is_online}
+
+@router.put("/runner/location")
+async def update_runner_location(
+    data: RunnerLocationUpdate,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Live location update endpoint called by the Runner app.
+    Updates runner's current GPS coordinates for active order tracking.
+    """
+    user_id = payload.get("sub")
+    r_res = await db.execute(select(Runner).where(Runner.user_id == user_id))
+    runner = r_res.scalars().first()
+    if not runner:
+        raise HTTPException(status_code=404, detail="Runner profile not found")
+    runner.current_latitude = data.latitude
+    runner.current_longitude = data.longitude
+    await db.commit()
+    return {"status": "ok", "latitude": runner.current_latitude, "longitude": runner.current_longitude}
 
 @router.post("/vendor/orders/{order_id}/action")
 async def vendor_order_action(
@@ -622,8 +702,6 @@ async def runner_job_action(
                 order.payment_status = "PAID"
             else:
                 order.payment_status = "PENDING"
-        elif order.payment_method == "ONLINE_SIMULATED":
-            order.payment_status = "SIMULATED"
             
         title = "सफलतापूर्वक डिलीवर हुआ (Delivered)"
     else:
@@ -633,7 +711,12 @@ async def runner_job_action(
     await db.commit()
     return {"message": f"Order status updated to {order.status}", "status": order.status}
 
-async def _format_order_response(order_id: str, db: AsyncSession) -> Optional[OrderResponse]:
+async def _format_order_response(
+    order_id: str,
+    db: AsyncSession,
+    current_user_id: Optional[str] = None,
+    role: Optional[str] = None
+) -> Optional[OrderResponse]:
     res = await db.execute(
         select(Order)
         .options(
@@ -679,6 +762,11 @@ async def _format_order_response(order_id: str, db: AsyncSession) -> Optional[Or
         )
         for t in order.timeline
     ]
+
+    # Security: Delivery PIN is strictly customer-only. Never expose to Vendor or Runner.
+    is_cust = (current_user_id and order.customer_id == current_user_id)
+    is_admin = (role == "admin")
+    exposed_otp = order.delivery_otp if (is_cust or is_admin) else None
     
     return OrderResponse(
         id=order.id,
@@ -701,7 +789,7 @@ async def _format_order_response(order_id: str, db: AsyncSession) -> Optional[Or
         payment_status=order.payment_status,
         payment_order_id=getattr(order, "payment_order_id", None),
         transaction_id=getattr(order, "transaction_id", None),
-        delivery_otp=order.delivery_otp,
+        delivery_otp=exposed_otp,
         placed_at=order.placed_at,
         cancel_until=order.cancel_until,
         can_cancel=can_cancel,

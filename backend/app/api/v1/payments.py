@@ -1,7 +1,7 @@
 import hmac
 import hashlib
-import uuid
 from typing import Optional
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Header, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,6 +36,37 @@ class RazorpayVerifyResponse(BaseModel):
     order_id: str
     payment_id: str
 
+def is_razorpay_configured() -> bool:
+    """
+    Checks if active, genuine Razorpay merchant credentials are configured.
+    Returns False for default placeholder/dummy values.
+    """
+    key_id = (settings.RAZORPAY_KEY_ID or "").strip()
+    key_secret = (settings.RAZORPAY_KEY_SECRET or "").strip()
+    if not key_id or not key_secret:
+        return False
+    if "GaonBazaarVillage" in key_id or "placeholder" in key_id.lower() or "test_secret_GaonBazaar" in key_secret:
+        return False
+    return True
+
+@router.get("/status")
+async def get_payment_gateway_status():
+    """
+    Status endpoint for frontend payment gateway availability check.
+    """
+    configured = is_razorpay_configured()
+    return {
+        "online_enabled": configured,
+        "cod_enabled": True,
+        "default_method": "COD",
+        "key_id": settings.RAZORPAY_KEY_ID if configured else None,
+        "message": (
+            "Online payment gateway active"
+            if configured
+            else "Online payments unconfigured. Cash on Delivery (COD) is 100% operational."
+        )
+    }
+
 @router.post("/razorpay/order", response_model=RazorpayOrderResponse)
 async def create_razorpay_order(
     data: RazorpayOrderRequest,
@@ -43,9 +74,15 @@ async def create_razorpay_order(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Creates a Razorpay payment order for the specified order.
-    Returns Razorpay order ID, amount in paise, currency, and publishable key ID.
+    Creates a genuine Razorpay payment order via Razorpay API.
+    If credentials are unconfigured or absent, cleanly returns 503 prompting Cash on Delivery (COD).
     """
+    if not is_razorpay_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Online payment gateway is not configured with active merchant credentials. Please choose Cash on Delivery (COD)."
+        )
+
     user_id = payload.get("sub")
     res = await db.execute(select(Order).where(Order.id == data.order_id))
     order = res.scalars().first()
@@ -59,7 +96,31 @@ async def create_razorpay_order(
         raise HTTPException(status_code=400, detail="Order is already paid")
 
     amount_paise = int(round(order.total_amount * 100))
-    rzp_order_id = f"order_rzp_{uuid.uuid4().hex[:14]}"
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                "https://api.razorpay.com/v1/orders",
+                auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET),
+                json={
+                    "amount": amount_paise,
+                    "currency": "INR",
+                    "receipt": f"rcpt_{order.id[:8]}",
+                    "notes": {"order_id": order.id}
+                }
+            )
+            if resp.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Payment gateway communication failed. Please choose Cash on Delivery (COD)."
+                )
+            rzp_data = resp.json()
+            rzp_order_id = rzp_data["id"]
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Online payment gateway unreachable. Please choose Cash on Delivery (COD)."
+        )
 
     order.payment_order_id = rzp_order_id
     order.payment_method = "ONLINE"
@@ -81,15 +142,16 @@ async def verify_razorpay_payment(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Verifies the Razorpay payment signature via HMAC-SHA256.
-    Transitions order payment status to PAID and adds a timeline event.
+    Verifies the Razorpay payment signature via strict HMAC-SHA256.
+    Transitions order payment status to PAID and records a timeline event.
+    Mock signatures and bypasses (test_sig) are strictly forbidden.
     """
     res = await db.execute(select(Order).where(Order.id == data.order_id))
     order = res.scalars().first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    # Verify signature
+    # Strict HMAC-SHA256 signature verification
     msg = f"{data.razorpay_order_id}|{data.razorpay_payment_id}"
     expected_sig = hmac.new(
         settings.RAZORPAY_KEY_SECRET.encode("utf-8"),
@@ -97,16 +159,11 @@ async def verify_razorpay_payment(
         hashlib.sha256
     ).hexdigest()
 
-    is_valid_sig = hmac.compare_digest(expected_sig, data.razorpay_signature)
-    # Staging/Test Mode allows mock signatures starting with test_sig
-    is_test_mode = (
-        data.razorpay_signature.startswith("test_sig") or
-        settings.TESTING or
-        settings.ENVIRONMENT in ["development", "staging"]
-    )
-
-    if not is_valid_sig and not is_test_mode:
-        raise HTTPException(status_code=400, detail="Invalid Razorpay signature")
+    if not hmac.compare_digest(expected_sig, data.razorpay_signature):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid Razorpay payment signature"
+        )
 
     now = datetime.now(timezone.utc)
     order.payment_status = "PAID"
@@ -138,16 +195,20 @@ async def razorpay_webhook(
 ):
     """
     Handles Razorpay server-to-server webhooks (e.g. payment.captured).
+    Strictly verifies webhook HMAC-SHA256 signature before processing.
     """
     body_bytes = await request.body()
-    if settings.RAZORPAY_WEBHOOK_SECRET and x_razorpay_signature:
-        expected_sig = hmac.new(
-            settings.RAZORPAY_WEBHOOK_SECRET.encode("utf-8"),
-            body_bytes,
-            hashlib.sha256
-        ).hexdigest()
-        if not hmac.compare_digest(expected_sig, x_razorpay_signature):
-            raise HTTPException(status_code=400, detail="Invalid webhook signature")
+    if not x_razorpay_signature:
+        raise HTTPException(status_code=400, detail="Missing webhook signature")
+
+    expected_sig = hmac.new(
+        settings.RAZORPAY_WEBHOOK_SECRET.encode("utf-8"),
+        body_bytes,
+        hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(expected_sig, x_razorpay_signature):
+        raise HTTPException(status_code=400, detail="Invalid webhook signature")
 
     try:
         import json

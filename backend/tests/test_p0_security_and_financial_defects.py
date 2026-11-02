@@ -164,7 +164,7 @@ async def test_runner_delivery_cross_account_and_prerequisites():
         assert r1_deliver.status_code == 200
 
         # Verify final order state
-        chk = (await client.get(f"/api/v1/orders/{order_id}")).json()
+        chk = (await client.get(f"/api/v1/orders/{order_id}", headers=c_headers)).json()
         assert chk["status"] == "DELIVERED"
         assert chk["payment_status"] == "PAID"
 
@@ -189,15 +189,15 @@ async def test_payment_status_integrity_and_simulation():
         store_1 = stores[0]
         prods = (await client.get(f"/api/v1/stores/{store_1['id']}/products")).json()
 
-        # 1. Test simulated online order -> payment_status MUST be SIMULATED, not PAID
-        sim_order = await client.post("/api/v1/orders", headers=c_headers, json={
+        # 1. Test online order -> payment_status MUST be PENDING, not prematurely PAID
+        online_order = await client.post("/api/v1/orders", headers=c_headers, json={
             "store_id": store_1["id"],
             "delivery_address_id": addr_id,
-            "payment_method": "ONLINE_SIMULATED",
+            "payment_method": "ONLINE",
             "items": [{"product_id": prods[0]["id"], "quantity": 1}]
         })
-        assert sim_order.status_code == 201
-        assert sim_order.json()["payment_status"] == "SIMULATED", f"Expected SIMULATED, got {sim_order.json()['payment_status']}"
+        assert online_order.status_code == 201
+        assert online_order.json()["payment_status"] == "PENDING", f"Expected PENDING, got {online_order.json()['payment_status']}"
 
         # 2. Test COD order -> initially PENDING
         cod_order = await client.post("/api/v1/orders", headers=c_headers, json={

@@ -131,5 +131,5 @@ async def test_financial_safeguards_for_test_accounts():
         })
         assert order_res.status_code == 201
         order_data = order_res.json()
-        assert order_data["payment_method"] == "ONLINE_SIMULATED", "Test account orders must use simulated mode to avoid real financial gateway capture"
-        assert order_data["payment_status"] == "SIMULATED", "Simulated orders must be tracked as SIMULATED, not genuinely PAID"
+        assert order_data["payment_method"] == "ONLINE"
+        assert order_data["payment_status"] == "PENDING", "Online orders must remain PENDING until genuine gateway verification"

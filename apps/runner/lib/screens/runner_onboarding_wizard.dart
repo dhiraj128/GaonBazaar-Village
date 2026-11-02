@@ -14,11 +14,11 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
   int _currentStep = 0;
   bool _isSubmitting = false;
 
-  final _fullNameCtrl = TextEditingController(text: 'Santosh Kumar');
-  final _phoneCtrl = TextEditingController(text: '9800000003');
-  final _bikeNoCtrl = TextEditingController(text: 'BR-06-AB-1234');
-  final _dlCtrl = TextEditingController(text: 'DL-062024009876');
-  final _upiCtrl = TextEditingController(text: 'santosh@upi');
+  final _fullNameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _bikeNoCtrl = TextEditingController();
+  final _dlCtrl = TextEditingController();
+  final _upiCtrl = TextEditingController();
   String _vehicleType = 'Motorcycle';
   bool _digiLockerConsented = true;
 
@@ -171,7 +171,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
                     controller: _fullNameCtrl,
                     decoration: InputDecoration(
                       labelText: isHi ? 'पूरा नाम' : 'Full Name',
-                      hintText: 'Santosh Kumar',
+                      hintText: isHi ? 'उदा. संतोष कुमार' : 'e.g. Santosh Kumar',
                       border: const OutlineInputBorder(),
                     ),
                   ),
@@ -181,6 +181,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
                       labelText: isHi ? 'मोबाइल नंबर' : 'Phone Number',
+                      hintText: isHi ? 'उदा. 9876543210' : 'e.g. 9876543210',
                       prefixText: '+91 ',
                       border: const OutlineInputBorder(),
                     ),
@@ -218,7 +219,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
                     controller: _bikeNoCtrl,
                     decoration: InputDecoration(
                       labelText: isHi ? 'बाइक पंजीकरण संख्या' : 'Vehicle Registration Number',
-                      hintText: 'BR-06-AB-1234',
+                      hintText: isHi ? 'उदा. BR-06-AB-1234' : 'e.g. BR-06-AB-1234',
                       border: const OutlineInputBorder(),
                     ),
                   ),
@@ -227,7 +228,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
                     controller: _dlCtrl,
                     decoration: InputDecoration(
                       labelText: isHi ? 'ड्राइविंग लाइसेंस नंबर' : 'Driving Licence Number',
-                      hintText: 'DL-062024009876',
+                      hintText: isHi ? 'उदा. DL-062024009876' : 'e.g. DL-062024009876',
                       border: const OutlineInputBorder(),
                     ),
                   ),
@@ -292,7 +293,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
                     controller: _upiCtrl,
                     decoration: InputDecoration(
                       labelText: isHi ? 'यूपीआई आईडी' : 'UPI ID',
-                      hintText: 'santosh@upi',
+                      hintText: isHi ? 'उदा. आपकानाम@upi' : 'e.g. yourname@upi',
                       border: const OutlineInputBorder(),
                     ),
                   ),

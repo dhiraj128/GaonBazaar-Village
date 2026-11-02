@@ -16,15 +16,15 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
   bool _isSubmitting = false;
 
   // Form controllers
-  final _ownerNameCtrl = TextEditingController(text: 'Raju Sharma');
-  final _shopNameCtrl = TextEditingController(text: 'माँ शारदा किराना स्टोर');
+  final _ownerNameCtrl = TextEditingController();
+  final _shopNameCtrl = TextEditingController();
   final _villageCtrl = TextEditingController(text: 'Chaturshi');
-  final _landmarkCtrl = TextEditingController(text: 'Near Gram Panchayat Bhavan');
+  final _landmarkCtrl = TextEditingController();
   final _blockCtrl = TextEditingController(text: 'Minapur');
   final _districtCtrl = TextEditingController(text: 'Muzaffarpur');
-  final _aadhaarCtrl = TextEditingController(text: '1234 5678 9012');
-  final _panCtrl = TextEditingController(text: 'ABCDE1234F');
-  final _upiCtrl = TextEditingController(text: 'rajusharma@upi');
+  final _aadhaarCtrl = TextEditingController();
+  final _panCtrl = TextEditingController();
+  final _upiCtrl = TextEditingController();
   String _category = 'Grocery';
   bool _digiLockerConsented = true;
 

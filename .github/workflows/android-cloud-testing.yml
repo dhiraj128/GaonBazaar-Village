@@ -86,7 +86,7 @@ jobs:
             echo "=========================================="
             cd apps/customer
             flutter pub get
-            flutter test integration_test/customer_app_test.dart -d emulator-5554 --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1 || true
+            flutter test integration_test/customer_app_test.dart -d emulator-5554 --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1
             adb exec-out screencap -p > ../../screenshots/customer/01_customer_screen.png
             cd ../..
 
@@ -95,7 +95,7 @@ jobs:
             echo "=========================================="
             cd apps/vendor
             flutter pub get
-            flutter test integration_test/vendor_app_test.dart -d emulator-5554 --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1 || true
+            flutter test integration_test/vendor_app_test.dart -d emulator-5554 --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1
             adb exec-out screencap -p > ../../screenshots/vendor/02_vendor_screen.png
             cd ../..
 
@@ -104,7 +104,7 @@ jobs:
             echo "=========================================="
             cd apps/runner
             flutter pub get
-            flutter test integration_test/runner_app_test.dart -d emulator-5554 --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1 || true
+            flutter test integration_test/runner_app_test.dart -d emulator-5554 --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1
             adb exec-out screencap -p > ../../screenshots/runner/03_runner_screen.png
             cd ../..
 
