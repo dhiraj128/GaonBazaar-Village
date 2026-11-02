@@ -1,20 +1,23 @@
-import random
+import hashlib
 import secrets
-from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime, timezone, timedelta
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Header, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
 from app.core.config import settings
 from app.db.session import get_db
-from app.models.base import User, Store, Runner
+from app.models.base import User, Store, Runner, OtpChallenge
 from app.schemas.auth import (
     SendOTPRequest, SendOTPResponse, VerifyOTPRequest, TokenResponse, UserInfo, UpdateProfileRequest
 )
 from app.core.security import create_access_token, get_current_user_payload
+from app.services.sms import send_sms_otp
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-# Designated test phone personas whitelist
+# Designated test phone personas whitelist for staging/development
 TEST_PHONE_WHITELIST = {
     "9800000000", # Customer
     "9800000001", # Vendor 1
@@ -23,143 +26,261 @@ TEST_PHONE_WHITELIST = {
     "9800000099", # Super Admin
 }
 
+OTP_SALT = "gaonbazaar_secure_otp_salt_2026"
+
+def hash_otp(otp: str, salt: str = OTP_SALT) -> str:
+    """Returns SHA-256 hash of salt + OTP for secure persistent challenge storage."""
+    return hashlib.sha256(f"{salt}:{otp}".encode("utf-8")).hexdigest()
+
+def verify_otp_hash(otp: str, hashed: str, salt: str = OTP_SALT) -> bool:
+    """Constant-time verification of OTP against stored hash."""
+    return secrets.compare_digest(hash_otp(otp, salt), hashed)
+
 def is_whitelisted_test_phone(phone: str) -> bool:
     """Returns True if the phone is an authorized test persona in non-production environment."""
     if getattr(settings, "ENVIRONMENT", "").lower() == "production":
         return False
     return phone in TEST_PHONE_WHITELIST
 
-# In-memory OTP storage for rapid verification in dev/staging
+# In-memory OTP storage cache for fast session lookup and test harness compatibility
 OTP_STORAGE = {}
 
 @router.post("/otp/send", response_model=SendOTPResponse)
-async def send_otp(payload: SendOTPRequest):
-    now_ts = datetime.now(timezone.utc).timestamp()
+async def send_otp(
+    payload: SendOTPRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    now = datetime.now(timezone.utc)
+    now_ts = now.timestamp()
     stored = OTP_STORAGE.get(payload.phone)
 
-    # Rate limiting: minimum 15 seconds between OTP requests per phone (bypassed in pytest if testing)
+    # 1. Rate limiting: minimum 15 seconds between OTP requests per phone (bypassed in pytest if testing)
     if not getattr(settings, "TESTING", False) and stored and (now_ts - stored.get("last_sent_at", 0)) < 15:
         wait_sec = int(15 - (now_ts - stored["last_sent_at"]))
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"कृपया पुनः प्रयास करने से पहले {wait_sec} सेकंड प्रतीक्षा करें (Please wait before requesting another OTP)"
+            detail="कृपया पुनः प्रयास करने से पहले 15 सेकंड प्रतीक्षा करें (Please wait 15 seconds before requesting another OTP)"
         )
 
-    # Generate challenge: fixed challenge for 5 pilot test personas in dev/staging, crypto-random for public
+    # 2. Challenge generation:
+    # Whitelisted staging personas get predictable challenge in dev/staging;
+    # Real public users get a crypto-random 6-digit challenge.
     if is_whitelisted_test_phone(payload.phone):
         otp_code = "123456"
+        delivery_channel = "staging_sandbox"
     else:
         otp_code = f"{secrets.SystemRandom().randint(100000, 999999)}"
+        delivery_channel = "sms"
 
-    session_id = f"sess_{payload.phone}_{int(now_ts)}"
+    session_id = f"sess_{payload.phone}_{int(now_ts)}_{secrets.token_hex(4)}"
+    expires_at = now + timedelta(seconds=300)
+    otp_hashed = hash_otp(otp_code)
+
+    # 3. Store persistent challenge in database
+    challenge = OtpChallenge(
+        phone=payload.phone,
+        session_id=session_id,
+        otp_hash=otp_hashed,
+        role=payload.role,
+        attempts=0,
+        is_used=False,
+        expires_at=expires_at,
+        created_at=now
+    )
+    db.add(challenge)
+    await db.commit()
+
+    # 4. Update in-memory OTP_STORAGE for test compatibility and low-latency cache
     OTP_STORAGE[payload.phone] = {
         "otp": otp_code,
+        "session_id": session_id,
         "role": payload.role,
         "expires_at": now_ts + 300,
         "attempts": 0,
         "last_sent_at": now_ts
     }
 
-    # CRITICAL: Never return usable authentication codes in public response
+    # 5. Dispatch SMS via configured provider (Fast2SMS, MSG91, Twilio)
+    sms_res = await send_sms_otp(payload.phone, otp_code, payload.role)
+    delivery_status = sms_res.get("status", "delivered")
+
     return SendOTPResponse(
         message=f"OTP challenge issued to +91 {payload.phone}",
         session_id=session_id,
         expires_in=300,
-        mock_otp=None
+        delivery_status=delivery_status,
+        delivery_channel=delivery_channel,
+        mock_otp=None # Never expose OTP code in public API response
     )
 
 @router.post("/otp/verify", response_model=TokenResponse)
-async def verify_otp(payload: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
-    now_ts = datetime.now(timezone.utc).timestamp()
-    stored = OTP_STORAGE.get(payload.phone)
+async def verify_otp(
+    payload: VerifyOTPRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    now = datetime.now(timezone.utc)
+    now_ts = now.timestamp()
 
-    # 1. Challenge issuance check: Must have requested an OTP first
-    if not stored:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="कोई सक्रिय ओटीपी अनुरोध नहीं मिला। कृपया पहले ओटीपी भेजें (No active OTP challenge found. Please request an OTP first)"
-        )
+    # 1. Lookup active persistent OTP challenge from database
+    query = select(OtpChallenge).where(
+        OtpChallenge.phone == payload.phone,
+        OtpChallenge.is_used == False
+    )
+    if payload.session_id:
+        query = query.where(OtpChallenge.session_id == payload.session_id)
 
-    # 2. Enforce 5-minute expiry
-    if stored.get("expires_at", 0) < now_ts:
+    query = query.order_by(OtpChallenge.created_at.desc())
+    result = await db.execute(query)
+    challenge = result.scalars().first()
+
+    matched_role = payload.role or "customer"
+
+    if challenge:
+        # Check 5-minute expiry
+        # challenge.expires_at is retrieved as timezone-aware UTC datetime
+        if challenge.expires_at < now:
+            challenge.is_used = True
+            await db.commit()
+            OTP_STORAGE.pop(payload.phone, None)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="ओटीपी की समय सीमा समाप्त हो गई है (OTP has expired. Please request a new OTP)"
+            )
+
+        # Rate-limit invalid attempts (max 3)
+        challenge.attempts += 1
+        if challenge.attempts > 3:
+            challenge.is_used = True
+            await db.commit()
+            OTP_STORAGE.pop(payload.phone, None)
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="अधिकतम प्रयास सीमा समाप्त। कृपया नया ओटीपी अनुरोध करें (Maximum OTP verification attempts exceeded)"
+            )
+
+        # Constant-time hash verification
+        if not verify_otp_hash(payload.otp, challenge.otp_hash):
+            await db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="गलत ओटीपी दर्ज किया गया है (Invalid OTP code)"
+            )
+
+        # Challenge verified successfully: mark as single-use
+        challenge.is_used = True
+        await db.commit()
+        matched_role = challenge.role or payload.role or "customer"
         OTP_STORAGE.pop(payload.phone, None)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="ओटीपी की समय सीमा समाप्त हो गई है (OTP has expired. Please request a new OTP)"
-        )
 
-    # 3. Rate-limit invalid attempts (max 3 before lockout)
-    stored["attempts"] = stored.get("attempts", 0) + 1
-    if stored["attempts"] > 3:
+    else:
+        # Fallback to in-memory OTP_STORAGE (for tests where DB might be mocked or pre-seeded)
+        mem_stored = OTP_STORAGE.get(payload.phone)
+        if not mem_stored:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="कोई सक्रिय ओटीपी अनुरोध नहीं मिला। कृपया पहले ओटीपी भेजें (No active OTP challenge found. Please request an OTP first)"
+            )
+
+        if mem_stored.get("expires_at", 0) < now_ts:
+            OTP_STORAGE.pop(payload.phone, None)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="ओटीपी की समय सीमा समाप्त हो गई है (OTP has expired. Please request a new OTP)"
+            )
+
+        mem_stored["attempts"] = mem_stored.get("attempts", 0) + 1
+        if mem_stored["attempts"] > 3:
+            OTP_STORAGE.pop(payload.phone, None)
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="अधिकतम प्रयास सीमा समाप्त। कृपया नया ओटीपी अनुरोध करें (Maximum OTP verification attempts exceeded)"
+            )
+
+        if not secrets.compare_digest(str(mem_stored.get("otp")), str(payload.otp)):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="गलत ओटीपी दर्ज किया गया है (Invalid OTP code)"
+            )
+
+        matched_role = mem_stored.get("role", payload.role or "customer")
         OTP_STORAGE.pop(payload.phone, None)
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="अधिकतम प्रयास सीमा समाप्त। कृपया नया ओटीपी अनुरोध करें (Maximum OTP verification attempts exceeded)"
-        )
 
-    # 4. Strict constant-time OTP validation
-    if not secrets.compare_digest(str(stored.get("otp")), str(payload.otp)):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="गलत ओटीपी दर्ज किया गया है (Invalid OTP code)"
-        )
+    # 2. Query or create User entity in PostgreSQL / SQLite
+    user_query = await db.execute(select(User).where(User.phone == payload.phone))
+    user = user_query.scalars().first()
 
-    # 5. Prevent replay attacks: invalidate challenge immediately upon success
-    role = stored.get("role", payload.role or "customer")
-    OTP_STORAGE.pop(payload.phone, None)
-    
-    # Query or create user in DB
-    result = await db.execute(select(User).where(User.phone == payload.phone))
-    user = result.scalars().first()
-    
+    is_staging_persona = is_whitelisted_test_phone(payload.phone)
+
     if not user:
         user = User(
             phone=payload.phone,
-            name=payload.name or f"User {payload.phone[-4:]}",
-            role=role,
+            name=payload.name or (
+                "Minapur Pilot Customer" if payload.phone == "9800000000" else
+                "Chaturshi Kirana Store" if payload.phone == "9800000001" else
+                "Minapur Fast Runner" if payload.phone == "9800000003" else
+                f"User {payload.phone[-4:]}"
+            ),
+            role=matched_role,
             preferred_language="hi"
         )
         db.add(user)
         await db.commit()
         await db.refresh(user)
-        
-        # If Vendor, create linked Store entry (Pending Admin Approval)
-        if role == "vendor":
+
+        # If Vendor, create linked Store entry (Pre-approved for whitelisted test personas)
+        if matched_role == "vendor":
             store = Store(
                 owner_id=user.id,
-                shop_name=f"{user.name}'s Kirana",
+                shop_name=user.name or f"{user.phone[-4:]} Kirana Store",
                 owner_name=user.name or "Shopkeeper",
                 category="Grocery",
                 latitude=26.2230,
                 longitude=85.3520,
                 village="Chaturshi",
-                is_approved=False # Strict Admin Approval Required
+                is_approved=is_staging_persona, # Staging test vendors auto-approved for instant testing
+                is_online=True
             )
             db.add(store)
             await db.commit()
-            
-        # If Runner, create linked Runner entry (Pending Admin Approval)
-        elif role == "runner":
+
+        # If Runner, create linked Runner entry (Pre-approved for whitelisted test personas)
+        elif matched_role == "runner":
             runner = Runner(
                 user_id=user.id,
                 full_name=user.name or "Runner Partner",
                 vehicle_type="Motorcycle",
-                is_approved=False, # Strict Admin Approval Required
-                is_online=False,
+                is_approved=is_staging_persona, # Staging test runners auto-approved for instant testing
+                is_online=True,
                 current_latitude=26.2230,
                 current_longitude=85.3520
             )
             db.add(runner)
             await db.commit()
-            
-    # Generate JWT
+    else:
+        # User already exists: if staging test persona, ensure role and approval match
+        if is_staging_persona:
+            if matched_role == "vendor":
+                store_q = await db.execute(select(Store).where(Store.owner_id == user.id))
+                store = store_q.scalars().first()
+                if store and not store.is_approved:
+                    store.is_approved = True
+                    await db.commit()
+            elif matched_role == "runner":
+                runner_q = await db.execute(select(Runner).where(Runner.user_id == user.id))
+                runner = runner_q.scalars().first()
+                if runner and not runner.is_approved:
+                    runner.is_approved = True
+                    runner.is_online = True
+                    await db.commit()
+
+    # 3. Generate JWT access token with sub, phone, role
     token_data = {
         "sub": user.id,
         "phone": user.phone,
         "role": user.role
     }
     access_token = create_access_token(token_data)
-    
+
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
@@ -167,8 +288,9 @@ async def verify_otp(payload: VerifyOTPRequest, db: AsyncSession = Depends(get_d
             id=user.id,
             phone=user.phone,
             name=user.name,
+            email=user.email,
             role=user.role,
-            preferred_language=user.preferred_language,
+            preferred_language=user.preferred_language or "hi",
             is_active=user.is_active
         )
     )
@@ -183,14 +305,14 @@ async def get_current_user(
     user = result.scalars().first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-        
+
     return UserInfo(
         id=user.id,
         phone=user.phone,
         name=user.name,
         email=user.email,
         role=user.role,
-        preferred_language=user.preferred_language,
+        preferred_language=user.preferred_language or "hi",
         is_active=user.is_active
     )
 
@@ -205,23 +327,23 @@ async def update_current_user(
     user = result.scalars().first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-        
+
     if req.name is not None:
         user.name = req.name.strip()
     if req.email is not None:
         user.email = req.email.strip()
     if req.preferred_language is not None:
         user.preferred_language = req.preferred_language.strip()
-        
+
     await db.commit()
     await db.refresh(user)
-    
+
     return UserInfo(
         id=user.id,
         phone=user.phone,
         name=user.name,
         email=user.email,
         role=user.role,
-        preferred_language=user.preferred_language,
+        preferred_language=user.preferred_language or "hi",
         is_active=user.is_active
     )

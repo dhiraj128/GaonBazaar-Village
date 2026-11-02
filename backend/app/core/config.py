@@ -116,6 +116,12 @@ class Settings(BaseSettings):
     ADMIN_API_KEY: str = "dev-insecure-admin-key-change-in-production"
     TESTING: bool = False
     
+    # SMS Gateway Configuration
+    SMS_PROVIDER: Optional[str] = None # fast2sms, msg91, twilio, mock
+    SMS_API_KEY: Optional[str] = None
+    SMS_SENDER_ID: str = "GAONBZ"
+    SMS_TEMPLATE_ID: Optional[str] = None
+    
     # Database (Default to SQLite file for robust local testing without external daemon)
     DATABASE_URL: str = "sqlite+aiosqlite:///./gaonbazaar.db"
     SYNC_DATABASE_URL: str = "sqlite:///./gaonbazaar.db"

@@ -21,7 +21,7 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final TextEditingController _otpController = TextEditingController(text: '123456');
+  final TextEditingController _otpController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
   int _secondsRemaining = 60;
@@ -155,6 +155,35 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     ),
                   ),
                 ),
+                if (widget.phone == '9800000000') ...[
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () => setState(() {
+                      _otpController.text = '123456';
+                      _errorMessage = null;
+                    }),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: GBColors.primary.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: GBColors.primary.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.science_outlined, size: 16, color: GBColors.primary),
+                          const SizedBox(width: 8),
+                          Text(
+                            loc.isHindi ? 'स्टेजिंग टेस्ट ओटीपी: 123456 (टैप करें)' : 'Staging Test OTP: 123456 (Tap to fill)',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
                 if (_errorMessage != null) ...[
                   const SizedBox(height: 10),
                   Text(

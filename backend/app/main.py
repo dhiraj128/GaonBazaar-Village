@@ -32,6 +32,8 @@ async def init_db_and_seed():
                 "ALTER TABLE order_timeline ALTER COLUMN timestamp TYPE TIMESTAMPTZ USING timestamp AT TIME ZONE 'UTC';",
                 "ALTER TABLE support_tickets ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
                 "ALTER TABLE audit_logs ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+                "ALTER TABLE otp_challenges ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+                "ALTER TABLE otp_challenges ALTER COLUMN expires_at TYPE TIMESTAMPTZ USING expires_at AT TIME ZONE 'UTC';",
             ]
             for stmt in alter_stmts:
                 try:

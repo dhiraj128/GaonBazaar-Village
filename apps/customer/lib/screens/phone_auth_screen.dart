@@ -12,7 +12,7 @@ class PhoneAuthScreen extends StatefulWidget {
 }
 
 class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
-  final TextEditingController _phoneController = TextEditingController(text: '9876543210');
+  final TextEditingController _phoneController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -136,6 +136,33 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () => setState(() {
+                    _phoneController.text = '9800000000';
+                    _errorMessage = null;
+                  }),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: GBColors.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: GBColors.primary.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.science_outlined, size: 16, color: GBColors.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          loc.isHindi ? 'स्टेजिंग डेमो फोन: 9800000000 (टैप करें)' : 'Staging Test Phone: 9800000000 (Tap to fill)',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 if (_errorMessage != null) ...[

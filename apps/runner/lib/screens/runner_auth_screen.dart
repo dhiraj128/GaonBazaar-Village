@@ -13,8 +13,9 @@ class RunnerAuthScreen extends StatefulWidget {
 }
 
 class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
-  final TextEditingController _phoneController = TextEditingController(text: '9800000003');
-  final TextEditingController _otpController = TextEditingController(text: '123456');
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
+  String? _sessionId;
   bool _otpSent = false;
   bool _isLoading = false;
   String? _errorMessage;
@@ -43,6 +44,7 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
     setState(() => _isLoading = false);
 
     if (res.isSuccess) {
+      _sessionId = res.data?['session_id'] as String?;
       setState(() => _otpSent = true);
     } else {
       setState(() => _errorMessage = res.errorMessage ?? (isHi ? 'ओटीपी भेजने में विफल' : 'Failed to send OTP'));
@@ -67,6 +69,7 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
     final res = await state.apiClient.verifyOtp(
       phone: phone,
       otp: otp,
+      sessionId: _sessionId,
       role: 'runner',
     );
 
@@ -170,6 +173,33 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () => setState(() {
+                      _phoneController.text = '9800000003';
+                      _errorMessage = null;
+                    }),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: GBColors.primary.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: GBColors.primary.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.science_outlined, size: 16, color: GBColors.primary),
+                          const SizedBox(width: 8),
+                          Text(
+                            isHi ? 'स्टेजिंग रनर फोन: 9800000003 (टैप करें)' : 'Staging Runner: 9800000003 (Tap to fill)',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   GBPrimaryButton(
                     label: isHi ? 'ओटीपी प्राप्त करें' : 'Send OTP',
@@ -197,6 +227,35 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
                       ),
                     ),
                   ),
+                  if (_phoneController.text == '9800000003') ...[
+                    const SizedBox(height: 12),
+                    InkWell(
+                      onTap: () => setState(() {
+                        _otpController.text = '123456';
+                        _errorMessage = null;
+                      }),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: GBColors.primary.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: GBColors.primary.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.science_outlined, size: 16, color: GBColors.primary),
+                            const SizedBox(width: 8),
+                            Text(
+                              isHi ? 'स्टेजिंग ओटीपी: 123456 (टैप करें)' : 'Staging OTP: 123456 (Tap to fill)',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   GBPrimaryButton(
                     label: isHi ? 'सत्यापित करें व लॉगिन करें' : 'Verify & Login',

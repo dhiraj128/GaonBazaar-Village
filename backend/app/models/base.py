@@ -23,12 +23,12 @@ class UTCDateTime(TypeDecorator):
             if not isinstance(value, datetime):
                 return value
             if value.tzinfo is None:
-                value = value.replace(tzinfo=timezone.utc)
+                utc_dt = value.replace(tzinfo=timezone.utc)
             else:
-                value = value.astimezone(timezone.utc)
-            if dialect.name == "sqlite":
-                return value.replace(tzinfo=None)
-            return value
+                utc_dt = value.astimezone(timezone.utc)
+            # Store naive UTC representation in the database to completely prevent
+            # asyncpg's Cython codec error: "can't subtract offset-naive and offset-aware datetimes"
+            return utc_dt.replace(tzinfo=None)
         return value
 
     def process_result_value(self, value, dialect):
@@ -39,6 +39,19 @@ class UTCDateTime(TypeDecorator):
                 return value.replace(tzinfo=timezone.utc)
             return value.astimezone(timezone.utc)
         return value
+
+class OtpChallenge(Base):
+    __tablename__ = "otp_challenges"
+    
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    phone = Column(String(15), index=True, nullable=False)
+    session_id = Column(String(100), unique=True, index=True, nullable=False)
+    otp_hash = Column(String(128), nullable=False)
+    role = Column(String(20), nullable=False, default="customer")
+    attempts = Column(Integer, default=0)
+    is_used = Column(Boolean, default=False)
+    expires_at = Column(UTCDateTime, nullable=False)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
 
 class User(Base):
     __tablename__ = "users"

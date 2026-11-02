@@ -14,8 +14,9 @@ class VendorAuthScreen extends StatefulWidget {
 }
 
 class _VendorAuthScreenState extends State<VendorAuthScreen> {
-  final TextEditingController _phoneController = TextEditingController(text: '9800000001');
-  final TextEditingController _otpController = TextEditingController(text: '123456');
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _otpController = TextEditingController();
+  String? _sessionId;
   bool _otpSent = false;
   bool _isLoading = false;
   String? _errorMessage;
@@ -41,6 +42,7 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
     setState(() => _isLoading = false);
 
     if (res.isSuccess) {
+      _sessionId = res.data?['session_id'] as String?;
       setState(() => _otpSent = true);
     } else {
       setState(() => _errorMessage = res.errorMessage ?? (loc.isHindi ? 'ओटीपी भेजने में विफल' : 'Failed to send OTP'));
@@ -66,6 +68,7 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
     final res = await state.apiClient.verifyOtp(
       phone: phone,
       otp: otp,
+      sessionId: _sessionId,
       role: 'vendor',
     );
 
@@ -169,6 +172,33 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () => setState(() {
+                      _phoneController.text = '9800000001';
+                      _errorMessage = null;
+                    }),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: GBColors.primary.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: GBColors.primary.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.science_outlined, size: 16, color: GBColors.primary),
+                          const SizedBox(width: 8),
+                          Text(
+                            loc.isHindi ? 'स्टेजिंग विक्रेता फोन: 9800000001 (टैप करें)' : 'Staging Vendor: 9800000001 (Tap to fill)',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   GBPrimaryButton(
                     label: loc.isHindi ? 'ओटीपी प्राप्त करें' : 'Send OTP',
@@ -199,6 +229,35 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
                       ),
                     ),
                   ),
+                  if (_phoneController.text == '9800000001') ...[
+                    const SizedBox(height: 12),
+                    InkWell(
+                      onTap: () => setState(() {
+                        _otpController.text = '123456';
+                        _errorMessage = null;
+                      }),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: GBColors.primary.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: GBColors.primary.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.science_outlined, size: 16, color: GBColors.primary),
+                            const SizedBox(width: 8),
+                            Text(
+                              loc.isHindi ? 'स्टेजिंग ओटीपी: 123456 (टैप करें)' : 'Staging OTP: 123456 (Tap to fill)',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   GBPrimaryButton(
                     label: loc.isHindi ? 'सत्यापित करें व लॉगिन करें' : 'Verify & Login',

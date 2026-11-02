@@ -20,9 +20,11 @@ class ApiResponse<T> {
 class GBApiClient {
   String baseUrl;
   String? _authToken;
+  String currentLanguage = "en";
 
-  GBApiClient({String? customBaseUrl})
-      : baseUrl = customBaseUrl ?? Endpoints.baseUrl;
+  GBApiClient({String? customBaseUrl, String initialLanguage = "en"})
+      : baseUrl = customBaseUrl ?? Endpoints.baseUrl,
+        currentLanguage = initialLanguage;
 
   void setAuthToken(String token) {
     _authToken = token;
@@ -32,79 +34,104 @@ class GBApiClient {
     _authToken = null;
   }
 
+  void setLanguage(String lang) {
+    currentLanguage = lang.toLowerCase() == "hi" ? "hi" : "en";
+  }
+
   Map<String, String> _headers() {
     final headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "Accept-Language": currentLanguage,
     };
     if (_authToken != null) {
-      headers['Authorization'] = 'Bearer $_authToken';
+      headers["Authorization"] = "Bearer $_authToken";
     }
     return headers;
   }
 
   String _cleanErrorMessage(dynamic e) {
     final str = e.toString().toLowerCase();
-    if (str.contains('timed out') || str.contains('timeout')) {
-      return 'सर्वर से संपर्क में समय लग रहा है। कृपया कुछ सेकंड बाद पुनः प्रयास करें (Server response timed out. Please retry)';
+    final isEn = currentLanguage == "en";
+    if (str.contains("timed out") || str.contains("timeout")) {
+      return isEn
+          ? "Server response timed out. Please retry."
+          : "सर्वर से संपर्क में समय लग रहा है। कृपया कुछ सेकंड बाद पुनः प्रयास करें।";
     }
-    if (str.contains('socketexception') ||
-        str.contains('operation not permitted') ||
-        str.contains('connection refused') ||
-        str.contains('clientexception') ||
-        str.contains('network is unreachable') ||
-        str.contains('failed host lookup')) {
-      return 'इंटरनेट कनेक्शन नहीं मिल पा रहा है। कृपया नेटवर्क जांचें (Unable to connect. Please check network)';
+    if (str.contains("socketexception") ||
+        str.contains("operation not permitted") ||
+        str.contains("connection refused") ||
+        str.contains("clientexception") ||
+        str.contains("network is unreachable") ||
+        str.contains("failed host lookup")) {
+      return isEn
+          ? "Unable to connect to server. Please check your internet connection."
+          : "इंटरनेट कनेक्शन नहीं मिल पा रहा है। कृपया नेटवर्क जांचें।";
     }
-    return 'अनपेक्षित त्रुटि हुई। कृपया दोबारा प्रयास करें (Something went wrong. Please try again)';
+    return isEn
+        ? "Something went wrong. Please try again."
+        : "अनपेक्षित त्रुटि हुई। कृपया दोबारा प्रयास करें।";
   }
 
   String _sanitizeErrorMessage(int statusCode, dynamic detail) {
+    final isEn = currentLanguage == "en";
     if (detail is String && detail.trim().isNotEmpty) {
-      final low = detail.toLowerCase();
-      // Mask all internal database, framework, or syntax traces
-      if (low.contains('traceback') ||
-          low.contains('sqlalchemy') ||
-          low.contains('psycopg') ||
-          low.contains('foreignkey') ||
-          low.contains('integrityerror') ||
-          low.contains('syntaxerror') ||
-          low.contains('operationalerror') ||
-          low.contains('internal server error') ||
-          low.contains('stack trace')) {
-        return 'सेवा वर्तमान में व्यस्त है। कृपया कुछ क्षण बाद पुनः प्रयास करें (Service temporarily busy. Please retry)';
+      final text = detail.trim();
+      final low = text.toLowerCase();
+      if (low.contains("traceback") ||
+          low.contains("sqlalchemy") ||
+          low.contains("psycopg") ||
+          low.contains("foreignkey") ||
+          low.contains("integrityerror") ||
+          low.contains("syntaxerror") ||
+          low.contains("operationalerror") ||
+          low.contains("internal server error") ||
+          low.contains("stack trace")) {
+        return isEn
+            ? "Service temporarily busy. Please retry shortly."
+            : "सेवा वर्तमान में व्यस्त है। कृपया कुछ क्षण बाद पुनः प्रयास करें।";
       }
-      return detail.trim();
+      if (text.contains("(") && text.endsWith(")")) {
+        final startIdx = text.lastIndexOf("(");
+        final enPart = text.substring(startIdx + 1, text.length - 1).trim();
+        final hiPart = text.substring(0, startIdx).trim();
+        if (isEn && enPart.isNotEmpty) {
+          return enPart;
+        } else if (!isEn && hiPart.isNotEmpty) {
+          return hiPart;
+        }
+      }
+      return text;
     }
-
     if (detail is List && detail.isNotEmpty) {
       final first = detail.first;
-      if (first is Map && first.containsKey('msg')) {
-        return '${first['msg']}';
+      if (first is Map && first.containsKey("msg")) {
+        return "${first['msg']}";
       }
-      return 'कृपया दर्ज की गई जानकारी की जांच करें (Please check the entered details)';
+      return isEn ? "Please check the entered details." : "कृपया दर्ज की गई जानकारी की जांच करें।";
     }
-
     switch (statusCode) {
       case 400:
-        return 'अमान्य अनुरोध। कृपया पुनः प्रयास करें (Invalid request. Please retry)';
+        return isEn ? "Invalid request. Please verify details and retry." : "अमान्य अनुरोध। कृपया पुनः प्रयास करें।";
       case 401:
-        return 'सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें (Session expired. Please sign in again)';
+        return isEn ? "Session expired. Please sign in again." : "सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें।";
       case 403:
-        return 'इस कार्रवाई की अनुमति नहीं है (You do not have permission for this action)';
+        return isEn ? "You do not have permission for this action." : "इस कार्रवाई की अनुमति नहीं है।";
       case 404:
-        return 'अनुरोधित जानकारी उपलब्ध नहीं है (Requested information not found)';
+        return isEn ? "Requested information not found." : "अनुरोधित जानकारी उपलब्ध नहीं है।";
       case 409:
-        return 'ऑर्डर स्थिति बदल चुकी है। कृपया स्क्रीन ताज़ा करें (Status updated. Please refresh)';
+        return isEn ? "Status updated. Please refresh." : "ऑर्डर स्थिति बदल चुकी है। कृपया स्क्रीन ताज़ा करें।";
       case 422:
-        return 'कृपया दर्ज की गई जानकारी जांचें (Please verify entered details)';
+        return isEn ? "Please verify the entered details." : "कृपया दर्ज की गई जानकारी जांचें।";
+      case 429:
+        return isEn ? "Too many requests. Please wait before retrying." : "कृपया पुनः प्रयास करने से पहले प्रतीक्षा करें।";
       case 500:
       case 502:
       case 503:
       case 504:
-        return 'सर्वर सेवा वर्तमान में व्यस्त है। कृपया कुछ देर बाद प्रयास करें (Service temporarily busy. Please retry shortly)';
+        return isEn ? "Service temporarily busy. Please retry shortly." : "सर्वर सेवा वर्तमान में व्यस्त है। कृपया कुछ देर बाद प्रयास करें।";
       default:
-        return 'अनपेक्षित समस्या हुई। कृपया दोबारा प्रयास करें (Unable to complete request. Please try again)';
+        return isEn ? "Unable to complete request. Please try again." : "अनपेक्षित समस्या हुई। कृपया दोबारा प्रयास करें।";
     }
   }
 
