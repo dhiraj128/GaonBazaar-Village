@@ -10,11 +10,12 @@ async_engine_kwargs = {
     "pool_pre_ping": True,
 }
 
-# If connecting to Supabase connection pooler or remote PostgreSQL, disable statement cache for Supavisor compatibility
+# If connecting to Supabase connection pooler or remote PostgreSQL, disable statement cache for Supavisor compatibility and enforce SSL
 if "pooler.supabase.com" in settings.ASYNC_DATABASE_URL or "supabase.co" in settings.ASYNC_DATABASE_URL:
     async_engine_kwargs["connect_args"] = {
         "statement_cache_size": 0,
         "prepared_statement_cache_size": 0,
+        "ssl": "require",
     }
 
 async_engine = create_async_engine(
