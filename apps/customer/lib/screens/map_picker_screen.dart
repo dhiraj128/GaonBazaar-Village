@@ -332,7 +332,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
     showModalBottomSheet(
       context: context,
-      isScrollable: true,
+      isScrollControlled: true,
       backgroundColor: isDark ? GBColors.cardDark : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
