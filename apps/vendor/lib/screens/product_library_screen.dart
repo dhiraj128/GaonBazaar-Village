@@ -23,7 +23,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
       'category': 'Grocery',
       'unit': '1 kg',
       'suggested_price': 38.0,
-      'image_url': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400',
+      'image_url': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400',
     },
     {
       'id': 'cat_rice',
@@ -41,7 +41,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
       'category': 'Grocery',
       'unit': '1 L',
       'suggested_price': 142.0,
-      'image_url': 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400',
+      'image_url': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400',
     },
     {
       'id': 'cat_milk',
@@ -95,7 +95,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
       'category': 'Electrical',
       'unit': '1 piece',
       'suggested_price': 85.0,
-      'image_url': 'https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=400',
+      'image_url': 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400',
     },
     {
       'id': 'cat_sugar',

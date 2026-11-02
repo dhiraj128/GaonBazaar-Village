@@ -581,6 +581,20 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                 ),
               ),
               IconButton(
+                icon: const Icon(Icons.navigation_outlined, color: GBColors.primary, size: 20),
+                tooltip: isHi ? 'दुकान का रास्ता (Google Maps)' : 'Navigate to Store (Google Maps)',
+                visualDensity: VisualDensity.compact,
+                onPressed: () {
+                  final mapUrl = 'https://www.google.com/maps/dir/?api=1&destination=${Uri.encodeComponent("${order.storeName}, Minapur, Muzaffarpur")}';
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(isHi ? 'दुकान का गूगल मैप्स नेविगेशन: ${order.storeName}' : 'Store Google Maps: ${order.storeName}'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
+              IconButton(
                 icon: const Icon(Icons.call, color: GBColors.primary, size: 20),
                 visualDensity: VisualDensity.compact,
                 onPressed: () {
@@ -617,6 +631,19 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                     ],
                   ],
                 ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.navigation_outlined, color: GBColors.secondary, size: 20),
+                tooltip: isHi ? 'डिलीवरी का रास्ता (Google Maps)' : 'Navigate to Drop (Google Maps)',
+                visualDensity: VisualDensity.compact,
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(isHi ? 'ग्राहक ड्रॉप का गूगल मैप्स नेविगेशन: ${order.deliveryAddress}' : 'Drop Google Maps: ${order.deliveryAddress}'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
               ),
             ],
           ),

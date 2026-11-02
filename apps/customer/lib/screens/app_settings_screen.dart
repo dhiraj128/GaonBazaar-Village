@@ -183,6 +183,35 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+
+            // 5. Staging Build Diagnostics Badge
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                decoration: BoxDecoration(
+                  color: isDark ? GBColors.cardDark : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.verified, size: 14, color: GBColors.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      'GaonBazaar Village • Staging Build a9197f5',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),

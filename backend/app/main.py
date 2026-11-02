@@ -53,10 +53,10 @@ async def init_db_and_seed():
 
         # Update verified product image URLs in existing database rows
         url_updates = [
-            ("cat_atta", "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400"),
-            ("cat_mustard_oil", "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400"),
-            ("cat_led_bulb", "https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=400"),
-            ("cat_soy_oil", "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400"),
+            ("cat_atta", "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400"),
+            ("cat_mustard_oil", "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400"),
+            ("cat_led_bulb", "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400"),
+            ("cat_soy_oil", "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400"),
             ("cat_moong_dal", "https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400"),
         ]
         for cat_id, new_url in url_updates:
@@ -66,7 +66,18 @@ async def init_db_and_seed():
                     {"url": new_url, "id": cat_id}
                 )
                 await conn.execute(
-                    text("UPDATE store_products SET image_url = :url WHERE global_product_id = :id"),
+                    text("""
+                        UPDATE store_products 
+                        SET image_url = :url 
+                        WHERE global_product_id = :id 
+                          AND (
+                            image_url IS NULL 
+                            OR image_url = '' 
+                            OR image_url LIKE '%photo-1574323347407-f5e1ad6d020b%' 
+                            OR image_url LIKE '%photo-1620916566398-39f1143ab7be%' 
+                            OR image_url LIKE '%photo-1507668077129-56e32842fceb%'
+                          )
+                    """),
                     {"url": new_url, "id": cat_id}
                 )
             except Exception:
@@ -85,7 +96,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 kg",
                     suggested_mrp=45.0,
-                    image_url="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400",
+                    image_url="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400",
                     tags="atta,aata,wheat,flour,आटा"
                 ),
                 GlobalCatalogItem(
@@ -105,7 +116,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 L",
                     suggested_mrp=155.0,
-                    image_url="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400",
+                    image_url="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
                     tags="oil,mustard,tel,सरसों तेल"
                 ),
                 GlobalCatalogItem(
@@ -165,7 +176,7 @@ async def init_db_and_seed():
                     category="Electrical",
                     default_unit="1 piece",
                     suggested_mrp=99.0,
-                    image_url="https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=400",
+                    image_url="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400",
                     tags="bulb,led,light,बल्ब"
                 ),
                 GlobalCatalogItem(
@@ -245,7 +256,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 L",
                     suggested_mrp=135.0,
-                    image_url="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400",
+                    image_url="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400",
                     tags="oil,soyabean,refined,तेल"
                 ),
                 GlobalCatalogItem(
@@ -453,13 +464,13 @@ async def init_db_and_seed():
             
             # Products for Store 1
             st1_products = [
-                StoreProduct(store_id="str_01", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=38.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400"),
+                StoreProduct(store_id="str_01", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=38.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400"),
                 StoreProduct(store_id="str_01", global_product_id="cat_rice", category="Grocery", unit="1 kg", price=54.0, mrp=65.0, image_url="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400"),
-                StoreProduct(store_id="str_01", global_product_id="cat_mustard_oil", category="Grocery", unit="1 L", price=142.0, mrp=155.0, image_url="https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400"),
+                StoreProduct(store_id="str_01", global_product_id="cat_mustard_oil", category="Grocery", unit="1 L", price=142.0, mrp=155.0, image_url="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400"),
                 StoreProduct(store_id="str_01", global_product_id="cat_potato", category="Vegetables", unit="1 kg", price=24.0, mrp=30.0, image_url="https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400"),
                 StoreProduct(store_id="str_01", global_product_id="cat_onion", category="Vegetables", unit="1 kg", price=32.0, mrp=40.0, image_url="https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400"),
                 StoreProduct(store_id="str_01", global_product_id="cat_pooja_agarbatti", category="Pooja", unit="1 pack", price=20.0, mrp=25.0, image_url="https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400"),
-                StoreProduct(store_id="str_01", global_product_id="cat_led_bulb", category="Electrical", unit="1 piece", price=85.0, mrp=99.0, image_url="https://images.unsplash.com/photo-1507668077129-56e32842fceb?w=400"),
+                StoreProduct(store_id="str_01", global_product_id="cat_led_bulb", category="Electrical", unit="1 piece", price=85.0, mrp=99.0, image_url="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400"),
             ]
             session.add_all(st1_products)
             
@@ -468,7 +479,7 @@ async def init_db_and_seed():
                 StoreProduct(store_id="str_02", global_product_id="cat_milk", category="Dairy", unit="1 L", price=56.0, mrp=60.0, image_url="https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400"),
                 StoreProduct(store_id="str_02", global_product_id="cat_potato", category="Vegetables", unit="1 kg", price=25.0, mrp=30.0, image_url="https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400"),
                 StoreProduct(store_id="str_02", global_product_id="cat_tomato", category="Vegetables", unit="1 kg", price=28.0, mrp=35.0, image_url="https://images.unsplash.com/photo-1546470427-227c7369a941?w=400"),
-                StoreProduct(store_id="str_02", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=39.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400"),
+                StoreProduct(store_id="str_02", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=39.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400"),
             ]
             session.add_all(st2_products)
             
