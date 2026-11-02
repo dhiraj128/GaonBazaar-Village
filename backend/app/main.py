@@ -1,16 +1,20 @@
 import os
+import logging
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.future import select
+from sqlalchemy import text
 
 from app.core.config import settings
 from app.db.session import async_engine, AsyncSessionLocal
 from app.models.base import Base, User, Store, StoreProduct, GlobalCatalogItem, Runner, Address
 from app.api.v1 import auth, addresses, stores, orders, ai, admin, support
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+logger = logging.getLogger("gaonbazaar")
+
+async def init_db_and_seed():
     # Initialize DB tables
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -490,7 +494,32 @@ async def lifespan(app: FastAPI):
             session.add(u_admin)
             
             await session.commit()
-            
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.db_healthy = False
+    app.state.db_error = None
+    max_retries = 3
+    retry_delay = 2
+    for attempt in range(1, max_retries + 1):
+        try:
+            logger.info("Initializing database schema and seeding (attempt %d/%d)...", attempt, max_retries)
+            await init_db_and_seed()
+            app.state.db_healthy = True
+            app.state.db_error = None
+            logger.info("Database schema initialized and pilot records seeded successfully.")
+            break
+        except Exception as exc:
+            app.state.db_healthy = False
+            app.state.db_error = str(exc)
+            logger.warning("Database initialization attempt %d/%d encountered error: %s", attempt, max_retries, exc)
+            if attempt < max_retries:
+                await asyncio.sleep(retry_delay)
+            else:
+                logger.error(
+                    "Database initialization could not complete during startup. "
+                    "Web server will remain online to serve health checks and retry queries."
+                )
     yield
 
 app = FastAPI(
@@ -534,5 +563,25 @@ async def health():
         "status": "healthy",
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
-        "commit": os.getenv("RENDER_GIT_COMMIT", "c30afc3")
+        "database": "connected" if getattr(app.state, "db_healthy", False) else "initializing",
+        "commit": os.getenv("RENDER_GIT_COMMIT", "latest")
     }
+
+@app.get("/health/db")
+async def health_db():
+    try:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(text("SELECT 1"))
+            val = result.scalar()
+            return {
+                "status": "connected",
+                "database_engine": "postgresql" if "postgresql" in settings.ASYNC_DATABASE_URL else "sqlite",
+                "ping": val == 1,
+                "schema_seeded": getattr(app.state, "db_healthy", False)
+            }
+    except Exception as exc:
+        return {
+            "status": "disconnected",
+            "error": str(exc),
+            "detail": "Database connection attempt failed"
+        }

@@ -1,5 +1,107 @@
-from pydantic_settings import BaseSettings
+import re
+from urllib.parse import quote, unquote
 from typing import Optional
+from pydantic_settings import BaseSettings
+
+def clean_and_normalize_database_url(
+    url: str,
+    is_async: bool = True,
+    default_ref: str = "vxewgvrjhjpntfvsmuez",
+    default_region: str = "ap-south-1"
+) -> str:
+    """
+    Normalizes PostgreSQL and SQLite database URLs:
+    1. Direct Supabase IPv6 hosts (db.<ref>.supabase.co) are automatically
+       routed to the IPv4-compatible AWS connection pooler (aws-0-<region>.pooler.supabase.com).
+    2. Supabase connection poolers require username formatted as 'postgres.<ref>'.
+    3. Safely URL-encodes special characters in passwords (e.g. #, @, !) to prevent URI parsing failure.
+    4. Enforces the correct driver prefix (postgresql+asyncpg:// for async, postgresql:// for sync).
+    5. Preserves SQLite local database paths intact.
+    """
+    if not url:
+        return url
+
+    # Handle SQLite
+    if "sqlite" in url:
+        if is_async:
+            if url.startswith("sqlite:///"):
+                return url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
+            return url
+        else:
+            if url.startswith("sqlite+aiosqlite:///"):
+                return url.replace("sqlite+aiosqlite:///", "sqlite:///", 1)
+            return url
+
+    # Extract scheme
+    if "://" in url:
+        scheme_prefix, rest = url.split("://", 1)
+    else:
+        scheme_prefix = "postgresql"
+        rest = url
+
+    # Parse userinfo and host_part
+    if "@" in rest:
+        userinfo, host_part = rest.rsplit("@", 1)
+    else:
+        userinfo = ""
+        host_part = rest
+
+    # Parse user and password
+    if ":" in userinfo:
+        user, pwd = userinfo.split(":", 1)
+    else:
+        user = userinfo
+        pwd = ""
+
+    # Clean and re-quote password safely
+    clean_pwd = quote(unquote(pwd), safe="") if pwd else ""
+
+    # Parse query string if present
+    query = ""
+    if "?" in host_part:
+        host_part, query = host_part.split("?", 1)
+
+    # Parse path (database name)
+    path = ""
+    if "/" in host_part:
+        host_port, path = host_part.split("/", 1)
+    else:
+        host_port = host_part
+
+    # Parse host and port
+    if ":" in host_port:
+        host, port = host_port.split(":", 1)
+    else:
+        host = host_port
+        port = "5432"
+
+    ref = default_ref
+    # Detect direct Supabase IPv6 host (e.g. db.vxewgvrjhjpntfvsmuez.supabase.co)
+    match = re.match(r"^db\.([a-zA-Z0-9_-]+)\.supabase\.co$", host)
+    if match:
+        ref = match.group(1)
+        # Direct Supabase host is IPv6-only; rewrite to AWS IPv4 connection pooler
+        host = f"aws-0-{default_region}.pooler.supabase.com"
+        port = "5432"
+    elif "pooler.supabase.com" in host:
+        if "." in user:
+            ref = user.split(".", 1)[1]
+
+    # Supabase pooler requires username in format: postgres.<project_ref>
+    if "pooler.supabase.com" in host and user:
+        if "." not in user:
+            user = f"{user}.{ref}"
+
+    # Reconstruct credentials and network location
+    cred = f"{user}:{clean_pwd}" if clean_pwd else user
+    endpoint = f"{host}:{port}" if port else host
+    full_path = f"/{path}" if path else "/postgres"
+    if query:
+        full_path += f"?{query}"
+
+    netloc = f"{cred}@{endpoint}" if cred else endpoint
+    target_scheme = "postgresql+asyncpg" if is_async else "postgresql"
+    return f"{target_scheme}://{netloc}{full_path}"
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "GaonBazaar Rural Hyperlocal Delivery API"
@@ -20,23 +122,12 @@ class Settings(BaseSettings):
     
     @property
     def ASYNC_DATABASE_URL(self) -> str:
-        url = self.DATABASE_URL
-        if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
-        elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
-            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        return url
+        return clean_and_normalize_database_url(self.DATABASE_URL, is_async=True)
 
     @property
     def RESOLVED_SYNC_DATABASE_URL(self) -> str:
         url = self.SYNC_DATABASE_URL or self.DATABASE_URL
-        if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql://", 1)
-        elif url.startswith("postgresql+asyncpg://"):
-            url = url.replace("postgresql+asyncpg://", "postgresql://", 1)
-        elif url.startswith("sqlite+aiosqlite:///"):
-            url = url.replace("sqlite+aiosqlite:///", "sqlite:///", 1)
-        return url
+        return clean_and_normalize_database_url(url, is_async=False)
     
     # Rural Hyperlocal Configuration
     MAX_DELIVERY_RADIUS_KM: float = 8.0
