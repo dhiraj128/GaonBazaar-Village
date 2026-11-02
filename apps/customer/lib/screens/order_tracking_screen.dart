@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
 import 'package:localization/localization.dart';
 import 'package:shared_models/shared_models.dart';
@@ -212,6 +213,103 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     );
   }
 
+  void _shareDeliveryLocation() {
+    final loc = GBLocalizations.of(context);
+    final isHi = loc.isHindi;
+    final mapLink = 'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent("${_order.deliveryAddress}, Minapur, Muzaffarpur, Bihar")}';
+
+    Clipboard.setData(ClipboardData(text: mapLink));
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.share_location, color: GBColors.primary, size: 26),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    isHi ? 'डिलीवरी लोकेशन शेयर करें' : 'Share Delivery Location',
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              isHi
+                  ? 'डिलीवरी पार्टनर को सटीक ग्रामीण पते पर पहुँचने हेतु यह Google Maps लिंक शेयर करें:'
+                  : 'Share this Google Maps directions link with your delivery partner for exact rural doorstep delivery:',
+              style: const TextStyle(fontSize: 13, color: Colors.grey),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: GBColors.primary.withAlpha(20),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: GBColors.primary.withAlpha(60)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.link, color: GBColors.primary, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      mapLink,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.check_circle, color: GBColors.success, size: 18),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF25D366), foregroundColor: Colors.white),
+                    icon: const Icon(Icons.message, size: 18),
+                    label: Text(isHi ? 'व्हाट्सएप शेयर' : 'Share WhatsApp'),
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(isHi ? 'लोकेशन लिंक क्लिपबोर्ड पर कॉपी हो गया!' : 'Location link copied to clipboard!')),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.copy, size: 18),
+                    label: Text(isHi ? 'लिंक कॉपी करें' : 'Copy Link'),
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(isHi ? 'Google Maps लिंक कॉपी हो गया!' : 'Google Maps link copied!')),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = GBLocalizations.of(context);
@@ -242,6 +340,11 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: loc.isHindi ? 'पीछे जाएं' : 'Back',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(loc.tr('order_tracking'), style: const TextStyle(fontWeight: FontWeight.w800)),
       ),
       body: SafeArea(
@@ -333,6 +436,121 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   ],
                 ),
               ),
+
+            const SizedBox(height: 16),
+
+            // Live Location & Google Maps Sharing Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? GBColors.cardDark : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark ? GBColors.borderDark : GBColors.borderLight,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, color: GBColors.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        loc.isHindi ? 'डिलीवरी लोकेशन व गूगल मैप्स' : 'Delivery Location & Google Maps',
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _order.deliveryAddress,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? GBColors.textPrimaryDark : GBColors.textPrimaryLight,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: GBColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.share_location, size: 18),
+                      label: Text(
+                        loc.isHindi ? 'डिलीवरी साथी को Google Maps लोकेशन भेजें' : 'Share Google Maps Location with Runner',
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                      ),
+                      onPressed: _shareDeliveryLocation,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            if (isOutForDelivery) ...[
+              const SizedBox(height: 16),
+              // Assigned Runner Partner Info Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      GBColors.primary.withOpacity(0.08),
+                      GBColors.primary.withOpacity(0.03),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: GBColors.primary.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: const BoxDecoration(
+                        color: GBColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.two_wheeler, color: Colors.white, size: 26),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            loc.isHindi ? 'डिलीवरी साथी: संतोष कुमार' : 'Delivery Partner: Santosh Kumar',
+                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            loc.isHindi ? 'हीरो स्प्लेंडर (BR-06-AB-1234) • ⭐ 4.9' : 'Hero Splendor (BR-06-AB-1234) • ⭐ 4.9',
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            loc.isHindi ? 'अनुमानित आगमन: 15-20 मिनट' : 'Estimated arrival: 15-20 mins',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: GBColors.primary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.phone_in_talk, color: GBColors.primary, size: 24),
+                      onPressed: _callRunner,
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
             const SizedBox(height: 16),
 

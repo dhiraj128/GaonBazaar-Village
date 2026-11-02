@@ -32,6 +32,11 @@ class _OrdersTabState extends State<OrdersTab> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: loc.isHindi ? 'होम पर वापस जाएं' : 'Back to Home',
+          onPressed: () => widget.onTabChange(0),
+        ),
         title: Text(loc.tr('tab_orders'), style: const TextStyle(fontWeight: FontWeight.w800)),
       ),
       body: state.isLoadingOrders

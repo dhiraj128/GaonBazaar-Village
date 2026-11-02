@@ -573,35 +573,12 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isHi ? 'पिकअप दुकान' : 'Pickup Store',
+                      isHi ? 'पिकअप दुकान (Pickup Store)' : 'Pickup Store',
                       style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
                     ),
                     Text(order.storeName, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                   ],
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.navigation_outlined, color: GBColors.primary, size: 20),
-                tooltip: isHi ? 'दुकान का रास्ता (Google Maps)' : 'Navigate to Store (Google Maps)',
-                visualDensity: VisualDensity.compact,
-                onPressed: () {
-                  final mapUrl = 'https://www.google.com/maps/dir/?api=1&destination=${Uri.encodeComponent("${order.storeName}, Minapur, Muzaffarpur")}';
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(isHi ? 'दुकान का गूगल मैप्स नेविगेशन: ${order.storeName}' : 'Store Google Maps: ${order.storeName}'),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.call, color: GBColors.primary, size: 20),
-                visualDensity: VisualDensity.compact,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${isHi ? "दुकानदार से संपर्क" : "Contact Store"}: +91 9800000001')),
-                  );
-                },
               ),
             ],
           ),
@@ -618,36 +595,87 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isHi ? 'ग्राहक ड्रॉप पता' : 'Drop Address',
+                      isHi ? 'ग्राहक ड्रॉप पता (Customer Drop Location)' : 'Customer Drop Location',
                       style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
                     ),
                     Text(order.deliveryAddress, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                     if (isCod) ...[
                       const SizedBox(height: 4),
                       Text(
-                        '${isHi ? "नकद संग्रह" : "Collect Cash"}: ₹${order.totalAmount.toStringAsFixed(0)}',
+                        '${isHi ? "नकद संग्रह (COD)" : "Collect Cash"}: ₹${order.totalAmount.toStringAsFixed(0)}',
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.red),
                       ),
                     ],
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.navigation_outlined, color: GBColors.secondary, size: 20),
-                tooltip: isHi ? 'डिलीवरी का रास्ता (Google Maps)' : 'Navigate to Drop (Google Maps)',
-                visualDensity: VisualDensity.compact,
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Google Maps Navigation Action Buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: GBColors.primary,
+                    side: const BorderSide(color: GBColors.primary),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                  icon: const Icon(Icons.storefront, size: 16),
+                  label: Text(
+                    isHi ? 'दुकान का रास्ता' : 'Store Map',
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                  ),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(isHi ? 'दुकान का गूगल मैप्स नेविगेशन: ${order.storeName}' : 'Store Google Maps: ${order.storeName}'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: GBColors.secondary,
+                    side: const BorderSide(color: GBColors.secondary),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                  icon: const Icon(Icons.navigation, size: 16),
+                  label: Text(
+                    isHi ? 'ग्राहक का रास्ता' : 'Drop Map',
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                  ),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(isHi ? 'ग्राहक का गूगल मैप्स नेविगेशन: ${order.deliveryAddress}' : 'Customer Google Maps: ${order.deliveryAddress}'),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                ),
+                child: const Icon(Icons.call, size: 16, color: GBColors.primary),
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(isHi ? 'ग्राहक ड्रॉप का गूगल मैप्स नेविगेशन: ${order.deliveryAddress}' : 'Drop Google Maps: ${order.deliveryAddress}'),
-                      duration: const Duration(seconds: 2),
-                    ),
+                    SnackBar(content: Text('${isHi ? "कॉलिंग ग्राहक" : "Calling customer"}: +91 9800000000')),
                   );
                 },
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
 
           Text(
             itemsSummary.isNotEmpty ? itemsSummary : (isHi ? 'सामग्री विवरण' : 'Items'),

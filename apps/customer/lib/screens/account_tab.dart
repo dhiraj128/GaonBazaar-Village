@@ -11,7 +11,9 @@ import 'policies_screen.dart';
 import 'language_selection_screen.dart';
 
 class AccountTab extends StatelessWidget {
-  const AccountTab({super.key});
+  final Function(int)? onTabChange;
+
+  const AccountTab({super.key, this.onTabChange});
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +34,17 @@ class AccountTab extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: loc.isHindi ? 'होम पर वापस जाएं' : 'Back to Home',
+          onPressed: () {
+            if (onTabChange != null) {
+              onTabChange!(0);
+            } else if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
+          },
+        ),
         title: Text(
           loc.tr('tab_account'),
           style: const TextStyle(fontWeight: FontWeight.w800),

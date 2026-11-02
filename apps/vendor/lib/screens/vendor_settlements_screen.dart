@@ -33,6 +33,11 @@ class _VendorSettlementsScreenState extends State<VendorSettlementsScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: isHi ? 'पीछे जाएं' : 'Back',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(
           isHi ? 'कमाई व बैंक सेटलमेंट' : 'Earnings & Settlements',
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),

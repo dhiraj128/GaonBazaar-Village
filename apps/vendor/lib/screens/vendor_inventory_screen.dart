@@ -83,6 +83,241 @@ class VendorInventoryScreen extends StatelessWidget {
     );
   }
 
+  void _showAddCustomProductDialog(BuildContext context, VendorAppState state) {
+    final loc = GBLocalizations.of(context);
+    final isHi = loc.isHindi;
+
+    final nameHiCtrl = TextEditingController();
+    final nameEnCtrl = TextEditingController();
+    final priceCtrl = TextEditingController();
+    final mrpCtrl = TextEditingController();
+    final stockCtrl = TextEditingController(text: '25');
+    String selectedCategory = 'Grocery';
+    String selectedUnit = '1 kg';
+    String selectedImageUrl = 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400';
+
+    final presetImages = [
+      {'name': isHi ? 'अनाज / चावल' : 'Grains / Rice', 'url': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400'},
+      {'name': isHi ? 'सब्ज़ियां' : 'Vegetables', 'url': 'https://images.unsplash.com/photo-1546470427-227c7369a941?w=400'},
+      {'name': isHi ? 'दूध / घी' : 'Dairy / Ghee', 'url': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400'},
+      {'name': isHi ? 'सरसों तेल' : 'Cooking Oil', 'url': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400'},
+      {'name': isHi ? 'गुड़ / शक्कर' : 'Jaggery / Sugar', 'url': 'https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=400'},
+      {'name': isHi ? 'पूजा सामग्री' : 'Pooja Items', 'url': 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400'},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (bottomCtx, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.add_business, color: GBColors.primary, size: 26),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          isHi ? 'दुकान में नया सामान जोड़ें' : 'Add Custom Product to Store',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: nameHiCtrl,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'सामग्री का नाम (हिंदी में)' : 'Product Name (Hindi)',
+                      hintText: isHi ? 'उदा. देशी चना सत्तू' : 'e.g. Desi Chana Sattu',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: nameEnCtrl,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'सामग्री का नाम (English)' : 'Product Name (English)',
+                      hintText: 'e.g. Roasted Gram Sattu 500g',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: selectedCategory,
+                          decoration: InputDecoration(
+                            labelText: isHi ? 'श्रेणी' : 'Category',
+                            border: const OutlineInputBorder(),
+                          ),
+                          items: ['Grocery', 'Vegetables', 'Dairy', 'Snacks', 'Pooja', 'Spices', 'Household']
+                              .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                              .toList(),
+                          onChanged: (v) => setModalState(() => selectedCategory = v ?? 'Grocery'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: selectedUnit,
+                          decoration: InputDecoration(
+                            labelText: isHi ? 'माप / इकाई' : 'Unit',
+                            border: const OutlineInputBorder(),
+                          ),
+                          items: ['500 g', '1 kg', '2 kg', '5 kg', '1 L', '500 ml', '1 pack', '1 piece', '1 dozen']
+                              .map((u) => DropdownMenuItem(value: u, child: Text(u)))
+                              .toList(),
+                          onChanged: (v) => setModalState(() => selectedUnit = v ?? '1 kg'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: priceCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: InputDecoration(
+                            labelText: isHi ? 'बिक्री मूल्य (₹)' : 'Selling Price (₹)',
+                            prefixText: '₹ ',
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: mrpCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          decoration: InputDecoration(
+                            labelText: isHi ? 'एमआरपी (₹)' : 'MRP (₹)',
+                            prefixText: '₹ ',
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: stockCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'उपलब्ध स्टॉक मात्रा (Units)' : 'Initial Stock Quantity (Units)',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    isHi ? 'सामग्री की फोटो चुनें:' : 'Select Product Photo:',
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 40,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: presetImages.map((img) {
+                        final isSel = selectedImageUrl == img['url'];
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(img['name']!),
+                            selected: isSel,
+                            selectedColor: GBColors.primary.withAlpha(50),
+                            onSelected: (_) => setModalState(() => selectedImageUrl = img['url']!),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: GBColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () async {
+                        final nameHi = nameHiCtrl.text.trim();
+                        final nameEn = nameEnCtrl.text.trim();
+                        final price = double.tryParse(priceCtrl.text.trim()) ?? 0.0;
+                        final mrp = double.tryParse(mrpCtrl.text.trim()) ?? price;
+                        final stock = int.tryParse(stockCtrl.text.trim()) ?? 10;
+
+                        if (nameHi.isEmpty && nameEn.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(isHi ? 'कृपया सामग्री का नाम दर्ज करें' : 'Please enter product name')),
+                          );
+                          return;
+                        }
+                        if (price <= 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(isHi ? 'कृपया मान्य विक्रय मूल्य दर्ज करें' : 'Please enter valid price')),
+                          );
+                          return;
+                        }
+
+                        Navigator.of(ctx).pop();
+                        final success = await state.addProduct({
+                          'name_hi': nameHi.isNotEmpty ? nameHi : nameEn,
+                          'name_en': nameEn.isNotEmpty ? nameEn : nameHi,
+                          'category': selectedCategory,
+                          'unit': selectedUnit,
+                          'price': price,
+                          'mrp': mrp,
+                          'stock_quantity': stock,
+                          'in_stock': true,
+                          'image_url': selectedImageUrl,
+                        });
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                success
+                                    ? (isHi ? 'सामग्री दुकान में सफलतापूर्वक जुड़ गई!' : 'Product added to store catalog!')
+                                    : (isHi ? 'सामग्री सुरक्षित सहेजी गई' : 'Product saved locally'),
+                              ),
+                              backgroundColor: GBColors.success,
+                            ),
+                          );
+                          state.fetchProducts();
+                        }
+                      },
+                      child: Text(
+                        isHi ? 'दुकान में जोड़ें (Add to Store)' : 'Add to My Store',
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = VendorStateProvider.of(context);
@@ -91,13 +326,19 @@ class VendorInventoryScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: loc.isHindi ? 'पीछे जाएं' : 'Back',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(
           loc.tr('menu_inventory'),
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle, color: GBColors.primary, size: 28),
+            icon: const Icon(Icons.library_add, color: GBColors.primary, size: 24),
+            tooltip: loc.isHindi ? 'केंद्रीय लाइब्रेरी' : 'Central Library',
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const ProductLibraryScreen()),
@@ -241,6 +482,16 @@ class VendorInventoryScreen extends StatelessWidget {
                       );
                     },
                   ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: GBColors.primary,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: Text(
+          loc.isHindi ? 'नया सामान जोड़ें' : 'Add Custom Product',
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        onPressed: () => _showAddCustomProductDialog(context, state),
       ),
     );
   }

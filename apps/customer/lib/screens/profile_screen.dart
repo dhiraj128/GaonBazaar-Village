@@ -69,6 +69,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: loc.isHindi ? 'पीछे जाएं' : 'Back',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(loc.tr('profile_title'), style: const TextStyle(fontWeight: FontWeight.w800)),
       ),
       body: SafeArea(
@@ -206,7 +211,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 18),
+
+            // Primary Village & Panchayat (Rural Identity)
+            Text(
+              loc.isHindi ? 'प्राथमिक गाँव व पंचायत' : 'Primary Village & Panchayat',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: isDark ? GBColors.textMutedDark : GBColors.textMutedLight,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? GBColors.surfaceDark : Colors.grey.withAlpha(20),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: isDark ? GBColors.borderDark : GBColors.borderLight),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.holiday_village, color: GBColors.primary, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          loc.isHindi ? 'चतुर्शी / Chatursi (वार्ड नं. 4)' : 'Chaturshi (Ward No. 4)',
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                        ),
+                        Text(
+                          loc.isHindi ? 'मीनापुर ब्लॉक, मुजफ्फरपुर (843128)' : 'Minapur Block, Muzaffarpur (843128)',
+                          style: const TextStyle(fontSize: 11, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
 
             // Save Changes Button
             GBPrimaryButton(

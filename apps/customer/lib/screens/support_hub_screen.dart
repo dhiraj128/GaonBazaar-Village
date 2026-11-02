@@ -186,6 +186,11 @@ class _SupportHubScreenState extends State<SupportHubScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: loc.isHindi ? 'पीछे जाएं' : 'Back',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(loc.tr('support_hub_title'), style: const TextStyle(fontWeight: FontWeight.w800)),
       ),
       body: SafeArea(

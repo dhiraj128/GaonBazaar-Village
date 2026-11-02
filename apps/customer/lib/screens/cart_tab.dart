@@ -19,6 +19,11 @@ class CartTab extends StatelessWidget {
     if (state.cartItems.isEmpty) {
       return Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            tooltip: loc.isHindi ? 'होम पर वापस जाएं' : 'Back to Home',
+            onPressed: () => onTabChange(0),
+          ),
           title: Text(loc.tr('my_cart'), style: const TextStyle(fontWeight: FontWeight.w800)),
         ),
         body: GBEmptyState(
@@ -32,6 +37,11 @@ class CartTab extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: loc.isHindi ? 'होम पर वापस जाएं' : 'Back to Home',
+          onPressed: () => onTabChange(0),
+        ),
         title: Text(loc.tr('my_cart'), style: const TextStyle(fontWeight: FontWeight.w800)),
         actions: [
           TextButton(

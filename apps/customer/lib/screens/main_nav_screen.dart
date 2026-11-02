@@ -35,7 +35,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
       AiAssistantTab(onTabChange: _onTabChange),
       CartTab(onTabChange: _onTabChange),
       OrdersTab(onTabChange: _onTabChange),
-      const AccountTab(),
+      AccountTab(onTabChange: _onTabChange),
     ];
 
     return WillPopScope(
