@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaonBazaar — Rural Hyperlocal Live Applications Portal</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23138808'><path d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #138808;
+      --primary-light: #22c55e;
+      --primary-dark: #0f6c06;
+      --bg: #0B0F19;
+      --card-bg: #151D2F;
+      --card-border: #1E293B;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #138808, #22c55e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 14px rgba(19, 136, 8, 0.4);
+    }
+    .brand-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .brand-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      font-size: 13px;
+      font-weight: 600;
+      color: #4ade80;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 10px #22c55e;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.9); }
+    }
+    main {
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+    .hero {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .hero h1 {
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      background: linear-gradient(to right, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 650px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .app-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.25s ease;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+    .app-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(34, 197, 94, 0.4);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    }
+    .app-card-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+    .card-customer .app-card-icon { background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); }
+    .card-vendor .app-card-icon { background: rgba(249, 115, 22, 0.15); border: 1px solid rgba(249, 115, 22, 0.3); }
+    .card-runner .app-card-icon { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); }
+    .card-admin .app-card-icon { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); }
+    .app-card-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .app-card-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      width: fit-content;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .card-customer .app-card-badge { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+    .card-vendor .app-card-badge { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
+    .card-runner .app-card-badge { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    .card-admin .app-card-badge { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
+    .app-card-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 24px;
+      flex: 1;
+    }
+    .btn-launch {
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .card-customer .btn-launch { background: #138808; color: #fff; }
+    .card-customer:hover .btn-launch { background: #18a90a; }
+    .card-vendor .btn-launch { background: #ea580c; color: #fff; }
+    .card-vendor:hover .btn-launch { background: #f97316; }
+    .card-runner .btn-launch { background: #2563eb; color: #fff; }
+    .card-runner:hover .btn-launch { background: #3b82f6; }
+    .card-admin .btn-launch { background: #9333ea; color: #fff; }
+    .card-admin:hover .btn-launch { background: #a855f7; }
+
+    /* Interactive Live Device Preview Sandbox */
+    .preview-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px;
+      margin-top: 24px;
+    }
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .preview-title h2 {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .preview-title p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .device-tabs {
+      display: flex;
+      background: #0B0F19;
+      padding: 4px;
+      border-radius: 12px;
+      gap: 4px;
+    }
+    .device-tab {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .device-tab.active {
+      background: #1E293B;
+      color: #fff;
+    }
+    .device-frame-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 0;
+      background: #0B0F19;
+      border-radius: 16px;
+      min-height: 820px;
+    }
+    .phone-mockup {
+      width: 412px;
+      height: 840px;
+      border-radius: 40px;
+      background: #000;
+      border: 12px solid #1E293B;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+      position: relative;
+    }
+    .phone-mockup iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    footer {
+      text-align: center;
+      padding: 32px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--card-border);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-container">
+      <div class="logo-badge">🌾</div>
+      <div>
+        <div class="brand-title">GaonBazaar — गाँव बाज़ार</div>
+        <div class="brand-subtitle">Rural Hyperlocal Delivery Platform • Minapur Pilot (Muzaffarpur, Bihar)</div>
+      </div>
+    </div>
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      <span>Live Cloud Backend: Connected</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Live Application Suite Previews</h1>
+      <p>Click any application card below to launch its full-screen mobile interface, or explore directly using the interactive device preview below.</p>
+    </div>
+
+    <div class="cards-grid">
+      <!-- 1. Customer App -->
+      <a href="customer/" target="_blank" class="app-card card-customer">
+        <div class="app-card-icon">🛒</div>
+        <span class="app-card-badge">Customer Native</span>
+        <h3 class="app-card-title">Customer App</h3>
+        <p class="app-card-desc">Bilingual Hindi/English shopping experience with voice microphone AI shopping, GPS location detection, village catalog browsing, and instant order tracking.</p>
+        <div class="btn-launch">Launch Customer App ↗</div>
+      </a>
+
+      <!-- 2. Vendor App -->
+      <a href="vendor/" target="_blank" class="app-card card-vendor">
+        <div class="app-card-icon">🏪</div>
+        <span class="app-card-badge">Merchant Partner</span>
+        <h3 class="app-card-title">Vendor App</h3>
+        <p class="app-card-desc">Shopkeeper inventory manager, order accept/pack workflows, quick product library synchronization, and daily earnings ledger.</p>
+        <div class="btn-launch">Launch Vendor App ↗</div>
+      </a>
+
+      <!-- 3. Runner App -->
+      <a href="runner/" target="_blank" class="app-card card-runner">
+        <div class="app-card-icon">🛵</div>
+        <span class="app-card-badge">Delivery Fleet</span>
+        <h3 class="app-card-title">Runner App</h3>
+        <p class="app-card-desc">Local delivery partner job radar, route guidance, store pickup verification, and secure 4-digit customer delivery OTP confirmation.</p>
+        <div class="btn-launch">Launch Runner App ↗</div>
+      </a>
+
+      <!-- 4. Super Admin Web Portal -->
+      <a href="admin/" target="_blank" class="app-card card-admin">
+        <div class="app-card-icon">⚡</div>
+        <span class="app-card-badge">Operations Portal</span>
+        <h3 class="app-card-title">Super Admin Portal</h3>
+        <p class="app-card-desc">React & TypeScript web portal for platform oversight: vendor KYC approvals, runner onboarding, catalog curation, and real-time delivery tracking.</p>
+        <div class="btn-launch">Launch Admin Portal ↗</div>
+      </a>
+    </div>
+
+    <!-- Interactive In-Browser Live Device Sandbox -->
+    <section class="preview-section">
+      <div class="preview-header">
+        <div class="preview-title">
+          <h2>Interactive Device Sandbox</h2>
+          <p>Switch between the real Flutter applications below to test live features in accurate mobile dimensions.</p>
+        </div>
+        <div class="device-tabs">
+          <button class="device-tab active" onclick="switchApp('customer/')">Customer</button>
+          <button class="device-tab" onclick="switchApp('vendor/')">Vendor</button>
+          <button class="device-tab" onclick="switchApp('runner/')">Runner</button>
+          <button class="device-tab" onclick="switchApp('admin/')">Admin</button>
+        </div>
+      </div>
+      <div class="device-frame-container">
+        <div class="phone-mockup" id="phoneMockup">
+          <iframe id="appFrame" src="customer/"></iframe>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    GaonBazaar Autonomous Engineering Platform • Connected Backend: <code>https://gaonbazaar-village.onrender.com/api/v1</code>
+  </footer>
+
+  <script>
+    function switchApp(path) {
+      const frame = document.getElementById('appFrame');
+      const mockup = document.getElementById('phoneMockup');
+      const tabs = document.querySelectorAll('.device-tab');
+      
+      tabs.forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+
+      if (path === 'admin/') {
+        mockup.style.width = '100%';
+        mockup.style.maxWidth = '1100px';
+        mockup.style.borderRadius = '16px';
+        mockup.style.borderWidth = '4px';
+      } else {
+        mockup.style.width = '412px';
+        mockup.style.maxWidth = '412px';
+        mockup.style.borderRadius = '40px';
+        mockup.style.borderWidth = '12px';
+      }
+      frame.src = path;
+    }
+  </script>
+</body>
+</html>
