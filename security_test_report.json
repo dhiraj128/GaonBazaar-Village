@@ -1,0 +1,423 @@
+{
+  "summary": {
+    "total_tests": 63,
+    "passed": 63,
+    "failed": 0,
+    "pass_rate_pct": 100.0,
+    "duration_seconds": 19.876
+  },
+  "isolation_domains": {
+    "customer_isolation": "ENFORCED_AND_VERIFIED",
+    "vendor_isolation": "ENFORCED_AND_VERIFIED",
+    "runner_isolation": "ENFORCED_AND_VERIFIED",
+    "admin_privilege_boundary": "ENFORCED_AND_VERIFIED",
+    "concurrency_overselling_protection": "ENFORCED_AND_VERIFIED",
+    "concurrency_single_runner_assignment": "ENFORCED_AND_VERIFIED",
+    "financial_ledger_integrity": "ENFORCED_AND_VERIFIED",
+    "platform_fee_deterministic_inr_3": "ENFORCED_AND_VERIFIED",
+    "duplicate_refund_prevention": "ENFORCED_AND_VERIFIED"
+  },
+  "concurrency_benchmarks": [
+    {
+      "batch_size": 10,
+      "throughput_rps": 36.92,
+      "p50_ms": 209.6,
+      "p95_ms": 268.3,
+      "error_rate_pct": 0.0
+    },
+    {
+      "batch_size": 25,
+      "throughput_rps": 33.23,
+      "p50_ms": 196.8,
+      "p95_ms": 652.8,
+      "error_rate_pct": 0.0
+    },
+    {
+      "batch_size": 50,
+      "throughput_rps": 34.36,
+      "p50_ms": 139.7,
+      "p95_ms": 1111.3,
+      "error_rate_pct": 0.0
+    }
+  ],
+  "tests": [
+    {
+      "name": "test_admin_settings_dynamic_update_and_audit",
+      "suite": "tests.test_admin_audit",
+      "time_seconds": 0.092,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_admin_customer_management_and_tickets",
+      "suite": "tests.test_admin_audit",
+      "time_seconds": 0.129,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_admin_vendor_and_runner_approval_flow",
+      "suite": "tests.test_admin_audit",
+      "time_seconds": 0.069,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_ai_query_hindi_atta",
+      "suite": "tests.test_ai",
+      "time_seconds": 0.03,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_ai_query_hinglish_milk",
+      "suite": "tests.test_ai",
+      "time_seconds": 0.061,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_ai_query_show_cart",
+      "suite": "tests.test_ai",
+      "time_seconds": 0.025,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_ai_query_remove",
+      "suite": "tests.test_ai",
+      "time_seconds": 0.023,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_root_and_health",
+      "suite": "tests.test_api_endpoints",
+      "time_seconds": 0.028,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_otp_send_and_verify_flow",
+      "suite": "tests.test_api_endpoints",
+      "time_seconds": 0.039,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_nearby_stores_and_two_featured_rule",
+      "suite": "tests.test_api_endpoints",
+      "time_seconds": 0.03,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_concurrent_inventory_overselling_protection",
+      "suite": "tests.test_concurrent_orders_load",
+      "time_seconds": 1.509,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_concurrent_runner_assignment_race_condition",
+      "suite": "tests.test_concurrent_orders_load",
+      "time_seconds": 0.379,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_concurrent_order_load_benchmarks_and_metrics",
+      "suite": "tests.test_concurrent_orders_load",
+      "time_seconds": 4.668,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_full_cross_platform_lifecycle",
+      "suite": "tests.test_cross_platform_integration",
+      "time_seconds": 0.291,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_supabase_direct_to_pooler_normalization",
+      "suite": "tests.test_database_url_normalization",
+      "time_seconds": 0.032,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_password_special_characters_encoded",
+      "suite": "tests.test_database_url_normalization",
+      "time_seconds": 0.03,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_pooler_url_preserves_custom_port_and_user_ref",
+      "suite": "tests.test_database_url_normalization",
+      "time_seconds": 0.032,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_sqlite_urls_unaltered",
+      "suite": "tests.test_database_url_normalization",
+      "time_seconds": 0.031,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_health_endpoints",
+      "suite": "tests.test_database_url_normalization",
+      "time_seconds": 0.032,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_full_order_and_delivery_lifecycle",
+      "suite": "tests.test_e2e_flow",
+      "time_seconds": 0.19,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_haversine_distance_calculation",
+      "suite": "tests.test_geo",
+      "time_seconds": 0.045,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_service_radius_enforcement",
+      "suite": "tests.test_geo",
+      "time_seconds": 0.034,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_nearest_pilot_locality",
+      "suite": "tests.test_geo",
+      "time_seconds": 0.032,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_strict_customer_isolation_orders_and_idor",
+      "suite": "tests.test_multi_user_isolation_and_security",
+      "time_seconds": 0.147,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_strict_customer_address_and_notification_isolation",
+      "suite": "tests.test_multi_user_isolation_and_security",
+      "time_seconds": 0.086,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_strict_vendor_isolation",
+      "suite": "tests.test_multi_user_isolation_and_security",
+      "time_seconds": 3.687,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_strict_runner_isolation_and_address_masking",
+      "suite": "tests.test_multi_user_isolation_and_security",
+      "time_seconds": 0.854,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_payment_security_and_duplicate_refund_prevention",
+      "suite": "tests.test_multi_user_isolation_and_security",
+      "time_seconds": 0.154,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_authentication_token_tampering_and_role_escalation",
+      "suite": "tests.test_multi_user_isolation_and_security",
+      "time_seconds": 0.085,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_notifications_lifecycle",
+      "suite": "tests.test_notifications",
+      "time_seconds": 0.06,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_eight_km_radius_enforcement_on_order_creation",
+      "suite": "tests.test_order_security",
+      "time_seconds": 0.069,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_price_manipulation_protection",
+      "suite": "tests.test_order_security",
+      "time_seconds": 0.083,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_order_cancellation_enforces_180s_window",
+      "suite": "tests.test_order_security",
+      "time_seconds": 0.099,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_delivery_otp_verification_security",
+      "suite": "tests.test_order_security",
+      "time_seconds": 0.176,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_otp_database_persistence_across_memory_wipe",
+      "suite": "tests.test_otp_database_persistence",
+      "time_seconds": 0.056,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_staging_personas_customer_vendor_runner_login",
+      "suite": "tests.test_otp_database_persistence",
+      "time_seconds": 0.082,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_public_user_random_otp_and_sms_status",
+      "suite": "tests.test_otp_database_persistence",
+      "time_seconds": 0.043,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_vendor_order_cross_account_isolation",
+      "suite": "tests.test_p0_security_and_financial_defects",
+      "time_seconds": 0.128,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_runner_delivery_cross_account_and_prerequisites",
+      "suite": "tests.test_p0_security_and_financial_defects",
+      "time_seconds": 0.197,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_payment_status_integrity_and_simulation",
+      "suite": "tests.test_p0_security_and_financial_defects",
+      "time_seconds": 0.102,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_otp_security_and_admin_isolation",
+      "suite": "tests.test_p0_security_and_financial_defects",
+      "time_seconds": 0.05,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_razorpay_order_and_verify_flow",
+      "suite": "tests.test_payments",
+      "time_seconds": 0.168,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_order_security_and_delivery_otp_isolation",
+      "suite": "tests.test_payments",
+      "time_seconds": 3.727,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_razorpay_verify_security_and_idor",
+      "suite": "tests.test_payments",
+      "time_seconds": 0.098,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_razorpay_webhook_validation",
+      "suite": "tests.test_payments",
+      "time_seconds": 0.079,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_proposed_five_tier_delivery_pricing",
+      "suite": "tests.test_pricing",
+      "time_seconds": 0.028,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_multi_order_batch_payout_algorithm",
+      "suite": "tests.test_pricing",
+      "time_seconds": 0.027,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_strict_platform_fee_and_deterministic_totals",
+      "suite": "tests.test_pricing",
+      "time_seconds": 0.044,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_full_and_partial_refund_lifecycle",
+      "suite": "tests.test_refunds_and_replacements",
+      "time_seconds": 0.116,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_cod_order_refund_handling",
+      "suite": "tests.test_refunds_and_replacements",
+      "time_seconds": 0.076,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_replacement_workflow_and_zero_cost",
+      "suite": "tests.test_refunds_and_replacements",
+      "time_seconds": 0.07,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_runner_payout_pricing_matrix_alignment",
+      "suite": "tests.test_refunds_and_replacements",
+      "time_seconds": 0.045,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_role_authentication_and_token_generation",
+      "suite": "tests.test_security_roles",
+      "time_seconds": 0.08,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_unapproved_vendor_not_in_customer_store_list",
+      "suite": "tests.test_security_roles",
+      "time_seconds": 0.07,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_address_ownership_isolation",
+      "suite": "tests.test_security_roles",
+      "time_seconds": 0.084,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_otp_bypass_restricted_for_public_numbers",
+      "suite": "tests.test_staging_security",
+      "time_seconds": 0.06,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_admin_authentication_and_route_protection",
+      "suite": "tests.test_staging_security",
+      "time_seconds": 0.062,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_financial_safeguards_for_test_accounts",
+      "suite": "tests.test_staging_security",
+      "time_seconds": 0.097,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_customer_profile_update_and_support_hub",
+      "suite": "tests.test_support_and_profile",
+      "time_seconds": 0.095,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_profile_avatar_and_village_details",
+      "suite": "tests.test_support_and_profile",
+      "time_seconds": 0.074,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_order_scoped_chat_and_location_sharing",
+      "suite": "tests.test_support_and_profile",
+      "time_seconds": 0.144,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_twenty_step_integrated_journey",
+      "suite": "tests.test_twenty_step_integration",
+      "time_seconds": 0.385,
+      "status": "PASSED"
+    },
+    {
+      "name": "test_vendor_and_runner_endpoints_and_actions",
+      "suite": "tests.test_vendor_runner_repair",
+      "time_seconds": 0.134,
+      "status": "PASSED"
+    }
+  ]
+}

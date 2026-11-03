@@ -114,9 +114,45 @@ async def create_order(
         prod = p_res.scalars().first()
         if not prod:
             raise HTTPException(status_code=400, detail=f"Product {itm.product_id} unavailable in selected store")
+        if not prod.in_stock:
+            raise HTTPException(status_code=400, detail=f"Product '{prod.custom_name_en or prod.id}' is currently out of stock")
+        if prod.stock_quantity is not None and prod.stock_quantity < itm.quantity:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Insufficient stock for '{prod.custom_name_en or prod.id}'. Requested {itm.quantity}, available: {prod.stock_quantity}"
+            )
             
         line_total = prod.price * itm.quantity
         subtotal += line_total
+        
+        # Atomic inventory decrement to prevent concurrent overselling race conditions
+        from sqlalchemy import update, case
+        stmt_stock = (
+            update(StoreProduct)
+            .where(
+                StoreProduct.id == prod.id,
+                StoreProduct.store_id == data.store_id,
+                StoreProduct.in_stock == True,
+                (StoreProduct.stock_quantity.is_(None) | (StoreProduct.stock_quantity >= itm.quantity))
+            )
+            .values(
+                stock_quantity=case(
+                    (StoreProduct.stock_quantity.is_(None), None),
+                    else_=StoreProduct.stock_quantity - itm.quantity
+                ),
+                in_stock=case(
+                    (StoreProduct.stock_quantity.is_(None), True),
+                    ((StoreProduct.stock_quantity - itm.quantity) <= 0, False),
+                    else_=True
+                )
+            )
+        )
+        res_stock = await db.execute(stmt_stock)
+        if res_stock.rowcount == 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Insufficient stock for '{prod.custom_name_en or prod.id}'. The product has just sold out or does not have {itm.quantity} units remaining."
+            )
         
         name_en = prod.custom_name_en or (prod.global_item.name_en if prod.global_item else "Product")
         name_hi = prod.custom_name_hi or (prod.global_item.name_hi if prod.global_item else "उत्पाद")
@@ -280,6 +316,16 @@ async def create_support_ticket(
     db: AsyncSession = Depends(get_db)
 ):
     user_id = payload.get("sub")
+    role = payload.get("role")
+    
+    if req.order_id:
+        o_res = await db.execute(select(Order).where(Order.id == req.order_id))
+        order = o_res.scalars().first()
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        if order.customer_id != user_id and role != "admin":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to raise support ticket for another customer's order")
+
     ticket = SupportTicket(
         user_id=user_id,
         order_id=req.order_id,
@@ -306,7 +352,7 @@ async def cancel_order(
     db: AsyncSession = Depends(get_db)
 ):
     user_id = payload.get("sub")
-    res = await db.execute(select(Order).where(Order.id == order_id))
+    res = await db.execute(select(Order).options(selectinload(Order.items)).where(Order.id == order_id))
     order = res.scalars().first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
@@ -328,6 +374,15 @@ async def cancel_order(
     order.status = "CANCELLED"
     if order.payment_status == "PAID":
         order.payment_status = "REFUNDED"
+
+    # Restore inventory upon cancellation
+    for itm in order.items:
+        p_res = await db.execute(select(StoreProduct).where(StoreProduct.id == itm.product_id))
+        p = p_res.scalars().first()
+        if p and p.stock_quantity is not None:
+            p.stock_quantity += itm.quantity
+            if p.stock_quantity > 0:
+                p.in_stock = True
     db.add(OrderTimeline(
         order_id=order.id,
         status="CANCELLED",
@@ -405,16 +460,23 @@ async def list_runner_jobs(
     db: AsyncSession = Depends(get_db)
 ):
     user_id = payload.get("sub")
+    role = payload.get("role")
     r_res = await db.execute(select(Runner).where(Runner.user_id == user_id))
     runner = r_res.scalars().first()
     
-    # Available jobs (PACKED or assigned to this runner)
+    if role != "admin":
+        if not runner:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Runner profile required to access delivery jobs")
+        if not runner.is_approved:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Runner account is pending administrative approval")
+    
+    # Available jobs (PACKED and unassigned, OR assigned to this runner)
     if runner:
         query = select(Order.id).where(
-            (Order.status == "PACKED") | (Order.runner_id == runner.id)
+            ((Order.status == "PACKED") & (Order.runner_id.is_(None))) | (Order.runner_id == runner.id)
         ).order_by(Order.placed_at.desc())
     else:
-        query = select(Order.id).where(Order.status == "PACKED").order_by(Order.placed_at.desc())
+        query = select(Order.id).where((Order.status == "PACKED") & (Order.runner_id.is_(None))).order_by(Order.placed_at.desc())
         
     orders_res = await db.execute(query)
     order_ids = orders_res.scalars().all()
@@ -674,13 +736,36 @@ async def runner_job_action(
     now = datetime.now(timezone.utc)
     
     if act == "ACCEPT":
-        if order.status not in ["PACKED", "ACCEPTED"]:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot ACCEPT job in status '{order.status}'. Order must be 'PACKED' or 'ACCEPTED'.")
-        if order.runner_id and runner and order.runner_id != runner.id and not is_admin:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Order has already been assigned to another delivery runner")
+        # Atomic conditional update to prevent concurrent claiming race conditions
+        from sqlalchemy import update
+        target_runner_id = runner.id if runner else None
+        stmt_accept = (
+            update(Order)
+            .where(
+                Order.id == order.id,
+                Order.status.in_(["PACKED", "ACCEPTED"]),
+                (Order.runner_id.is_(None) | (Order.runner_id == target_runner_id))
+            )
+            .values(
+                runner_id=target_runner_id,
+                status="RUNNER_ASSIGNED"
+            )
+        )
+        res_accept = await db.execute(stmt_accept)
+        if res_accept.rowcount == 0 and not is_admin:
+            # Check why it couldn't be claimed
+            check_res = await db.execute(select(Order).where(Order.id == order_id))
+            latest_order = check_res.scalars().first()
+            if latest_order and (
+                (latest_order.runner_id and runner and latest_order.runner_id != runner.id) or
+                latest_order.status in ["RUNNER_ASSIGNED", "PICKED_UP", "OUT_FOR_DELIVERY", "DELIVERED"]
+            ):
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Order has already been assigned to another delivery runner")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot ACCEPT job in status '{latest_order.status if latest_order else order.status}'.")
+
+        order.status = "RUNNER_ASSIGNED"
         if runner:
             order.runner_id = runner.id
-        order.status = "RUNNER_ASSIGNED"
         title = "डिलीवरी साथी तय हुआ (Runner Assigned)"
     elif act in ["PICKUP", "PICKED_UP"]:
         if not is_admin and runner and order.runner_id != runner.id:
@@ -782,6 +867,26 @@ async def _format_order_response(
     is_admin = (role == "admin")
     exposed_otp = order.delivery_otp if (is_cust or is_admin) else None
     
+    # Section 4 - Strict Runner Isolation & Privacy:
+    # Runner cannot see customer's full address before accepting the order (minimal discovery info).
+    # Once assigned, only the assigned runner sees the delivery address.
+    is_assigned_runner = (
+        order.runner and (
+            order.runner.user_id == current_user_id or 
+            ("user" in order.runner.__dict__ and order.runner.user and order.runner.user.id == current_user_id)
+        )
+    )
+    if role == "runner" and not is_assigned_runner and not is_admin:
+        deliv_addr = (
+            f"Village: {order.delivery_address.village} (Full address visible upon accepting mission)"
+            if order.delivery_address else "Village: Local (Full address visible upon accepting mission)"
+        )
+    else:
+        deliv_addr = (
+            f"{order.delivery_address.village}, {order.delivery_address.landmark + ', ' if order.delivery_address.landmark else ''}{order.delivery_address.block}, {order.delivery_address.district}"
+            if order.delivery_address else "Minapur, Muzaffarpur"
+        )
+    
     payout_val = getattr(order, "runner_payout", None)
     if payout_val is None:
         if order.delivery_fee <= 15.0: payout_val = 10.0
@@ -802,10 +907,7 @@ async def _format_order_response(
             if (order.runner and "user" in order.runner.__dict__ and order.runner.user and hasattr(order.runner.user, "phone"))
             else ("9800000003" if order.runner else None)
         ),
-        delivery_address=(
-            f"{order.delivery_address.village}, {order.delivery_address.landmark + ', ' if order.delivery_address.landmark else ''}{order.delivery_address.block}, {order.delivery_address.district}"
-            if order.delivery_address else "Minapur, Muzaffarpur"
-        ),
+        delivery_address=deliv_addr,
         status=order.status,
         subtotal=order.subtotal,
         delivery_fee=order.delivery_fee,
