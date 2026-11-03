@@ -61,3 +61,4 @@ packages/*/build/
 Thumbs.db
 
 scratch/
+physical_*.png

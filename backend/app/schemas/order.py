@@ -64,6 +64,7 @@ class OrderResponse(BaseModel):
     payment_order_id: Optional[str] = None
     transaction_id: Optional[str] = None
     delivery_otp: Optional[str] = None
+    runner_payout: Optional[float] = None
     placed_at: datetime
     cancel_until: datetime
     can_cancel: bool
@@ -74,6 +75,7 @@ class OrderResponse(BaseModel):
 class OrderActionRequest(BaseModel):
     action: str # ACCEPT, REJECT, PACKED, PICKUP, DELIVER
     delivery_otp: Optional[str] = None
+    runner_payout: Optional[float] = None
     cash_collected: Optional[bool] = None
     reason: Optional[str] = None
 

@@ -224,7 +224,7 @@ async def test_full_cross_platform_lifecycle():
         assert runner_fin_res.status_code == 200
         r_fin = runner_fin_res.json()
         assert r_fin["total_deliveries_count"] >= 1
-        assert r_fin["total_delivery_earnings"] >= 15.0
+        assert r_fin["total_delivery_earnings"] >= 10.0  # Approved 5-tier matrix: Tier 1 (0-1km) runner payout is ₹10.0
 
         # 9. Super Admin Overview
         admin_overview_res = await client.get("/api/v1/admin/overview", headers=adm_headers)

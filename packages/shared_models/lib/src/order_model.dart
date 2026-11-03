@@ -76,6 +76,7 @@ class GBOrder {
   final String paymentMethod;
   final String paymentStatus;
   final String deliveryOtp;
+  final double? runnerPayout;
   final DateTime placedAt;
   final DateTime cancelUntil;
   final bool canCancel;
@@ -100,6 +101,7 @@ class GBOrder {
     required this.paymentMethod,
     required this.paymentStatus,
     required this.deliveryOtp,
+    this.runnerPayout,
     required this.placedAt,
     required this.cancelUntil,
     required this.canCancel,
@@ -126,6 +128,7 @@ class GBOrder {
       paymentMethod: json['payment_method'] as String,
       paymentStatus: json['payment_status'] as String,
       deliveryOtp: json['delivery_otp'] as String? ?? '',
+      runnerPayout: (json['runner_payout'] as num?)?.toDouble() ?? _deriveRunnerPayout((json['delivery_fee'] as num).toDouble()),
       placedAt: DateTime.parse(json['placed_at'] as String),
       cancelUntil: DateTime.parse(json['cancel_until'] as String),
       canCancel: json['can_cancel'] as bool? ?? false,
@@ -139,6 +142,14 @@ class GBOrder {
               .toList() ??
           [],
     );
+  }
+
+  static double _deriveRunnerPayout(double deliveryFee) {
+    if (deliveryFee <= 15.0) return 10.0;
+    if (deliveryFee <= 20.0) return 14.0;
+    if (deliveryFee <= 25.0) return 18.0;
+    if (deliveryFee <= 30.0) return 22.0;
+    return 28.0;
   }
 }
 

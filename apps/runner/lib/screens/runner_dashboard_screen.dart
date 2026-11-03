@@ -1017,7 +1017,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  '${isHi ? "कमाई" : "Earn"}: ₹${order.deliveryFee.toStringAsFixed(0)}',
+                  '${isHi ? "कमाई" : "Earn"}: ₹${(order.runnerPayout ?? order.deliveryFee).toStringAsFixed(0)}',
                   style: const TextStyle(fontWeight: FontWeight.w800, color: GBColors.primary, fontSize: 12),
                 ),
               ),
@@ -1182,7 +1182,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
           const SizedBox(height: 14),
 
           // Action Buttons
-          _buildActionButtons(state, order.id, order.status, order.deliveryOtp, order.deliveryFee, isCod, order.totalAmount, isHi),
+          _buildActionButtons(state, order.id, order.status, order.deliveryOtp, order.runnerPayout ?? order.deliveryFee, isCod, order.totalAmount, isHi),
         ],
       ),
     );

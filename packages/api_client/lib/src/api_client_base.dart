@@ -1158,4 +1158,58 @@ class GBApiClient {
     }
   }
 
+  Future<ApiResponse<Map<String, dynamic>>> createRefund({
+    required String orderId,
+    double? amount,
+    String? reason,
+    String? refundType,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/payments/refund'),
+        headers: _headers(),
+        body: jsonEncode({
+          'order_id': orderId,
+          if (amount != null) 'amount': amount,
+          if (reason != null) 'reason': reason,
+          if (refundType != null) 'refund_type': refundType,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> requestReplacement({
+    required String orderId,
+    required String reason,
+    required String itemsJson,
+    String? ticketId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/orders/$orderId/replacement'),
+        headers: _headers(),
+        body: jsonEncode({
+          'reason': reason,
+          'items_json': itemsJson,
+          if (ticketId != null) 'ticket_id': ticketId,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
 }

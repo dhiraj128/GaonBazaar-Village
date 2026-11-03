@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.db.session import get_db
 from pydantic import BaseModel
 from app.models.base import (
+    Replacement,
     Order, OrderItem, OrderTimeline, Store, StoreProduct, Address, User, Runner, SupportTicket, OrderMessage
 )
 
@@ -439,7 +440,12 @@ async def get_runner_finances(
         select(Order).where(Order.runner_id == runner.id, Order.status == "DELIVERED")
     )
     delivered_orders = orders_res.scalars().all()
-    total_delivery_fees = sum(o.delivery_fee for o in delivered_orders)
+    # Authoritative server-side runner payout from pricing matrix (₹10-₹28), not raw customer delivery fee
+    total_delivery_fees = sum(
+        getattr(o, 'runner_payout', None) if getattr(o, 'runner_payout', None) is not None
+        else (10.0 if o.delivery_fee <= 15.0 else (14.0 if o.delivery_fee <= 20.0 else (18.0 if o.delivery_fee <= 25.0 else (22.0 if o.delivery_fee <= 30.0 else 28.0))))
+        for o in delivered_orders
+    )
     
     return {
         "runner_id": runner.id,
@@ -524,7 +530,12 @@ async def get_runner_profile(
         select(Order).where(Order.runner_id == runner.id, Order.status == "DELIVERED")
     )
     delivered_orders = orders_res.scalars().all()
-    total_delivery_fees = sum(o.delivery_fee for o in delivered_orders)
+    # Authoritative server-side runner payout from pricing matrix (₹10-₹28), not raw customer delivery fee
+    total_delivery_fees = sum(
+        getattr(o, 'runner_payout', None) if getattr(o, 'runner_payout', None) is not None
+        else (10.0 if o.delivery_fee <= 15.0 else (14.0 if o.delivery_fee <= 20.0 else (18.0 if o.delivery_fee <= 25.0 else (22.0 if o.delivery_fee <= 30.0 else 28.0))))
+        for o in delivered_orders
+    )
     cash_to_remit = sum(o.total_amount for o in delivered_orders if o.payment_method == "COD" and o.payment_status == "PAID")
 
     return {
@@ -724,7 +735,7 @@ async def _format_order_response(
         select(Order)
         .options(
             selectinload(Order.store),
-            selectinload(Order.runner),
+            selectinload(Order.runner).selectinload(Runner.user),
             selectinload(Order.delivery_address),
             selectinload(Order.items),
             selectinload(Order.timeline)
@@ -771,6 +782,14 @@ async def _format_order_response(
     is_admin = (role == "admin")
     exposed_otp = order.delivery_otp if (is_cust or is_admin) else None
     
+    payout_val = getattr(order, "runner_payout", None)
+    if payout_val is None:
+        if order.delivery_fee <= 15.0: payout_val = 10.0
+        elif order.delivery_fee <= 20.0: payout_val = 14.0
+        elif order.delivery_fee <= 25.0: payout_val = 18.0
+        elif order.delivery_fee <= 30.0: payout_val = 22.0
+        else: payout_val = 28.0
+
     return OrderResponse(
         id=order.id,
         customer_id=order.customer_id,
@@ -778,7 +797,11 @@ async def _format_order_response(
         store_name=order.store.shop_name if order.store else "GaonBazaar Store",
         runner_id=order.runner_id,
         runner_name=order.runner.full_name if order.runner else None,
-        runner_phone="9876543210" if order.runner else None,
+        runner_phone=(
+            order.runner.user.phone
+            if (order.runner and "user" in order.runner.__dict__ and order.runner.user and hasattr(order.runner.user, "phone"))
+            else ("9800000003" if order.runner else None)
+        ),
         delivery_address=(
             f"{order.delivery_address.village}, {order.delivery_address.landmark + ', ' if order.delivery_address.landmark else ''}{order.delivery_address.block}, {order.delivery_address.district}"
             if order.delivery_address else "Minapur, Muzaffarpur"
@@ -793,6 +816,7 @@ async def _format_order_response(
         payment_order_id=getattr(order, "payment_order_id", None),
         transaction_id=getattr(order, "transaction_id", None),
         delivery_otp=exposed_otp,
+        runner_payout=payout_val,
         placed_at=order.placed_at,
         cancel_until=order.cancel_until,
         can_cancel=can_cancel,
@@ -886,3 +910,69 @@ async def send_order_message(
     await db.commit()
     await db.refresh(msg)
     return msg
+
+class RequestReplacementData(BaseModel):
+    reason: str
+    items_json: str
+    ticket_id: Optional[str] = None
+
+@router.post("/orders/{order_id}/replacement")
+async def request_order_replacement(
+    order_id: str,
+    data: RequestReplacementData,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Customer requests a free replacement for damaged, missing, or wrong items.
+    Must be reviewed and authorized by admin before vendor packing and runner dispatch.
+    """
+    user_id = payload.get("sub")
+    res = await db.execute(select(Order).where(Order.id == order_id))
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if order.customer_id != user_id and payload.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized to request replacement for this order")
+
+    if order.status != "DELIVERED":
+        raise HTTPException(status_code=400, detail="Replacement can only be requested for delivered orders")
+
+    import random
+    replacement_otp = str(random.randint(1000, 9999))
+    now = datetime.now(timezone.utc)
+
+    replacement = Replacement(
+        original_order_id=order.id,
+        ticket_id=data.ticket_id,
+        customer_id=user_id,
+        store_id=order.store_id,
+        status="REQUESTED",
+        reason=data.reason,
+        items_json=data.items_json,
+        customer_due=0.0, # Strictly ₹0 for approved free replacement
+        delivery_otp=replacement_otp,
+        created_at=now,
+        updated_at=now
+    )
+    db.add(replacement)
+
+    db.add(OrderTimeline(
+        order_id=order.id,
+        status=order.status,
+        title="सामग्री प्रतिस्थापन अनुरोध (Replacement Requested)",
+        description=f"Customer requested replacement: {data.reason}",
+        timestamp=now
+    ))
+    await db.commit()
+    await db.refresh(replacement)
+
+    return {
+        "id": replacement.id,
+        "original_order_id": replacement.original_order_id,
+        "status": replacement.status,
+        "reason": replacement.reason,
+        "customer_due": replacement.customer_due,
+        "message": "Replacement request submitted. Super Admin will verify and dispatch free replacement."
+    }

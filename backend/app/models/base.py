@@ -117,6 +117,7 @@ class Store(Base):
     commission_rate = Column(Float, default=0.0) # Strict 0% introductory rate
     upi_id = Column(String(100), nullable=True)
     bank_account_info = Column(Text, nullable=True)
+    rejection_reason = Column(Text, nullable=True)
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     
     owner = relationship("User", back_populates="store")
@@ -137,6 +138,7 @@ class Runner(Base):
     current_latitude = Column(Float, nullable=True)
     current_longitude = Column(Float, nullable=True)
     upi_id = Column(String(100), nullable=True)
+    rejection_reason = Column(Text, nullable=True)
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     
     user = relationship("User", back_populates="runner")
@@ -188,6 +190,8 @@ class Order(Base):
     delivery_fee = Column(Float, nullable=False)
     platform_fee = Column(Float, default=3.0) # Strict ₹3 platform fee
     total_amount = Column(Float, nullable=False)
+    distance_km = Column(Float, default=0.8)
+    runner_payout = Column(Float, default=10.0)
     
     payment_method = Column(String(20), default="COD") # COD, ONLINE
     payment_status = Column(String(20), default="PENDING") # PENDING, PAID, REFUNDED
@@ -207,6 +211,8 @@ class Order(Base):
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
     timeline = relationship("OrderTimeline", back_populates="order", cascade="all, delete-orphan")
     messages = relationship("OrderMessage", back_populates="order", cascade="all, delete-orphan")
+    refunds = relationship("Refund", back_populates="order", cascade="all, delete-orphan")
+    replacements = relationship("Replacement", back_populates="order", cascade="all, delete-orphan")
 
 class OrderItem(Base):
     __tablename__ = "order_items"
@@ -317,3 +323,45 @@ class Notification(Base):
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="notifications")
+
+
+class Refund(Base):
+    __tablename__ = "refunds"
+    
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    order_id = Column(String(36), ForeignKey("orders.id"), nullable=False, index=True)
+    payment_id = Column(String(100), nullable=True) # Razorpay payment ID or COD reference
+    gateway_refund_id = Column(String(100), nullable=True) # Genuine gateway refund ID
+    amount = Column(Float, nullable=False) # Rupees
+    currency = Column(String(10), default="INR")
+    reason = Column(String(255), nullable=True)
+    status = Column(String(30), default="COMPLETED") # PENDING, PROCESSING, COMPLETED, FAILED
+    refund_type = Column(String(30), default="FULL") # FULL, PARTIAL, ITEM_LEVEL
+    created_by = Column(String(36), ForeignKey("users.id"), nullable=True)
+    admin_notes = Column(Text, nullable=True)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    order = relationship("Order", back_populates="refunds")
+
+
+class Replacement(Base):
+    __tablename__ = "replacements"
+    
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    original_order_id = Column(String(36), ForeignKey("orders.id"), nullable=False, index=True)
+    ticket_id = Column(String(36), ForeignKey("support_tickets.id"), nullable=True)
+    customer_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    store_id = Column(String(36), ForeignKey("stores.id"), nullable=False)
+    runner_id = Column(String(36), ForeignKey("runners.id"), nullable=True)
+    status = Column(String(30), default="REQUESTED") # REQUESTED, APPROVED, REJECTED, VENDOR_CONFIRMED, ASSIGNED, PICKED_UP, DELIVERED, CANCELLED
+    reason = Column(String(255), nullable=False)
+    items_json = Column(Text, nullable=False) # JSON array of replacement items
+    customer_due = Column(Float, default=0.0) # Strictly ₹0 for approved free replacement
+    delivery_otp = Column(String(10), nullable=True)
+    admin_notes = Column(Text, nullable=True)
+    rejection_reason = Column(Text, nullable=True)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    order = relationship("Order", back_populates="replacements")

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.db.session import get_db
-from app.models.base import Store, Runner, Order, User, GlobalCatalogItem, OrderItem, SupportTicket, TicketMessage, AuditLog, Address, OrderTimeline
+from app.models.base import Store, Runner, Order, User, GlobalCatalogItem, OrderItem, SupportTicket, TicketMessage, AuditLog, Address, OrderTimeline, Refund, Replacement
 from app.core.config import settings
 from app.core.security import get_current_admin, create_access_token
 
@@ -523,3 +523,98 @@ async def get_audit_logs(db: AsyncSession = Depends(get_db), _admin: dict = Depe
     res = await db.execute(select(AuditLog).order_by(AuditLog.created_at.desc()))
     return res.scalars().all()
 
+
+
+@router.get("/refunds")
+async def get_all_refunds(
+    db: AsyncSession = Depends(get_db),
+    _admin: dict = Depends(get_current_admin)
+):
+    """
+    Lists all platform refunds with order reference, amount, status, and gateway refund ID.
+    """
+    res = await db.execute(select(Refund).order_by(Refund.created_at.desc()))
+    refunds = res.scalars().all()
+    return [
+        {
+            "id": r.id,
+            "order_id": r.order_id,
+            "payment_id": r.payment_id,
+            "gateway_refund_id": r.gateway_refund_id,
+            "amount": r.amount,
+            "currency": r.currency,
+            "reason": r.reason,
+            "status": r.status,
+            "refund_type": r.refund_type,
+            "created_at": r.created_at.isoformat() if r.created_at else None
+        }
+        for r in refunds
+    ]
+
+@router.get("/replacements")
+async def get_all_replacements(
+    db: AsyncSession = Depends(get_db),
+    _admin: dict = Depends(get_current_admin)
+):
+    """
+    Lists all customer replacement requests with items, status, and reason.
+    """
+    res = await db.execute(select(Replacement).order_by(Replacement.created_at.desc()))
+    replacements = res.scalars().all()
+    return [
+        {
+            "id": rep.id,
+            "original_order_id": rep.original_order_id,
+            "customer_id": rep.customer_id,
+            "store_id": rep.store_id,
+            "runner_id": rep.runner_id,
+            "status": rep.status,
+            "reason": rep.reason,
+            "items_json": rep.items_json,
+            "customer_due": rep.customer_due,
+            "delivery_otp": rep.delivery_otp,
+            "admin_notes": rep.admin_notes,
+            "created_at": rep.created_at.isoformat() if rep.created_at else None
+        }
+        for rep in replacements
+    ]
+
+@router.post("/replacements/{replacement_id}/approve")
+async def approve_replacement(
+    replacement_id: str,
+    db: AsyncSession = Depends(get_db),
+    _admin: dict = Depends(get_current_admin)
+):
+    """
+    Admin approves a replacement request, authorizing vendor to pack and runner to dispatch.
+    """
+    res = await db.execute(select(Replacement).where(Replacement.id == replacement_id))
+    rep = res.scalars().first()
+    if not rep:
+        raise HTTPException(status_code=404, detail="Replacement request not found")
+
+    rep.status = "APPROVED"
+    rep.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    return {"message": "Replacement approved successfully", "status": rep.status}
+
+@router.post("/replacements/{replacement_id}/reject")
+async def reject_replacement(
+    replacement_id: str,
+    rejection_reason: Optional[str] = "Item does not meet return policy criteria",
+    db: AsyncSession = Depends(get_db),
+    _admin: dict = Depends(get_current_admin)
+):
+    """
+    Admin rejects a replacement request with clear explanation.
+    """
+    res = await db.execute(select(Replacement).where(Replacement.id == replacement_id))
+    rep = res.scalars().first()
+    if not rep:
+        raise HTTPException(status_code=404, detail="Replacement request not found")
+
+    rep.status = "REJECTED"
+    rep.rejection_reason = rejection_reason
+    rep.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    return {"message": "Replacement rejected", "status": rep.status, "reason": rejection_reason}

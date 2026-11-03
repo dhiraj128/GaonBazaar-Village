@@ -54,6 +54,42 @@ async def init_db_and_seed():
             "ALTER TABLE support_tickets ADD COLUMN resolution_notes TEXT;",
             "ALTER TABLE support_tickets ADD COLUMN resolved_at TIMESTAMP WITH TIME ZONE;",
             "ALTER TABLE support_tickets ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE;",
+            "ALTER TABLE orders ADD COLUMN distance_km FLOAT DEFAULT 0.8;",
+            "ALTER TABLE orders ADD COLUMN runner_payout FLOAT DEFAULT 10.0;",
+            "ALTER TABLE stores ADD COLUMN rejection_reason TEXT;",
+            "ALTER TABLE runners ADD COLUMN rejection_reason TEXT;",
+            """CREATE TABLE IF NOT EXISTS refunds (
+                id VARCHAR(36) PRIMARY KEY,
+                order_id VARCHAR(36) NOT NULL REFERENCES orders(id),
+                payment_id VARCHAR(100),
+                gateway_refund_id VARCHAR(100),
+                amount FLOAT NOT NULL,
+                currency VARCHAR(10) DEFAULT 'INR',
+                reason VARCHAR(255),
+                status VARCHAR(30) DEFAULT 'COMPLETED',
+                refund_type VARCHAR(30) DEFAULT 'FULL',
+                created_by VARCHAR(36) REFERENCES users(id),
+                admin_notes TEXT,
+                created_at TIMESTAMP WITH TIME ZONE,
+                updated_at TIMESTAMP WITH TIME ZONE
+            );""",
+            """CREATE TABLE IF NOT EXISTS replacements (
+                id VARCHAR(36) PRIMARY KEY,
+                original_order_id VARCHAR(36) NOT NULL REFERENCES orders(id),
+                ticket_id VARCHAR(36) REFERENCES support_tickets(id),
+                customer_id VARCHAR(36) NOT NULL REFERENCES users(id),
+                store_id VARCHAR(36) NOT NULL REFERENCES stores(id),
+                runner_id VARCHAR(36) REFERENCES runners(id),
+                status VARCHAR(30) DEFAULT 'REQUESTED',
+                reason VARCHAR(255) NOT NULL,
+                items_json TEXT NOT NULL,
+                customer_due FLOAT DEFAULT 0.0,
+                delivery_otp VARCHAR(10),
+                admin_notes TEXT,
+                rejection_reason TEXT,
+                created_at TIMESTAMP WITH TIME ZONE,
+                updated_at TIMESTAMP WITH TIME ZONE
+            );""",
         ]:
             try:
                 await conn.execute(text(col_stmt))

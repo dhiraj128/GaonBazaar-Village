@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.db.session import get_db
-from app.models.base import Order, OrderTimeline
+from app.models.base import Order, OrderTimeline, Refund
 from app.core.security import get_current_user_payload
 from app.core.config import settings
 from datetime import datetime, timezone
@@ -291,3 +291,203 @@ async def razorpay_webhook(
         raise HTTPException(status_code=400, detail=f"Webhook processing error: {str(e)}")
 
     return {"status": "ok"}
+
+
+class CreateRefundRequest(BaseModel):
+    order_id: str
+    amount: Optional[float] = None
+    reason: Optional[str] = "Customer refund request"
+    refund_type: Optional[str] = "FULL"
+    admin_notes: Optional[str] = None
+
+class RefundDetailResponse(BaseModel):
+    id: str
+    order_id: str
+    payment_id: Optional[str]
+    gateway_refund_id: Optional[str]
+    amount: float
+    currency: str
+    reason: Optional[str]
+    status: str
+    refund_type: str
+    created_at: str
+
+@router.post("/refund", response_model=RefundDetailResponse)
+async def process_refund(
+    data: CreateRefundRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Processes authoritative order refund.
+    Validates ownership, remaining refundable balance, and idempotency.
+    Interacts with real Razorpay refund API if configured.
+    Updates order payment status and timeline.
+    """
+    user_id = payload.get("sub")
+    role = payload.get("role")
+
+    res = await db.execute(select(Order).where(Order.id == data.order_id))
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if order.customer_id != user_id and role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to request refund for this order"
+        )
+
+    # Calculate existing valid refunds for this order
+    res_ref = await db.execute(
+        select(Refund).where(
+            Refund.order_id == order.id,
+            Refund.status.in_(["COMPLETED", "PROCESSING", "PENDING"])
+        )
+    )
+    existing_refunds = res_ref.scalars().all()
+    total_already_refunded = sum(r.amount for r in existing_refunds)
+    remaining_refundable = round(order.total_amount - total_already_refunded, 2)
+
+    if remaining_refundable <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Order has already been fully refunded"
+        )
+
+    refund_amount = round(data.amount if data.amount is not None else remaining_refundable, 2)
+    if refund_amount <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Refund amount must be greater than zero"
+        )
+    if refund_amount > remaining_refundable:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Refund amount (₹{refund_amount}) exceeds remaining refundable balance (₹{remaining_refundable})"
+        )
+
+    gateway_refund_id = None
+    refund_status = "COMPLETED"
+
+    if order.payment_method == "ONLINE" and order.transaction_id:
+        if is_razorpay_configured():
+            amount_paise = int(round(refund_amount * 100))
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    resp = await client.post(
+                        f"https://api.razorpay.com/v1/payments/{order.transaction_id}/refund",
+                        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET),
+                        json={
+                            "amount": amount_paise,
+                            "notes": {"order_id": order.id, "reason": data.reason or "Customer refund"}
+                        }
+                    )
+                    if resp.status_code not in (200, 201):
+                        raise HTTPException(
+                            status_code=status.HTTP_502_BAD_GATEWAY,
+                            detail=f"Payment gateway refund failed: {resp.text}"
+                        )
+                    rzp_refund = resp.json()
+                    gateway_refund_id = rzp_refund.get("id")
+                    refund_status = "COMPLETED" if rzp_refund.get("status") in ("processed", "completed") else "PROCESSING"
+            except httpx.RequestError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail=f"Payment gateway unreachable: {str(e)}"
+                )
+        else:
+            import secrets
+            gateway_refund_id = f"rfnd_test_{secrets.token_hex(6)}"
+            refund_status = "COMPLETED"
+    else:
+        # COD Refund: Record as direct cash/UPI disbursement
+        gateway_refund_id = f"cod_disb_{order.id[:8]}"
+        refund_status = "COMPLETED"
+
+    now = datetime.now(timezone.utc)
+    new_refund = Refund(
+        order_id=order.id,
+        payment_id=order.transaction_id or f"cod_{order.id}",
+        gateway_refund_id=gateway_refund_id,
+        amount=refund_amount,
+        currency="INR",
+        reason=data.reason,
+        status=refund_status,
+        refund_type=data.refund_type or ("FULL" if refund_amount == order.total_amount else "PARTIAL"),
+        created_by=user_id,
+        admin_notes=data.admin_notes,
+        created_at=now,
+        updated_at=now
+    )
+    db.add(new_refund)
+
+    if (total_already_refunded + refund_amount) >= order.total_amount:
+        order.payment_status = "REFUNDED"
+    else:
+        order.payment_status = "PARTIALLY_REFUNDED"
+
+    timeline_entry = OrderTimeline(
+        order_id=order.id,
+        status=order.status,
+        title="रिफ़ंड सफल (Refund Processed)",
+        description=f"Refund of ₹{refund_amount:.2f} processed. Reference: {gateway_refund_id}",
+        timestamp=now
+    )
+    db.add(timeline_entry)
+    await db.commit()
+    await db.refresh(new_refund)
+
+    return RefundDetailResponse(
+        id=new_refund.id,
+        order_id=new_refund.order_id,
+        payment_id=new_refund.payment_id,
+        gateway_refund_id=new_refund.gateway_refund_id,
+        amount=new_refund.amount,
+        currency=new_refund.currency,
+        reason=new_refund.reason,
+        status=new_refund.status,
+        refund_type=new_refund.refund_type,
+        created_at=new_refund.created_at.isoformat()
+    )
+
+@router.get("/refunds/{order_id}")
+async def get_order_refunds(
+    order_id: str,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Fetches all refunds for a specific order with IDOR verification.
+    """
+    user_id = payload.get("sub")
+    role = payload.get("role")
+
+    res = await db.execute(select(Order).where(Order.id == order_id))
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if order.customer_id != user_id and role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view refunds for this order"
+        )
+
+    res_ref = await db.execute(select(Refund).where(Refund.order_id == order_id).order_by(Refund.created_at.desc()))
+    refunds = res_ref.scalars().all()
+    return [
+        {
+            "id": r.id,
+            "order_id": r.order_id,
+            "payment_id": r.payment_id,
+            "gateway_refund_id": r.gateway_refund_id,
+            "amount": r.amount,
+            "currency": r.currency,
+            "reason": r.reason,
+            "status": r.status,
+            "refund_type": r.refund_type,
+            "created_at": r.created_at.isoformat() if r.created_at else None
+        }
+        for r in refunds
+    ]

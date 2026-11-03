@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.db.session import get_db
-from app.models.base import SupportTicket, TicketMessage, Order, OrderItem, OrderTimeline, User
+from app.models.base import SupportTicket, TicketMessage, Order, OrderItem, OrderTimeline, User, Refund, Replacement
 from app.core.security import get_current_user_payload
 
 router = APIRouter(prefix="/support", tags=["Customer Support & Help Desk"])
@@ -333,25 +333,66 @@ async def get_refund_and_replacement_status(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Fetches genuine refund and replacement records for cancelled, returned, or disputed orders.
+    Fetches genuine refund and replacement records from database tables for the customer.
     """
     user_id = payload.get("sub")
-    res = await db.execute(
+    results = []
+
+    # 1. Fetch from Refund table
+    res_refunds = await db.execute(
+        select(Refund)
+        .join(Order, Refund.order_id == Order.id)
+        .where(Order.customer_id == user_id)
+        .order_by(Refund.created_at.desc())
+    )
+    refunds = res_refunds.scalars().all()
+    seen_orders = set()
+    for r in refunds:
+        seen_orders.add(r.order_id)
+        results.append(RefundStatusItem(
+            order_id=r.order_id,
+            status=r.status,
+            refund_amount=r.amount,
+            reason=r.reason or "Order refund processed",
+            created_at=r.created_at.isoformat() if r.created_at else datetime.now(timezone.utc).isoformat(),
+            expected_credit_days="Instant for COD, 3-5 days for Online (Gateway: " + (r.gateway_refund_id or "N/A") + ")"
+        ))
+
+    # 2. Fetch from Replacement table
+    res_rep = await db.execute(
+        select(Replacement)
+        .where(Replacement.customer_id == user_id)
+        .order_by(Replacement.created_at.desc())
+    )
+    reps = res_rep.scalars().all()
+    for rep in reps:
+        results.append(RefundStatusItem(
+            order_id=rep.original_order_id,
+            status=f"REPLACEMENT_{rep.status}",
+            refund_amount=rep.customer_due, # ₹0
+            reason=f"Replacement: {rep.reason}",
+            created_at=rep.created_at.isoformat() if rep.created_at else datetime.now(timezone.utc).isoformat(),
+            expected_credit_days="Free Replacement Delivery (OTP: " + (rep.delivery_otp or "Pending") + ")"
+        ))
+
+    # 3. Fallback to cancelled orders not yet in Refund table
+    res_orders = await db.execute(
         select(Order)
         .where(Order.customer_id == user_id, Order.status.in_(["CANCELLED", "REFUNDED", "RETURNED"]))
         .order_by(Order.placed_at.desc())
     )
-    orders = res.scalars().all()
-    results = []
+    orders = res_orders.scalars().all()
     for o in orders:
-        results.append(RefundStatusItem(
-            order_id=o.id,
-            status="REFUNDED" if o.payment_status == "REFUNDED" else ("PROCESSING" if o.payment_method == "ONLINE" else "CASH_REFUND_COMPLETED"),
-            refund_amount=o.total_amount,
-            reason="Customer cancellation within 180s window" if o.status == "CANCELLED" else "Damaged/Missing item reported",
-            created_at=o.placed_at.isoformat() if o.placed_at else datetime.now(timezone.utc).isoformat(),
-            expected_credit_days="Instant for COD, 3-5 days for Online"
-        ))
+        if o.id not in seen_orders:
+            results.append(RefundStatusItem(
+                order_id=o.id,
+                status="REFUNDED" if o.payment_status == "REFUNDED" else ("PROCESSING" if o.payment_method == "ONLINE" else "CASH_REFUND_COMPLETED"),
+                refund_amount=o.total_amount,
+                reason="Customer cancellation within 180s window" if o.status == "CANCELLED" else "Damaged/Missing item reported",
+                created_at=o.placed_at.isoformat() if o.placed_at else datetime.now(timezone.utc).isoformat(),
+                expected_credit_days="Instant for COD, 3-5 days for Online"
+            ))
+
     return results
 
 @router.post("/ai-chat", response_model=SupportChatResponse)
