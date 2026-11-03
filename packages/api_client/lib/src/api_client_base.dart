@@ -1212,4 +1212,24 @@ class GBApiClient {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
   }
+
+  Future<ApiResponse<List<GBProduct>>> getVendorProducts([String? storeId]) async {
+    return getStoreProducts(storeId ?? '');
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateOrderStatus(String orderId, String status) async {
+    return vendorOrderAction(orderId, status);
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> toggleProductStock(String productId, bool inStock) async {
+    return updateProductStock(productId, inStock: inStock);
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateProductInventory(String productId, double price, int stock) async {
+    return updateProductStock(productId, price: price, stockQuantity: stock);
+  }
+
+  Future<ApiResponse<GBProduct>> createVendorProduct(Map<String, dynamic> productData) async {
+    return addVendorProduct(productData);
+  }
 }

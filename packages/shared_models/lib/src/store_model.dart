@@ -1,4 +1,5 @@
 class GBStore {
+  String get address => '$village, ${landmark != null && landmark!.isNotEmpty ? "$landmark, " : ""}$block, $district';
   final String id;
   final String ownerId;
   final String shopName;

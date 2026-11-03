@@ -22,6 +22,10 @@ async def onboard_store(
 ):
     owner_id = payload.get("sub")
     
+    clean_upi = None
+    if req.upi_id and req.upi_id.strip() not in ['', 'vendor@upi', 'NOT_CONFIGURED']:
+        clean_upi = req.upi_id.strip()
+
     # Check if store already exists for user
     res = await db.execute(select(Store).where(Store.owner_id == owner_id))
     existing = res.scalars().first()
@@ -37,8 +41,8 @@ async def onboard_store(
         existing.district = req.district
         if req.banner_url:
             existing.banner_url = req.banner_url
-        if req.upi_id:
-            existing.upi_id = req.upi_id
+        if clean_upi is not None or req.upi_id is not None:
+            existing.upi_id = clean_upi
         await db.commit()
         await db.refresh(existing)
         return StoreResponse(
@@ -77,7 +81,7 @@ async def onboard_store(
         rating=5.0,
         banner_url=req.banner_url or "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500",
         commission_rate=0.0,
-        upi_id=req.upi_id
+        upi_id=clean_upi
     )
     db.add(new_store)
     await db.commit()

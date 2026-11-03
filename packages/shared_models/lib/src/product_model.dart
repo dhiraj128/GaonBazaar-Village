@@ -62,4 +62,33 @@ class GBProduct {
       'stock_quantity': stockQuantity,
     };
   }
+  GBProduct copyWith({
+    String? id,
+    String? storeId,
+    String? globalProductId,
+    String? nameEn,
+    String? nameHi,
+    String? category,
+    String? unit,
+    double? price,
+    double? mrp,
+    String? imageUrl,
+    bool? inStock,
+    int? stockQuantity,
+  }) {
+    return GBProduct(
+      id: id ?? this.id,
+      storeId: storeId ?? this.storeId,
+      globalProductId: globalProductId ?? this.globalProductId,
+      nameEn: nameEn ?? this.nameEn,
+      nameHi: nameHi ?? this.nameHi,
+      category: category ?? this.category,
+      unit: unit ?? this.unit,
+      price: price ?? this.price,
+      mrp: mrp ?? this.mrp,
+      imageUrl: imageUrl ?? this.imageUrl,
+      inStock: inStock ?? this.inStock,
+      stockQuantity: stockQuantity ?? this.stockQuantity,
+    );
+  }
 }

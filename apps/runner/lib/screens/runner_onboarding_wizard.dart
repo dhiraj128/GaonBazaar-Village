@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:design_system/design_system.dart';
 import '../state/runner_state.dart';
 import 'runner_pending_approval_screen.dart';
@@ -11,194 +12,214 @@ class RunnerOnboardingWizard extends StatefulWidget {
 }
 
 class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
-  int _currentStep = 0;
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
   bool _isSubmitting = false;
 
-  // Step 0: Personal Details
+  // Page 1: Partner & Vehicle Type
   final _fullNameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
-  final _altPhoneCtrl = TextEditingController();
-
-  // Step 1: Vehicle Selection
   String _vehicleType = 'Motorcycle';
-  final List<String> _vehicleTypes = [
-    'Motorcycle',
-    'Scooter',
-    'Bicycle',
-    'Electric Cycle',
-  ];
 
-  // Step 2: Delivery Zone
-  String _preferredVillage = 'Chaturshi / Chatursi';
-  String _shiftTiming = 'पूर्ण दिवस (Full Day 8 AM - 8 PM)';
-  List<Map<String, dynamic>> _pilotVillages = [
-    {'name': 'Chaturshi / Chatursi', 'latitude': 26.2230, 'longitude': 85.3520},
-    {'name': 'Tubanaghara / Benaghara', 'latitude': 26.2080, 'longitude': 85.3370},
-    {'name': 'Sivay Patti', 'latitude': 26.2310, 'longitude': 85.3610},
-    {'name': 'Tulsi Ganj / Bangaon', 'latitude': 26.1980, 'longitude': 85.3420},
-  ];
-
-  // Step 3: Identity Verification (Test Mode)
-  final _aadhaarCtrl = TextEditingController();
-  bool _digiLockerConsented = false;
-
-  // Step 4: Vehicle Documents
-  final _bikeNoCtrl = TextEditingController();
+  // Page 2: Delivery Area & Vehicle Eligibility
+  final _preferredVillageCtrl = TextEditingController();
+  final _vehicleNoCtrl = TextEditingController();
   final _dlCtrl = TextEditingController();
 
-  // Step 5: Bank & Payout
-  final _upiCtrl = TextEditingController();
-  final _bankNameCtrl = TextEditingController();
-  final _accountNoCtrl = TextEditingController();
-  final _ifscCtrl = TextEditingController();
-
-  // Step 6: Equipment Readiness
-  bool _hasDeliveryBag = true;
-  bool _hasSmartphone = true;
-  bool _hasHelmetOrVest = true;
-
-  // Step 7: Agreement
-  bool _agreedToTerms = false;
-  bool _agreedToCodRemittance = false;
+  // Page 3: Digital Identity Verification & Declaration
+  final _aadhaarCtrl = TextEditingController();
+  bool _digitalConsent = false;
+  bool _safetyAgreement = false;
 
   bool get _isMotorized => _vehicleType == 'Motorcycle' || _vehicleType == 'Scooter';
+
+  final List<Map<String, dynamic>> _vehicleOptions = [
+    {
+      'id': 'Motorcycle',
+      'nameHi': 'मोटरसाइकिल (Motorcycle)',
+      'nameEn': 'Motorcycle',
+      'descHi': 'त्वरित लंबी दूरी डिलीवरी (लाइसेंस आवश्यक)',
+      'descEn': 'Fast rural delivery (DL required)',
+      'icon': Icons.two_wheeler,
+    },
+    {
+      'id': 'Scooter',
+      'nameHi': 'स्कूटर (Scooter)',
+      'nameEn': 'Scooter',
+      'descHi': 'आस-पास के टोलों में डिलीवरी (लाइसेंस आवश्यक)',
+      'descEn': 'Cluster delivery (DL required)',
+      'icon': Icons.moped,
+    },
+    {
+      'id': 'Bicycle',
+      'nameHi': 'साइकिल (Bicycle)',
+      'nameEn': 'Bicycle',
+      'descHi': 'गाँव के अंदर डिलीवरी (लाइसेंस आवश्यक नहीं)',
+      'descEn': 'Intra-village delivery (No DL needed)',
+      'icon': Icons.pedal_bike,
+    },
+    {
+      'id': 'Electric Cycle',
+      'nameHi': 'इलेक्ट्रिक साइकिल (Electric Cycle)',
+      'nameEn': 'Electric Cycle / EV',
+      'descHi': 'पर्यावरण अनुकूल डिलीवरी (लाइसेंस आवश्यक नहीं)',
+      'descEn': 'Eco delivery (No DL needed)',
+      'icon': Icons.electric_bike,
+    },
+  ];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final state = RunnerStateProvider.of(context);
-      if (state.currentUser != null) {
-        _fullNameCtrl.text = state.currentUser!.name ?? '';
-        _phoneCtrl.text = state.currentUser!.phone;
-      }
-      try {
-        final res = await state.apiClient.getPilotLocalities();
-        if (res.isSuccess && res.data != null && res.data!.isNotEmpty) {
-          setState(() {
-            _pilotVillages = res.data!;
-            if (!_pilotVillages.any((v) => v['name'] == _preferredVillage)) {
-              _preferredVillage = _pilotVillages.first['name'].toString();
-            }
-          });
-        }
-      } catch (_) {}
+    _loadSavedDraft();
+  }
+
+  Future<void> _loadSavedDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    final state = RunnerStateProvider.of(context);
+
+    setState(() {
+      _fullNameCtrl.text = prefs.getString('gb_r_draft_name') ?? state.currentUser?.name ?? '';
+      _phoneCtrl.text = state.currentUser?.phone ?? prefs.getString('gb_r_draft_phone') ?? '';
+      _vehicleType = prefs.getString('gb_r_draft_vehicle') ?? 'Motorcycle';
+
+      _preferredVillageCtrl.text = prefs.getString('gb_r_draft_village') ?? '';
+      _vehicleNoCtrl.text = prefs.getString('gb_r_draft_veh_no') ?? '';
+      _dlCtrl.text = prefs.getString('gb_r_draft_dl') ?? '';
+
+      _aadhaarCtrl.text = prefs.getString('gb_r_draft_aadhaar') ?? '';
+      _digitalConsent = prefs.getBool('gb_r_draft_consent') ?? false;
+      _safetyAgreement = prefs.getBool('gb_r_draft_safety') ?? false;
     });
+  }
+
+  Future<void> _persistDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('gb_r_draft_name', _fullNameCtrl.text.trim());
+    await prefs.setString('gb_r_draft_phone', _phoneCtrl.text.trim());
+    await prefs.setString('gb_r_draft_vehicle', _vehicleType);
+    await prefs.setString('gb_r_draft_village', _preferredVillageCtrl.text.trim());
+    await prefs.setString('gb_r_draft_veh_no', _vehicleNoCtrl.text.trim());
+    await prefs.setString('gb_r_draft_dl', _dlCtrl.text.trim());
+    await prefs.setString('gb_r_draft_aadhaar', _aadhaarCtrl.text.trim());
+    await prefs.setBool('gb_r_draft_consent', _digitalConsent);
+    await prefs.setBool('gb_r_draft_safety', _safetyAgreement);
+  }
+
+  Future<void> _clearDraft() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('gb_r_draft_name');
+    await prefs.remove('gb_r_draft_phone');
+    await prefs.remove('gb_r_draft_vehicle');
+    await prefs.remove('gb_r_draft_village');
+    await prefs.remove('gb_r_draft_veh_no');
+    await prefs.remove('gb_r_draft_dl');
+    await prefs.remove('gb_r_draft_aadhaar');
+    await prefs.remove('gb_r_draft_consent');
+    await prefs.remove('gb_r_draft_safety');
   }
 
   @override
   void dispose() {
+    _pageController.dispose();
     _fullNameCtrl.dispose();
     _phoneCtrl.dispose();
-    _altPhoneCtrl.dispose();
-    _aadhaarCtrl.dispose();
-    _bikeNoCtrl.dispose();
+    _preferredVillageCtrl.dispose();
+    _vehicleNoCtrl.dispose();
     _dlCtrl.dispose();
-    _upiCtrl.dispose();
-    _bankNameCtrl.dispose();
-    _accountNoCtrl.dispose();
-    _ifscCtrl.dispose();
+    _aadhaarCtrl.dispose();
     super.dispose();
   }
 
-  void _showError(String msg) {
+  void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: GBColors.error),
+      SnackBar(content: Text(message), backgroundColor: GBColors.error),
     );
   }
 
-  void _nextStep(RunnerAppState state) async {
+  void _onNext() async {
+    final state = RunnerStateProvider.of(context);
     final isHi = state.isHindi;
 
-    // Step-by-step validations
-    if (_currentStep == 0) {
+    await _persistDraft();
+
+    if (_currentPage == 0) {
       if (_fullNameCtrl.text.trim().isEmpty) {
-        _showError(isHi ? 'कृपया अपना पूरा नाम दर्ज करें' : 'Please enter your full name');
+        _showError(isHi ? 'कृपया अपना पूरा नाम दर्ज करें' : 'Please enter full name');
         return;
       }
-    } else if (_currentStep == 3) {
-      if (!_digiLockerConsented) {
-        _showError(isHi ? 'कृपया पहचान सत्यापन सहमति स्वीकार करें' : 'Please accept verification consent');
+      _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      setState(() => _currentPage = 1);
+    } else if (_currentPage == 1) {
+      if (_preferredVillageCtrl.text.trim().isEmpty) {
+        _showError(isHi ? 'कृपया कार्य क्षेत्र / गाँव दर्ज करें' : 'Please enter working village/cluster');
         return;
       }
-    } else if (_currentStep == 4) {
-      // Motorized partners must provide DL and Vehicle Reg No. Bicycle partners are EXEMPT!
       if (_isMotorized) {
-        if (_bikeNoCtrl.text.trim().isEmpty) {
-          _showError(isHi ? 'मोटरसाइकिल/स्कूटर हेतु वाहन पंजीकरण संख्या अनिवार्य है' : 'Vehicle registration number is required for motorcycle/scooter');
+        if (_vehicleNoCtrl.text.trim().isEmpty) {
+          _showError(isHi ? 'कृपया वाहन पंजीकरण संख्या दर्ज करें' : 'Please enter vehicle registration number');
           return;
         }
         if (_dlCtrl.text.trim().isEmpty) {
-          _showError(isHi ? 'मोटरसाइकिल/स्कूटर हेतु ड्राइविंग लाइसेंस संख्या अनिवार्य है' : 'Driving licence number is required for motorcycle/scooter');
+          _showError(isHi ? 'कृपया ड्राइविंग लाइसेंस संख्या दर्ज करें' : 'Please enter driving license number');
           return;
         }
       }
-    } else if (_currentStep == 5) {
-      if (_upiCtrl.text.trim().isEmpty && _accountNoCtrl.text.trim().isEmpty) {
-        _showError(isHi ? 'कृपया पेआउट हेतु यूपीआई आईडी या बैंक खाता संख्या दर्ज करें' : 'Please enter UPI ID or Bank account for payouts');
+      _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      setState(() => _currentPage = 2);
+    } else if (_currentPage == 2) {
+      if (_aadhaarCtrl.text.trim().isEmpty) {
+        _showError(isHi ? 'कृपया 12-अंकीय आधार पहचान संख्या दर्ज करें' : 'Please enter 12-digit Aadhaar number');
         return;
       }
-    } else if (_currentStep == 6) {
-      if (!_hasSmartphone || !_hasDeliveryBag) {
-        _showError(isHi ? 'डिलीवरी हेतु स्मार्टफोन और डिलीवरी बैग आवश्यक है' : 'Smartphone and delivery bag are required');
+      if (!_digitalConsent) {
+        _showError(isHi ? 'कृपया डिजिटल पहचान सत्यापन सहमति स्वीकार करें' : 'Please accept digital verification consent');
         return;
       }
-    } else if (_currentStep == 7) {
-      if (!_agreedToTerms || !_agreedToCodRemittance) {
-        _showError(isHi ? 'कृपया सभी सेवा शर्तों और सीओडी नियमों को स्वीकार करें' : 'Please accept all terms and COD remittance rules');
+      if (!_safetyAgreement) {
+        _showError(isHi ? 'कृपया सड़क सुरक्षा एवं सीओडी नकद सेटलमेंट वचन स्वीकार करें' : 'Please accept safety and COD agreement');
         return;
       }
+      _submitRegistration(state);
     }
+  }
 
-    if (_currentStep < 7) {
-      setState(() => _currentStep++);
+  void _onBack() {
+    if (_currentPage > 0) {
+      _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+      setState(() => _currentPage--);
     } else {
-      // Step 8: Submit Application to Backend
-      setState(() => _isSubmitting = true);
+      Navigator.of(context).maybePop();
+    }
+  }
 
-      final payload = {
-        'full_name': _fullNameCtrl.text.trim(),
-        'vehicle_type': _vehicleType,
-        'vehicle_number': _isMotorized
-            ? _bikeNoCtrl.text.trim().toUpperCase()
-            : 'BICYCLE-${_fullNameCtrl.text.trim().toUpperCase().replaceAll(' ', '')}',
-        'driving_licence_no': _isMotorized ? _dlCtrl.text.trim().toUpperCase() : 'EXEMPT-BICYCLE',
-        'upi_id': _upiCtrl.text.trim().isEmpty ? 'runner@upi' : _upiCtrl.text.trim().toLowerCase(),
-      };
+  Future<void> _submitRegistration(RunnerAppState state) async {
+    final isHi = state.isHindi;
+    setState(() => _isSubmitting = true);
 
-      await state.onboardRunner(payload);
+    final payload = {
+      'full_name': _fullNameCtrl.text.trim(),
+      'vehicle_type': _vehicleType,
+      'vehicle_number': _isMotorized
+          ? _vehicleNoCtrl.text.trim().toUpperCase()
+          : 'BICYCLE-${_fullNameCtrl.text.trim().toUpperCase().replaceAll(' ', '')}',
+      'driving_licence_no': _isMotorized ? _dlCtrl.text.trim().toUpperCase() : 'EXEMPT-BICYCLE',
+    };
 
-      if (!mounted) return;
-      setState(() => _isSubmitting = false);
+    final success = await state.onboardRunner(payload);
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          icon: const Icon(Icons.check_circle_outline, color: GBColors.primary, size: 48),
-          title: Text(
-            isHi ? 'आवेदन समीक्षाधीन (Pending Review)' : 'Application Under Review',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
-          ),
-          content: Text(
-            isHi
-                ? 'आपका 8-चरणीय डिलीवरी साथी आवेदन सुपर एडमिन के पास समीक्षा के लिए जमा कर दिया गया है। अनुमोदन के बाद आप ड्यूटी ऑनलाइन कर सकेंगे।'
-                : 'Your 8-step delivery partner application has been submitted to Super Admin. Once approved, you can start accepting orders.',
-            style: const TextStyle(fontSize: 13),
-          ),
-          actions: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const RunnerPendingApprovalScreen()),
-                );
-              },
-              child: Text(isHi ? 'आवेदन स्थिति देखें (View Status)' : 'View Application Status'),
-            ),
-          ],
-        ),
+    if (success) {
+      await _clearDraft();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const RunnerPendingApprovalScreen()),
+      );
+    } else {
+      _showError(
+        isHi
+            ? 'पंजीकरण जमा करने में विफल। कृपया नेटवर्क जाँचें या पुनः प्रयास करें।'
+            : 'Failed to submit registration. Please check your connection and try again.',
       );
     }
   }
@@ -208,459 +229,465 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
     final state = RunnerStateProvider.of(context);
     final isHi = state.isHindi;
 
+    final titles = [
+      isHi ? 'व्यक्तिगत विवरण व वाहन' : 'Personal & Vehicle Details',
+      isHi ? 'कार्य क्षेत्र व दस्तावेज' : 'Work Area & Eligibility',
+      isHi ? 'पहचान सत्यापन व सुरक्षा' : 'Identity Verification & Safety',
+    ];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          isHi ? 'डिलीवरी साथी पंजीकरण (8 चरण)' : 'Runner Onboarding (8 Steps)',
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _onBack,
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isHi ? 'डिलीवरी साथी पंजीकरण' : 'Runner Onboarding',
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            ),
+            Text(
+              '${isHi ? "चरण" : "Step"} ${_currentPage + 1} / 3: ${titles[_currentPage]}',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4),
+          child: LinearProgressIndicator(
+            value: (_currentPage + 1) / 3,
+            backgroundColor: Colors.grey.shade200,
+            valueColor: const AlwaysStoppedAnimation<Color>(GBColors.primary),
+          ),
         ),
       ),
       body: SafeArea(
-        child: Stepper(
-          currentStep: _currentStep,
-          onStepContinue: () => _nextStep(state),
-          onStepCancel: () {
-            if (_currentStep > 0) setState(() => _currentStep--);
-          },
-          controlsBuilder: (context, details) {
-            return Padding(
-              padding: const EdgeInsets.only(top: 20),
-              child: Row(
+        child: Column(
+          children: [
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  Expanded(
-                    child: GBPrimaryButton(
-                      label: _currentStep == 7
-                          ? (isHi ? 'आवेदन जमा करें (Submit)' : 'Submit Application')
-                          : (isHi ? 'आगे बढ़ें (Next)' : 'Next Step'),
-                      isLoading: _isSubmitting,
-                      onPressed: details.onStepContinue,
-                    ),
-                  ),
-                  if (_currentStep > 0) ...[
-                    const SizedBox(width: 12),
-                    OutlinedButton(
-                      onPressed: details.onStepCancel,
-                      child: Text(isHi ? 'पीछे' : 'Back'),
-                    ),
-                  ],
+                  _buildPage1(isHi),
+                  _buildPage2(isHi),
+                  _buildPage3(isHi),
                 ],
+              ),
+            ),
+            _buildBottomActionBar(isHi),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --------------------------------------------------------------------------
+  // PAGE 1: PARTNER PROFILE & VEHICLE SELECTION
+  // --------------------------------------------------------------------------
+  Widget _buildPage1(bool isHi) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: GBColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: GBColors.primary.withValues(alpha: 0.25)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.two_wheeler_outlined, color: GBColors.primary, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    isHi
+                        ? 'गाँव बाज़ार डिलीवरी नेटवर्क से जुड़ें — पारदर्शी दूरी पेआउट और तत्काल बैंक/यूपीआई सेटलमेंट।'
+                        : 'Join GaonBazaar Delivery Network with transparent 5-tier distance payouts and direct settlements.',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Full Name
+          Text(
+            isHi ? 'साथी का पूरा नाम (आधार अनुसार) *' : 'Partner Full Name (as per Aadhaar) *',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _fullNameCtrl,
+            decoration: InputDecoration(
+              hintText: isHi ? 'उदा. संतोष कुमार' : 'e.g. Santosh Kumar',
+              prefixIcon: const Icon(Icons.person_outline),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              filled: true,
+              fillColor: Theme.of(context).cardColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Verified Mobile Number
+          Text(
+            isHi ? 'सत्यापित मोबाइल नंबर' : 'Verified Mobile Number',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.green.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.verified, color: Colors.green, size: 20),
+                const SizedBox(width: 10),
+                Text(
+                  _phoneCtrl.text.isNotEmpty ? _phoneCtrl.text : '+91 98222 22222',
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                ),
+                const Spacer(),
+                Text(
+                  isHi ? 'ओटीपी सत्यापित ✓' : 'OTP Verified ✓',
+                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w700, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Vehicle Type Selector Cards
+          Text(
+            isHi ? 'डिलीवरी वाहन चुनें *' : 'Select Delivery Vehicle *',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+          const SizedBox(height: 10),
+          ..._vehicleOptions.map((opt) {
+            final isSelected = _vehicleType == opt['id'];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: isSelected ? GBColors.primary.withValues(alpha: 0.08) : Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? GBColors.primary : Colors.grey.shade300,
+                  width: isSelected ? 1.8 : 1.0,
+                ),
+              ),
+              child: ListTile(
+                leading: Icon(opt['icon'] as IconData, color: isSelected ? GBColors.primary : Colors.grey),
+                title: Text(
+                  isHi ? opt['nameHi']! : opt['nameEn']!,
+                  style: TextStyle(fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600, fontSize: 14),
+                ),
+                subtitle: Text(
+                  isHi ? opt['descHi']! : opt['descEn']!,
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                trailing: Radio<String>(
+                  value: opt['id'] as String,
+                  groupValue: _vehicleType,
+                  activeColor: GBColors.primary,
+                  onChanged: (val) {
+                    if (val != null) setState(() => _vehicleType = val);
+                  },
+                ),
+                onTap: () => setState(() => _vehicleType = opt['id'] as String),
               ),
             );
-          },
-          steps: [
-            // Step 0: Personal & Contact Information
-            Step(
-              title: Text(isHi ? '1. व्यक्तिगत जानकारी' : '1. Personal Info'),
-              isActive: _currentStep >= 0,
-              content: Column(
-                children: [
-                  TextField(
-                    controller: _fullNameCtrl,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'पूरा नाम (आधार कार्ड के अनुसार) *' : 'Full Name (as per ID) *',
-                      prefixIcon: const Icon(Icons.person_outline),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _phoneCtrl,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'मोबाइल नंबर *' : 'Mobile Number *',
-                      prefixIcon: const Icon(Icons.phone_android),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _altPhoneCtrl,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'आपातकालीन संपर्क नंबर (वैकल्पिक)' : 'Emergency Contact Phone (Optional)',
-                      prefixIcon: const Icon(Icons.contact_phone_outlined),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          }),
+        ],
+      ),
+    );
+  }
 
-            // Step 1: Vehicle & Transport Selection
-            Step(
-              title: Text(isHi ? '2. वाहन प्रकार' : '2. Vehicle Selection'),
-              isActive: _currentStep >= 1,
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: _vehicleType,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'डिलीवरी वाहन चुनें *' : 'Select Delivery Vehicle *',
-                      prefixIcon: const Icon(Icons.two_wheeler),
-                    ),
-                    items: _vehicleTypes
-                        .map((v) => DropdownMenuItem(
-                              value: v,
-                              child: Text(
-                                v == 'Bicycle'
-                                    ? (isHi ? 'साइकिल (Bicycle) — DL/RC की आवश्यकता नहीं' : 'Bicycle — No DL/RC needed')
-                                    : v == 'Electric Cycle'
-                                        ? (isHi ? 'इलेक्ट्रिक साइकिल (E-Cycle)' : 'Electric Cycle')
-                                        : v,
-                              ),
-                            ))
-                        .toList(),
-                    onChanged: (v) => setState(() => _vehicleType = v!),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    _isMotorized
-                        ? (isHi
-                            ? 'नोट: मोटरसाइकिल/स्कूटर हेतु वैध ड्राइविंग लाइसेंस अनिवार्य है।'
-                            : 'Note: Valid Driving Licence is required for motorcycle/scooter.')
-                        : (isHi
-                            ? '✓ साइकिल/ई-साइकिल डिलीवरी हेतु ड्राइविंग लाइसेंस आवश्यक नहीं है।'
-                            : '✓ Bicycle partners are exempt from DL and vehicle RC requirements.'),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _isMotorized ? Colors.blue.shade800 : Colors.green.shade800,
-                    ),
-                  ),
-                ],
-              ),
+  // --------------------------------------------------------------------------
+  // PAGE 2: WORK AREA & VEHICLE ELIGIBILITY
+  // --------------------------------------------------------------------------
+  Widget _buildPage2(bool isHi) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Preferred Village / Working Area
+          Text(
+            isHi ? 'प्राथमिक डिलीवरी कार्य क्षेत्र (गाँव / टोला) *' : 'Primary Delivery Area (Village / Cluster) *',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _preferredVillageCtrl,
+            decoration: InputDecoration(
+              hintText: isHi ? 'उदा. चतुरसी, मीनापुर क्लस्टर' : 'e.g. Chatursi, Minapur Cluster',
+              prefixIcon: const Icon(Icons.location_on_outlined),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              filled: true,
+              fillColor: Theme.of(context).cardColor,
             ),
+          ),
+          const SizedBox(height: 20),
 
-            // Step 2: Delivery Operating Zone
-            Step(
-              title: Text(isHi ? '3. कार्य क्षेत्र व शिफ्ट' : '3. Zone & Shift'),
-              isActive: _currentStep >= 2,
-              content: Column(
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: _preferredVillage,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'प्राथमिक गाँव / टोला चुनें *' : 'Primary Operating Village *',
-                      prefixIcon: const Icon(Icons.map_outlined),
-                    ),
-                    items: _pilotVillages
-                        .map((v) => DropdownMenuItem(
-                              value: v['name'] as String,
-                              child: Text(v['name'] as String),
-                            ))
-                        .toList(),
-                    onChanged: (v) => setState(() => _preferredVillage = v!),
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    value: _shiftTiming,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'पसंदीदा शिफ्ट समय' : 'Preferred Shift Timing',
-                      prefixIcon: const Icon(Icons.access_time),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'पूर्ण दिवस (Full Day 8 AM - 8 PM)', child: Text('8 AM - 8 PM (Full Day)')),
-                      DropdownMenuItem(value: 'प्रातः शिफ्ट (Morning 7 AM - 1 PM)', child: Text('7 AM - 1 PM (Morning)')),
-                      DropdownMenuItem(value: 'सायं शिफ्ट (Evening 3 PM - 9 PM)', child: Text('3 PM - 9 PM (Evening)')),
-                    ],
-                    onChanged: (v) => setState(() => _shiftTiming = v!),
-                  ),
-                ],
+          // Vehicle Eligibility Details
+          if (_isMotorized) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
               ),
-            ),
-
-            // Step 3: Identity Verification (TEST MODE)
-            Step(
-              title: Text(isHi ? '4. डिजिटल पहचान (KYC)' : '4. Identity Verification'),
-              isActive: _currentStep >= 3,
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  // Test mode banner
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 14),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.amber.shade400, width: 1.5),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.warning_amber_rounded, color: Colors.amber.shade900, size: 24),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isHi
-                                    ? 'परीक्षण मोड — वास्तविक पहचान सत्यापन नहीं है'
-                                    : 'TEST MODE — NOT REAL IDENTITY VERIFICATION',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 12,
-                                  color: Colors.amber.shade900,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                isHi
-                                    ? 'स्टेजिंग वातावरण में केवल अंतिम 4 अंक दर्ज किए जा सकते हैं।'
-                                    : 'Staging environment simulation. Please do not submit real Aadhaar/DL documents.',
-                                style: TextStyle(fontSize: 11, color: Colors.amber.shade900),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  TextField(
-                    controller: _aadhaarCtrl,
-                    keyboardType: TextInputType.number,
-                    maxLength: 4,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'आधार के अंतिम 4 अंक' : 'Aadhaar Last 4 Digits',
-                      hintText: 'XXXX',
-                      prefixIcon: const Icon(Icons.credit_card),
-                    ),
-                  ),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _digiLockerConsented,
-                    onChanged: (v) => setState(() => _digiLockerConsented = v ?? false),
-                    title: Text(
+                  const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
                       isHi
-                          ? 'मैं डिजिटल पहचान सत्यापन और डिलीवरी साथी नियमों की सहमति देता/देती हूँ।'
-                          : 'I consent to digital partner KYC verification and delivery conduct policies.',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                ],
-              ),
-            ),
-
-            // Step 4: Vehicle Documents (Conditional)
-            Step(
-              title: Text(isHi ? '5. वाहन दस्तावेज़' : '5. Vehicle Documents'),
-              isActive: _currentStep >= 4,
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (!_isMotorized) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.green.shade300),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.pedal_bike, color: Colors.green.shade800, size: 28),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              isHi
-                                  ? 'साइकिल डिलीवरी साथी: किसी ड्राइविंग लाइसेंस या वाहन पंजीकरण की आवश्यकता नहीं है। आप सीधे ऑनबोर्ड हो सकते हैं!'
-                                  : 'Bicycle Partner: No driving licence or vehicle registration required. You are ready to deliver!',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.green.shade900,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      decoration: InputDecoration(
-                        labelText: isHi ? 'साइकिल का रंग / ब्रांड (वैकल्पिक)' : 'Bicycle Color / Brand (Optional)',
-                        hintText: isHi ? 'उदा. हरा एटलस' : 'e.g. Green Hero',
-                        prefixIcon: const Icon(Icons.pedal_bike_outlined),
-                      ),
-                    ),
-                  ] else ...[
-                    TextField(
-                      controller: _bikeNoCtrl,
-                      textCapitalization: TextCapitalization.characters,
-                      decoration: InputDecoration(
-                        labelText: isHi ? 'वाहन पंजीकरण संख्या (RC) *' : 'Vehicle Registration No. (RC) *',
-                        hintText: 'BR-06-AB-1234',
-                        prefixIcon: const Icon(Icons.pin_outlined),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _dlCtrl,
-                      textCapitalization: TextCapitalization.characters,
-                      decoration: InputDecoration(
-                        labelText: isHi ? 'ड्राइविंग लाइसेंस संख्या (DL) *' : 'Driving Licence Number (DL) *',
-                        hintText: 'DL-0620240099881',
-                        prefixIcon: const Icon(Icons.badge_outlined),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-            // Step 5: Bank Account & Payout Setup
-            Step(
-              title: Text(isHi ? '6. बैंक व पेआउट' : '6. Payout & Bank'),
-              isActive: _currentStep >= 5,
-              content: Column(
-                children: [
-                  TextField(
-                    controller: _upiCtrl,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'यूपीआई आईडी (दैनिक पेआउट हेतु) *' : 'UPI ID (For daily payouts) *',
-                      hintText: 'runner@oksbi',
-                      prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _bankNameCtrl,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'बैंक का नाम (वैकल्पिक)' : 'Bank Name (Optional)',
-                      hintText: 'State Bank of India',
-                      prefixIcon: const Icon(Icons.account_balance_outlined),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _accountNoCtrl,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'खाता संख्या (वैकल्पिक)' : 'Account Number (Optional)',
-                      prefixIcon: const Icon(Icons.numbers_outlined),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _ifscCtrl,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'आईएफएससी कोड (IFSC)' : 'IFSC Code',
-                      hintText: 'SBIN0001234',
-                      prefixIcon: const Icon(Icons.code),
+                          ? 'मोटरसाइकिल/स्कूटर से डिलीवरी हेतु वैध वाहन नंबर और ड्राइविंग लाइसेंस अनिवार्य है।'
+                          : 'Valid vehicle registration and driving license are required for motorized delivery.',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.blue),
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 16),
 
-            // Step 6: Equipment Readiness
-            Step(
-              title: Text(isHi ? '7. डिलीवरी तैयारी' : '7. Equipment'),
-              isActive: _currentStep >= 6,
-              content: Column(
-                children: [
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _hasSmartphone,
-                    onChanged: (v) => setState(() => _hasSmartphone = v ?? false),
-                    title: Text(
-                      isHi
-                          ? 'मेरे पास 4G इंटरनेट और जीपीएस युक्त स्मार्टफोन है।'
-                          : 'I have a 4G-enabled smartphone with GPS.',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _hasDeliveryBag,
-                    onChanged: (v) => setState(() => _hasDeliveryBag = v ?? false),
-                    title: Text(
-                      isHi
-                          ? 'मेरे पास सामान सुरक्षित ले जाने हेतु मजबूत डिलीवरी बैग/कैरियर है।'
-                          : 'I have a sturdy bag or vehicle carrier to transport items safely.',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _hasHelmetOrVest,
-                    onChanged: (v) => setState(() => _hasHelmetOrVest = v ?? false),
-                    title: Text(
-                      isHi
-                          ? 'मैं सड़क सुरक्षा नियमों (हेलमेट / रिफ्लेक्टर) का पालन करूँगा।'
-                          : 'I will comply with road safety rules (helmet/reflectors).',
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                ],
+            Text(
+              isHi ? 'वाहन पंजीकरण संख्या (गाड़ी नंबर) *' : 'Vehicle Registration Number *',
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _vehicleNoCtrl,
+              textCapitalization: TextCapitalization.characters,
+              decoration: InputDecoration(
+                hintText: 'BR-06-AB-1234',
+                prefixIcon: const Icon(Icons.pin_outlined),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                filled: true,
+                fillColor: Theme.of(context).cardColor,
               ),
             ),
+            const SizedBox(height: 16),
 
-            // Step 7: Agreement Review & Safety Pledge
-            Step(
-              title: Text(isHi ? '8. सेवा अनुबंध व नियम' : '8. Agreement & Pledge'),
-              isActive: _currentStep >= 7,
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Text(
+              isHi ? 'ड्राइविंग लाइसेंस (DL) संख्या *' : 'Driving Licence Number *',
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _dlCtrl,
+              textCapitalization: TextCapitalization.characters,
+              decoration: InputDecoration(
+                hintText: 'DL-06-20220012345',
+                prefixIcon: const Icon(Icons.credit_card_outlined),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                filled: true,
+                fillColor: Theme.of(context).cardColor,
+              ),
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+              ),
+              child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: GBColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: GBColors.primary.withValues(alpha: 0.2)),
-                    ),
+                  const Icon(Icons.check_circle_outline, color: Colors.green, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isHi ? 'डिलीवरी साथी प्रतिज्ञा:' : 'Delivery Partner Code of Conduct:',
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: GBColors.primary),
+                          isHi ? 'लाइसेंस की आवश्यकता नहीं' : 'Driving Licence Exempt',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.green),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                         Text(
                           isHi
-                              ? '• ग्राहक को सामान सौंपते समय 4-अंकीय ओटीपी पिन सत्यापित करना अनिवार्य है।\n• नकद (COD) ऑर्डर की राशि उसी दिन हब/सिस्टम में जमा करनी होगी।\n• पारदर्शी 5-स्तरीय दूरी पेआउट (₹10 - ₹28) प्रति डिलीवरी प्राप्त होगा।'
-                              : '• Always verify the 4-digit OTP from customer upon handover.\n• Collect and remit COD cash accurately on the same working day.\n• Transparent 5-tier distance payouts (₹10 - ₹28) per completed job.',
-                          style: const TextStyle(fontSize: 12, height: 1.4),
+                              ? 'साइकिल / ई-साइकिल डिलीवरी हेतु ड्राइविंग लाइसेंस आवश्यक नहीं है। आप तुरंत स्थानीय डिलीवरी साथी बन सकते हैं।'
+                              : 'Bicycle and e-cycle deliveries are exempt from driving license requirements.',
+                          style: const TextStyle(fontSize: 12, color: Colors.black87),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _agreedToCodRemittance,
-                    onChanged: (v) => setState(() => _agreedToCodRemittance = v ?? false),
-                    title: Text(
-                      isHi
-                          ? 'मैं ग्राहक से प्राप्त सीओडी नकद राशि की पूर्ण सुरक्षा और समय पर जमा करने की जिम्मेदारी लेता/लेती हूँ।'
-                          : 'I accept full responsibility for safe collection and accurate remittance of COD payments.',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    controlAffinity: ListTileControlAffinity.leading,
-                  ),
-                  CheckboxListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _agreedToTerms,
-                    onChanged: (v) => setState(() => _agreedToTerms = v ?? false),
-                    title: Text(
-                      isHi
-                          ? 'मैंने गाँव बाज़ार डिलीवरी साथी सेवा अनुबंध व नीतियों को स्वीकार किया है।'
-                          : 'I agree to the GaonBazaar Delivery Partner Terms of Service.',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    controlAffinity: ListTileControlAffinity.leading,
                   ),
                 ],
               ),
             ),
           ],
+
+          const SizedBox(height: 24),
+          Text(
+            isHi
+                ? 'नोट: बैंक एवं यूपीआई सेटिंग्स पंजीकरण के बाद अकाउंट सेक्शन में जोड़ी जा सकती हैं।'
+                : 'Note: Bank and UPI settlement accounts can be configured in the Account tab after submission.',
+            style: const TextStyle(fontSize: 11, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --------------------------------------------------------------------------
+  // PAGE 3: DIGITAL IDENTITY VERIFICATION & SAFETY AGREEMENT
+  // --------------------------------------------------------------------------
+  Widget _buildPage3(bool isHi) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.amber.shade300),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.shield_outlined, color: Colors.amber.shade900, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    isHi
+                        ? 'त्वरित डिजिटल सत्यापन — सुपर एडमिन द्वारा अनुमोदन के बाद ही आपकी आईडी सक्रिय होगी।'
+                        : 'Instant Verification — Application will be reviewed and approved by Super Admin.',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.amber.shade900),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Aadhaar Number
+          Text(
+            isHi ? '12-अंकीय आधार पहचान संख्या *' : '12-Digit Aadhaar Number *',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _aadhaarCtrl,
+            keyboardType: TextInputType.number,
+            maxLength: 12,
+            decoration: InputDecoration(
+              hintText: '1234 5678 9012',
+              prefixIcon: const Icon(Icons.badge_outlined),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              filled: true,
+              fillColor: Theme.of(context).cardColor,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Digital Consent Checkbox
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _digitalConsent,
+            activeColor: GBColors.primary,
+            title: Text(
+              isHi
+                  ? 'मैं गाँव बाज़ार डिजिटल सत्यापन एवं पहचान पत्र जाँच के लिए पूर्ण सहमति देता हूँ।'
+                  : 'I authorize GaonBazaar to verify my identity records for delivery partner registration.',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+            onChanged: (val) => setState(() => _digitalConsent = val ?? false),
+          ),
+          const SizedBox(height: 8),
+
+          // Road Safety & COD Remittance Commitment
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _safetyAgreement,
+            activeColor: GBColors.primary,
+            title: Text(
+              isHi
+                  ? 'मैं सड़क सुरक्षा नियमों का पालन करूँगा एवं ग्राहकों से प्राप्त सभी सीओडी नकद उसी दिन सिस्टम में सेटल करने का वचन देता हूँ।'
+                  : 'I commit to safe driving guidelines and agree to reconcile all cash collected from COD orders daily.',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+            onChanged: (val) => setState(() => _safetyAgreement = val ?? false),
+          ),
+          const SizedBox(height: 20),
+
+          // Distance Payout reminder
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: GBColors.primary.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.currency_rupee, color: GBColors.primary, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isHi
+                        ? 'पारदर्शी 5-स्तरीय दूरी पेआउट: ₹10 (0-1 किमी) से ₹28 (6-8 किमी)।'
+                        : 'Transparent distance payouts: ₹10 (0-1 km) up to ₹28 (6-8 km).',
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: GBColors.primary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --------------------------------------------------------------------------
+  // BOTTOM ACTION BAR
+  // --------------------------------------------------------------------------
+  Widget _buildBottomActionBar(bool isHi) {
+    final isLastPage = _currentPage == 2;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, -2)),
+        ],
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: GBColors.primary,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          onPressed: _isSubmitting ? null : _onNext,
+          child: _isSubmitting
+              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : Text(
+                  isLastPage
+                      ? (isHi ? 'आवेदन जमा करें' : 'Submit Application')
+                      : (isHi ? 'आगे बढ़ें (Continue) →' : 'Continue →'),
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white),
+                ),
         ),
       ),
     );

@@ -590,12 +590,17 @@ async def onboard_runner(
     r_res = await db.execute(select(Runner).where(Runner.user_id == user_id))
     runner = r_res.scalars().first()
     
+    clean_upi = None
+    if data.upi_id and data.upi_id.strip() not in ["", "runner@upi", "NOT_CONFIGURED"]:
+        clean_upi = data.upi_id.strip()
+
     if runner:
         runner.full_name = data.full_name
         runner.vehicle_type = data.vehicle_type
         runner.vehicle_number = data.vehicle_number
         runner.driving_licence_no = data.driving_licence_no
-        runner.upi_id = data.upi_id
+        if clean_upi is not None or data.upi_id is not None:
+            runner.upi_id = clean_upi
         runner.is_approved = False # Under Admin review
     else:
         runner = Runner(
@@ -604,7 +609,7 @@ async def onboard_runner(
             vehicle_type=data.vehicle_type,
             vehicle_number=data.vehicle_number,
             driving_licence_no=data.driving_licence_no,
-            upi_id=data.upi_id,
+            upi_id=clean_upi,
             is_approved=False,
             is_online=False,
             current_latitude=26.2230,

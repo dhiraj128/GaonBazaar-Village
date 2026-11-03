@@ -29,6 +29,23 @@ class VendorAppState extends ChangeNotifier {
 
   bool get isHindi => currentLocale == 'hi';
 
+  String get linkedUpiId {
+    final upi = myStore?.upiId;
+    if (upi == null || upi.trim().isEmpty || upi.trim() == 'vendor@upi' || upi.trim() == 'NOT_CONFIGURED') {
+      return '';
+    }
+    return upi.trim();
+  }
+
+  int get profileCompletionPercentage {
+    if (myStore == null) return 20;
+    int score = 40; // Basic registration completed
+    if (myStore!.village.isNotEmpty && myStore!.latitude != 0.0) score += 20; // Location confirmed
+    if (myStore!.isApproved) score += 20; // Admin verification
+    if (linkedUpiId.isNotEmpty) score += 20; // Payout configured
+    return score.clamp(0, 100);
+  }
+
   Future<void> init() async {
     try {
       await apiClient.probeAndSelectHost();
@@ -100,6 +117,8 @@ class VendorAppState extends ChangeNotifier {
 
   void updateStore(GBStore updated) {
     myStore = updated;
+    isStoreOnline = updated.isOnline;
+    isStoreApproved = updated.isApproved;
     notifyListeners();
   }
 
@@ -107,6 +126,9 @@ class VendorAppState extends ChangeNotifier {
     currentUser = null;
     authToken = null;
     apiClient.clearAuthToken();
+    myStore = null;
+    isStoreApproved = false;
+    isStoreOnline = false;
     storeOrders.clear();
     myProducts.clear();
     finances = null;
@@ -127,7 +149,26 @@ class VendorAppState extends ChangeNotifier {
       isStoreApproved = myStore!.isApproved;
       notifyListeners();
       fetchProducts();
+    } else {
+      isStoreApproved = false;
+      notifyListeners();
     }
+  }
+
+  Future<bool> onboardStore(Map<String, dynamic> storeData) async {
+    final res = await apiClient.onboardStore(storeData);
+    if (res.isSuccess && res.data != null) {
+      myStore = res.data!;
+      isStoreOnline = myStore!.isOnline;
+      isStoreApproved = myStore!.isApproved;
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> updateStoreProfile(Map<String, dynamic> storeData) async {
+    return await onboardStore(storeData);
   }
 
   Future<String?> toggleStoreOnline() async {
@@ -142,24 +183,7 @@ class VendorAppState extends ChangeNotifier {
     if (res.isSuccess) {
       isStoreOnline = newStatus;
       if (myStore != null) {
-        myStore = GBStore(
-          id: myStore!.id,
-          ownerId: myStore!.ownerId,
-          shopName: myStore!.shopName,
-          ownerName: myStore!.ownerName,
-          category: myStore!.category,
-          latitude: myStore!.latitude,
-          longitude: myStore!.longitude,
-          village: myStore!.village,
-          landmark: myStore!.landmark,
-          block: myStore!.block,
-          district: myStore!.district,
-          isOnline: isStoreOnline,
-          isApproved: myStore!.isApproved,
-          isFeatured: myStore!.isFeatured,
-          rating: myStore!.rating,
-          bannerUrl: myStore!.bannerUrl,
-        );
+        myStore = myStore!.copyWith(isOnline: isStoreOnline);
       }
       notifyListeners();
       return null;
@@ -180,16 +204,26 @@ class VendorAppState extends ChangeNotifier {
   }
 
   Future<void> fetchProducts() async {
-    if (myStore == null) return;
     isLoadingProducts = true;
     notifyListeners();
 
-    final res = await apiClient.getStoreProducts(myStore!.id);
+    final res = await apiClient.getVendorProducts();
     isLoadingProducts = false;
     if (res.isSuccess && res.data != null) {
       myProducts = res.data!;
     }
     notifyListeners();
+  }
+
+  
+  Future<bool> handleOrderAction(String orderId, String action) async {
+    final res = await updateOrderStatus(orderId, action);
+    return res['success'] == true;
+  }
+
+  Future<bool> addProduct(Map<String, dynamic> data) async {
+    final res = await addCustomProduct(data);
+    return res['success'] == true;
   }
 
   Future<void> fetchFinances() async {
@@ -200,50 +234,49 @@ class VendorAppState extends ChangeNotifier {
     }
   }
 
-  Future<bool> handleOrderAction(String orderId, String action) async {
-    final res = await apiClient.vendorOrderAction(orderId, action);
+  Future<Map<String, dynamic>> updateOrderStatus(String orderId, String status) async {
+    final res = await apiClient.updateOrderStatus(orderId, status);
     if (res.isSuccess) {
       await fetchOrders();
       fetchFinances();
-      return true;
+      return {'success': true, 'message': res.data?['message']};
     }
-    return false;
+    return {'success': false, 'error': res.errorMessage ?? 'Action failed'};
   }
 
-  Future<bool> addProduct(Map<String, dynamic> productData) async {
-    final res = await apiClient.addVendorProduct(productData);
-    if (res.isSuccess && res.data != null) {
-      myProducts.insert(0, res.data!);
-      notifyListeners();
-      return true;
-    }
-    return false;
-  }
-
-  Future<void> toggleProductStock(String productId) async {
-    final idx = myProducts.indexWhere((p) => p.id == productId);
-    if (idx != -1) {
-      final current = myProducts[idx];
-      final newStock = !current.inStock;
-      final res = await apiClient.updateProductStock(productId, inStock: newStock);
-      if (res.isSuccess) {
-        myProducts[idx] = GBProduct(
-          id: current.id,
-          storeId: current.storeId,
-          nameEn: current.nameEn,
-          nameHi: current.nameHi,
-          category: current.category,
-          unit: current.unit,
-          price: current.price,
-          mrp: current.mrp,
-          imageUrl: current.imageUrl,
-          inStock: newStock,
-          stockQuantity: current.stockQuantity,
-        );
+  Future<Map<String, dynamic>> toggleProductStock(String productId, [bool? inStock]) async {
+    final current = myProducts.firstWhere((p) => p.id == productId, orElse: () => myProducts.first);
+    final targetStock = inStock ?? !current.inStock;
+    final res = await apiClient.toggleProductStock(productId, targetStock);
+    if (res.isSuccess) {
+      final idx = myProducts.indexWhere((p) => p.id == productId);
+      if (idx != -1) {
+        myProducts[idx] = myProducts[idx].copyWith(inStock: targetStock);
         notifyListeners();
       }
+      return {'success': true};
     }
+    return {'success': false, 'error': res.errorMessage};
   }
+
+  Future<Map<String, dynamic>> updateProductPrice(String productId, double price, int stock) async {
+    final res = await apiClient.updateProductInventory(productId, price, stock);
+    if (res.isSuccess) {
+      await fetchProducts();
+      return {'success': true};
+    }
+    return {'success': false, 'error': res.errorMessage};
+  }
+
+  Future<Map<String, dynamic>> addCustomProduct(Map<String, dynamic> productData) async {
+    final res = await apiClient.createVendorProduct(productData);
+    if (res.isSuccess) {
+      await fetchProducts();
+      return {'success': true};
+    }
+    return {'success': false, 'error': res.errorMessage};
+  }
+
   Future<void> fetchNotifications() async {
     try {
       final res = await apiClient.getNotifications();
@@ -252,24 +285,14 @@ class VendorAppState extends ChangeNotifier {
       } else if (notifications.isEmpty) {
         notifications = [
           GBNotification(
-            id: 'notif_vend_welcome',
-            title: isHindi ? 'दुकानदार पोर्टल में आपका स्वागत है' : 'Welcome to Shopkeeper Portal',
+            id: 'notif_ven_welcome',
+            title: isHindi ? 'विक्रेता ऐप में आपका स्वागत है!' : 'Welcome to Vendor App!',
             body: isHindi
-                ? 'गाँव बाज़ार 0% कमीशन पर आपकी दुकान को सीधे ग्रामीण ग्राहकों से जोड़ता है।'
-                : 'GaonBazaar connects your village shop directly to customers at 0% commission.',
-            timestamp: DateTime.now().subtract(const Duration(minutes: 30)),
+                ? 'गाँव बाज़ार में आपका स्वागत है। अपनी दुकान चालू रखें और 0% कमीशन पर सीधे गाँव में उत्पाद बेचें।'
+                : 'Welcome to GaonBazaar! Keep your store online to fulfill rural quick-commerce orders with 0% commission.',
+            timestamp: DateTime.now().subtract(const Duration(minutes: 10)),
             isRead: false,
             type: 'system',
-          ),
-          GBNotification(
-            id: 'notif_vend_payout',
-            title: isHindi ? 'दैनिक सेटलमेंट सक्रिय' : 'Daily Settlement Active',
-            body: isHindi
-                ? 'आपके बैंक / यूपीआई खाते में कल के सभी पूर्ण ऑर्डर का भुगतान प्रोसेस हो चुका है।'
-                : 'Payout for all delivered orders processed to your linked UPI/Bank account.',
-            timestamp: DateTime.now().subtract(const Duration(hours: 3)),
-            isRead: true,
-            type: 'settlement',
           ),
         ];
       }

@@ -35,9 +35,23 @@ class RunnerAppState extends ChangeNotifier {
   double get todayEarningsTotal => (finances?['today_earnings'] as num?)?.toDouble() ?? todayEarnings;
   double get weeklyEarnings => (finances?['weekly_earnings'] as num?)?.toDouble() ?? 0.0;
   List<Map<String, dynamic>> get trips => (finances?['trips'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
-  String get linkedUpiId => (finances?['upi_id'] as String?)?.isNotEmpty == true
-      ? (finances!['upi_id'] as String)
-      : (runnerProfile?['upi_id'] as String? ?? '');
+
+  String get linkedUpiId {
+    final upi = (finances?['upi_id'] as String?) ?? (runnerProfile?['upi_id'] as String?);
+    if (upi == null || upi.trim().isEmpty || upi.trim() == 'runner@upi' || upi.trim() == 'NOT_CONFIGURED') {
+      return '';
+    }
+    return upi.trim();
+  }
+
+  int get profileCompletionPercentage {
+    if (runnerProfile == null) return 20;
+    int score = 40; // Initial registration
+    if (runnerProfile!['vehicle_number'] != null && runnerProfile!['vehicle_number'].toString().isNotEmpty) score += 20;
+    if (isApproved) score += 20;
+    if (linkedUpiId.isNotEmpty) score += 20;
+    return score.clamp(0, 100);
+  }
 
   GBOrder? get activeMission {
     final runnerId = runnerProfile?['id'] as String? ?? currentUser?.id;
@@ -133,6 +147,9 @@ class RunnerAppState extends ChangeNotifier {
     currentUser = null;
     authToken = null;
     apiClient.clearAuthToken();
+    runnerProfile = null;
+    isApproved = false;
+    isOnline = false;
     activeJobs.clear();
     finances = null;
     notifyListeners();
@@ -148,10 +165,14 @@ class RunnerAppState extends ChangeNotifier {
     final res = await apiClient.getRunnerMe();
     if (res.isSuccess && res.data != null) {
       runnerProfile = res.data!;
-      isApproved = (res.data!['is_approved'] as bool?) ?? true;
+      // Strict rule: missing approval defaults to false!
+      isApproved = (res.data!['is_approved'] as bool?) ?? false;
       isOnline = (res.data!['is_online'] as bool?) ?? false;
       todayEarnings = (res.data!['today_earnings'] as num?)?.toDouble() ?? 0.0;
       completedTrips = (res.data!['completed_trips'] as int?) ?? 0;
+      notifyListeners();
+    } else {
+      isApproved = false;
       notifyListeners();
     }
   }
@@ -233,6 +254,10 @@ class RunnerAppState extends ChangeNotifier {
       return true;
     }
     return false;
+  }
+
+  Future<bool> updateRunnerProfile(Map<String, dynamic> runnerData) async {
+    return await onboardRunner(runnerData);
   }
 
   Future<void> fetchNotifications() async {

@@ -8,7 +8,7 @@ import 'vendor_auth_screen.dart';
 import 'product_library_screen.dart';
 import 'vendor_settlements_screen.dart';
 import 'vendor_picking_packing_screen.dart';
-import 'vendor_store_settings_screen.dart';
+import 'account_subpages.dart';
 
 class VendorDashboardScreen extends StatefulWidget {
   const VendorDashboardScreen({super.key});
@@ -822,11 +822,12 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
   }
 
   // =========================================================================
-  // TAB 4: ACCOUNT & SETTINGS
+  // TAB 4: ACCOUNT & SUBPAGES
   // =========================================================================
   Widget _buildAccountTab(VendorAppState state) {
     final loc = GBLocalizations.of(context);
     final isHi = loc.isHindi;
+    final completionPct = state.profileCompletionPercentage;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -864,39 +865,172 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
                     ],
                   ),
                 ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: state.isStoreApproved ? Colors.green.shade50 : Colors.amber.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: state.isStoreApproved ? Colors.green : Colors.amber),
+                  ),
+                  child: Text(
+                    state.isStoreApproved ? (isHi ? 'स्वीकृत' : 'Approved') : (isHi ? 'समीक्षाधीन' : 'Pending'),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: state.isStoreApproved ? Colors.green.shade800 : Colors.amber.shade900,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
 
+        const SizedBox(height: 12),
+
+        // Profile Completion Progress Card
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: GBColors.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: GBColors.primary.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.task_alt, color: GBColors.primary, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        isHi ? 'प्रोफ़ाइल पूर्णता स्थिति' : 'Profile Completion',
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: GBColors.primary),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    '$completionPct%',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: GBColors.primary),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: completionPct / 100.0,
+                  backgroundColor: Colors.grey.shade300,
+                  valueColor: const AlwaysStoppedAnimation<Color>(GBColors.primary),
+                  minHeight: 6,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                completionPct >= 100
+                    ? (isHi ? 'सभी आवश्यक प्रोफ़ाइल व बैंक विवरण पूर्ण हैं!' : 'All required profile & bank details complete!')
+                    : (isHi ? 'ऑर्डर और भुगतान प्राप्त करने के लिए शेष विवरण पूर्ण करें।' : 'Complete remaining details to enable payouts.'),
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+
         const SizedBox(height: 16),
 
-        // Settings Items
+        Text(
+          isHi ? 'खाता एवं व्यापार सेटिंग्स' : 'Account & Business Settings',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+
+        // Dedicated Subpage 1: Personal Profile
         _buildAccountTile(
-          icon: Icons.store_outlined,
-          title: isHi ? 'दुकान प्रबंधन व सेटिंग्स' : 'Store Profile & Settings',
+          icon: Icons.person_outline,
+          title: isHi ? 'व्यक्तिगत प्रोफ़ाइल' : 'Personal Profile',
+          subtitle: state.currentUser?.name ?? state.myStore?.ownerName ?? (isHi ? 'नाम व फ़ोन विवरण' : 'Name & contact details'),
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const VendorStoreSettingsScreen()),
+              MaterialPageRoute(builder: (_) => const VendorPersonalProfileScreen()),
             );
           },
         ),
+
+        // Dedicated Subpage 2: My Store
+        _buildAccountTile(
+          icon: Icons.storefront_outlined,
+          title: isHi ? 'मेरी दुकान का विवरण' : 'My Store Details',
+          subtitle: state.myStore?.shopName ?? (isHi ? 'श्रेणी व दुकान नाम' : 'Store category & details'),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const VendorMyStoreScreen()),
+            );
+          },
+        ),
+
+        // Dedicated Subpage 3: Store Location
+        _buildAccountTile(
+          icon: Icons.location_on_outlined,
+          title: isHi ? 'दुकान का स्थान व जीपीएस' : 'Store Location & GPS',
+          subtitle: state.myStore?.address ?? (isHi ? 'गाँव, ब्लॉक व 8 किमी डिलीवरी क्षेत्र' : 'Village, block & 8km radius'),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const VendorStoreLocationScreen()),
+            );
+          },
+        ),
+
+        // Dedicated Subpage 4: Business Verification & KYC
         _buildAccountTile(
           icon: Icons.verified_user_outlined,
-          title: isHi ? 'सत्यापन व केवाईसी स्थिति' : 'Verification & KYC Status',
-          subtitle: state.isStoreApproved ? (isHi ? 'सत्यापित (Verified)' : 'Verified') : (isHi ? 'समीक्षाधीन (Under Review)' : 'Under Review'),
+          title: isHi ? 'व्यवसाय सत्यापन व केवाईसी स्थिति' : 'Business Verification & KYC',
+          subtitle: state.isStoreApproved
+              ? (isHi ? 'सत्यापित एवं अधिकृत (Approved)' : 'Approved & Verified')
+              : (isHi ? 'दस्तावेज़ समीक्षाधीन (Under Review)' : 'Under Admin Review'),
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const VendorStoreSettingsScreen()),
+              MaterialPageRoute(builder: (_) => const VendorBusinessVerificationScreen()),
             );
           },
         ),
+
+        // Dedicated Subpage 5: Bank & UPI Payout (Zero Fake UPI)
         _buildAccountTile(
           icon: Icons.account_balance_outlined,
-          title: isHi ? 'बैंक व यूपीआई सेटिंग्स' : 'Bank & UPI Settings',
-          subtitle: state.myStore?.upiId ?? 'Not linked',
-          onTap: () => setState(() => _navIndex = 3),
+          title: isHi ? 'बैंक खाता व यूपीआई पेआउट' : 'Bank Account & UPI Payout',
+          subtitle: (state.linkedUpiId.isNotEmpty && state.linkedUpiId != 'NOT_CONFIGURED')
+              ? state.linkedUpiId
+              : (isHi ? 'सेट नहीं है (Not Configured)' : 'Not Configured'),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const VendorBankPayoutScreen()),
+            );
+          },
         ),
+
+        // Dedicated Subpage 6: Operating Hours
+        _buildAccountTile(
+          icon: Icons.access_time_outlined,
+          title: isHi ? 'दुकान खुलने व बंद होने का समय' : 'Store Operating Hours',
+          subtitle: isHi ? 'दैनिक समय और अवकाश नियंत्रण' : 'Daily schedule & holiday controls',
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const VendorOperatingHoursScreen()),
+            );
+          },
+        ),
+
+        const SizedBox(height: 12),
+        Text(
+          isHi ? 'प्राथमिकताएं व सहायता' : 'Preferences & Support',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+
+        // Language
         _buildAccountTile(
           icon: Icons.language_outlined,
           title: isHi ? 'भाषा (Language)' : 'Language',
@@ -937,6 +1071,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
             );
           },
         ),
+
+        // Theme
         _buildAccountTile(
           icon: Icons.brightness_medium_outlined,
           title: isHi ? 'थीम (Theme)' : 'Theme Mode',
@@ -947,9 +1083,12 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> {
             state.setTheme(state.themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark);
           },
         ),
+
+        // Support
         _buildAccountTile(
           icon: Icons.headset_mic_outlined,
           title: isHi ? 'दुकानदार सहायता व हेल्पलाइन' : 'Helpdesk & Support',
+          subtitle: '+91 98000 00000',
           onTap: () async {
             final uri = Uri.parse('tel:+919800000000');
             if (await canLaunchUrl(uri)) await launchUrl(uri);

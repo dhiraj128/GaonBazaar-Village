@@ -4,6 +4,7 @@ import 'package:shared_models/shared_models.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../state/runner_state.dart';
 import 'runner_auth_screen.dart';
+import 'runner_account_subpages.dart';
 import 'runner_active_delivery_screen.dart';
 
 class RunnerDashboardScreen extends StatefulWidget {
@@ -983,16 +984,17 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
   }
 
   // ==========================================
-  // TAB 4: ACCOUNT / PROFILE
+  // TAB 4: PROFILE, ACCOUNT & SETTINGS
   // ==========================================
   Widget _buildAccountTab(RunnerAppState state) {
     final isHi = state.isHindi;
+    final completionPct = state.profileCompletionPercentage;
 
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Profile Header
+          // Profile Card
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -1069,28 +1071,192 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
-          // Support & Emergency
-          Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          // Profile Completion Progress Card
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: GBColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: GBColors.primary.withValues(alpha: 0.2)),
+            ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ListTile(
-                  leading: const Icon(Icons.emergency, color: Colors.red),
-                  title: Text(isHi ? 'आपातकालीन सहायता हेल्पलाइन' : 'Emergency Partner Support'),
-                  subtitle: const Text('+91 98000 00000'),
-                  trailing: const Icon(Icons.phone, color: Colors.red),
-                  onTap: () async {
-                    final uri = Uri.parse('tel:9800000000');
-                    if (await canLaunchUrl(uri)) await launchUrl(uri);
-                  },
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.task_alt, color: GBColors.primary, size: 18),
+                        const SizedBox(width: 6),
+                        Text(
+                          isHi ? 'साथी प्रोफ़ाइल पूर्णता' : 'Partner Profile Completion',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: GBColors.primary),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '$completionPct%',
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: GBColors.primary),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: completionPct / 100.0,
+                    backgroundColor: Colors.grey.shade300,
+                    valueColor: const AlwaysStoppedAnimation<Color>(GBColors.primary),
+                    minHeight: 6,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  completionPct >= 100
+                      ? (isHi ? 'सभी विवरण एवं भुगतान सेटिंग्स पूर्ण हैं!' : 'All partner details & payout settings complete!')
+                      : (isHi ? 'ट्रिप पेआउट और मिशन पाने के लिए विवरण पूर्ण करें।' : 'Complete remaining details to enable payouts.'),
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
+
+          Text(
+            isHi ? 'डिलीवरी साथी सेटिंग्स व उप-पृष्ठ' : 'Partner Account & Subpages',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+
+          // Subpage 1: Personal Profile
+          Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: ListTile(
+              leading: const Icon(Icons.person_outline, color: GBColors.primary),
+              title: Text(isHi ? 'व्यक्तिगत प्रोफ़ाइल' : 'Personal Profile', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              subtitle: Text(
+                state.runnerProfile?['full_name'] as String? ?? state.currentUser?.name ?? (isHi ? 'नाम व विवरण' : 'Name & contact'),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RunnerPersonalProfileScreen()),
+                );
+              },
+            ),
+          ),
+
+          // Subpage 2: Vehicle Details
+          Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: ListTile(
+              leading: const Icon(Icons.two_wheeler, color: GBColors.primary),
+              title: Text(isHi ? 'वाहन विवरण एवं ड्राइविंग लाइसेंस' : 'Vehicle Details & License', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              subtitle: Text(
+                '${state.runnerProfile?["vehicle_type"] ?? "Motorcycle"} • ${state.runnerProfile?["vehicle_number"] ?? "Not Set"}',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RunnerVehicleDetailsScreen()),
+                );
+              },
+            ),
+          ),
+
+          // Subpage 3: Identity & Documents
+          Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: ListTile(
+              leading: const Icon(Icons.verified_user_outlined, color: GBColors.primary),
+              title: Text(isHi ? 'पहचान दस्तावेज़ व आधार सत्यापन' : 'Identity Documents & Aadhaar', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              subtitle: Text(
+                state.isApproved ? (isHi ? 'सत्यापित (Verified)' : 'Verified') : (isHi ? 'समीक्षाधीन (Under Review)' : 'Under Review'),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RunnerIdentityDocumentsScreen()),
+                );
+              },
+            ),
+          ),
+
+          // Subpage 4: Delivery Area
+          Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: ListTile(
+              leading: const Icon(Icons.map_outlined, color: GBColors.primary),
+              title: Text(isHi ? 'डिलीवरी कार्यक्षेत्र व क्लस्टर' : 'Delivery Work Area & Cluster', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              subtitle: Text(
+                '${state.runnerProfile?["working_village"] ?? "Minapur"} (${state.runnerProfile?["block"] ?? "Minapur"} Block)',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RunnerDeliveryAreaScreen()),
+                );
+              },
+            ),
+          ),
+
+          // Subpage 5: Bank & UPI Payout (Zero Fake UPI)
+          Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: ListTile(
+              leading: const Icon(Icons.account_balance_outlined, color: GBColors.primary),
+              title: Text(isHi ? 'बैंक खाता व यूपीआई पेआउट' : 'Bank Account & UPI Payout', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+              subtitle: Text(
+                (state.linkedUpiId.isNotEmpty && state.linkedUpiId != 'NOT_CONFIGURED')
+                    ? state.linkedUpiId
+                    : (isHi ? 'सेट नहीं है (Not Configured)' : 'Not Configured'),
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RunnerBankPayoutScreen()),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 12),
+          Text(
+            isHi ? 'सहायता एवं सिस्टम' : 'Support & System',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+
+          // Support & Emergency
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: ListTile(
+              leading: const Icon(Icons.emergency, color: Colors.red),
+              title: Text(isHi ? 'आपातकालीन सहायता हेल्पलाइन' : 'Emergency Partner Support'),
+              subtitle: const Text('+91 98000 00000'),
+              trailing: const Icon(Icons.phone, color: Colors.red),
+              onTap: () async {
+                final uri = Uri.parse('tel:9800000000');
+                if (await canLaunchUrl(uri)) await launchUrl(uri);
+              },
+            ),
+          ),
+
+          const SizedBox(height: 8),
 
           // Settings: Language & Theme
           Card(
