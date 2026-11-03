@@ -53,16 +53,26 @@ async def get_current_admin(
 ) -> dict:
     # 1. API Key check
     if api_key and api_key == settings.ADMIN_API_KEY:
-        return {"sub": "admin_key_user", "role": "admin", "phone": "9800000099"}
+        return {"sub": "admin_key_user", "role": "super_admin", "phone": "9800000099"}
     
     # 2. JWT Bearer Token check
     if credentials:
         payload = decode_access_token(credentials.credentials)
-        if payload and payload.get("role") == "admin":
+        if payload and payload.get("role") in ["admin", "super_admin", "hub_manager"]:
             return payload
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
-        detail="प्रशासनिक अनुमति आवश्यक है (Super Admin privileges required)"
+        detail="प्रशासनिक अनुमति आवश्यक है (Administrative privileges required)"
     )
 
+async def require_super_admin(admin_payload: dict = Depends(get_current_admin)) -> dict:
+    role = admin_payload.get("role")
+    if role in ["admin", "super_admin"]:
+        return admin_payload
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Role-Based Access Control: 'Hub Manager' is restricted from accessing Financials/Batch Payouts, Master Catalog Pricing Settings, and System Audit Logs. Super Admin privilege required."
+    )
+
+require_hub_manager_or_super_admin = get_current_admin

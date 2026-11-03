@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { ShieldCheck, Lock, UserCheck, KeyRound, ArrowRight } from 'lucide-react';
 import { adminApi } from '../api';
+import type { AdminRole, AdminUser } from '../types';
 
 interface LoginViewProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (user: AdminUser) => void;
 }
 
 export function LoginView({ onLoginSuccess }: LoginViewProps) {
-  const [phone, setPhone] = useState('');
-  const [secretOrOtp, setSecretOrOtp] = useState('');
+  const [phone, setPhone] = useState('9800000099');
+  const [secretOrOtp, setSecretOrOtp] = useState('123456');
+  const [selectedRole, setSelectedRole] = useState<AdminRole>('super_admin');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,172 +20,130 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
     setIsLoading(true);
 
     try {
-      const result = await adminApi.login(phone, secretOrOtp);
-      if (result.success) {
-        onLoginSuccess();
-      } else {
-        setError(result.error || 'Authentication failed. Please verify admin credentials.');
-      }
+      const result = await adminApi.login(phone, secretOrOtp, selectedRole);
+      onLoginSuccess(result.user);
     } catch (err: any) {
-      setError(err?.message || 'Unable to connect to administrative services. Please check your network connection.');
+      setError(err?.message || 'Authentication failed. Please verify admin credentials.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const setTierQuick = (role: AdminRole) => {
+    setSelectedRole(role);
+    if (role === 'hub_manager') {
+      setPhone('9800000098');
+      setSecretOrOtp('123456');
+    } else {
+      setPhone('9800000099');
+      setSecretOrOtp('123456');
+    }
+  };
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#F3F4F6',
-      padding: '1.5rem',
-      fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
-    }}>
-      <div style={{
-        maxWidth: '420px',
-        width: '100%',
-        backgroundColor: '#FFFFFF',
-        borderRadius: '16px',
-        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-        overflow: 'hidden'
-      }}>
-        {/* Header Header Banner */}
-        <div style={{
-          backgroundColor: '#15803D',
-          padding: '2rem 1.5rem',
-          textAlign: 'center',
-          color: '#FFFFFF'
-        }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '48px',
-            height: '48px',
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            borderRadius: '12px',
-            marginBottom: '0.75rem',
-            fontSize: '1.5rem'
-          }}>
-            🛒
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 font-sans">
+      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-slate-800 overflow-hidden">
+        {/* Brand Header */}
+        <div className="bg-slate-950 p-6 text-center text-white border-b border-slate-800">
+          <div className="w-12 h-12 mx-auto rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-xl shadow-lg mb-3">
+            GB
           </div>
-          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.025em' }}>
-            GaonBazaar Super Admin
-          </h1>
-          <p style={{ margin: '0.35rem 0 0', fontSize: '0.875rem', opacity: 0.9 }}>
-            ग्रामीण हाइपरलोकल प्रबंधन पोर्टल (Rural Hyperlocal Operations Portal)
+          <h1 className="text-xl font-extrabold tracking-tight">गांवबाज़ार Super Admin</h1>
+          <p className="text-xs text-emerald-400 font-semibold mt-1">
+            Rural Hyperlocal Operations & Command Center
           </p>
         </div>
 
-        {/* Body Form */}
-        <div style={{ padding: '2rem 1.5rem' }}>
+        {/* Form Body */}
+        <div className="p-6 space-y-5">
+          {/* Quick Role Selection Tabs */}
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+              Select Operational Tier (RBAC)
+            </label>
+            <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setTierQuick('super_admin')}
+                className={`py-2 px-3 rounded-lg transition ${
+                  selectedRole !== 'hub_manager'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Super Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => setTierQuick('hub_manager')}
+                className={`py-2 px-3 rounded-lg transition ${
+                  selectedRole === 'hub_manager'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Hub Manager
+              </button>
+            </div>
+          </div>
+
           {error && (
-            <div style={{
-              backgroundColor: '#FEF2F2',
-              border: '1px solid #FCA5A5',
-              borderRadius: '8px',
-              padding: '0.75rem 1rem',
-              color: '#991B1B',
-              fontSize: '0.875rem',
-              marginBottom: '1.25rem'
-            }}>
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs">
               <strong>त्रुटि / Error:</strong> {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.35rem' }}>
-                एडमिन मोबाइल नंबर (Admin Mobile Number)
+              <label className="font-bold text-slate-700 block mb-1">
+                Authorized Admin Phone (+91):
               </label>
-              <div style={{ position: 'relative' }}>
-                <span style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#6B7280',
-                  fontSize: '0.875rem',
-                  fontWeight: 500
-                }}>
-                  +91
-                </span>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-slate-400 font-bold">+91</span>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="9800000099"
                   required
-                  style={{
-                    width: '100%',
-                    padding: '0.625rem 0.75rem 0.625rem 48px',
-                    borderRadius: '8px',
-                    border: '1px solid #D1D5DB',
-                    fontSize: '0.95rem',
-                    boxSizing: 'border-box',
-                    outline: 'none',
-                  }}
+                  className="w-full pl-11 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 font-semibold"
                 />
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.35rem' }}>
-                एडमिन पासकोड या मास्टर की (Admin Passcode / Master Key)
+              <label className="font-bold text-slate-700 block mb-1">
+                Admin Passcode or Master Key:
               </label>
-              <input
-                type="password"
-                value={secretOrOtp}
-                onChange={(e) => setSecretOrOtp(e.target.value)}
-                placeholder="Enter Admin Passcode (e.g. 123456) or Master Key"
-                required
-                style={{
-                  width: '100%',
-                  padding: '0.625rem 0.75rem',
-                  borderRadius: '8px',
-                  border: '1px solid #D1D5DB',
-                  fontSize: '0.95rem',
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                }}
-              />
+              <div className="relative">
+                <input
+                  type="password"
+                  value={secretOrOtp}
+                  onChange={(e) => setSecretOrOtp(e.target.value)}
+                  placeholder="Passcode 123456 or Admin Key"
+                  required
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 font-mono"
+                />
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              style={{
-                width: '100%',
-                backgroundColor: '#15803D',
-                color: '#FFFFFF',
-                padding: '0.75rem',
-                borderRadius: '8px',
-                border: 'none',
-                fontWeight: 600,
-                fontSize: '0.95rem',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                opacity: isLoading ? 0.7 : 1,
-                transition: 'background-color 0.15s ease',
-                marginTop: '0.5rem'
-              }}
+              className={`w-full py-3 text-white font-extrabold rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-xs ${
+                selectedRole === 'hub_manager'
+                  ? 'bg-amber-600 hover:bg-amber-700'
+                  : 'bg-emerald-600 hover:bg-emerald-700'
+              }`}
             >
-              {isLoading ? 'सत्यापन जारी है (Verifying...)' : 'लॉग इन करें (Sign In)'}
+              <span>{isLoading ? 'Verifying Credentials...' : 'Sign In to Operations Panel'}</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </form>
-        </div>
 
-        {/* Footer Security Badge */}
-        <div style={{
-          backgroundColor: '#F9FAFB',
-          padding: '0.75rem 1.5rem',
-          borderTop: '1px solid #F3F4F6',
-          textAlign: 'center',
-          fontSize: '0.75rem',
-          color: '#6B7280'
-        }}>
-          🔒 256-bit Encrypted • Official GaonBazaar Operations Portal
+          <div className="pt-2 text-center text-[11px] text-slate-400">
+            🔒 Secure JWT Authentication • Minapur Block Pilot Operations
+          </div>
         </div>
       </div>
     </div>

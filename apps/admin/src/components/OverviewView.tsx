@@ -1,14 +1,15 @@
+import React from 'react';
 import {
   IndianRupee,
   ShoppingBag,
   Store,
   Bike,
-  AlertTriangle,
-  ArrowRight,
   ShieldAlert,
+  ArrowRight,
+  AlertTriangle,
 } from 'lucide-react';
-import type { AdminOverview, OrderItemRecord } from '../types';
 import type { NavTab } from './Sidebar';
+import type { AdminOverview, OrderItemRecord } from '../types';
 
 interface OverviewViewProps {
   overview: AdminOverview | null;
@@ -22,7 +23,11 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   onNavigate,
 }) => {
   if (!overview) {
-    return <div className="p-8 text-center text-slate-500">Loading overview data...</div>;
+    return (
+      <div className="p-8 text-center text-slate-500">
+        Loading system analytics...
+      </div>
+    );
   }
 
   const hasPendingApprovals =
@@ -30,42 +35,28 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Alert banner if pending approvals */}
+      {/* Alert Header if pending approvals exist */}
       {hasPendingApprovals && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between shadow-sm">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between shadow-xs">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
             <div>
-              <div className="text-sm font-bold text-amber-900">
-                Action Required: Pending Approvals
-              </div>
-              <div className="text-xs text-amber-700">
-                {overview.pending_vendor_approvals > 0 &&
-                  `${overview.pending_vendor_approvals} new village shop(s) awaiting verification. `}
-                {overview.pending_runner_approvals > 0 &&
-                  `${overview.pending_runner_approvals} delivery runner(s) awaiting DL & vehicle approval.`}
-              </div>
+              <h4 className="text-sm font-bold text-amber-900">
+                KYC Verification Action Items
+              </h4>
+              <p className="text-xs text-amber-700">
+                You have {overview.pending_vendor_approvals} stores and{' '}
+                {overview.pending_runner_approvals} delivery partners waiting for Super Admin review.
+              </p>
             </div>
           </div>
           <div className="flex space-x-2">
-            {overview.pending_vendor_approvals > 0 && (
-              <button
-                onClick={() => onNavigate('vendors')}
-                className="px-3 py-1.5 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition"
-              >
-                Review Stores
-              </button>
-            )}
-            {overview.pending_runner_approvals > 0 && (
-              <button
-                onClick={() => onNavigate('runners')}
-                className="px-3 py-1.5 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition"
-              >
-                Review Runners
-              </button>
-            )}
+            <button
+              onClick={() => onNavigate('users')}
+              className="px-3 py-1.5 text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition"
+            >
+              Review KYC Queue
+            </button>
           </div>
         </div>
       )}

@@ -151,7 +151,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({ catalog, onAddItem }) 
                 <div>
                   <span className="text-[10px] text-slate-400 block">Suggested Price</span>
                   <span className="font-extrabold text-slate-900 text-sm">
-                    ₹{item.suggested_price.toFixed(2)}
+                    ₹{(item.suggested_price || item.suggested_mrp || 0).toFixed(2)}
                   </span>
                 </div>
                 <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-1 rounded font-semibold border border-emerald-200">
