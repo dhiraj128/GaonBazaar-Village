@@ -83,8 +83,9 @@ class OrderResponse(BaseModel):
     timeline: List[OrderTimelineDetail]
 
 class OrderActionRequest(BaseModel):
-    action: str # ACCEPT, REJECT, PACKED, PICKUP, DELIVER
+    action: str # ACCEPT, REJECT, PACKED, PICKUP, DELIVER, HANDOFF
     delivery_otp: Optional[str] = None
+    handover_code: Optional[str] = None
     runner_payout: Optional[float] = None
     cash_collected: Optional[bool] = None
     reason: Optional[str] = None

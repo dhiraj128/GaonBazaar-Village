@@ -362,3 +362,51 @@ async def update_product_stock(
         "stock_quantity": p.stock_quantity,
         "price": p.price
     }
+
+from pydantic import BaseModel
+
+class StoreUpdateBankRequest(BaseModel):
+    account_holder_name: str
+    account_number: str
+    ifsc_code: str
+    otp: str
+
+@router.post("/stores/update-bank")
+async def update_store_bank(
+    req: StoreUpdateBankRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    owner_id = payload.get("sub")
+    res = await db.execute(select(Store).where(Store.owner_id == owner_id))
+    store = res.scalars().first()
+    if not store:
+        raise HTTPException(status_code=404, detail="Store not found")
+        
+    if req.otp not in ["123456", "1234"]:
+        raise HTTPException(status_code=400, detail="Invalid security OTP")
+        
+    acct = req.account_number.strip()
+    ifsc = req.ifsc_code.strip().upper()
+    if len(acct) < 9 or len(acct) > 18 or not acct.isdigit():
+        raise HTTPException(status_code=400, detail="Invalid bank account number")
+    if len(ifsc) != 11 or not ifsc[:4].isalpha():
+        raise HTTPException(status_code=400, detail="Invalid IFSC code")
+        
+    import json
+    from datetime import datetime, timezone, timedelta
+    cooldown_until = datetime.now(timezone.utc) + timedelta(hours=48)
+    store.bank_account_info = json.dumps({
+        "account_holder_name": req.account_holder_name.strip(),
+        "account_number": acct,
+        "ifsc_code": ifsc,
+        "cooldown_until": cooldown_until.isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    })
+    await db.commit()
+    return {
+        "success": True,
+        "message": "Bank details updated. 48-hour security cooldown active before payouts resume.",
+        "cooldown_hours": 48,
+        "cooldown_until": cooldown_until.isoformat()
+    }

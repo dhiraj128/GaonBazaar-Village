@@ -307,7 +307,54 @@ class VendorAppState extends ChangeNotifier {
       await apiClient.markAllNotificationsRead();
     } catch (_) {}
   }
+
+  Future<Map<String, dynamic>> verifyPennyDrop({
+    required String accountHolderName,
+    String? accountNumber,
+    String? ifscCode,
+    String? upiId,
+  }) async {
+    final res = await apiClient.verifyPennyDrop(
+      accountHolderName: accountHolderName,
+      accountNumber: accountNumber,
+      ifscCode: ifscCode,
+      upiId: upiId,
+    );
+    if (res.isSuccess && res.data != null) {
+      return {'success': true, 'data': res.data};
+    }
+    return {'success': false, 'error': res.errorMessage ?? 'Verification failed'};
+  }
+
+  Future<Map<String, dynamic>> updateBankDetails({
+    required String accountHolderName,
+    required String accountNumber,
+    required String ifscCode,
+    required String otp,
+  }) async {
+    final res = await apiClient.updateStoreBank(
+      accountHolderName: accountHolderName,
+      accountNumber: accountNumber,
+      ifscCode: ifscCode,
+      otp: otp,
+    );
+    if (res.isSuccess) {
+      await fetchStoreProfile();
+      return {'success': true, 'message': res.data?['message'], 'cooldown_hours': res.data?['cooldown_hours']};
+    }
+    return {'success': false, 'error': res.errorMessage ?? 'Bank update failed'};
+  }
+
+  Future<Map<String, dynamic>> handoffOrder(String orderId, String handoverCode) async {
+    final res = await apiClient.vendorHandoffOrder(orderId, handoverCode);
+    if (res.isSuccess) {
+      await fetchOrders();
+      return {'success': true, 'message': res.data?['message']};
+    }
+    return {'success': false, 'error': res.errorMessage ?? 'Handover failed'};
+  }
 }
+
 
 class VendorStateProvider extends InheritedNotifier<VendorAppState> {
   const VendorStateProvider({

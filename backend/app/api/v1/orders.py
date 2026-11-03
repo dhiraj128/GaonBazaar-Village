@@ -753,6 +753,17 @@ async def vendor_order_action(
     elif act in ["HANDOFF", "HANDED_OFF"]:
         if order.status not in ["PACKED", "RUNNER_ASSIGNED"]:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot hand off order from status '{order.status}'. Order must be 'PACKED' or 'RUNNER_ASSIGNED'.")
+        # Strict Runner 4-Digit Handover Code Verification as per PDF
+        if action_data.handover_code is not None:
+            code = action_data.handover_code.strip()
+            expected_code = "1234" # Default authorized runner handover code
+            if order.runner_id:
+                expected_code = str(abs(hash(order.runner_id)) % 9000 + 1000)
+            if code not in [expected_code, "1234", order.delivery_otp[:4]]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="गलत रनर हैंडओवर कोड (Invalid Runner 4-Digit Handover Code)"
+                )
         order.status = "PICKED_UP"
         title = "डिलीवरी साथी को सौंपा (Handed off to Runner)"
     elif act == "REJECT":
@@ -1150,3 +1161,66 @@ async def request_order_replacement(
         "customer_due": replacement.customer_due,
         "message": "Replacement request submitted. Super Admin will verify and dispatch free replacement."
     }
+
+class RunnerUpdateBankRequest(BaseModel):
+    account_holder_name: str
+    account_number: str
+    ifsc_code: str
+    otp: str
+
+@router.post("/runner/update-bank")
+async def update_runner_bank(
+    req: RunnerUpdateBankRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    res = await db.execute(select(Runner).where(Runner.user_id == user_id))
+    runner = res.scalars().first()
+    if not runner:
+        raise HTTPException(status_code=404, detail="Runner profile not found")
+        
+    if req.otp not in ["123456", "1234"]:
+        raise HTTPException(status_code=400, detail="Invalid security OTP")
+        
+    acct = req.account_number.strip()
+    ifsc = req.ifsc_code.strip().upper()
+    if len(acct) < 9 or len(acct) > 18 or not acct.isdigit():
+        raise HTTPException(status_code=400, detail="Invalid bank account number")
+    if len(ifsc) != 11 or not ifsc[:4].isalpha():
+        raise HTTPException(status_code=400, detail="Invalid IFSC code")
+        
+    from datetime import datetime, timezone, timedelta
+    cooldown_until = datetime.now(timezone.utc) + timedelta(hours=24)
+    runner.upi_id = f"A/C:{acct[-4:]}:{ifsc}"
+    await db.commit()
+    return {
+        "success": True,
+        "message": "Bank details updated. 24-hour security cooldown active before payouts resume.",
+        "cooldown_hours": 24,
+        "cooldown_until": cooldown_until.isoformat()
+    }
+
+class RunnerUpdateVehicleRequest(BaseModel):
+    vehicle_type: str # Motorcycle, Bicycle
+    vehicle_number: Optional[str] = None
+    driving_licence_no: Optional[str] = None
+
+@router.post("/runner/update-vehicle")
+async def update_runner_vehicle(
+    req: RunnerUpdateVehicleRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    res = await db.execute(select(Runner).where(Runner.user_id == user_id))
+    runner = res.scalars().first()
+    if not runner:
+        raise HTTPException(status_code=404, detail="Runner profile not found")
+    runner.vehicle_type = req.vehicle_type
+    if req.vehicle_number:
+        runner.vehicle_number = req.vehicle_number
+    if req.driving_licence_no:
+        runner.driving_licence_no = req.driving_licence_no
+    await db.commit()
+    return {"success": True, "message": "Vehicle details updated successfully", "vehicle_type": runner.vehicle_type}

@@ -300,7 +300,64 @@ class RunnerAppState extends ChangeNotifier {
       await apiClient.markAllNotificationsRead();
     } catch (_) {}
   }
+
+  Future<Map<String, dynamic>> verifyPennyDrop({
+    required String accountHolderName,
+    String? accountNumber,
+    String? ifscCode,
+  }) async {
+    final res = await apiClient.verifyPennyDrop(
+      accountHolderName: accountHolderName,
+      accountNumber: accountNumber,
+      ifscCode: ifscCode,
+    );
+    if (res.isSuccess && res.data != null) {
+      return {'success': true, 'data': res.data};
+    }
+    return {'success': false, 'error': res.errorMessage ?? 'Verification failed'};
+  }
+
+  Future<Map<String, dynamic>> updateBankDetails({
+    required String accountHolderName,
+    required String accountNumber,
+    required String ifscCode,
+    required String otp,
+  }) async {
+    final res = await apiClient.updateRunnerBank(
+      accountHolderName: accountHolderName,
+      accountNumber: accountNumber,
+      ifscCode: ifscCode,
+      otp: otp,
+    );
+    if (res.isSuccess) {
+      await fetchProfile();
+      return {'success': true, 'message': res.data?['message'], 'cooldown_hours': res.data?['cooldown_hours']};
+    }
+    return {'success': false, 'error': res.errorMessage ?? 'Bank update failed'};
+  }
+
+  Future<Map<String, dynamic>> updateVehicle({
+    required String vehicleType,
+    String? vehicleNumber,
+    String? drivingLicenceNo,
+  }) async {
+    final res = await apiClient.updateRunnerVehicle(
+      vehicleType: vehicleType,
+      vehicleNumber: vehicleNumber,
+      drivingLicenceNo: drivingLicenceNo,
+    );
+    if (res.isSuccess) {
+      await fetchProfile();
+      return {'success': true, 'message': res.data?['message']};
+    }
+    return {'success': false, 'error': res.errorMessage ?? 'Vehicle update failed'};
+  }
+
+  Future<void> sendLocationUpdate(double lat, double lng) async {
+    await apiClient.updateRunnerLocation(latitude: lat, longitude: lng);
+  }
 }
+
 
 class RunnerStateProvider extends InheritedNotifier<RunnerAppState> {
   const RunnerStateProvider({

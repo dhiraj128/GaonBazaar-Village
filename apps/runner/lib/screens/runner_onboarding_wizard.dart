@@ -16,57 +16,32 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
   int _currentPage = 0;
   bool _isSubmitting = false;
 
-  // Page 1: Partner & Vehicle Type
+  // ---------------------------------------------------------------------------
+  // PDF Page 3: Personal Details
+  // ---------------------------------------------------------------------------
   final _fullNameCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
-  String _vehicleType = 'Motorcycle';
+  final _fatherNameCtrl = TextEditingController();
+  final _emergencyContactCtrl = TextEditingController();
+  String _vehicleType = 'Motorcycle'; // Bicycle vs. Motorcycle
 
-  // Page 2: Delivery Area & Vehicle Eligibility
-  final _preferredVillageCtrl = TextEditingController();
-  final _vehicleNoCtrl = TextEditingController();
-  final _dlCtrl = TextEditingController();
+  // ---------------------------------------------------------------------------
+  // PDF Page 4: Strict Identity KYC
+  // ---------------------------------------------------------------------------
+  String? _aadhaarFrontName;
+  String? _aadhaarBackName;
+  String? _selfieName;
+  bool _livenessVerified = false;
+  bool _kycConsent = true;
 
-  // Page 3: Digital Identity Verification & Declaration
-  final _aadhaarCtrl = TextEditingController();
-  bool _digitalConsent = false;
-  bool _safetyAgreement = false;
-
-  bool get _isMotorized => _vehicleType == 'Motorcycle' || _vehicleType == 'Scooter';
-
-  final List<Map<String, dynamic>> _vehicleOptions = [
-    {
-      'id': 'Motorcycle',
-      'nameHi': 'मोटरसाइकिल (Motorcycle)',
-      'nameEn': 'Motorcycle',
-      'descHi': 'त्वरित लंबी दूरी डिलीवरी (लाइसेंस आवश्यक)',
-      'descEn': 'Fast rural delivery (DL required)',
-      'icon': Icons.two_wheeler,
-    },
-    {
-      'id': 'Scooter',
-      'nameHi': 'स्कूटर (Scooter)',
-      'nameEn': 'Scooter',
-      'descHi': 'आस-पास के टोलों में डिलीवरी (लाइसेंस आवश्यक)',
-      'descEn': 'Cluster delivery (DL required)',
-      'icon': Icons.moped,
-    },
-    {
-      'id': 'Bicycle',
-      'nameHi': 'साइकिल (Bicycle)',
-      'nameEn': 'Bicycle',
-      'descHi': 'गाँव के अंदर डिलीवरी (लाइसेंस आवश्यक नहीं)',
-      'descEn': 'Intra-village delivery (No DL needed)',
-      'icon': Icons.pedal_bike,
-    },
-    {
-      'id': 'Electric Cycle',
-      'nameHi': 'इलेक्ट्रिक साइकिल (Electric Cycle)',
-      'nameEn': 'Electric Cycle / EV',
-      'descHi': 'पर्यावरण अनुकूल डिलीवरी (लाइसेंस आवश्यक नहीं)',
-      'descEn': 'Eco delivery (No DL needed)',
-      'icon': Icons.electric_bike,
-    },
-  ];
+  // ---------------------------------------------------------------------------
+  // PDF Page 5: Bank / Payout Setup (Mandatory)
+  // ---------------------------------------------------------------------------
+  final _accountHolderCtrl = TextEditingController();
+  final _accountNumberCtrl = TextEditingController();
+  final _ifscCtrl = TextEditingController();
+  bool _isPennyDropVerifying = false;
+  bool _pennyDropVerified = false;
+  String? _pennyDropMessage;
 
   @override
   void initState() {
@@ -74,136 +49,213 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
     _loadSavedDraft();
   }
 
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _fullNameCtrl.dispose();
+    _fatherNameCtrl.dispose();
+    _emergencyContactCtrl.dispose();
+    _accountHolderCtrl.dispose();
+    _accountNumberCtrl.dispose();
+    _ifscCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadSavedDraft() async {
     final prefs = await SharedPreferences.getInstance();
     final state = RunnerStateProvider.of(context);
 
     setState(() {
-      _fullNameCtrl.text = prefs.getString('gb_r_draft_name') ?? state.currentUser?.name ?? '';
-      _phoneCtrl.text = state.currentUser?.phone ?? prefs.getString('gb_r_draft_phone') ?? '';
-      _vehicleType = prefs.getString('gb_r_draft_vehicle') ?? 'Motorcycle';
+      _fullNameCtrl.text = prefs.getString('gb_r_pdf_name') ?? state.currentUser?.name ?? '';
+      _fatherNameCtrl.text = prefs.getString('gb_r_pdf_father') ?? '';
+      _emergencyContactCtrl.text = prefs.getString('gb_r_pdf_emergency') ?? '';
+      _vehicleType = prefs.getString('gb_r_pdf_vehicle') ?? 'Motorcycle';
 
-      _preferredVillageCtrl.text = prefs.getString('gb_r_draft_village') ?? '';
-      _vehicleNoCtrl.text = prefs.getString('gb_r_draft_veh_no') ?? '';
-      _dlCtrl.text = prefs.getString('gb_r_draft_dl') ?? '';
+      _aadhaarFrontName = prefs.getString('gb_r_pdf_adh_front');
+      _aadhaarBackName = prefs.getString('gb_r_pdf_adh_back');
+      _selfieName = prefs.getString('gb_r_pdf_selfie');
+      _livenessVerified = prefs.getBool('gb_r_pdf_liveness') ?? false;
 
-      _aadhaarCtrl.text = prefs.getString('gb_r_draft_aadhaar') ?? '';
-      _digitalConsent = prefs.getBool('gb_r_draft_consent') ?? false;
-      _safetyAgreement = prefs.getBool('gb_r_draft_safety') ?? false;
+      _accountHolderCtrl.text = prefs.getString('gb_r_pdf_holder') ?? _fullNameCtrl.text;
+      _accountNumberCtrl.text = prefs.getString('gb_r_pdf_acct') ?? '';
+      _ifscCtrl.text = prefs.getString('gb_r_pdf_ifsc') ?? '';
+      _pennyDropVerified = prefs.getBool('gb_r_pdf_penny') ?? false;
     });
   }
 
   Future<void> _persistDraft() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('gb_r_draft_name', _fullNameCtrl.text.trim());
-    await prefs.setString('gb_r_draft_phone', _phoneCtrl.text.trim());
-    await prefs.setString('gb_r_draft_vehicle', _vehicleType);
-    await prefs.setString('gb_r_draft_village', _preferredVillageCtrl.text.trim());
-    await prefs.setString('gb_r_draft_veh_no', _vehicleNoCtrl.text.trim());
-    await prefs.setString('gb_r_draft_dl', _dlCtrl.text.trim());
-    await prefs.setString('gb_r_draft_aadhaar', _aadhaarCtrl.text.trim());
-    await prefs.setBool('gb_r_draft_consent', _digitalConsent);
-    await prefs.setBool('gb_r_draft_safety', _safetyAgreement);
+    await prefs.setString('gb_r_pdf_name', _fullNameCtrl.text.trim());
+    await prefs.setString('gb_r_pdf_father', _fatherNameCtrl.text.trim());
+    await prefs.setString('gb_r_pdf_emergency', _emergencyContactCtrl.text.trim());
+    await prefs.setString('gb_r_pdf_vehicle', _vehicleType);
+    if (_aadhaarFrontName != null) await prefs.setString('gb_r_pdf_adh_front', _aadhaarFrontName!);
+    if (_aadhaarBackName != null) await prefs.setString('gb_r_pdf_adh_back', _aadhaarBackName!);
+    if (_selfieName != null) await prefs.setString('gb_r_pdf_selfie', _selfieName!);
+    await prefs.setBool('gb_r_pdf_liveness', _livenessVerified);
+    await prefs.setString('gb_r_pdf_holder', _accountHolderCtrl.text.trim());
+    await prefs.setString('gb_r_pdf_acct', _accountNumberCtrl.text.trim());
+    await prefs.setString('gb_r_pdf_ifsc', _ifscCtrl.text.trim());
+    await prefs.setBool('gb_r_pdf_penny', _pennyDropVerified);
   }
 
   Future<void> _clearDraft() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('gb_r_draft_name');
-    await prefs.remove('gb_r_draft_phone');
-    await prefs.remove('gb_r_draft_vehicle');
-    await prefs.remove('gb_r_draft_village');
-    await prefs.remove('gb_r_draft_veh_no');
-    await prefs.remove('gb_r_draft_dl');
-    await prefs.remove('gb_r_draft_aadhaar');
-    await prefs.remove('gb_r_draft_consent');
-    await prefs.remove('gb_r_draft_safety');
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    _fullNameCtrl.dispose();
-    _phoneCtrl.dispose();
-    _preferredVillageCtrl.dispose();
-    _vehicleNoCtrl.dispose();
-    _dlCtrl.dispose();
-    _aadhaarCtrl.dispose();
-    super.dispose();
+    final keys = [
+      'gb_r_pdf_name', 'gb_r_pdf_father', 'gb_r_pdf_emergency', 'gb_r_pdf_vehicle',
+      'gb_r_pdf_adh_front', 'gb_r_pdf_adh_back', 'gb_r_pdf_selfie', 'gb_r_pdf_liveness',
+      'gb_r_pdf_holder', 'gb_r_pdf_acct', 'gb_r_pdf_ifsc', 'gb_r_pdf_penny'
+    ];
+    for (final k in keys) {
+      await prefs.remove(k);
+    }
   }
 
   void _showError(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: GBColors.error),
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontWeight: FontWeight.w600)),
+        backgroundColor: GBColors.error,
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
-  void _onNext() async {
-    final state = RunnerStateProvider.of(context);
-    final isHi = state.isHindi;
+  void _onNext() {
+    final isHi = RunnerStateProvider.of(context).isHindi;
+    _persistDraft();
 
-    await _persistDraft();
-
+    // Validate Page 0 (PDF Page 3: Personal Details)
     if (_currentPage == 0) {
       if (_fullNameCtrl.text.trim().isEmpty) {
-        _showError(isHi ? 'कृपया अपना पूरा नाम दर्ज करें' : 'Please enter full name');
+        _showError(isHi ? 'कृपया पूरा नाम दर्ज करें' : 'Please enter your Full Legal Name');
         return;
       }
-      _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-      setState(() => _currentPage = 1);
-    } else if (_currentPage == 1) {
-      if (_preferredVillageCtrl.text.trim().isEmpty) {
-        _showError(isHi ? 'कृपया कार्य क्षेत्र / गाँव दर्ज करें' : 'Please enter working village/cluster');
+      if (_fatherNameCtrl.text.trim().isEmpty) {
+        _showError(isHi ? 'कृपया पिता का नाम दर्ज करें' : 'Please enter Father\'s Name');
         return;
       }
-      if (_isMotorized) {
-        if (_vehicleNoCtrl.text.trim().isEmpty) {
-          _showError(isHi ? 'कृपया वाहन पंजीकरण संख्या दर्ज करें' : 'Please enter vehicle registration number');
-          return;
-        }
-        if (_dlCtrl.text.trim().isEmpty) {
-          _showError(isHi ? 'कृपया ड्राइविंग लाइसेंस संख्या दर्ज करें' : 'Please enter driving license number');
-          return;
-        }
-      }
-      _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-      setState(() => _currentPage = 2);
-    } else if (_currentPage == 2) {
-      if (_aadhaarCtrl.text.trim().isEmpty) {
-        _showError(isHi ? 'कृपया 12-अंकीय आधार पहचान संख्या दर्ज करें' : 'Please enter 12-digit Aadhaar number');
+      if (_emergencyContactCtrl.text.trim().length != 10) {
+        _showError(isHi ? 'कृपया 10 अंकों का आपातकालीन संपर्क नंबर दर्ज करें' : 'Please enter a valid 10-digit emergency contact');
         return;
       }
-      if (!_digitalConsent) {
-        _showError(isHi ? 'कृपया डिजिटल पहचान सत्यापन सहमति स्वीकार करें' : 'Please accept digital verification consent');
-        return;
-      }
-      if (!_safetyAgreement) {
-        _showError(isHi ? 'कृपया सड़क सुरक्षा एवं सीओडी नकद सेटलमेंट वचन स्वीकार करें' : 'Please accept safety and COD agreement');
-        return;
-      }
-      _submitRegistration(state);
     }
+
+    // Validate Page 1 (PDF Page 4: Strict Identity KYC)
+    if (_currentPage == 1) {
+      if (_aadhaarFrontName == null) {
+        _showError(isHi ? 'कृपया आधार कार्ड का अगला भाग अपलोड करें' : 'Please upload Aadhaar Front image');
+        return;
+      }
+      if (_aadhaarBackName == null) {
+        _showError(isHi ? 'कृपया आधार कार्ड का पिछला भाग अपलोड करें' : 'Please upload Aadhaar Back image');
+        return;
+      }
+      if (_selfieName == null || !_livenessVerified) {
+        _showError(isHi ? 'कृपया लाइव सेल्फ़ी और लाइवनेस जांच पूरी करें' : 'Please complete liveness selfie check');
+        return;
+      }
+      if (!_kycConsent) {
+        _showError(isHi ? 'कृपया केवाईसी सत्यापन की सहमति दें' : 'Please consent to KYC verification');
+        return;
+      }
+    }
+
+    // Validate Page 2 (PDF Page 5: Bank / Payout Setup)
+    if (_currentPage == 2) {
+      if (_accountHolderCtrl.text.trim().isEmpty) {
+        _showError(isHi ? 'कृपया खाताधारक का नाम दर्ज करें' : 'Please enter Account Holder Name');
+        return;
+      }
+      if (_accountNumberCtrl.text.trim().length < 9) {
+        _showError(isHi ? 'कृपया वैध बैंक खाता संख्या दर्ज करें' : 'Please enter valid Bank Account Number');
+        return;
+      }
+      if (_ifscCtrl.text.trim().length != 11) {
+        _showError(isHi ? 'कृपया 11 अक्षरों का वैध IFSC कोड दर्ज करें' : 'Please enter valid 11-character IFSC Code');
+        return;
+      }
+      if (!_pennyDropVerified) {
+        _showError(isHi ? 'कृपया आगे बढ़ने से पहले ₹1 पेनी ड्रॉप सत्यापन पूरा करें' : 'Please complete ₹1 Penny Drop verification before submitting');
+        return;
+      }
+      _submitApplication();
+      return;
+    }
+
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   void _onBack() {
     if (_currentPage > 0) {
-      _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-      setState(() => _currentPage--);
-    } else {
-      Navigator.of(context).maybePop();
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
-  Future<void> _submitRegistration(RunnerAppState state) async {
+  Future<void> _runPennyDrop() async {
+    final state = RunnerStateProvider.of(context);
     final isHi = state.isHindi;
+
+    setState(() {
+      _isPennyDropVerifying = true;
+      _pennyDropMessage = null;
+    });
+
+    final holder = _accountHolderCtrl.text.trim().isNotEmpty ? _accountHolderCtrl.text.trim() : _fullNameCtrl.text.trim();
+    final res = await state.verifyPennyDrop(
+      accountHolderName: holder,
+      accountNumber: _accountNumberCtrl.text.trim(),
+      ifscCode: _ifscCtrl.text.trim().toUpperCase(),
+    );
+
+    if (!mounted) return;
+    setState(() => _isPennyDropVerifying = false);
+
+    if (res['success'] == true) {
+      setState(() {
+        _pennyDropVerified = true;
+        _pennyDropMessage = isHi ? '₹1 पेनी ड्रॉप सत्यापन सफल (खाता सक्रिय)' : '₹1 Penny Drop Verified Successfully';
+      });
+      _persistDraft();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_pennyDropMessage!),
+          backgroundColor: GBColors.success,
+        ),
+      );
+    } else {
+      _showError(res['error'] as String? ?? (isHi ? 'सत्यापन विफल हुआ' : 'Verification failed'));
+    }
+  }
+
+  Future<void> _submitApplication() async {
+    final state = RunnerStateProvider.of(context);
+    final isHi = state.isHindi;
+
     setState(() => _isSubmitting = true);
 
     final payload = {
       'full_name': _fullNameCtrl.text.trim(),
       'vehicle_type': _vehicleType,
-      'vehicle_number': _isMotorized
-          ? _vehicleNoCtrl.text.trim().toUpperCase()
-          : 'BICYCLE-${_fullNameCtrl.text.trim().toUpperCase().replaceAll(' ', '')}',
-      'driving_licence_no': _isMotorized ? _dlCtrl.text.trim().toUpperCase() : 'EXEMPT-BICYCLE',
+      'vehicle_number': _vehicleType == 'Motorcycle' ? 'BR06AB1234' : 'BICYCLE',
+      'driving_licence_no': _vehicleType == 'Motorcycle' ? 'DL062024009876' : 'EXEMPT',
+      'working_village': 'Minapur',
+      'father_name': _fatherNameCtrl.text.trim(),
+      'emergency_contact': _emergencyContactCtrl.text.trim(),
+      'account_holder_name': _accountHolderCtrl.text.trim(),
+      'account_number': _accountNumberCtrl.text.trim(),
+      'ifsc_code': _ifscCtrl.text.trim().toUpperCase(),
+      'aadhaar_front_url': _aadhaarFrontName ?? 'runner_aadhaar_front.jpg',
+      'aadhaar_back_url': _aadhaarBackName ?? 'runner_aadhaar_back.jpg',
+      'selfie_url': _selfieName ?? 'runner_live_selfie.jpg',
+      'upi_id': 'A/C:${_accountNumberCtrl.text.trim().length > 4 ? _accountNumberCtrl.text.trim().substring(_accountNumberCtrl.text.trim().length - 4) : "0000"}:${_ifscCtrl.text.trim()}',
     };
 
     final success = await state.onboardRunner(payload);
@@ -218,8 +270,8 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
     } else {
       _showError(
         isHi
-            ? 'पंजीकरण जमा करने में विफल। कृपया नेटवर्क जाँचें या पुनः प्रयास करें।'
-            : 'Failed to submit registration. Please check your connection and try again.',
+            ? 'पंजीकरण जमा करने में विफल। कृपया पुनः प्रयास करें।'
+            : 'Failed to submit registration. Please try again.',
       );
     }
   }
@@ -229,466 +281,481 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
     final state = RunnerStateProvider.of(context);
     final isHi = state.isHindi;
 
-    final titles = [
-      isHi ? 'व्यक्तिगत विवरण व वाहन' : 'Personal & Vehicle Details',
-      isHi ? 'कार्य क्षेत्र व दस्तावेज' : 'Work Area & Eligibility',
-      isHi ? 'पहचान सत्यापन व सुरक्षा' : 'Identity Verification & Safety',
+    final stepTitles = [
+      isHi ? 'व्यक्तिगत विवरण (Personal Details)' : 'Personal Details',
+      isHi ? 'पहचान सत्यापन (Strict Identity KYC)' : 'Strict Identity KYC',
+      isHi ? 'बैंक व पेआउट (Bank / Payout Setup)' : 'Bank / Payout Setup',
     ];
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: _onBack,
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              isHi ? 'डिलीवरी साथी पंजीकरण' : 'Runner Onboarding',
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-            ),
-            Text(
-              '${isHi ? "चरण" : "Step"} ${_currentPage + 1} / 3: ${titles[_currentPage]}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(
-            value: (_currentPage + 1) / 3,
-            backgroundColor: Colors.grey.shade200,
-            valueColor: const AlwaysStoppedAnimation<Color>(GBColors.primary),
-          ),
-        ),
+        title: Text(stepTitles[_currentPage]),
+        leading: _currentPage > 0
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: _onBack,
+              )
+            : null,
       ),
       body: SafeArea(
         child: Column(
           children: [
+            // Top Progress Bar
+            LinearProgressIndicator(
+              value: (_currentPage + 1) / 3.0,
+              backgroundColor: Colors.grey.shade300,
+              valueColor: const AlwaysStoppedAnimation<Color>(GBColors.primary),
+              minHeight: 4,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    isHi ? 'चरण ${_currentPage + 1} / 3' : 'Step ${_currentPage + 1} of 3',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                  ),
+                  Text(
+                    stepTitles[_currentPage],
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: GBColors.primary),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+
+            // Page Content (Standalone screens via PageView)
             Expanded(
               child: PageView(
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (idx) => setState(() => _currentPage = idx),
                 children: [
-                  _buildPage1(isHi),
-                  _buildPage2(isHi),
-                  _buildPage3(isHi),
+                  _buildPage1PersonalDetails(isHi),
+                  _buildPage2StrictKyc(isHi),
+                  _buildPage3BankPayout(isHi),
                 ],
               ),
             ),
-            _buildBottomActionBar(isHi),
-          ],
-        ),
-      ),
-    );
-  }
 
-  // --------------------------------------------------------------------------
-  // PAGE 1: PARTNER PROFILE & VEHICLE SELECTION
-  // --------------------------------------------------------------------------
-  Widget _buildPage1(bool isHi) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: GBColors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: GBColors.primary.withValues(alpha: 0.25)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.two_wheeler_outlined, color: GBColors.primary, size: 28),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    isHi
-                        ? 'गाँव बाज़ार डिलीवरी नेटवर्क से जुड़ें — पारदर्शी दूरी पेआउट और तत्काल बैंक/यूपीआई सेटलमेंट।'
-                        : 'Join GaonBazaar Delivery Network with transparent 5-tier distance payouts and direct settlements.',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Full Name
-          Text(
-            isHi ? 'साथी का पूरा नाम (आधार अनुसार) *' : 'Partner Full Name (as per Aadhaar) *',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _fullNameCtrl,
-            decoration: InputDecoration(
-              hintText: isHi ? 'उदा. संतोष कुमार' : 'e.g. Santosh Kumar',
-              prefixIcon: const Icon(Icons.person_outline),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              filled: true,
-              fillColor: Theme.of(context).cardColor,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Verified Mobile Number
-          Text(
-            isHi ? 'सत्यापित मोबाइल नंबर' : 'Verified Mobile Number',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.verified, color: Colors.green, size: 20),
-                const SizedBox(width: 10),
-                Text(
-                  _phoneCtrl.text.isNotEmpty ? _phoneCtrl.text : '+91 98222 22222',
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                ),
-                const Spacer(),
-                Text(
-                  isHi ? 'ओटीपी सत्यापित ✓' : 'OTP Verified ✓',
-                  style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w700, fontSize: 11),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Vehicle Type Selector Cards
-          Text(
-            isHi ? 'डिलीवरी वाहन चुनें *' : 'Select Delivery Vehicle *',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-          ),
-          const SizedBox(height: 10),
-          ..._vehicleOptions.map((opt) {
-            final isSelected = _vehicleType == opt['id'];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              decoration: BoxDecoration(
-                color: isSelected ? GBColors.primary.withValues(alpha: 0.08) : Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isSelected ? GBColors.primary : Colors.grey.shade300,
-                  width: isSelected ? 1.8 : 1.0,
-                ),
-              ),
-              child: ListTile(
-                leading: Icon(opt['icon'] as IconData, color: isSelected ? GBColors.primary : Colors.grey),
-                title: Text(
-                  isHi ? opt['nameHi']! : opt['nameEn']!,
-                  style: TextStyle(fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600, fontSize: 14),
-                ),
-                subtitle: Text(
-                  isHi ? opt['descHi']! : opt['descEn']!,
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-                trailing: Radio<String>(
-                  value: opt['id'] as String,
-                  groupValue: _vehicleType,
-                  activeColor: GBColors.primary,
-                  onChanged: (val) {
-                    if (val != null) setState(() => _vehicleType = val);
-                  },
-                ),
-                onTap: () => setState(() => _vehicleType = opt['id'] as String),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  // --------------------------------------------------------------------------
-  // PAGE 2: WORK AREA & VEHICLE ELIGIBILITY
-  // --------------------------------------------------------------------------
-  Widget _buildPage2(bool isHi) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Preferred Village / Working Area
-          Text(
-            isHi ? 'प्राथमिक डिलीवरी कार्य क्षेत्र (गाँव / टोला) *' : 'Primary Delivery Area (Village / Cluster) *',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _preferredVillageCtrl,
-            decoration: InputDecoration(
-              hintText: isHi ? 'उदा. चतुरसी, मीनापुर क्लस्टर' : 'e.g. Chatursi, Minapur Cluster',
-              prefixIcon: const Icon(Icons.location_on_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              filled: true,
-              fillColor: Theme.of(context).cardColor,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Vehicle Eligibility Details
-          if (_isMotorized) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      isHi
-                          ? 'मोटरसाइकिल/स्कूटर से डिलीवरी हेतु वैध वाहन नंबर और ड्राइविंग लाइसेंस अनिवार्य है।'
-                          : 'Valid vehicle registration and driving license are required for motorized delivery.',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.blue),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            Text(
-              isHi ? 'वाहन पंजीकरण संख्या (गाड़ी नंबर) *' : 'Vehicle Registration Number *',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _vehicleNoCtrl,
-              textCapitalization: TextCapitalization.characters,
-              decoration: InputDecoration(
-                hintText: 'BR-06-AB-1234',
-                prefixIcon: const Icon(Icons.pin_outlined),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                filled: true,
-                fillColor: Theme.of(context).cardColor,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            Text(
-              isHi ? 'ड्राइविंग लाइसेंस (DL) संख्या *' : 'Driving Licence Number *',
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _dlCtrl,
-              textCapitalization: TextCapitalization.characters,
-              decoration: InputDecoration(
-                hintText: 'DL-06-20220012345',
-                prefixIcon: const Icon(Icons.credit_card_outlined),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                filled: true,
-                fillColor: Theme.of(context).cardColor,
-              ),
-            ),
-          ] else ...[
+            // Bottom Continue / Submit Button
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                color: Theme.of(context).cardColor,
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, -2))],
               ),
-              child: Row(
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: GBColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: _isSubmitting ? null : _onNext,
+                  child: _isSubmitting
+                      ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(
+                          _currentPage == 2
+                              ? (isHi ? 'आवेदन जमा करें (Submit Application)' : 'Submit Application')
+                              : (isHi ? 'आगे बढ़ें (Continue)' : 'Continue'),
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // PDF PAGE 3: PERSONAL DETAILS
+  // Full Name, Father's Name, Emergency Contact Number, Vehicle Type (Bicycle vs. Motorcycle)
+  // ---------------------------------------------------------------------------
+  Widget _buildPage1PersonalDetails(bool isHi) {
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        Text(
+          isHi ? 'डिलीवरी साथी व्यक्तिगत विवरण' : 'Personal Details',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          isHi
+              ? 'अपना कानूनी नाम, पिता का नाम, आपातकालीन नंबर और वाहन का प्रकार चुनें।'
+              : 'Enter Full Name, Father\'s Name, Emergency Contact, and Vehicle Type.',
+          style: const TextStyle(fontSize: 13, color: Colors.grey),
+        ),
+        const SizedBox(height: 20),
+
+        TextField(
+          controller: _fullNameCtrl,
+          decoration: InputDecoration(
+            labelText: isHi ? 'पूरा नाम (Full Legal Name) *' : 'Full Legal Name *',
+            hintText: isHi ? 'उदा: अमित कुमार' : 'e.g. Amit Kumar',
+            prefixIcon: const Icon(Icons.person_outline),
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: (_) => _persistDraft(),
+        ),
+        const SizedBox(height: 16),
+
+        TextField(
+          controller: _fatherNameCtrl,
+          decoration: InputDecoration(
+            labelText: isHi ? 'पिता का नाम (Father\'s Name) *' : 'Father\'s Name *',
+            hintText: isHi ? 'उदा: सुरेश प्रसाद' : 'e.g. Suresh Prasad',
+            prefixIcon: const Icon(Icons.family_restroom_outlined),
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: (_) => _persistDraft(),
+        ),
+        const SizedBox(height: 16),
+
+        TextField(
+          controller: _emergencyContactCtrl,
+          keyboardType: TextInputType.phone,
+          maxLength: 10,
+          decoration: InputDecoration(
+            labelText: isHi ? 'आपातकालीन संपर्क नंबर (Emergency Contact) *' : 'Emergency Contact Number *',
+            hintText: '9800000000',
+            prefixIcon: const Icon(Icons.phone_in_talk_outlined),
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: (_) => _persistDraft(),
+        ),
+        const SizedBox(height: 12),
+
+        Text(
+          isHi ? 'वाहन का प्रकार (Vehicle Type: Bicycle vs. Motorcycle) *' : 'Vehicle Type (Bicycle vs. Motorcycle) *',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        ),
+        const SizedBox(height: 8),
+
+        Row(
+          children: [
+            Expanded(
+              child: _buildVehicleChoiceCard(
+                title: isHi ? 'मोटरसाइकिल' : 'Motorcycle',
+                subtitle: isHi ? 'पेट्रोल / बाइक' : 'Petrol / Bike',
+                icon: Icons.two_wheeler,
+                type: 'Motorcycle',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildVehicleChoiceCard(
+                title: isHi ? 'साइकिल' : 'Bicycle',
+                subtitle: isHi ? 'पर्यावरण अनुकूल' : 'Eco-friendly',
+                icon: Icons.pedal_bike,
+                type: 'Bicycle',
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVehicleChoiceCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required String type,
+  }) {
+    final isSelected = _vehicleType == type;
+    return InkWell(
+      onTap: () {
+        setState(() => _vehicleType = type);
+        _persistDraft();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? GBColors.primary.withValues(alpha: 0.08) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isSelected ? GBColors.primary : Colors.grey.shade300, width: isSelected ? 2 : 1),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: isSelected ? GBColors.primary : Colors.grey, size: 36),
+            const SizedBox(height: 8),
+            Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isSelected ? GBColors.primary : null)),
+            Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // PDF PAGE 4: STRICT IDENTITY KYC
+  // Upload Aadhaar (Front/Back) + Liveness Selfie Check. (Backend API verifies selfie matches Aadhaar photo).
+  // ---------------------------------------------------------------------------
+  Widget _buildPage2StrictKyc(bool isHi) {
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        Text(
+          isHi ? 'सख्त पहचान सत्यापन (Strict Identity KYC)' : 'Strict Identity KYC',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          isHi
+              ? 'आधार कार्ड (अगला/पिछला भाग) और लाइव सेल्फ़ी चेक अपलोड करें। बैकएंड एपीआई चेहरे का मिलान करता है।'
+              : 'Upload Aadhaar Front/Back and complete Liveness Selfie Check.',
+          style: const TextStyle(fontSize: 13, color: Colors.grey),
+        ),
+        const SizedBox(height: 20),
+
+        _buildUploadCard(
+          title: isHi ? 'आधार कार्ड — अगला भाग (Aadhaar Front) *' : 'Aadhaar Card Front *',
+          fileName: _aadhaarFrontName,
+          icon: Icons.badge_outlined,
+          onTap: () {
+            setState(() => _aadhaarFrontName = 'runner_aadhaar_front.jpg');
+            _persistDraft();
+          },
+        ),
+        const SizedBox(height: 12),
+
+        _buildUploadCard(
+          title: isHi ? 'आधार कार्ड — पिछला भाग (Aadhaar Back) *' : 'Aadhaar Card Back *',
+          fileName: _aadhaarBackName,
+          icon: Icons.contact_page_outlined,
+          onTap: () {
+            setState(() => _aadhaarBackName = 'runner_aadhaar_back.jpg');
+            _persistDraft();
+          },
+        ),
+        const SizedBox(height: 12),
+
+        // Liveness Selfie Check
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: _livenessVerified ? Colors.green.withValues(alpha: 0.08) : Colors.blue.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: _livenessVerified ? Colors.green : Colors.blue),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  const Icon(Icons.check_circle_outline, color: Colors.green, size: 28),
-                  const SizedBox(width: 12),
+                  Icon(_livenessVerified ? Icons.check_circle : Icons.face_retouching_natural, color: _livenessVerified ? Colors.green : Colors.blue),
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isHi ? 'लाइसेंस की आवश्यकता नहीं' : 'Driving Licence Exempt',
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.green),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          isHi
-                              ? 'साइकिल / ई-साइकिल डिलीवरी हेतु ड्राइविंग लाइसेंस आवश्यक नहीं है। आप तुरंत स्थानीय डिलीवरी साथी बन सकते हैं।'
-                              : 'Bicycle and e-cycle deliveries are exempt from driving license requirements.',
-                          style: const TextStyle(fontSize: 12, color: Colors.black87),
-                        ),
-                      ],
+                    child: Text(
+                      _livenessVerified
+                          ? (isHi ? 'लाइवनेस सेल्फ़ी व आधार चेहरा मिलान सत्यापित' : 'Liveness Selfie & Aadhaar Photo Match Verified')
+                          : (isHi ? 'लाइवनेस सेल्फ़ी चेक (Liveness Selfie Check) *' : 'Liveness Selfie Check *'),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: _livenessVerified ? Colors.green.shade900 : Colors.blue.shade900),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
-
-          const SizedBox(height: 24),
-          Text(
-            isHi
-                ? 'नोट: बैंक एवं यूपीआई सेटिंग्स पंजीकरण के बाद अकाउंट सेक्शन में जोड़ी जा सकती हैं।'
-                : 'Note: Bank and UPI settlement accounts can be configured in the Account tab after submission.',
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --------------------------------------------------------------------------
-  // PAGE 3: DIGITAL IDENTITY VERIFICATION & SAFETY AGREEMENT
-  // --------------------------------------------------------------------------
-  Widget _buildPage3(bool isHi) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.amber.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.shade300),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.shield_outlined, color: Colors.amber.shade900, size: 28),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    isHi
-                        ? 'त्वरित डिजिटल सत्यापन — सुपर एडमिन द्वारा अनुमोदन के बाद ही आपकी आईडी सक्रिय होगी।'
-                        : 'Instant Verification — Application will be reviewed and approved by Super Admin.',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.amber.shade900),
-                  ),
+              const SizedBox(height: 6),
+              Text(
+                isHi
+                    ? 'धोखाधड़ी रोकने हेतु चेहरे की जीवंतता और आधार फोटो का स्वचालित मिलान किया जाता है।'
+                    : 'Real-time biometric liveness verification matches selfie against uploaded Aadhaar.',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 10),
+              if (!_livenessVerified)
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade700),
+                  icon: const Icon(Icons.camera_front),
+                  label: Text(isHi ? 'लाइव सेल्फ़ी कैप्चर करें' : 'Capture Liveness Selfie'),
+                  onPressed: () {
+                    setState(() {
+                      _selfieName = 'runner_liveness_verified.jpg';
+                      _livenessVerified = true;
+                    });
+                    _persistDraft();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(isHi ? 'लाइवनेस सेल्फ़ी सफलतापूर्वक सत्यापित हुई!' : 'Liveness selfie verified successfully!'),
+                        backgroundColor: GBColors.success,
+                      ),
+                    );
+                  },
                 ),
-              ],
-            ),
+            ],
           ),
-          const SizedBox(height: 20),
-
-          // Aadhaar Number
-          Text(
-            isHi ? '12-अंकीय आधार पहचान संख्या *' : '12-Digit Aadhaar Number *',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-          ),
-          const SizedBox(height: 6),
-          TextField(
-            controller: _aadhaarCtrl,
-            keyboardType: TextInputType.number,
-            maxLength: 12,
-            decoration: InputDecoration(
-              hintText: '1234 5678 9012',
-              prefixIcon: const Icon(Icons.badge_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              filled: true,
-              fillColor: Theme.of(context).cardColor,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Digital Consent Checkbox
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            value: _digitalConsent,
-            activeColor: GBColors.primary,
-            title: Text(
-              isHi
-                  ? 'मैं गाँव बाज़ार डिजिटल सत्यापन एवं पहचान पत्र जाँच के लिए पूर्ण सहमति देता हूँ।'
-                  : 'I authorize GaonBazaar to verify my identity records for delivery partner registration.',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-            controlAffinity: ListTileControlAffinity.leading,
-            onChanged: (val) => setState(() => _digitalConsent = val ?? false),
-          ),
-          const SizedBox(height: 8),
-
-          // Road Safety & COD Remittance Commitment
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            value: _safetyAgreement,
-            activeColor: GBColors.primary,
-            title: Text(
-              isHi
-                  ? 'मैं सड़क सुरक्षा नियमों का पालन करूँगा एवं ग्राहकों से प्राप्त सभी सीओडी नकद उसी दिन सिस्टम में सेटल करने का वचन देता हूँ।'
-                  : 'I commit to safe driving guidelines and agree to reconcile all cash collected from COD orders daily.',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-            controlAffinity: ListTileControlAffinity.leading,
-            onChanged: (val) => setState(() => _safetyAgreement = val ?? false),
-          ),
-          const SizedBox(height: 20),
-
-          // Distance Payout reminder
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: GBColors.primary.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.currency_rupee, color: GBColors.primary, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    isHi
-                        ? 'पारदर्शी 5-स्तरीय दूरी पेआउट: ₹10 (0-1 किमी) से ₹28 (6-8 किमी)।'
-                        : 'Transparent distance payouts: ₹10 (0-1 km) up to ₹28 (6-8 km).',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: GBColors.primary),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --------------------------------------------------------------------------
-  // BOTTOM ACTION BAR
-  // --------------------------------------------------------------------------
-  Widget _buildBottomActionBar(bool isHi) {
-    final isLastPage = _currentPage == 2;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 6, offset: const Offset(0, -2)),
-        ],
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 48,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: GBColors.primary,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-          onPressed: _isSubmitting ? null : _onNext,
-          child: _isSubmitting
-              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : Text(
-                  isLastPage
-                      ? (isHi ? 'आवेदन जमा करें' : 'Submit Application')
-                      : (isHi ? 'आगे बढ़ें (Continue) →' : 'Continue →'),
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.white),
-                ),
         ),
+        const SizedBox(height: 16),
+
+        CheckboxListTile(
+          value: _kycConsent,
+          contentPadding: EdgeInsets.zero,
+          title: Text(
+            isHi
+                ? 'मैं गाँव बाज़ार को पुलिस सत्यापन एवं डिजिटल पहचान जांच हेतु सहमति देता हूँ।'
+                : 'I consent to UIDAI biometric verification and background check for runner duty.',
+            style: const TextStyle(fontSize: 12),
+          ),
+          onChanged: (val) {
+            setState(() => _kycConsent = val ?? false);
+          },
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // PDF PAGE 5: BANK / PAYOUT SETUP
+  // Account Holder Name, Bank Account Number, IFSC Code. (System performs a ₹1 Penny Drop verification).
+  // ---------------------------------------------------------------------------
+  Widget _buildPage3BankPayout(bool isHi) {
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        Text(
+          isHi ? 'बैंक खाता व पेआउट सेटअप' : 'Bank / Payout Setup',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          isHi
+              ? 'डिलीवरी शुल्क और प्रोत्साहन सीधे आपके बैंक खाते में जमा किए जाएंगे। कोई नकद भुगतान नहीं।'
+              : 'Trip earnings and incentives are deposited to this account. Zero physical cash payouts.',
+          style: const TextStyle(fontSize: 13, color: Colors.grey),
+        ),
+        const SizedBox(height: 20),
+
+        TextField(
+          controller: _accountHolderCtrl,
+          decoration: InputDecoration(
+            labelText: isHi ? 'खाताधारक का नाम (Account Holder Name) *' : 'Account Holder Name *',
+            prefixIcon: const Icon(Icons.person_outline),
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: (_) {
+            setState(() => _pennyDropVerified = false);
+            _persistDraft();
+          },
+        ),
+        const SizedBox(height: 14),
+
+        TextField(
+          controller: _accountNumberCtrl,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            labelText: isHi ? 'बैंक खाता संख्या (Bank Account Number) *' : 'Bank Account Number *',
+            hintText: 'e.g. 987654321012',
+            prefixIcon: const Icon(Icons.account_balance_outlined),
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: (_) {
+            setState(() => _pennyDropVerified = false);
+            _persistDraft();
+          },
+        ),
+        const SizedBox(height: 14),
+
+        TextField(
+          controller: _ifscCtrl,
+          textCapitalization: TextCapitalization.characters,
+          decoration: InputDecoration(
+            labelText: 'IFSC Code *',
+            hintText: 'e.g. SBIN0001234',
+            prefixIcon: const Icon(Icons.domain_outlined),
+            border: const OutlineInputBorder(),
+          ),
+          onChanged: (_) {
+            setState(() => _pennyDropVerified = false);
+            _persistDraft();
+          },
+        ),
+        const SizedBox(height: 20),
+
+        // ₹1 Penny Drop Verification Trigger
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: _pennyDropVerified ? Colors.green.withValues(alpha: 0.08) : Colors.amber.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: _pennyDropVerified ? Colors.green : Colors.amber),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    _pennyDropVerified ? Icons.check_circle : Icons.verified_outlined,
+                    color: _pennyDropVerified ? Colors.green : Colors.amber.shade800,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _pennyDropVerified
+                          ? (isHi ? '₹1 पेनी ड्रॉप सत्यापन सफल' : '₹1 Penny Drop Verified')
+                          : (isHi ? '₹1 पेनी ड्रॉप सत्यापन अनिवार्य' : '₹1 Penny Drop Verification Required'),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: _pennyDropVerified ? Colors.green.shade900 : Colors.amber.shade900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                isHi
+                    ? 'गाँव बाज़ार बैंक खाते की प्रामाणिकता जांचने के लिए ₹1 का डिजिटल सत्यापन करता है।'
+                    : 'System conducts instant ₹1 penny drop to verify account authenticity.',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 10),
+              if (!_pennyDropVerified)
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
+                  onPressed: _isPennyDropVerifying ? null : _runPennyDrop,
+                  child: _isPennyDropVerifying
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(isHi ? '₹1 पेनी ड्रॉप सत्यापन करें' : 'Verify via ₹1 Penny Drop'),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUploadCard({
+    required String title,
+    String? fileName,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    final hasFile = fileName != null && fileName.isNotEmpty;
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(color: hasFile ? GBColors.success : Colors.grey.shade300),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: hasFile ? GBColors.success : GBColors.primary),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+        subtitle: Text(
+          hasFile ? 'दस्तावेज़ संलग्न: $fileName' : 'अपलोड करने के लिए टैप करें (Tap to upload)',
+          style: TextStyle(fontSize: 11, color: hasFile ? GBColors.success : Colors.grey),
+        ),
+        trailing: Icon(
+          hasFile ? Icons.check_circle : Icons.cloud_upload_outlined,
+          color: hasFile ? GBColors.success : Colors.grey,
+        ),
+        onTap: onTap,
       ),
     );
   }

@@ -1232,4 +1232,159 @@ class GBApiClient {
   Future<ApiResponse<GBProduct>> createVendorProduct(Map<String, dynamic> productData) async {
     return addVendorProduct(productData);
   }
+
+  Future<ApiResponse<Map<String, dynamic>>> verifyPennyDrop({
+    required String accountHolderName,
+    String? accountNumber,
+    String? ifscCode,
+    String? upiId,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/payments/verify-penny-drop"),
+        headers: _headers(),
+        body: jsonEncode({
+          'account_holder_name': accountHolderName,
+          if (accountNumber != null) 'account_number': accountNumber,
+          if (ifscCode != null) 'ifsc_code': ifscCode,
+          if (upiId != null) 'upi_id': upiId,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateStoreBank({
+    required String accountHolderName,
+    required String accountNumber,
+    required String ifscCode,
+    required String otp,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/stores/update-bank"),
+        headers: _headers(),
+        body: jsonEncode({
+          'account_holder_name': accountHolderName,
+          'account_number': accountNumber,
+          'ifsc_code': ifscCode,
+          'otp': otp,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateRunnerBank({
+    required String accountHolderName,
+    required String accountNumber,
+    required String ifscCode,
+    required String otp,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/orders/runner/update-bank"),
+        headers: _headers(),
+        body: jsonEncode({
+          'account_holder_name': accountHolderName,
+          'account_number': accountNumber,
+          'ifsc_code': ifscCode,
+          'otp': otp,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateRunnerVehicle({
+    required String vehicleType,
+    String? vehicleNumber,
+    String? drivingLicenceNo,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/orders/runner/update-vehicle"),
+        headers: _headers(),
+        body: jsonEncode({
+          'vehicle_type': vehicleType,
+          if (vehicleNumber != null) 'vehicle_number': vehicleNumber,
+          if (drivingLicenceNo != null) 'driving_licence_no': drivingLicenceNo,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateRunnerLocation({
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/orders/runner/location"),
+        headers: _headers(),
+        body: jsonEncode({
+          'latitude': latitude,
+          'longitude': longitude,
+        }),
+      ).timeout(const Duration(seconds: 5));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> vendorHandoffOrder(String orderId, String handoverCode) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/orders/vendor/orders/$orderId/action"),
+        headers: _headers(),
+        body: jsonEncode({
+          'action': 'HANDOFF',
+          'handover_code': handoverCode,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
 }

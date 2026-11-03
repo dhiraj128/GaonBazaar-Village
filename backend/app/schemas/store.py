@@ -68,6 +68,14 @@ class StoreRegistrationRequest(BaseModel):
     district: str = "Muzaffarpur"
     banner_url: Optional[str] = None
     upi_id: Optional[str] = None
+    account_holder_name: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc_code: Optional[str] = None
+    aadhaar_front_url: Optional[str] = None
+    aadhaar_back_url: Optional[str] = None
+    selfie_url: Optional[str] = None
+    fssai_license: Optional[str] = None
+    gst_certificate: Optional[str] = None
 
 class StoreStatusUpdate(BaseModel):
     is_online: bool
