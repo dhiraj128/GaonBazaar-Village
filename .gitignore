@@ -62,3 +62,7 @@ Thumbs.db
 
 scratch/
 physical_*.png
+
+*.db-shm
+*.db-wal
+scratch/

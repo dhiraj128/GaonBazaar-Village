@@ -19,10 +19,13 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 # Designated test phone personas whitelist for staging/development
 TEST_PHONE_WHITELIST = {
-    "9800000000", # Customer
+    "9800000000", # Customer A
+    "9800000010", # Customer B
+    "9800000011", # Customer C
     "9800000001", # Vendor 1
     "9800000002", # Vendor 2
     "9800000003", # Runner 1
+    "9800000004", # Runner 2
     "9800000099", # Super Admin
 }
 

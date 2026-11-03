@@ -1,4 +1,6 @@
+import os
 import ssl
+import certifi
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -11,11 +13,18 @@ async_engine_kwargs = {
     "pool_pre_ping": True,
 }
 
-# If connecting to Supabase connection pooler or remote PostgreSQL, disable statement cache for Supavisor compatibility and enforce robust SSL context
+# Locate Supabase root CA certificate
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+SUPABASE_CA_CERT = os.path.join(BASE_DIR, "certs", "prod-ca-2021.crt")
+
+# If connecting to Supabase connection pooler or remote PostgreSQL, disable statement cache for Supavisor compatibility and enforce strict verified TLS
 if "pooler.supabase.com" in settings.ASYNC_DATABASE_URL or "supabase.co" in settings.ASYNC_DATABASE_URL or "postgresql" in settings.ASYNC_DATABASE_URL:
-    ssl_ctx = ssl.create_default_context()
-    ssl_ctx.check_hostname = False
-    ssl_ctx.verify_mode = ssl.CERT_NONE
+    if os.path.exists(SUPABASE_CA_CERT):
+        ssl_ctx = ssl.create_default_context(cafile=SUPABASE_CA_CERT)
+    else:
+        ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+    ssl_ctx.check_hostname = True
+    ssl_ctx.verify_mode = ssl.CERT_REQUIRED
     async_engine_kwargs["connect_args"] = {
         "statement_cache_size": 0,
         "prepared_statement_cache_size": 0,
@@ -43,7 +52,10 @@ sync_engine_kwargs = {
     "pool_pre_ping": True,
 }
 if "pooler.supabase.com" in settings.RESOLVED_SYNC_DATABASE_URL or "supabase.co" in settings.RESOLVED_SYNC_DATABASE_URL or "postgresql" in settings.RESOLVED_SYNC_DATABASE_URL:
-    sync_engine_kwargs["connect_args"] = {"sslmode": "require"}
+    sync_conn_args = {"sslmode": "verify-full"}
+    if os.path.exists(SUPABASE_CA_CERT):
+        sync_conn_args["sslrootcert"] = SUPABASE_CA_CERT
+    sync_engine_kwargs["connect_args"] = sync_conn_args
 
 sync_engine = create_engine(
     settings.RESOLVED_SYNC_DATABASE_URL,
