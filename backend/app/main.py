@@ -1,8 +1,10 @@
 import os
 import logging
 import asyncio
+import secrets
+from typing import Optional
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.future import select
 from sqlalchemy import text
@@ -15,107 +17,127 @@ from app.api.v1 import auth, addresses, stores, orders, ai, admin, support, paym
 logger = logging.getLogger("gaonbazaar")
 
 async def init_db_and_seed():
-    # Initialize DB tables
+    # 1. Initialize DB base tables in dedicated, committed transaction
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        
-        # Upgrade existing PostgreSQL columns to TIMESTAMPTZ to eliminate offset-naive/aware mismatch
-        if "postgresql" in settings.ASYNC_DATABASE_URL:
-            alter_stmts = [
-                "ALTER TABLE users ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
-                "ALTER TABLE users ALTER COLUMN updated_at TYPE TIMESTAMPTZ USING updated_at AT TIME ZONE 'UTC';",
-                "ALTER TABLE addresses ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
-                "ALTER TABLE stores ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
-                "ALTER TABLE orders ALTER COLUMN placed_at TYPE TIMESTAMPTZ USING placed_at AT TIME ZONE 'UTC';",
-                "ALTER TABLE orders ALTER COLUMN cancel_until TYPE TIMESTAMPTZ USING cancel_until AT TIME ZONE 'UTC';",
-                "ALTER TABLE orders ALTER COLUMN delivered_at TYPE TIMESTAMPTZ USING delivered_at AT TIME ZONE 'UTC';",
-                "ALTER TABLE order_timeline ALTER COLUMN timestamp TYPE TIMESTAMPTZ USING timestamp AT TIME ZONE 'UTC';",
-                "ALTER TABLE support_tickets ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
-                "ALTER TABLE audit_logs ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
-                "ALTER TABLE otp_challenges ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
-                "ALTER TABLE otp_challenges ALTER COLUMN expires_at TYPE TIMESTAMPTZ USING expires_at AT TIME ZONE 'UTC';",
-            ]
-            for stmt in alter_stmts:
-                try:
-                    await conn.execute(text(stmt))
-                except Exception:
-                    pass
 
-        # Ensure user and order columns exist across both PostgreSQL and SQLite
-        for col_stmt in [
-            "ALTER TABLE users ADD COLUMN avatar_url VARCHAR(500);",
-            "ALTER TABLE users ADD COLUMN primary_village VARCHAR(100);",
-            "ALTER TABLE users ADD COLUMN primary_panchayat VARCHAR(100);",
-            "ALTER TABLE orders ADD COLUMN payment_order_id VARCHAR(100);",
-            "ALTER TABLE orders ADD COLUMN transaction_id VARCHAR(100);",
-            "ALTER TABLE support_tickets ADD COLUMN category VARCHAR(50) DEFAULT 'GENERAL_HELP';",
-            "ALTER TABLE support_tickets ADD COLUMN affected_product_id VARCHAR(50);",
-            "ALTER TABLE support_tickets ADD COLUMN attachment_url TEXT;",
-            "ALTER TABLE support_tickets ADD COLUMN resolution_notes TEXT;",
-            "ALTER TABLE support_tickets ADD COLUMN resolved_at TIMESTAMP WITH TIME ZONE;",
-            "ALTER TABLE support_tickets ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE;",
-            "ALTER TABLE orders ADD COLUMN distance_km FLOAT DEFAULT 0.8;",
-            "ALTER TABLE orders ADD COLUMN runner_payout FLOAT DEFAULT 10.0;",
-            "ALTER TABLE stores ADD COLUMN rejection_reason TEXT;",
-            "ALTER TABLE runners ADD COLUMN rejection_reason TEXT;",
-            """CREATE TABLE IF NOT EXISTS refunds (
-                id VARCHAR(36) PRIMARY KEY,
-                order_id VARCHAR(36) NOT NULL REFERENCES orders(id),
-                payment_id VARCHAR(100),
-                gateway_refund_id VARCHAR(100),
-                amount FLOAT NOT NULL,
-                currency VARCHAR(10) DEFAULT 'INR',
-                reason VARCHAR(255),
-                status VARCHAR(30) DEFAULT 'COMPLETED',
-                refund_type VARCHAR(30) DEFAULT 'FULL',
-                created_by VARCHAR(36) REFERENCES users(id),
-                admin_notes TEXT,
-                created_at TIMESTAMP WITH TIME ZONE,
-                updated_at TIMESTAMP WITH TIME ZONE
-            );""",
-            """CREATE TABLE IF NOT EXISTS replacements (
-                id VARCHAR(36) PRIMARY KEY,
-                original_order_id VARCHAR(36) NOT NULL REFERENCES orders(id),
-                ticket_id VARCHAR(36) REFERENCES support_tickets(id),
-                customer_id VARCHAR(36) NOT NULL REFERENCES users(id),
-                store_id VARCHAR(36) NOT NULL REFERENCES stores(id),
-                runner_id VARCHAR(36) REFERENCES runners(id),
-                status VARCHAR(30) DEFAULT 'REQUESTED',
-                reason VARCHAR(255) NOT NULL,
-                items_json TEXT NOT NULL,
-                customer_due FLOAT DEFAULT 0.0,
-                delivery_otp VARCHAR(10),
-                admin_notes TEXT,
-                rejection_reason TEXT,
-                created_at TIMESTAMP WITH TIME ZONE,
-                updated_at TIMESTAMP WITH TIME ZONE
-            );""",
-        ]:
-            try:
-                await conn.execute(text(col_stmt))
-            except Exception:
-                pass
-
-        # Update verified product image URLs in existing database rows
-        url_updates = [
-            ("cat_mustard_oil", "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"),
-            ("cat_soy_oil", "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=500&q=80"),
-            ("cat_atta", "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"),
-            ("cat_led_bulb", "https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=500&q=80"),
-            ("cat_tomato", "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80"),
-            ("cat_toor_dal", "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80"),
-            ("cat_moong_dal", "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80"),
-            ("cat_chana_dal", "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=500&q=80"),
-            ("cat_bath_soap", "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80"),
-            ("cat_detergent", "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&q=80"),
+    # 2. Upgrade existing PostgreSQL columns to TIMESTAMPTZ (each in isolated safe transaction)
+    if "postgresql" in settings.ASYNC_DATABASE_URL:
+        alter_stmts = [
+            "ALTER TABLE users ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+            "ALTER TABLE users ALTER COLUMN updated_at TYPE TIMESTAMPTZ USING updated_at AT TIME ZONE 'UTC';",
+            "ALTER TABLE addresses ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+            "ALTER TABLE stores ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+            "ALTER TABLE orders ALTER COLUMN placed_at TYPE TIMESTAMPTZ USING placed_at AT TIME ZONE 'UTC';",
+            "ALTER TABLE orders ALTER COLUMN cancel_until TYPE TIMESTAMPTZ USING cancel_until AT TIME ZONE 'UTC';",
+            "ALTER TABLE orders ALTER COLUMN delivered_at TYPE TIMESTAMPTZ USING delivered_at AT TIME ZONE 'UTC';",
+            "ALTER TABLE order_timeline ALTER COLUMN timestamp TYPE TIMESTAMPTZ USING timestamp AT TIME ZONE 'UTC';",
+            "ALTER TABLE support_tickets ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+            "ALTER TABLE audit_logs ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+            "ALTER TABLE otp_challenges ALTER COLUMN created_at TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';",
+            "ALTER TABLE otp_challenges ALTER COLUMN expires_at TYPE TIMESTAMPTZ USING expires_at AT TIME ZONE 'UTC';",
         ]
-        for cat_id, new_url in url_updates:
+        for stmt in alter_stmts:
             try:
+                async with async_engine.begin() as conn:
+                    await conn.execute(text(stmt))
+            except Exception as exc:
+                logger.debug("TIMESTAMPTZ upgrade notice for '%s': %s", stmt[:40], exc)
+
+    # 3. Ensure supplemental columns and tables exist using safe IF NOT EXISTS
+    is_pg = "postgresql" in settings.ASYNC_DATABASE_URL
+    add_col_prefix = "ALTER TABLE users ADD COLUMN IF NOT EXISTS " if is_pg else "ALTER TABLE users ADD COLUMN "
+    add_order_prefix = "ALTER TABLE orders ADD COLUMN IF NOT EXISTS " if is_pg else "ALTER TABLE orders ADD COLUMN "
+    add_ticket_prefix = "ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS " if is_pg else "ALTER TABLE support_tickets ADD COLUMN "
+    add_store_prefix = "ALTER TABLE stores ADD COLUMN IF NOT EXISTS " if is_pg else "ALTER TABLE stores ADD COLUMN "
+    add_runner_prefix = "ALTER TABLE runners ADD COLUMN IF NOT EXISTS " if is_pg else "ALTER TABLE runners ADD COLUMN "
+
+    migration_stmts = [
+        f"{add_col_prefix}avatar_url VARCHAR(500);",
+        f"{add_col_prefix}primary_village VARCHAR(100);",
+        f"{add_col_prefix}primary_panchayat VARCHAR(100);",
+        f"{add_order_prefix}payment_order_id VARCHAR(100);",
+        f"{add_order_prefix}transaction_id VARCHAR(100);",
+        f"{add_ticket_prefix}category VARCHAR(50) DEFAULT 'GENERAL_HELP';",
+        f"{add_ticket_prefix}affected_product_id VARCHAR(50);",
+        f"{add_ticket_prefix}attachment_url TEXT;",
+        f"{add_ticket_prefix}resolution_notes TEXT;",
+        f"{add_ticket_prefix}resolved_at TIMESTAMP WITH TIME ZONE;",
+        f"{add_ticket_prefix}updated_at TIMESTAMP WITH TIME ZONE;",
+        f"{add_order_prefix}distance_km FLOAT DEFAULT 0.8;",
+        f"{add_order_prefix}runner_payout FLOAT DEFAULT 10.0;",
+        f"{add_store_prefix}rejection_reason TEXT;",
+        f"{add_runner_prefix}rejection_reason TEXT;",
+        """CREATE TABLE IF NOT EXISTS notifications (
+            id VARCHAR(36) PRIMARY KEY,
+            user_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            title VARCHAR(200) NOT NULL,
+            body TEXT NOT NULL,
+            type VARCHAR(50) DEFAULT 'system',
+            is_read BOOLEAN DEFAULT FALSE NOT NULL,
+            metadata_json TEXT,
+            created_at TIMESTAMP WITH TIME ZONE
+        );""",
+        """CREATE TABLE IF NOT EXISTS refunds (
+            id VARCHAR(36) PRIMARY KEY,
+            order_id VARCHAR(36) NOT NULL REFERENCES orders(id),
+            payment_id VARCHAR(100),
+            gateway_refund_id VARCHAR(100),
+            amount FLOAT NOT NULL,
+            currency VARCHAR(10) DEFAULT 'INR',
+            reason VARCHAR(255),
+            status VARCHAR(30) DEFAULT 'COMPLETED',
+            refund_type VARCHAR(30) DEFAULT 'FULL',
+            created_by VARCHAR(36) REFERENCES users(id),
+            admin_notes TEXT,
+            created_at TIMESTAMP WITH TIME ZONE,
+            updated_at TIMESTAMP WITH TIME ZONE
+        );""",
+        """CREATE TABLE IF NOT EXISTS replacements (
+            id VARCHAR(36) PRIMARY KEY,
+            original_order_id VARCHAR(36) NOT NULL REFERENCES orders(id),
+            ticket_id VARCHAR(36) REFERENCES support_tickets(id),
+            customer_id VARCHAR(36) NOT NULL REFERENCES users(id),
+            store_id VARCHAR(36) NOT NULL REFERENCES stores(id),
+            runner_id VARCHAR(36) REFERENCES runners(id),
+            status VARCHAR(30) DEFAULT 'REQUESTED',
+            reason VARCHAR(255) NOT NULL,
+            items_json TEXT NOT NULL,
+            customer_due FLOAT DEFAULT 0.0,
+            delivery_otp VARCHAR(10),
+            admin_notes TEXT,
+            rejection_reason TEXT,
+            created_at TIMESTAMP WITH TIME ZONE,
+            updated_at TIMESTAMP WITH TIME ZONE
+        );""",
+    ]
+    for stmt in migration_stmts:
+        try:
+            async with async_engine.begin() as conn:
+                await conn.execute(text(stmt))
+        except Exception as exc:
+            logger.debug("Schema migration notice: %s", exc)
+
+    # 4. Update verified product image URLs in existing database rows
+    url_updates = [
+        ("cat_mustard_oil", "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"),
+        ("cat_soy_oil", "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=500&q=80"),
+        ("cat_atta", "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"),
+        ("cat_led_bulb", "https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=500&q=80"),
+        ("cat_tomato", "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80"),
+        ("cat_toor_dal", "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80"),
+        ("cat_moong_dal", "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80"),
+        ("cat_chana_dal", "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=500&q=80"),
+        ("cat_bath_soap", "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80"),
+        ("cat_detergent", "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&q=80"),
+    ]
+    try:
+        async with async_engine.begin() as conn:
+            for cat_id, new_url in url_updates:
                 await conn.execute(
                     text("UPDATE global_catalog SET image_url = :url WHERE id = :id"),
                     {"url": new_url, "id": cat_id}
                 )
-                # Protect legitimate vendor images: only update if NULL, empty, or one of the deprecated mock URLs
                 await conn.execute(
                     text("""
                         UPDATE store_products 
@@ -136,8 +158,8 @@ async def init_db_and_seed():
                     """),
                     {"url": new_url, "id": cat_id}
                 )
-            except Exception:
-                pass
+    except Exception as exc:
+        logger.debug("Product image URL update notice: %s", exc)
         
     # Seed pilot data for Minapur Block, Muzaffarpur, Bihar
     async with AsyncSessionLocal() as session:
@@ -884,23 +906,50 @@ async def health_db():
         async with AsyncSessionLocal() as session:
             result = await session.execute(text("SELECT 1"))
             val = result.scalar()
+            is_healthy = bool(getattr(app.state, "db_healthy", False))
             return {
                 "status": "connected",
                 "database_engine": "postgresql" if "postgresql" in settings.ASYNC_DATABASE_URL else "sqlite",
                 "ping": val == 1,
-                "schema_seeded": getattr(app.state, "db_healthy", False),
-                "init_error": getattr(app.state, "db_error", None)
+                "readiness": "ready" if is_healthy else "degraded",
+                "schema_seeded": is_healthy
             }
     except Exception as exc:
+        logger.error("Health check database probe failed: %s", exc)
         return {
             "status": "disconnected",
-            "error": str(exc),
+            "readiness": "offline",
             "detail": "Database connection attempt failed"
         }
 
 @app.post("/api/v1/system/seed-database")
-async def seed_database():
-    """Manual endpoint to trigger and verify schema seeding and pilot data insertion."""
+async def seed_database(
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    authorization: Optional[str] = Header(None)
+):
+    """
+    Restricted maintenance endpoint to trigger schema seeding and pilot data verification.
+    Requires authorized Admin credentials or X-Admin-Key.
+    """
+    is_authorized = False
+    if x_admin_key and secrets.compare_digest(x_admin_key.strip(), settings.ADMIN_API_KEY.strip()):
+        is_authorized = True
+    elif authorization and authorization.startswith("Bearer "):
+        token = authorization.split("Bearer ", 1)[1]
+        try:
+            from app.core.security import decode_token
+            payload = decode_token(token)
+            if payload and payload.get("role") == "admin":
+                is_authorized = True
+        except Exception:
+            pass
+
+    if not is_authorized:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Administrative maintenance access required to seed database"
+        )
+
     try:
         await init_db_and_seed()
         app.state.db_healthy = True
@@ -910,4 +959,4 @@ async def seed_database():
         app.state.db_healthy = False
         app.state.db_error = str(exc)
         logger.error("Manual seed-database error: %s", exc, exc_info=True)
-        return {"status": "error", "error": str(exc), "type": type(exc).__name__}
+        return {"status": "error", "message": "Database seeding encountered an internal error"}

@@ -31,12 +31,12 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   // Selected Pin Coordinates & State
   double _currentLat = 26.2230;
   double _currentLng = 85.3520;
-  String _selectedVillage = 'Chaturshi';
-  String _landmark = 'Near Gram Panchayat Bhavan';
-  String _block = 'Minapur';
-  String _district = 'Muzaffarpur';
+  String _selectedVillage = '';
+  String _landmark = '';
+  String _block = '';
+  String _district = '';
   String _state = 'Bihar';
-  String _pinCode = '843128';
+  String _pinCode = '';
   double _distanceKm = 0.8;
   bool _isServiceable = true;
 
@@ -49,10 +49,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   final _houseController = TextEditingController();
   final _panchayatController = TextEditingController();
   final _postOfficeController = TextEditingController();
-  final _blockController = TextEditingController(text: 'Minapur');
-  final _districtController = TextEditingController(text: 'Muzaffarpur');
+  final _blockController = TextEditingController();
+  final _districtController = TextEditingController();
   final _stateController = TextEditingController(text: 'Bihar');
-  final _pinController = TextEditingController(text: '843128');
+  final _pinController = TextEditingController();
   String _addressLabel = 'Home';
 
   // Pilot Localities in Minapur Block
@@ -143,10 +143,8 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   }
 
   void _calculateServiceability() {
-    final dist = _haversineKm(hubLat, hubLng, _currentLat, _currentLng);
     setState(() {
-      _distanceKm = double.parse(dist.toStringAsFixed(1));
-      _isServiceable = _distanceKm <= 8.0;
+      _isServiceable = _currentLat != 0.0 && _currentLng != 0.0;
     });
   }
 
@@ -155,7 +153,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     final distanceKm = double.parse(dist.toStringAsFixed(1));
     final isWithin = distanceKm <= 8.0;
 
-    String villageName = customVillage ?? (isWithin ? 'Minapur Locality' : 'Outside Service Zone');
+    String villageName = customVillage ?? 'Confirmed Pin Location';
     String landmarkName = customLandmark ?? (isWithin ? 'Near Pin (${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)})' : 'Exceeds 8.0 km service radius (${distanceKm} km)');
 
     if (customVillage == null) {
@@ -173,7 +171,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       _currentLat = lat;
       _currentLng = lng;
       _distanceKm = distanceKm;
-      _isServiceable = isWithin;
+      _isServiceable = true;
       _selectedVillage = villageName;
       _landmark = landmarkName;
     });
@@ -257,10 +255,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   }
 
   void _proceedToAddressDetails() {
-    if (!_isServiceable) {
+    if (_currentLat == 0.0 && _currentLng == 0.0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Delivery is limited to within 8.0 km of Minapur Hub.'),
+          content: Text('Please select a valid location on the map.'),
           backgroundColor: GBColors.error,
         ),
       );

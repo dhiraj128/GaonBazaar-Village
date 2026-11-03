@@ -164,7 +164,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
         <div className="text-xs font-bold text-white flex items-center gap-1">
           <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-          Minapur, Muzaffarpur (Bihar)
+          Rural Hyperlocal Operations
         </div>
         <div className="mt-2 text-[11px] text-slate-400 flex flex-col gap-0.5">
           <span>• Max Radius: <b className="text-emerald-400">8.0 km</b></span>

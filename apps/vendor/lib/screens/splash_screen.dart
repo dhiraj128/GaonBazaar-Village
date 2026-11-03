@@ -4,6 +4,9 @@ import 'package:design_system/design_system.dart';
 import '../state/vendor_state.dart';
 import 'vendor_auth_screen.dart';
 import 'vendor_dashboard_screen.dart';
+import 'vendor_language_selection_screen.dart';
+import 'vendor_pending_approval_screen.dart';
+import 'vendor_onboarding_wizard.dart';
 
 class VendorSplashScreen extends StatefulWidget {
   const VendorSplashScreen({super.key});
@@ -20,12 +23,26 @@ class _VendorSplashScreenState extends State<VendorSplashScreen> {
       if (!mounted) return;
       final state = VendorStateProvider.of(context);
       if (state.currentUser != null) {
+        if (state.myStore == null) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const VendorOnboardingWizard()),
+          );
+        } else if (!state.isStoreApproved) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const VendorPendingApprovalScreen()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const VendorDashboardScreen()),
+          );
+        }
+      } else if (state.hasSavedLocale) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const VendorDashboardScreen()),
+          MaterialPageRoute(builder: (_) => const VendorAuthScreen()),
         );
       } else {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const VendorAuthScreen()),
+          MaterialPageRoute(builder: (_) => const VendorLanguageSelectionScreen()),
         );
       }
     });

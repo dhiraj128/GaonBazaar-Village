@@ -492,7 +492,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                                 children: [
                                   const Text('Seller / Store', style: TextStyle(fontSize: 10, color: Colors.grey)),
                                   Text(_order.storeName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                                  const Text('Minapur Rural Hub, Muzaffarpur', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                  const Text('Rural Delivery Hub', style: TextStyle(fontSize: 10, color: Colors.grey)),
                                 ],
                               ),
                             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import '../state/runner_state.dart';
 import 'runner_dashboard_screen.dart';
+import 'runner_pending_approval_screen.dart';
 
 class RunnerOnboardingWizard extends StatefulWidget {
   const RunnerOnboardingWizard({super.key});
@@ -192,10 +193,10 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
               onPressed: () {
                 Navigator.of(ctx).pop();
                 Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const RunnerDashboardScreen()),
+                  MaterialPageRoute(builder: (_) => const RunnerPendingApprovalScreen()),
                 );
               },
-              child: Text(isHi ? 'डैशबोर्ड पर जाएँ' : 'Go to Dashboard'),
+              child: Text(isHi ? 'आवेदन स्थिति देखें (View Status)' : 'View Application Status'),
             ),
           ],
         ),

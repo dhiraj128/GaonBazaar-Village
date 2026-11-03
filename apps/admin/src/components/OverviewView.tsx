@@ -39,7 +39,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </div>
             <div>
               <div className="text-sm font-bold text-amber-900">
-                Action Required: Pending Approvals in Minapur
+                Action Required: Pending Approvals
               </div>
               <div className="text-xs text-amber-700">
                 {overview.pending_vendor_approvals > 0 &&
@@ -121,7 +121,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             <span className="text-sm font-medium text-slate-400">/ {overview.total_stores}</span>
           </div>
           <div className="mt-2 text-xs text-slate-500">
-            Online and serving Minapur localities
+            Online and serving registered localities
           </div>
         </div>
 

@@ -17,20 +17,10 @@ class RunnerAppState extends ChangeNotifier {
   bool isInitialized = false;
   bool isLoadingJobs = false;
 
-  Map<String, dynamic>? runnerProfile = {
-    'id': 'run_01',
-    'full_name': 'Amit Kumar',
-    'vehicle_type': 'Motorcycle',
-    'vehicle_number': 'BR-06-AB-1234',
-    'dl_number': 'DL-0620240099881',
-    'upi_id': 'amitkumar@upi',
-    'rating': 4.9,
-    'is_approved': true,
-    'is_online': true,
-  };
+  Map<String, dynamic>? runnerProfile;
 
-  double todayEarnings = 425.0;
-  int completedTrips = 7;
+  double todayEarnings = 0.0;
+  int completedTrips = 0;
   double cashCollectedToRemit = 0.0;
 
   List<GBOrder> activeJobs = [];
@@ -46,7 +36,10 @@ class RunnerAppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
 
       final savedLang = prefs.getString('gb_runner_locale');
-      if (savedLang != null) currentLocale = savedLang;
+      if (savedLang != null) {
+        currentLocale = savedLang;
+        hasSavedLocale = true;
+      }
 
       final savedTheme = prefs.getString('gb_runner_theme');
       themeMode = (savedTheme == 'dark') ? ThemeMode.dark : ThemeMode.light;
@@ -71,6 +64,7 @@ class RunnerAppState extends ChangeNotifier {
 
   void setLocale(String lang) async {
     currentLocale = lang;
+    hasSavedLocale = true;
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();

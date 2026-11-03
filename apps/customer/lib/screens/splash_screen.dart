@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import '../state/app_state.dart';
 import 'language_selection_screen.dart';
+import 'phone_auth_screen.dart';
 import 'main_nav_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -22,6 +23,10 @@ class _SplashScreenState extends State<SplashScreen> {
       if (state.currentUser != null) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const MainNavScreen()),
+        );
+      } else if (state.hasSavedLocale) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
         );
       } else {
         Navigator.of(context).pushReplacement(

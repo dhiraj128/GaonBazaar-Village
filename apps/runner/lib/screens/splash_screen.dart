@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../state/runner_state.dart';
 import 'runner_auth_screen.dart';
 import 'runner_dashboard_screen.dart';
+import 'runner_language_selection_screen.dart';
+import 'runner_pending_approval_screen.dart';
+import 'runner_onboarding_wizard.dart';
 
 class RunnerSplashScreen extends StatefulWidget {
   const RunnerSplashScreen({super.key});
@@ -19,12 +22,26 @@ class _RunnerSplashScreenState extends State<RunnerSplashScreen> {
       if (!mounted) return;
       final state = RunnerStateProvider.of(context);
       if (state.currentUser != null) {
+        if (state.runnerProfile == null) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const RunnerOnboardingWizard()),
+          );
+        } else if (!state.isApproved) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const RunnerPendingApprovalScreen()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const RunnerDashboardScreen()),
+          );
+        }
+      } else if (state.hasSavedLocale) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const RunnerDashboardScreen()),
+          MaterialPageRoute(builder: (_) => const RunnerAuthScreen()),
         );
       } else {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const RunnerAuthScreen()),
+          MaterialPageRoute(builder: (_) => const RunnerLanguageSelectionScreen()),
         );
       }
     });

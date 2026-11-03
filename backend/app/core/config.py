@@ -147,6 +147,41 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_ID: str = "rzp_test_GaonBazaarVillage"
     RAZORPAY_KEY_SECRET: str = "test_secret_GaonBazaar_Village"
     RAZORPAY_WEBHOOK_SECRET: str = "webhook_secret_GaonBazaar"
+
+    @property
+    def RESOLVED_RAZORPAY_KEY_ID(self) -> str:
+        import os
+        return (
+            os.getenv("RAZORPAY_KEY_ID")
+            or os.getenv("RAZORPAY_KEY")
+            or os.getenv("RAZORPAY_API_KEY")
+            or os.getenv("VITE_RAZORPAY_KEY_ID")
+            or self.RAZORPAY_KEY_ID
+            or ""
+        ).strip()
+
+    @property
+    def RESOLVED_RAZORPAY_KEY_SECRET(self) -> str:
+        import os
+        return (
+            os.getenv("RAZORPAY_KEY_SECRET")
+            or os.getenv("RAZORPAY_SECRET")
+            or os.getenv("RAZORPAY_SECRET_KEY")
+            or os.getenv("RAZORPAY_API_SECRET")
+            or self.RAZORPAY_KEY_SECRET
+            or ""
+        ).strip()
+
+    @property
+    def RESOLVED_RAZORPAY_WEBHOOK_SECRET(self) -> str:
+        import os
+        return (
+            os.getenv("RAZORPAY_WEBHOOK_SECRET")
+            or os.getenv("RAZORPAY_WEBHOOK_KEY")
+            or os.getenv("RAZORPAY_WEBHOOK")
+            or self.RAZORPAY_WEBHOOK_SECRET
+            or ""
+        ).strip()
     
     # Pilot Geography: Minapur Block, Muzaffarpur, Bihar
     PILOT_BLOCK: str = "Minapur"

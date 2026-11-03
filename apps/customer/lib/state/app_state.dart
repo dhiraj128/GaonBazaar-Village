@@ -12,6 +12,7 @@ class CustomerAppState extends ChangeNotifier {
   String currentLocale = 'hi'; // Default Hindi
   ThemeMode themeMode = ThemeMode.light; // Explicit Light / Dark (No system)
   bool isInitialized = false;
+  bool hasSavedLocale = false;
 
   // Selected Address
   GBAddress selectedAddress = GBAddress(
@@ -81,6 +82,7 @@ class CustomerAppState extends ChangeNotifier {
       final savedLang = prefs.getString('gb_app_locale');
       if (savedLang != null && (savedLang == 'hi' || savedLang == 'en')) {
         currentLocale = savedLang;
+        hasSavedLocale = true;
       }
 
       // Load Theme (Explicit Light or Dark)
@@ -121,6 +123,7 @@ class CustomerAppState extends ChangeNotifier {
 
   void setLocale(String lang) async {
     currentLocale = lang;
+    hasSavedLocale = true;
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();

@@ -3,6 +3,8 @@ import 'package:design_system/design_system.dart';
 import 'package:shared_models/shared_models.dart';
 import '../state/runner_state.dart';
 import 'runner_dashboard_screen.dart';
+import 'runner_pending_approval_screen.dart';
+import 'runner_onboarding_wizard.dart';
 import 'runner_onboarding_wizard.dart';
 
 class RunnerAuthScreen extends StatefulWidget {
@@ -82,10 +84,22 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
       final token = data['access_token'] as String;
 
       state.setAuth(user, token);
+      await state.fetchProfile();
+      if (!mounted) return;
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const RunnerDashboardScreen()),
-      );
+      if (state.runnerProfile == null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const RunnerOnboardingWizard()),
+        );
+      } else if (!state.isApproved) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const RunnerPendingApprovalScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const RunnerDashboardScreen()),
+        );
+      }
     } else {
       setState(() => _errorMessage = res.errorMessage ?? (isHi ? 'ओटीपी सत्यापन विफल' : 'OTP verification failed'));
     }
@@ -103,22 +117,7 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
           isHi ? 'डिलीवरी साथी लॉगिन' : 'Delivery Partner Login',
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: DropdownButton<String>(
-              value: state.currentLocale,
-              underline: const SizedBox(),
-              items: const [
-                DropdownMenuItem(value: 'hi', child: Text('हिंदी')),
-                DropdownMenuItem(value: 'en', child: Text('English')),
-              ],
-              onChanged: (lang) {
-                if (lang != null) state.setLocale(lang);
-              },
-            ),
-          ),
-        ],
+
       ),
       body: SafeArea(
         child: SingleChildScrollView(

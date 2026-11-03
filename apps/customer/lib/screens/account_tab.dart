@@ -112,7 +112,7 @@ class AccountTab extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            loc.isHindi ? 'मीनापुर पायलट सदस्य' : 'Minapur Pilot Member',
+                            loc.isHindi ? 'गाँव बाज़ार सदस्य' : 'GaonBazaar Member',
                             style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,

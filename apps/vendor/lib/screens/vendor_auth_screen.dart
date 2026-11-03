@@ -4,6 +4,8 @@ import 'package:localization/localization.dart';
 import 'package:shared_models/shared_models.dart';
 import '../state/vendor_state.dart';
 import 'vendor_dashboard_screen.dart';
+import 'vendor_pending_approval_screen.dart';
+import 'vendor_onboarding_wizard.dart';
 import 'vendor_onboarding_wizard.dart';
 
 class VendorAuthScreen extends StatefulWidget {
@@ -80,10 +82,22 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
       final token = data['access_token'] as String;
 
       state.setAuth(user, token);
+      await state.fetchStoreProfile();
+      if (!mounted) return;
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const VendorDashboardScreen()),
-      );
+      if (state.myStore == null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const VendorOnboardingWizard()),
+        );
+      } else if (!state.isStoreApproved) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const VendorPendingApprovalScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const VendorDashboardScreen()),
+        );
+      }
     } else if (mounted) {
       setState(() => _errorMessage = res.errorMessage ?? (loc.isHindi ? 'ओटीपी सत्यापन विफल' : 'OTP verification failed'));
     }
@@ -101,18 +115,7 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
           loc.tr('vendor_login'),
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
-        actions: [
-          TextButton.icon(
-            icon: const Icon(Icons.language, size: 18),
-            label: Text(
-              state.isHindi ? 'English' : 'हिंदी',
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-            onPressed: () {
-              state.setLocale(state.isHindi ? 'en' : 'hi');
-            },
-          ),
-        ],
+
       ),
       body: SafeArea(
         child: SingleChildScrollView(

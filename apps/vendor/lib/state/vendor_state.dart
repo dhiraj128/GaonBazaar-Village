@@ -12,28 +12,14 @@ class VendorAppState extends ChangeNotifier {
   String currentLocale = 'hi';
   ThemeMode themeMode = ThemeMode.light;
 
-  bool isStoreOnline = true;
-  bool isStoreApproved = true;
+  bool isStoreOnline = false;
+  bool isStoreApproved = false;
+  bool hasSavedLocale = false;
   bool isInitialized = false;
   bool isLoadingOrders = false;
   bool isLoadingProducts = false;
 
-  GBStore? myStore = GBStore(
-    id: 'str_01',
-    ownerId: 'usr_v1',
-    shopName: 'माँ शारदा किराना स्टोर',
-    ownerName: 'Raju Sharma',
-    category: 'Grocery',
-    latitude: 26.2230,
-    longitude: 85.3520,
-    village: 'Chaturshi / Chatursi',
-    landmark: 'Near Gram Panchayat Bhavan',
-    block: 'Minapur',
-    district: 'Muzaffarpur',
-    isOnline: true,
-    isApproved: true,
-    rating: 4.9,
-  );
+  GBStore? myStore;
 
   List<GBProduct> myProducts = [];
   List<GBOrder> storeOrders = [];
@@ -49,7 +35,10 @@ class VendorAppState extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
 
       final savedLang = prefs.getString('gb_vendor_locale');
-      if (savedLang != null) currentLocale = savedLang;
+      if (savedLang != null) {
+        currentLocale = savedLang;
+        hasSavedLocale = true;
+      }
 
       final savedTheme = prefs.getString('gb_vendor_theme');
       themeMode = (savedTheme == 'dark') ? ThemeMode.dark : ThemeMode.light;
@@ -74,6 +63,7 @@ class VendorAppState extends ChangeNotifier {
 
   void setLocale(String lang) async {
     currentLocale = lang;
+    hasSavedLocale = true;
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();

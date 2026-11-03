@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import '../state/vendor_state.dart';
-import 'vendor_dashboard_screen.dart';
+import 'vendor_pending_approval_screen.dart';
 
 class VendorOnboardingWizard extends StatefulWidget {
   const VendorOnboardingWizard({super.key});
@@ -25,10 +25,10 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
   String _category = 'Grocery';
 
   // Step 2: Village & Location
-  final _villageCtrl = TextEditingController(text: 'Chaturshi / Chatursi');
+  final _villageCtrl = TextEditingController();
   final _landmarkCtrl = TextEditingController();
-  final _blockCtrl = TextEditingController(text: 'Minapur');
-  final _districtCtrl = TextEditingController(text: 'Muzaffarpur');
+  final _blockCtrl = TextEditingController();
+  final _districtCtrl = TextEditingController();
 
   // Step 3: Business Type
   String _businessType = 'Sole Proprietorship / एकल स्वामित्व';
@@ -217,10 +217,10 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
               onPressed: () {
                 Navigator.of(ctx).pop();
                 Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const VendorDashboardScreen()),
+                  MaterialPageRoute(builder: (_) => const VendorPendingApprovalScreen()),
                 );
               },
-              child: Text(isHi ? 'डैशबोर्ड पर जाएँ' : 'Go to Dashboard'),
+              child: Text(isHi ? 'आवेदन स्थिति देखें (View Status)' : 'View Application Status'),
             ),
           ],
         ),

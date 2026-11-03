@@ -72,7 +72,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
             GaonBazaar Super Admin
           </h1>
           <p style={{ margin: '0.35rem 0 0', fontSize: '0.875rem', opacity: 0.9 }}>
-            ग्रामीण हाइपरलोकल प्रबंधन पोर्टल — मीनापुर (Minapur Pilot)
+            ग्रामीण हाइपरलोकल प्रबंधन पोर्टल (Rural Hyperlocal Operations Portal)
           </p>
         </div>
 
@@ -88,7 +88,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
               fontSize: '0.875rem',
               marginBottom: '1.25rem'
             }}>
-              <strong>ত্রুটি / Error:</strong> {error}
+              <strong>त्रुटि / Error:</strong> {error}
             </div>
           )}
 
@@ -130,13 +130,13 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
 
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, color: '#374151', marginBottom: '0.35rem' }}>
-                मास्टर की या ओटीपी (Master Key or OTP)
+                एडमिन पासकोड या मास्टर की (Admin Passcode / Master Key)
               </label>
               <input
                 type="password"
                 value={secretOrOtp}
                 onChange={(e) => setSecretOrOtp(e.target.value)}
-                placeholder="Enter Admin Secret Key or Authorized OTP"
+                placeholder="Enter Admin Passcode (e.g. 123456) or Master Key"
                 required
                 style={{
                   width: '100%',

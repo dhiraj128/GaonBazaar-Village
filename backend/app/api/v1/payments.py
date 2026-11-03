@@ -41,8 +41,8 @@ def is_razorpay_configured() -> bool:
     Checks if active, genuine Razorpay merchant credentials are configured.
     Returns False for default placeholder/dummy values.
     """
-    key_id = (settings.RAZORPAY_KEY_ID or "").strip()
-    key_secret = (settings.RAZORPAY_KEY_SECRET or "").strip()
+    key_id = (settings.RESOLVED_RAZORPAY_KEY_ID or "").strip()
+    key_secret = (settings.RESOLVED_RAZORPAY_KEY_SECRET or "").strip()
     if not key_id or not key_secret:
         return False
     if "GaonBazaarVillage" in key_id or "placeholder" in key_id.lower() or "test_secret_GaonBazaar" in key_secret:
@@ -59,12 +59,68 @@ async def get_payment_gateway_status():
         "online_enabled": configured,
         "cod_enabled": True,
         "default_method": "COD",
-        "key_id": settings.RAZORPAY_KEY_ID if configured else None,
+        "key_id": settings.RESOLVED_RAZORPAY_KEY_ID if configured else None,
         "message": (
             "Online payment gateway active"
             if configured
             else "Online payments unconfigured. Cash on Delivery (COD) is 100% operational."
         )
+    }
+
+@router.get("/diagnostic")
+async def get_payment_gateway_diagnostic(
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    authorization: Optional[str] = Header(None)
+):
+    """Admin-only diagnostic endpoint to check gateway presence and handshake without exposing secrets."""
+    import secrets
+    is_authorized = False
+    if x_admin_key and secrets.compare_digest(x_admin_key.strip(), settings.ADMIN_API_KEY.strip()):
+        is_authorized = True
+    elif authorization and authorization.startswith("Bearer "):
+        token = authorization.split("Bearer ", 1)[1]
+        try:
+            from app.core.security import decode_token
+            p = decode_token(token)
+            if p and p.get("role") == "admin":
+                is_authorized = True
+        except Exception:
+            pass
+
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Forbidden: Admin access required")
+
+    key_id = settings.RESOLVED_RAZORPAY_KEY_ID
+    key_secret = settings.RESOLVED_RAZORPAY_KEY_SECRET
+    has_key_id = bool(key_id)
+    has_key_secret = bool(key_secret)
+    is_placeholder = "GaonBazaarVillage" in key_id or "placeholder" in key_id.lower() or "test_secret_GaonBazaar" in key_secret
+    
+    prefix = key_id[:8] if len(key_id) >= 8 else "too_short"
+    gateway_handshake = "untested"
+    if has_key_id and has_key_secret and not is_placeholder:
+        try:
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                res = await client.get("https://api.razorpay.com/v1/orders", auth=(key_id, key_secret), params={"count": 1})
+                if res.status_code == 200:
+                    gateway_handshake = "authenticated_200"
+                elif res.status_code == 401:
+                    gateway_handshake = "auth_failed_401"
+                else:
+                    gateway_handshake = f"status_{res.status_code}"
+        except Exception as e:
+            gateway_handshake = f"error_{type(e).__name__}"
+
+    return {
+        "has_key_id": has_key_id,
+        "key_prefix": prefix,
+        "key_id_length": len(key_id),
+        "has_key_secret": has_key_secret,
+        "key_secret_length": len(key_secret),
+        "has_webhook_secret": bool(settings.RESOLVED_RAZORPAY_WEBHOOK_SECRET),
+        "is_placeholder": is_placeholder,
+        "configured": is_razorpay_configured(),
+        "gateway_handshake": gateway_handshake
     }
 
 @router.post("/razorpay/order", response_model=RazorpayOrderResponse)
@@ -101,7 +157,7 @@ async def create_razorpay_order(
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(
                 "https://api.razorpay.com/v1/orders",
-                auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET),
+                auth=(settings.RESOLVED_RAZORPAY_KEY_ID, settings.RESOLVED_RAZORPAY_KEY_SECRET),
                 json={
                     "amount": amount_paise,
                     "currency": "INR",
@@ -130,7 +186,7 @@ async def create_razorpay_order(
         id=rzp_order_id,
         amount=amount_paise,
         currency="INR",
-        key_id=settings.RAZORPAY_KEY_ID,
+        key_id=settings.RESOLVED_RAZORPAY_KEY_ID,
         name="GaonBazaar Village",
         description=f"Order #{order.id[:8]} payment"
     )
@@ -187,7 +243,7 @@ async def verify_razorpay_payment(
     # Strict HMAC-SHA256 signature verification
     msg = f"{data.razorpay_order_id}|{data.razorpay_payment_id}"
     expected_sig = hmac.new(
-        settings.RAZORPAY_KEY_SECRET.encode("utf-8"),
+        settings.RESOLVED_RAZORPAY_KEY_SECRET.encode("utf-8"),
         msg.encode("utf-8"),
         hashlib.sha256
     ).hexdigest()
@@ -235,11 +291,11 @@ async def razorpay_webhook(
     if not x_razorpay_signature:
         raise HTTPException(status_code=400, detail="Missing webhook signature")
 
-    if not settings.RAZORPAY_WEBHOOK_SECRET:
+    if not settings.RESOLVED_RAZORPAY_WEBHOOK_SECRET:
         raise HTTPException(status_code=503, detail="Webhook secret not configured")
 
     expected_sig = hmac.new(
-        settings.RAZORPAY_WEBHOOK_SECRET.encode("utf-8"),
+        settings.RESOLVED_RAZORPAY_WEBHOOK_SECRET.encode("utf-8"),
         body_bytes,
         hashlib.sha256
     ).hexdigest()
@@ -377,7 +433,7 @@ async def process_refund(
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     resp = await client.post(
                         f"https://api.razorpay.com/v1/payments/{order.transaction_id}/refund",
-                        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET),
+                        auth=(settings.RESOLVED_RAZORPAY_KEY_ID, settings.RESOLVED_RAZORPAY_KEY_SECRET),
                         json={
                             "amount": amount_paise,
                             "notes": {"order_id": order.id, "reason": data.reason or "Customer refund"}

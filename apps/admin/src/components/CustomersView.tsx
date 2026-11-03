@@ -40,7 +40,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ customers: initial
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Customer Directory</h2>
           <p className="text-slate-600 text-sm">
-            Registered village customers across Minapur Block, Muzaffarpur
+            Registered village customers across service areas
           </p>
         </div>
         <div className="relative w-full sm:w-64">

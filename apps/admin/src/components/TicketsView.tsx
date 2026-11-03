@@ -208,7 +208,7 @@ export const TicketsView: React.FC<TicketsViewProps> = ({ tickets: initialTicket
                               }`}
                             >
                               <div className="flex items-center justify-between font-semibold text-[11px] text-slate-500">
-                                <span>{isAdmin ? 'Admin (Minapur Hub)' : isSystem ? 'System Notice' : 'Customer'}</span>
+                                <span>{isAdmin ? 'Admin Operations' : isSystem ? 'System Notice' : 'Customer'}</span>
                                 <span>{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                               </div>
                               <p className="whitespace-pre-wrap">{m.message}</p>

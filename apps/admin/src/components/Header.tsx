@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ currentTab, onRefresh, isLoading
         <h1 className="text-lg font-bold text-slate-800">{getTabTitle(currentTab)}</h1>
         <span className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
           <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-          Minapur Pilot Zone Active
+          Rural Operations Zone Active
         </span>
       </div>
 
