@@ -107,8 +107,8 @@ class _RunnerPendingApprovalScreenState extends State<RunnerPendingApprovalScree
               Text(
                 isRejected
                     ? (isHi
-                        ? 'सुपर एडमिन द्वारा आपके आवेदन में सुधार की आवश्यकता पाई गई है: ${profile!['rejection_reason']}'
-                        : 'Super Admin found corrections needed: ${profile!['rejection_reason']}')
+                        ? 'सुपर एडमिन द्वारा आपके आवेदन में सुधार की आवश्यकता पाई गई है: ${profile['rejection_reason']}'
+                        : 'Super Admin found corrections needed: ${profile['rejection_reason']}')
                     : (isHi
                         ? 'आपका 8-चरणीय डिलीवरी साथी पंजीकरण विवरण जमा हो चुका है। सुपर एडमिन द्वारा दस्तावेज़ सत्यापन के बाद आपकी आईडी सक्रिय कर दी जाएगी।'
                         : 'Your 8-step delivery partner registration has been submitted. Once verified by Super Admin, you will be authorized to accept delivery missions.'),

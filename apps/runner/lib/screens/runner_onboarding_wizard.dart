@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import '../state/runner_state.dart';
-import 'runner_dashboard_screen.dart';
 import 'runner_pending_approval_screen.dart';
 
 class RunnerOnboardingWizard extends StatefulWidget {

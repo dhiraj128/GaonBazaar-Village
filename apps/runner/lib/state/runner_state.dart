@@ -12,9 +12,10 @@ class RunnerAppState extends ChangeNotifier {
   String currentLocale = 'hi';
   ThemeMode themeMode = ThemeMode.light;
 
-  bool isOnline = true;
-  bool isApproved = true;
+  bool isOnline = false;
+  bool isApproved = false;
   bool isInitialized = false;
+  bool hasSavedLocale = false;
   bool isLoadingJobs = false;
 
   Map<String, dynamic>? runnerProfile;
