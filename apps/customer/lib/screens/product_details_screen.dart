@@ -23,6 +23,11 @@ class ProductDetailsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: loc.isHindi ? 'पीछे जाएं' : 'Back',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(
           product.getLocalizedName(loc.isHindi),
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
@@ -37,7 +42,10 @@ class ProductDetailsScreen extends StatelessWidget {
                 children: [
                   // Product Photo
                   Container(
-                    height: 220,
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.30,
+                      minHeight: 180,
+                    ),
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: isDark ? GBColors.cardDark : Colors.white,

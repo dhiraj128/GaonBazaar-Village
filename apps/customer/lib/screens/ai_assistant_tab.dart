@@ -45,7 +45,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> with SingleTickerProvid
       'name_hi': 'ताज़ा चक्की आटा',
       'unit': '1 kg',
       'price': 38.0,
-      'image_url': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400',
+      'image_url': 'https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg',
       'keywords': ['atta', 'aata', 'flour', 'wheat', 'gehu', 'आटा', 'चक्की']
     },
     {
@@ -54,7 +54,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> with SingleTickerProvid
       'name_hi': 'कच्ची घानी सरसों तेल',
       'unit': '1 L',
       'price': 142.0,
-      'image_url': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400',
+      'image_url': 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Dune_Aura_Mustard_oil_bottle_picture.jpg',
       'keywords': ['mustard', 'oil', 'tel', 'sarson', 'सरसों', 'तेल']
     },
     {
@@ -108,7 +108,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> with SingleTickerProvid
       'name_hi': '९ वॉट एलईडी बल्ब',
       'unit': '1 piece',
       'price': 85.0,
-      'image_url': 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400',
+      'image_url': 'https://upload.wikimedia.org/wikipedia/commons/4/4c/LED_bulb_800_Lm_Soft_white_2024.agr.jpg',
       'keywords': ['bulb', 'led', 'light', 'बल्ब', 'बिजली']
     },
   ];
@@ -277,7 +277,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> with SingleTickerProvid
         category: (matchedRaw['category'] as String?) ?? 'Grocery',
         unit: (matchedRaw['unit'] as String?) ?? '1 unit',
         price: ((matchedRaw['price'] ?? matchedRaw['suggested_price'] ?? 40.0) as num).toDouble(),
-        imageUrl: (matchedRaw['image_url'] as String?) ?? 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400',
+        imageUrl: (matchedRaw['image_url'] as String?) ?? 'https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg',
       );
     }
 
@@ -345,9 +345,9 @@ class _AiAssistantTabState extends State<AiAssistantTab> with SingleTickerProvid
     final voice = VoiceService.instance;
 
     setState(() {
-      _voiceState = AiVoiceState.listening;
+      _voiceState = AiVoiceState.processing;
       _liveTranscript = '';
-      _statusMessage = state.isHindi ? 'सुन रहे हैं... बोलिए' : 'Listening... speak now';
+      _statusMessage = state.isHindi ? 'माइक्रोफ़ोन प्रारंभ हो रहा है...' : 'Initializing microphone...';
     });
 
     try {
@@ -357,8 +357,8 @@ class _AiAssistantTabState extends State<AiAssistantTab> with SingleTickerProvid
           setState(() {
             _voiceState = AiVoiceState.error;
             _statusMessage = state.isHindi
-                ? 'माइक्रोफ़ोन उपलब्ध नहीं है। नीचे लिखकर भेजें।'
-                : 'Microphone not available on this browser/device. Please type your query.';
+                ? 'माइक्रोफ़ोन की अनुमति आवश्यक है या वेब स्पीच समर्थित नहीं है। कृपया नीचे लिखकर पूछें।'
+                : 'Microphone permission required or Web Speech API not supported. Please type your query.';
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -368,6 +368,13 @@ class _AiAssistantTabState extends State<AiAssistantTab> with SingleTickerProvid
           );
         }
         return;
+      }
+
+      if (mounted) {
+        setState(() {
+          _voiceState = AiVoiceState.listening;
+          _statusMessage = state.isHindi ? 'सुन रहे हैं... बोलिए' : 'Listening... speak now';
+        });
       }
 
       await voice.startListening(

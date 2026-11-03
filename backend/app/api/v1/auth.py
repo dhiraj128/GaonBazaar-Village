@@ -10,7 +10,7 @@ from app.core.config import settings
 from app.db.session import get_db
 from app.models.base import User, Store, Runner, OtpChallenge
 from app.schemas.auth import (
-    SendOTPRequest, SendOTPResponse, VerifyOTPRequest, TokenResponse, UserInfo, UpdateProfileRequest
+    SendOTPRequest, SendOTPResponse, VerifyOTPRequest, TokenResponse, UserInfo, UpdateProfileRequest, UploadAvatarRequest
 )
 from app.core.security import create_access_token, get_current_user_payload
 from app.services.sms import send_sms_otp
@@ -291,6 +291,9 @@ async def verify_otp(
             email=user.email,
             role=user.role,
             preferred_language=user.preferred_language or "hi",
+            avatar_url=getattr(user, "avatar_url", None),
+            primary_village=getattr(user, "primary_village", None),
+            primary_panchayat=getattr(user, "primary_panchayat", None),
             is_active=user.is_active
         )
     )
@@ -313,6 +316,9 @@ async def get_current_user(
         email=user.email,
         role=user.role,
         preferred_language=user.preferred_language or "hi",
+        avatar_url=getattr(user, "avatar_url", None),
+        primary_village=getattr(user, "primary_village", None),
+        primary_panchayat=getattr(user, "primary_panchayat", None),
         is_active=user.is_active
     )
 
@@ -334,6 +340,12 @@ async def update_current_user(
         user.email = req.email.strip()
     if req.preferred_language is not None:
         user.preferred_language = req.preferred_language.strip()
+    if req.avatar_url is not None:
+        user.avatar_url = req.avatar_url.strip()
+    if req.primary_village is not None:
+        user.primary_village = req.primary_village.strip()
+    if req.primary_panchayat is not None:
+        user.primary_panchayat = req.primary_panchayat.strip()
 
     await db.commit()
     await db.refresh(user)
@@ -345,5 +357,37 @@ async def update_current_user(
         email=user.email,
         role=user.role,
         preferred_language=user.preferred_language or "hi",
+        avatar_url=getattr(user, "avatar_url", None),
+        primary_village=getattr(user, "primary_village", None),
+        primary_panchayat=getattr(user, "primary_panchayat", None),
+        is_active=user.is_active
+    )
+
+@router.post("/avatar", response_model=UserInfo)
+async def upload_user_avatar(
+    req: UploadAvatarRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.avatar_url = req.avatar_data
+    await db.commit()
+    await db.refresh(user)
+
+    return UserInfo(
+        id=user.id,
+        phone=user.phone,
+        name=user.name,
+        email=user.email,
+        role=user.role,
+        preferred_language=user.preferred_language or "hi",
+        avatar_url=user.avatar_url,
+        primary_village=user.primary_village,
+        primary_panchayat=user.primary_panchayat,
         is_active=user.is_active
     )

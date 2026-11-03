@@ -100,7 +100,7 @@ class VendorInventoryScreen extends StatelessWidget {
       {'name': isHi ? 'अनाज / चावल' : 'Grains / Rice', 'url': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400'},
       {'name': isHi ? 'सब्ज़ियां' : 'Vegetables', 'url': 'https://images.unsplash.com/photo-1546470427-227c7369a941?w=400'},
       {'name': isHi ? 'दूध / घी' : 'Dairy / Ghee', 'url': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400'},
-      {'name': isHi ? 'सरसों तेल' : 'Cooking Oil', 'url': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400'},
+      {'name': isHi ? 'सरसों तेल' : 'Cooking Oil', 'url': 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Dune_Aura_Mustard_oil_bottle_picture.jpg'},
       {'name': isHi ? 'गुड़ / शक्कर' : 'Jaggery / Sugar', 'url': 'https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=400'},
       {'name': isHi ? 'पूजा सामग्री' : 'Pooja Items', 'url': 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400'},
     ];

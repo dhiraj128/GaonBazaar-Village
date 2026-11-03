@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:design_system/design_system.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'order_chat_screen.dart';
 import 'package:localization/localization.dart';
 import 'package:shared_models/shared_models.dart';
 import '../state/app_state.dart';
@@ -193,24 +195,58 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     );
   }
 
-  void _callStore() {
-    final loc = GBLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(loc.isHindi ? 'दुकानदार संपर्क: ${_order.storeName}' : 'Store Contact: ${_order.storeName}'),
-        action: SnackBarAction(label: 'OK', onPressed: () {}),
+  Future<void> _callStore() async {
+    final uri = Uri.parse('tel:9800000001');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Calling ${_order.storeName}...')),
+        );
+      }
+    }
+  }
+
+  Future<void> _callRunner() async {
+    final phone = _order.runnerPhone ?? '9800000003';
+    final uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Calling delivery partner ($phone)...')),
+        );
+      }
+    }
+  }
+
+  void _openChatWithPartner() {
+    final state = AppStateProvider.of(context);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OrderChatScreen(
+          apiClient: state.apiClient,
+          orderId: _order.id,
+          currentRole: 'customer',
+          partnerName: _order.runnerName ?? 'Delivery Partner',
+          partnerPhone: _order.runnerPhone ?? '9800000003',
+        ),
       ),
     );
   }
 
-  void _callRunner() {
-    final loc = GBLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(loc.isHindi ? 'डिलीवरी पार्टनर संपर्क: मीनापुर ब्लॉक सहायता' : 'Delivery Partner: Minapur Dispatch Line'),
-        action: SnackBarAction(label: 'OK', onPressed: () {}),
-      ),
-    );
+  String _getMonthName(int month, bool isHi) {
+    const en = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const hi = ['', 'जनवरी', 'फ़रवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
+    return isHi ? hi[month] : en[month];
+  }
+
+  String _formatTime(DateTime dt) {
+    final hr = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
+    final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+    return '$hr:${dt.minute.toString().padLeft(2, '0')} $ampm';
   }
 
   void _shareDeliveryLocation() {
@@ -439,7 +475,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
             const SizedBox(height: 16),
 
-            // Live Location & Google Maps Sharing Card
+            // Real Customer - Runner Chat & Location Sharing Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -454,40 +490,56 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.location_on, color: GBColors.primary, size: 20),
+                      const Icon(Icons.chat_bubble_outline, color: GBColors.primary, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        loc.isHindi ? 'डिलीवरी लोकेशन व गूगल मैप्स' : 'Delivery Location & Google Maps',
+                        loc.isHindi ? 'डिलीवरी साथी से संपर्क एवं लाइव लोकेशन' : 'Contact Runner & Share Live Location',
                         style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
-                    _order.deliveryAddress,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? GBColors.textPrimaryDark : GBColors.textPrimaryLight,
-                    ),
+                    loc.isHindi
+                        ? 'सटीक घर/टोला पर डिलीवरी के लिए साथी को संदेश या वास्तविक जीपीएस पिन भेजें।'
+                        : 'Chat with runner or share your exact live GPS pin for doorstep rural delivery.',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: GBColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: GBColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 11),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          icon: const Icon(Icons.chat, size: 17),
+                          label: Text(
+                            loc.isHindi ? 'साथी से चैट / जीपीएस पिन' : 'Chat & Share GPS Pin',
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                          ),
+                          onPressed: _openChatWithPartner,
+                        ),
                       ),
-                      icon: const Icon(Icons.share_location, size: 18),
-                      label: Text(
-                        loc.isHindi ? 'डिलीवरी साथी को Google Maps लोकेशन भेजें' : 'Share Google Maps Location with Runner',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: GBColors.primary,
+                          side: const BorderSide(color: GBColors.primary),
+                          padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        icon: const Icon(Icons.phone_in_talk, size: 17),
+                        label: Text(
+                          loc.isHindi ? 'कॉल' : 'Call',
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                        ),
+                        onPressed: _callRunner,
                       ),
-                      onPressed: _shareDeliveryLocation,
-                    ),
+                    ],
                   ),
                 ],
               ),
@@ -619,6 +671,187 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                       ],
                     );
                   }),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Complete Itemized Order Details & Bill Summary Card
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? GBColors.cardDark : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark ? GBColors.borderDark : GBColors.borderLight,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        loc.isHindi ? 'ऑर्डर सामग्री एवं बिल विवरण' : 'Order Items & Bill Details',
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: _order.paymentStatus == 'PAID'
+                              ? GBColors.success.withAlpha(25)
+                              : GBColors.warning.withAlpha(25),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _order.paymentStatus == 'PAID'
+                              ? (loc.isHindi ? 'भुगतान संपन्न (PAID)' : 'PAID')
+                              : (loc.isHindi ? 'भुगतान बकाया (PENDING)' : 'PENDING'),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: _order.paymentStatus == 'PAID' ? GBColors.success : GBColors.warning,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '${loc.isHindi ? "ऑर्डर का समय" : "Order Placed"}: ${_order.placedAt.day} ${_getMonthName(_order.placedAt.month, loc.isHindi)} ${_order.placedAt.year}, ${_formatTime(_order.placedAt)}',
+                    style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade400 : Colors.grey.shade700),
+                  ),
+                  const Divider(height: 18),
+                  if (_order.items.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        loc.isHindi ? 'किराना सामग्री पैक हो रही है' : 'Items being packed',
+                        style: const TextStyle(fontSize: 13, color: Colors.grey),
+                      ),
+                    )
+                  else
+                    ..._order.items.map((item) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: GBColors.primary.withAlpha(25),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '${item.quantity}x',
+                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: GBColors.primary),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    loc.isHindi ? item.nameHi : item.nameEn,
+                                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                  ),
+                                  Text(
+                                    '${item.unit} • ₹${item.unitPrice.toStringAsFixed(0)}',
+                                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              '₹${item.totalPrice.toStringAsFixed(0)}',
+                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  const Divider(height: 18),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(loc.isHindi ? 'सामग्री उप-योग (Subtotal)' : 'Item Subtotal', style: const TextStyle(fontSize: 12)),
+                      Text('₹${_order.subtotal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(loc.isHindi ? 'डिलीवरी शुल्क' : 'Delivery Fee', style: const TextStyle(fontSize: 12)),
+                      Text('₹${_order.deliveryFee.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(loc.isHindi ? 'प्लेटफ़ॉर्म शुल्क' : 'Platform Fee', style: const TextStyle(fontSize: 12)),
+                      Text('₹${_order.platformFee.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  const Divider(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        loc.isHindi ? 'कुल राशि (Grand Total)' : 'Grand Total',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                      ),
+                      Text(
+                        '₹${_order.totalAmount.toStringAsFixed(0)}',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: GBColors.primary),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        _order.paymentMethod == 'COD' ? Icons.payments_outlined : Icons.credit_card,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${loc.isHindi ? "भुगतान विधि" : "Payment"}: ${_order.paymentMethod == "COD" ? (loc.isHindi ? "कैश ऑन डिलीवरी (COD)" : "Cash on Delivery (COD)") : "Online Payment"}',
+                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  if (_order.status == 'CANCELLED') ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withAlpha(20),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.cancel, color: Colors.red, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _order.paymentStatus == 'REFUNDED'
+                                  ? (loc.isHindi ? 'ऑर्डर रद्द: रिफ़ंड प्रक्रिया शुरू कर दी गई है।' : 'Order Cancelled: Refund initiated to original source.')
+                                  : (loc.isHindi ? 'ऑर्डर रद्द कर दिया गया है।' : 'Order has been cancelled.'),
+                              style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

@@ -25,6 +25,7 @@ class Endpoints {
   static const String verifyOtp = '/auth/otp/verify';
   static const String currentUser = '/auth/me';
   static const String updateProfile = '/auth/me';
+  static const String uploadAvatar = '/auth/avatar';
 
   // Stores & Products
   static const String nearbyStores = '/stores/nearby';
@@ -43,6 +44,7 @@ class Endpoints {
   static const String customerOrders = '/orders';
   static String orderDetails(String id) => '/orders/$id';
   static String cancelOrder(String id) => '/orders/$id/cancel';
+  static String orderMessages(String id) => '/orders/$id/messages';
 
   // Support & Tickets
   static const String supportTickets = '/support/tickets';
@@ -70,6 +72,7 @@ class Endpoints {
   static const String aiQuery = '/ai/query';
 
   // Payments
+  static const String paymentStatus = '/payments/status';
   static const String razorpayOrder = '/payments/razorpay/order';
   static const String razorpayVerify = '/payments/razorpay/verify';
 }

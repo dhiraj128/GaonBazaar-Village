@@ -21,6 +21,7 @@ dependencies:
     path: ../../packages/shared_models
   api_client:
     path: ../../packages/api_client
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:

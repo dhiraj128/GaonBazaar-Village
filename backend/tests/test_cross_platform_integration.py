@@ -70,7 +70,7 @@ async def test_full_cross_platform_lifecycle():
                 "unit": "5 kg",
                 "price": 175.0,
                 "mrp": 195.0,
-                "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500",
+                "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg?w=500",
                 "in_stock": True,
                 "stock_quantity": 40
             }

@@ -179,13 +179,38 @@ class CustomerAppState extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateProfile({String? name, String? email, String? preferredLanguage}) async {
+  Future<bool> updateProfile({
+    String? name,
+    String? email,
+    String? preferredLanguage,
+    String? avatarUrl,
+    String? primaryVillage,
+    String? primaryPanchayat,
+  }) async {
     if (authToken == null) return false;
     final res = await apiClient.updateProfile(
       name: name,
       email: email,
       preferredLanguage: preferredLanguage,
+      avatarUrl: avatarUrl,
+      primaryVillage: primaryVillage,
+      primaryPanchayat: primaryPanchayat,
     );
+    if (res.isSuccess && res.data != null) {
+      currentUser = res.data;
+      notifyListeners();
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('gb_user_data', jsonEncode(currentUser!.toJson()));
+      } catch (_) {}
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> uploadAvatar(String avatarData) async {
+    if (authToken == null) return false;
+    final res = await apiClient.uploadAvatar(avatarData);
     if (res.isSuccess && res.data != null) {
       currentUser = res.data;
       notifyListeners();
@@ -205,77 +230,8 @@ class CustomerAppState extends ChangeNotifier {
 
     final res = await apiClient.getCustomerOrders();
     isLoadingOrders = false;
-    if (res.isSuccess && res.data != null && res.data!.isNotEmpty) {
+    if (res.isSuccess && res.data != null) {
       myOrders = res.data!;
-    } else if (myOrders.isEmpty) {
-      myOrders = [
-        GBOrder(
-          id: 'ord_mnp_8842',
-          customerId: currentUser?.id ?? 'usr_c1',
-          storeId: 'str_minapur_1',
-          storeName: 'Raju Kirana Store (राजू किराना स्टोर)',
-          runnerId: 'run_01',
-          runnerName: 'Vikram Singh',
-          runnerPhone: '+91 98222 22222',
-          deliveryAddress: 'Ward 4, Near Shiv Mandir, Chaturshi, Minapur, Muzaffarpur',
-          status: 'OUT_FOR_DELIVERY',
-          subtotal: 310.0,
-          deliveryFee: 15.0,
-          platformFee: 3.0,
-          totalAmount: 328.0,
-          paymentMethod: 'COD',
-          paymentStatus: 'PENDING',
-          deliveryOtp: '4821',
-          placedAt: DateTime.now().subtract(const Duration(minutes: 18)),
-          cancelUntil: DateTime.now().subtract(const Duration(minutes: 15)),
-          canCancel: false,
-          cancelSecondsRemaining: 0,
-          items: [
-            GBOrderItem(
-              id: 'item_1',
-              productId: 'cat_atta',
-              nameEn: 'Aashirvaad Shudh Chakki Atta 5kg',
-              nameHi: 'आशीर्वाद शुद्ध चक्की आटा 5 किग्रा',
-              unit: '5 kg',
-              unitPrice: 210.0,
-              quantity: 1,
-              totalPrice: 210.0,
-              imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400',
-            ),
-            GBOrderItem(
-              id: 'item_2',
-              productId: 'cat_mustard_oil',
-              nameEn: 'Fortune Kachi Ghani Mustard Oil 1L',
-              nameHi: 'फॉर्च्यून कच्ची घानी सरसों तेल 1 ली',
-              unit: '1 L',
-              unitPrice: 100.0,
-              quantity: 1,
-              totalPrice: 100.0,
-              imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400',
-            ),
-          ],
-          timeline: [
-            GBOrderTimelineItem(
-              status: 'PLACED',
-              title: 'Order Placed',
-              description: 'Customer placed order with COD',
-              timestamp: DateTime.now().subtract(const Duration(minutes: 18)),
-            ),
-            GBOrderTimelineItem(
-              status: 'PACKED',
-              title: 'Order Packed',
-              description: 'Store confirmed and packed items',
-              timestamp: DateTime.now().subtract(const Duration(minutes: 10)),
-            ),
-            GBOrderTimelineItem(
-              status: 'OUT_FOR_DELIVERY',
-              title: 'Out for Delivery',
-              description: 'Delivery partner picked up package',
-              timestamp: DateTime.now().subtract(const Duration(minutes: 4)),
-            ),
-          ],
-        )
-      ];
     }
     notifyListeners();
   }

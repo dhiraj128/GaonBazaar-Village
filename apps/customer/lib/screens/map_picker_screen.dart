@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -149,36 +150,50 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     });
   }
 
-  void _updateCoordinates(double lat, double lng) {
+  void _updateCoordinates(double lat, double lng, {String? customVillage, String? customLandmark}) {
+    final dist = _haversineKm(hubLat, hubLng, lat, lng);
+    final distanceKm = double.parse(dist.toStringAsFixed(1));
+    final isWithin = distanceKm <= 8.0;
+
+    String villageName = customVillage ?? (isWithin ? 'Minapur Locality' : 'Outside Service Zone');
+    String landmarkName = customLandmark ?? (isWithin ? 'Near Pin (${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)})' : 'Exceeds 8.0 km service radius (${distanceKm} km)');
+
+    if (customVillage == null) {
+      for (final p in _pilotLocations) {
+        final d = _haversineKm(lat, lng, p['lat'] as double, p['lng'] as double);
+        if (d < 0.5) {
+          villageName = p['village'] as String;
+          landmarkName = p['landmark'] as String;
+          break;
+        }
+      }
+    }
+
     setState(() {
       _currentLat = lat;
       _currentLng = lng;
-      String nearestVillage = 'Minapur Rural Locality';
-      String nearestLandmark = 'Near Village Road Pin';
-      double minD = 9999.0;
-      for (final p in _pilotLocations) {
-        final d = _haversineKm(lat, lng, p['lat'] as double, p['lng'] as double);
-        if (d < minD) {
-          minD = d;
-          if (d <= 2.5) {
-            nearestVillage = p['village'] as String;
-            nearestLandmark = p['landmark'] as String;
-          }
-        }
-      }
-      _selectedVillage = nearestVillage;
-      _landmark = nearestLandmark;
-      _calculateServiceability();
+      _distanceKm = distanceKm;
+      _isServiceable = isWithin;
+      _selectedVillage = villageName;
+      _landmark = landmarkName;
     });
+
     if (_mapController != null) {
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLng(LatLng(lat, lng)),
-      );
+      try {
+        _mapController!.animateCamera(
+          CameraUpdate.newLatLng(LatLng(lat, lng)),
+        );
+      } catch (_) {}
     }
   }
 
   void _selectPilotLocation(Map<String, dynamic> loc) {
-    _updateCoordinates(loc['lat'] as double, loc['lng'] as double);
+    _updateCoordinates(
+      loc['lat'] as double,
+      loc['lng'] as double,
+      customVillage: loc['village'] as String,
+      customLandmark: loc['landmark'] as String,
+    );
   }
 
   Future<void> _fetchDeviceGpsLocation() async {
@@ -551,11 +566,14 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           ),
         ),
 
-        // Interactive Google Map View
+        // Interactive Map View (Native GoogleMap on Android, Canvas on Web)
         Expanded(
           child: Stack(
             children: [
-              GoogleMap(
+              if (kIsWeb)
+                _buildWebInteractiveMap(isDark, loc)
+              else
+                GoogleMap(
                 initialCameraPosition: CameraPosition(
                   target: LatLng(_currentLat, _currentLng),
                   zoom: 14.5,
@@ -938,4 +956,143 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       ),
     );
   }
+
+  Widget _buildWebInteractiveMap(bool isDark, GBLocalizations loc) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapUp: (details) {
+        final size = MediaQuery.of(context).size;
+        final dx = details.localPosition.dx - (size.width / 2);
+        final dy = details.localPosition.dy - 180;
+        final newLat = _currentLat - (dy * 0.00015);
+        final newLng = _currentLng + (dx * 0.00015);
+        _updateCoordinates(newLat, newLng);
+      },
+      child: Container(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Map Grid Background Pattern
+            CustomPaint(
+              size: Size.infinite,
+              painter: _RuralMapPainter(isDark: isDark),
+            ),
+            // Geofence Circle (8.0 km radius visualization)
+            Container(
+              width: 340,
+              height: 340,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: _isServiceable ? GBColors.success.withAlpha(140) : GBColors.error.withAlpha(140),
+                  width: 2.5,
+                ),
+                color: (_isServiceable ? GBColors.success : GBColors.error).withAlpha(15),
+              ),
+            ),
+            // Hub Marker
+            Positioned(
+              top: 130,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text('Minapur Hub', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                  ),
+                  const Icon(Icons.store, color: Color(0xFF2E7D32), size: 24),
+                ],
+              ),
+            ),
+            // Current Delivery Pin
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: _isServiceable ? GBColors.primary : GBColors.error,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
+                  ),
+                  child: Text(
+                    ' ( km)',
+                    style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Icon(
+                  Icons.location_on,
+                  size: 44,
+                  color: _isServiceable ? GBColors.primary : GBColors.error,
+                ),
+              ],
+            ),
+            // Interactive Click Hint
+            Positioned(
+              bottom: 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withAlpha(180),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  loc.isHindi ? 'मानचित्र पर कहीं भी क्लिक करके डिलीवरी पिन बदलें' : 'Click anywhere on map to reposition delivery pin',
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+}
+
+class _RuralMapPainter extends CustomPainter {
+  final bool isDark;
+  _RuralMapPainter({required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bgPaint = Paint()..color = isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
+
+    final roadPaint = Paint()
+      ..color = (isDark ? Colors.white12 : Colors.grey.shade300)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke;
+
+    final riverPaint = Paint()
+      ..color = const Color(0xFF60A5FA).withAlpha(80)
+      ..strokeWidth = 6
+      ..style = PaintingStyle.stroke;
+
+    // Rural highway curve
+    final path = Path()
+      ..moveTo(0, size.height * 0.3)
+      ..quadraticBezierTo(size.width * 0.5, size.height * 0.45, size.width, size.height * 0.25);
+    canvas.drawPath(path, roadPaint);
+
+    // Cross road
+    final path2 = Path()
+      ..moveTo(size.width * 0.2, 0)
+      ..lineTo(size.width * 0.8, size.height);
+    canvas.drawPath(path2, roadPaint);
+
+    // River
+    final riverPath = Path()
+      ..moveTo(0, size.height * 0.7)
+      ..cubicTo(size.width * 0.3, size.height * 0.6, size.width * 0.6, size.height * 0.8, size.width, size.height * 0.65);
+    canvas.drawPath(riverPath, riverPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

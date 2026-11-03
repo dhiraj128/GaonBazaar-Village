@@ -259,7 +259,7 @@ let initialCatalog: CatalogItem[] = [
     category: 'Grocery & Ration',
     standard_unit: '1 Litre',
     suggested_price: 155.0,
-    image_url: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80',
+    image_url: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Dune_Aura_Mustard_oil_bottle_picture.jpg?w=500&q=80',
   },
   {
     id: 'cat_03',

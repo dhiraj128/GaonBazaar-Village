@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:shared_models/shared_models.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../state/runner_state.dart';
 import 'runner_auth_screen.dart';
+import 'order_chat_screen.dart';
 
 class RunnerDashboardScreen extends StatefulWidget {
   const RunnerDashboardScreen({super.key});
@@ -628,17 +630,21 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                     isHi ? 'दुकान का रास्ता' : 'Store Map',
                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
                   ),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(isHi ? 'दुकान का गूगल मैप्स नेविगेशन: ${order.storeName}' : 'Store Google Maps: ${order.storeName}'),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+                  onPressed: () async {
+                    final uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=26.2230,85.3520');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Opening Google Maps...')),
+                        );
+                      }
+                    }
                   },
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Expanded(
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
@@ -651,28 +657,57 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                     isHi ? 'ग्राहक का रास्ता' : 'Drop Map',
                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
                   ),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(isHi ? 'ग्राहक का गूगल मैप्स नेविगेशन: ${order.deliveryAddress}' : 'Customer Google Maps: ${order.deliveryAddress}'),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+                  onPressed: () async {
+                    final uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=26.2210,85.3500');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Opening Google Maps...')),
+                        );
+                      }
+                    }
                   },
                 ),
               ),
-              const SizedBox(width: 8),
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                ),
-                child: const Icon(Icons.call, size: 16, color: GBColors.primary),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${isHi ? "कॉलिंग ग्राहक" : "Calling customer"}: +91 9800000000')),
+              const SizedBox(width: 6),
+              Tooltip(
+                message: 'Chat with Customer',
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                  child: const Icon(Icons.chat_bubble_outline, size: 16, color: GBColors.primary),
+                  onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => OrderChatScreen(
+                        apiClient: state.apiClient,
+                        orderId: order.id,
+                        currentRole: 'runner',
+                        partnerName: 'Customer',
+                        partnerPhone: '9800000000',
+                      ),
+                    ),
                   );
                 },
-              ),
+              ),),
+              const SizedBox(width: 6),
+              Tooltip(
+                message: 'Call Customer',
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                  ),
+                  child: const Icon(Icons.call, size: 16, color: GBColors.primary),
+                  onPressed: () async {
+                  final uri = Uri.parse('tel:9800000000');
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri);
+                  }
+                },
+              ),),
             ],
           ),
           const SizedBox(height: 10),

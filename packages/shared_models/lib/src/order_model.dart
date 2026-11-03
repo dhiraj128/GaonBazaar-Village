@@ -125,7 +125,7 @@ class GBOrder {
       totalAmount: (json['total_amount'] as num).toDouble(),
       paymentMethod: json['payment_method'] as String,
       paymentStatus: json['payment_status'] as String,
-      deliveryOtp: json['delivery_otp'] as String,
+      deliveryOtp: json['delivery_otp'] as String? ?? '',
       placedAt: DateTime.parse(json['placed_at'] as String),
       cancelUntil: DateTime.parse(json['cancel_until'] as String),
       canCancel: json['can_cancel'] as bool? ?? false,
@@ -139,5 +139,66 @@ class GBOrder {
               .toList() ??
           [],
     );
+  }
+}
+
+
+class GBOrderMessage {
+  final String id;
+  final String orderId;
+  final String senderId;
+  final String senderRole;
+  final String senderName;
+  final String messageType; // TEXT, LOCATION_PIN, LIVE_LOCATION_START, LIVE_LOCATION_STOP
+  final String? content;
+  final double? latitude;
+  final double? longitude;
+  final String? locationTitle;
+  final DateTime createdAt;
+
+  GBOrderMessage({
+    required this.id,
+    required this.orderId,
+    required this.senderId,
+    required this.senderRole,
+    required this.senderName,
+    required this.messageType,
+    this.content,
+    this.latitude,
+    this.longitude,
+    this.locationTitle,
+    required this.createdAt,
+  });
+
+  factory GBOrderMessage.fromJson(Map<String, dynamic> json) {
+    return GBOrderMessage(
+      id: json['id'] as String,
+      orderId: json['order_id'] as String,
+      senderId: json['sender_id'] as String,
+      senderRole: json['sender_role'] as String,
+      senderName: json['sender_name'] as String,
+      messageType: json['message_type'] as String? ?? 'TEXT',
+      content: json['content'] as String?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      locationTitle: json['location_title'] as String?,
+      createdAt: DateTime.parse(json['created_at'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'order_id': orderId,
+      'sender_id': senderId,
+      'sender_role': senderRole,
+      'sender_name': senderName,
+      'message_type': messageType,
+      'content': content,
+      'latitude': latitude,
+      'longitude': longitude,
+      'location_title': locationTitle,
+      'created_at': createdAt.toIso8601String(),
+    };
   }
 }

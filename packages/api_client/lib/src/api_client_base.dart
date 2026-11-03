@@ -256,18 +256,42 @@ class GBApiClient {
     String? name,
     String? email,
     String? preferredLanguage,
+    String? avatarUrl,
+    String? primaryVillage,
+    String? primaryPanchayat,
   }) async {
     try {
       final payload = <String, dynamic>{};
       if (name != null) payload['name'] = name;
       if (email != null) payload['email'] = email;
       if (preferredLanguage != null) payload['preferred_language'] = preferredLanguage;
+      if (avatarUrl != null) payload['avatar_url'] = avatarUrl;
+      if (primaryVillage != null) payload['primary_village'] = primaryVillage;
+      if (primaryPanchayat != null) payload['primary_panchayat'] = primaryPanchayat;
 
       final response = await http.patch(
         Uri.parse('$baseUrl${Endpoints.updateProfile}'),
         headers: _headers(),
         body: jsonEncode(payload),
       ).timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return ApiResponse(isSuccess: true, data: GBUser.fromJson(data), statusCode: 200);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<GBUser>> uploadAvatar(String avatarData) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl${Endpoints.uploadAvatar}'),
+        headers: _headers(),
+        body: jsonEncode({'avatar_data': avatarData}),
+      ).timeout(const Duration(seconds: 12));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -918,4 +942,76 @@ class GBApiClient {
       return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
     }
   }
+
+  // --- Payment Gateway Status ---
+  Future<ApiResponse<Map<String, dynamic>>> getPaymentStatus() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl${Endpoints.paymentStatus}'), headers: _headers())
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: data, statusCode: 200);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  // --- Order-Scoped Chat & Live Location Messages ---
+  Future<ApiResponse<List<GBOrderMessage>>> getOrderMessages(String orderId) async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl${Endpoints.orderMessages(orderId)}'), headers: _headers())
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final list = (jsonDecode(response.body) as List)
+            .map((item) => GBOrderMessage.fromJson(item as Map<String, dynamic>))
+            .toList();
+        return ApiResponse(isSuccess: true, data: list, statusCode: 200);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<GBOrderMessage>> sendOrderMessage(
+    String orderId, {
+    required String messageType,
+    String? content,
+    double? latitude,
+    double? longitude,
+    String? locationTitle,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'message_type': messageType,
+        'content': content,
+        'latitude': latitude,
+        'longitude': longitude,
+        'location_title': locationTitle,
+      };
+
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl${Endpoints.orderMessages(orderId)}'),
+            headers: _headers(),
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return ApiResponse(isSuccess: true, data: GBOrderMessage.fromJson(data), statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
 }

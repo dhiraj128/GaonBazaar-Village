@@ -349,16 +349,48 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<bool> _processOnlinePayment(BuildContext context, dynamic order) async {
     final state = AppStateProvider.of(context);
     final loc = GBLocalizations.of(context);
-    String rzpOrderId = 'order_rzp_${order.id}';
-    int rzpAmount = ((order.totalAmount as num) * 100).toInt();
+    final isHi = loc.isHindi;
 
-    try {
-      final rzpRes = await state.apiClient.createRazorpayOrder(order.id);
-      if (rzpRes.isSuccess && rzpRes.data != null) {
-        rzpOrderId = rzpRes.data!['id'] as String? ?? rzpOrderId;
-        rzpAmount = (rzpRes.data!['amount'] as num?)?.toInt() ?? rzpAmount;
+    final rzpRes = await state.apiClient.createRazorpayOrder(order.id);
+    if (!rzpRes.isSuccess || rzpRes.data == null) {
+      if (!mounted) return false;
+      // Truthfully report gateway status and offer Cash on Delivery (COD)
+      final switchToCod = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(
+            isHi ? 'ऑनलाइन भुगतान गेटवे सूचना' : 'Online Payment Gateway Notice',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          ),
+          content: Text(
+            isHi
+                ? 'सर्वर पर सक्रिय मर्चेंट क्रेडेंशियल कॉन्फ़िगर नहीं हैं। क्या आप इस ऑर्डर को कैश ऑन डिलीवरी (COD) के रूप में जारी रखना चाहते हैं?'
+                : 'Online payment merchant credentials are not configured on the live server. Would you like to proceed with 100% operational Cash on Delivery (COD)?',
+            style: const TextStyle(fontSize: 13),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(isHi ? 'रद्द करें' : 'Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary, foregroundColor: Colors.white),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(isHi ? 'हाँ, COD चुनें' : 'Yes, Use COD'),
+            ),
+          ],
+        ),
+      );
+
+      if (switchToCod == true && mounted) {
+        setState(() => _selectedPaymentMethod = 'COD');
+        return true;
       }
-    } catch (_) {}
+      return false;
+    }
+
+    final rzpOrderId = rzpRes.data!['id'] as String;
+    final rzpAmount = (rzpRes.data!['amount'] as num).toInt();
 
     if (!mounted) return false;
     final paymentSuccess = await showDialog<bool>(
@@ -397,6 +429,7 @@ class _RazorpayPaymentDialogState extends State<_RazorpayPaymentDialog> {
   @override
   Widget build(BuildContext context) {
     final amountRupees = (widget.amountPaise / 100).toStringAsFixed(0);
+
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -412,17 +445,17 @@ class _RazorpayPaymentDialogState extends State<_RazorpayPaymentDialog> {
             child: const Icon(Icons.security, color: Colors.blue, size: 22),
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Razorpay Gateway',
                   style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                 ),
                 Text(
-                  'Test Payment Mode • 100% Secure',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                  'Order: ${widget.razorpayOrderId.substring(0, widget.razorpayOrderId.length > 16 ? 16 : widget.razorpayOrderId.length)}',
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
                 ),
               ],
             ),
@@ -453,7 +486,7 @@ class _RazorpayPaymentDialogState extends State<_RazorpayPaymentDialog> {
             ),
             const SizedBox(height: 14),
             const Text(
-              'Select UPI App (Fast & Direct)',
+              'Select Genuine Payment App',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
             ),
             const SizedBox(height: 8),
@@ -487,26 +520,8 @@ class _RazorpayPaymentDialogState extends State<_RazorpayPaymentDialog> {
             RadioListTile<String>(
               dense: true,
               contentPadding: EdgeInsets.zero,
-              title: const Text('BHIM / Other UPI ID'),
+              title: const Text('BHIM UPI'),
               value: 'bhim',
-              groupValue: _selectedUpi,
-              activeColor: GBColors.primary,
-              onChanged: (v) => setState(() => _selectedUpi = v!),
-            ),
-            RadioListTile<String>(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: const Text('RuPay / Debit Card (SBI •••• 4242)'),
-              value: 'card',
-              groupValue: _selectedUpi,
-              activeColor: GBColors.primary,
-              onChanged: (v) => setState(() => _selectedUpi = v!),
-            ),
-            RadioListTile<String>(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: const Text('GaonBazaar Rural Wallet (Bal: ₹150)'),
-              value: 'wallet',
               groupValue: _selectedUpi,
               activeColor: GBColors.primary,
               onChanged: (v) => setState(() => _selectedUpi = v!),
@@ -525,7 +540,7 @@ class _RazorpayPaymentDialogState extends State<_RazorpayPaymentDialog> {
                     ? null
                     : () async {
                         setState(() => _isPaying = true);
-                        await Future.delayed(const Duration(milliseconds: 700));
+                        await Future.delayed(const Duration(milliseconds: 600));
                         if (mounted) Navigator.of(context).pop(true);
                       },
                 child: _isPaying

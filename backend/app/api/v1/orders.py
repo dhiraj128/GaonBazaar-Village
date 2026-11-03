@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.db.session import get_db
 from pydantic import BaseModel
 from app.models.base import (
-    Order, OrderItem, OrderTimeline, Store, StoreProduct, Address, User, Runner, SupportTicket
+    Order, OrderItem, OrderTimeline, Store, StoreProduct, Address, User, Runner, SupportTicket, OrderMessage
 )
 
 class CreateTicketRequest(BaseModel):
@@ -21,7 +21,7 @@ class RunnerLocationUpdate(BaseModel):
     longitude: float
 from app.schemas.order import (
     CartSyncRequest, CartPriceBreakdown, CreateOrderRequest, OrderResponse,
-    OrderItemDetail, OrderTimelineDetail, OrderActionRequest
+    OrderItemDetail, OrderTimelineDetail, OrderActionRequest, SendOrderMessageRequest, OrderMessageResponse
 )
 from app.core.security import get_current_user_payload
 from app.services.geo_service import calculate_haversine_distance, is_within_service_radius
@@ -217,7 +217,10 @@ async def get_order_details(
 
     is_cust = order.customer_id == user_id
     is_owner = order.store and order.store.owner_id == user_id
-    is_runner = order.runner and order.runner.user_id == user_id
+    is_runner = (
+        (order.runner and order.runner.user_id == user_id) or
+        (role == "runner" and order.runner_id is None)
+    )
     is_admin = role == "admin"
 
     if not (is_cust or is_owner or is_runner or is_admin):
@@ -797,3 +800,89 @@ async def _format_order_response(
         items=items_out,
         timeline=timeline_out
     )
+
+@router.get("/orders/{order_id}/messages", response_model=List[OrderMessageResponse])
+async def get_order_messages(
+    order_id: str,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    role = payload.get("role")
+
+    res = await db.execute(
+        select(Order)
+        .options(selectinload(Order.store), selectinload(Order.runner))
+        .where(Order.id == order_id)
+    )
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    is_cust = order.customer_id == user_id
+    is_owner = order.store and order.store.owner_id == user_id
+    is_runner = (
+        (order.runner and order.runner.user_id == user_id) or
+        (role == "runner" and order.runner_id is None)
+    )
+    is_admin = role == "admin"
+
+    if not (is_cust or is_owner or is_runner or is_admin):
+        raise HTTPException(status_code=403, detail="Not authorized to access messages for this order")
+
+    msg_res = await db.execute(
+        select(OrderMessage).where(OrderMessage.order_id == order_id).order_by(OrderMessage.created_at.asc())
+    )
+    msgs = msg_res.scalars().all()
+    return msgs
+
+@router.post("/orders/{order_id}/messages", response_model=OrderMessageResponse, status_code=status.HTTP_201_CREATED)
+async def send_order_message(
+    order_id: str,
+    req: SendOrderMessageRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    user_id = payload.get("sub")
+    role = payload.get("role", "customer")
+
+    res = await db.execute(
+        select(Order)
+        .options(selectinload(Order.store), selectinload(Order.runner))
+        .where(Order.id == order_id)
+    )
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    is_cust = order.customer_id == user_id
+    is_owner = order.store and order.store.owner_id == user_id
+    is_runner = (
+        (order.runner and order.runner.user_id == user_id) or
+        (role == "runner" and order.runner_id is None)
+    )
+    is_admin = role == "admin"
+
+    if not (is_cust or is_owner or is_runner or is_admin):
+        raise HTTPException(status_code=403, detail="Not authorized to send messages for this order")
+
+    u_res = await db.execute(select(User).where(User.id == user_id))
+    user = u_res.scalars().first()
+    sender_name = user.name if user and user.name else ("Customer" if is_cust else ("Runner" if is_runner else "Partner"))
+
+    msg = OrderMessage(
+        order_id=order_id,
+        sender_id=user_id,
+        sender_role=role,
+        sender_name=sender_name,
+        message_type=req.message_type,
+        content=req.content,
+        latitude=req.latitude,
+        longitude=req.longitude,
+        location_title=req.location_title,
+        created_at=datetime.now(timezone.utc)
+    )
+    db.add(msg)
+    await db.commit()
+    await db.refresh(msg)
+    return msg

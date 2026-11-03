@@ -27,12 +27,21 @@ class UserInfo(BaseModel):
     email: Optional[str] = None
     role: str
     preferred_language: str
+    avatar_url: Optional[str] = None
+    primary_village: Optional[str] = None
+    primary_panchayat: Optional[str] = None
     is_active: bool
 
 class UpdateProfileRequest(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     preferred_language: Optional[str] = None
+    avatar_url: Optional[str] = None
+    primary_village: Optional[str] = None
+    primary_panchayat: Optional[str] = None
+
+class UploadAvatarRequest(BaseModel):
+    avatar_data: str
 
 class TokenResponse(BaseModel):
     access_token: str

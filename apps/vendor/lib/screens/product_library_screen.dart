@@ -23,7 +23,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
       'category': 'Grocery',
       'unit': '1 kg',
       'suggested_price': 38.0,
-      'image_url': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400',
+      'image_url': 'https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg',
     },
     {
       'id': 'cat_rice',
@@ -41,7 +41,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
       'category': 'Grocery',
       'unit': '1 L',
       'suggested_price': 142.0,
-      'image_url': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400',
+      'image_url': 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Dune_Aura_Mustard_oil_bottle_picture.jpg',
     },
     {
       'id': 'cat_milk',
@@ -95,7 +95,7 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
       'category': 'Electrical',
       'unit': '1 piece',
       'suggested_price': 85.0,
-      'image_url': 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400',
+      'image_url': 'https://upload.wikimedia.org/wikipedia/commons/4/4c/LED_bulb_800_Lm_Soft_white_2024.agr.jpg',
     },
     {
       'id': 'cat_sugar',

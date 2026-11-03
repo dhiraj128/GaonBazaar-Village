@@ -76,3 +76,23 @@ class OrderActionRequest(BaseModel):
     delivery_otp: Optional[str] = None
     cash_collected: Optional[bool] = None
     reason: Optional[str] = None
+
+class SendOrderMessageRequest(BaseModel):
+    message_type: str = "TEXT" # TEXT, LOCATION_PIN, LIVE_LOCATION_START, LIVE_LOCATION_STOP
+    content: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    location_title: Optional[str] = None
+
+class OrderMessageResponse(BaseModel):
+    id: str
+    order_id: str
+    sender_id: str
+    sender_role: str
+    sender_name: str
+    message_type: str
+    content: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    location_title: Optional[str] = None
+    created_at: datetime

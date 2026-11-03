@@ -62,6 +62,9 @@ class User(Base):
     email = Column(String(120), nullable=True)
     role = Column(String(20), nullable=False, default="customer") # customer, vendor, runner, admin
     preferred_language = Column(String(5), default="hi") # hi or en
+    avatar_url = Column(String(500), nullable=True)
+    primary_village = Column(String(100), nullable=True)
+    primary_panchayat = Column(String(100), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -202,6 +205,7 @@ class Order(Base):
     delivery_address = relationship("Address")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
     timeline = relationship("OrderTimeline", back_populates="order", cascade="all, delete-orphan")
+    messages = relationship("OrderMessage", back_populates="order", cascade="all, delete-orphan")
 
 class OrderItem(Base):
     __tablename__ = "order_items"
@@ -255,3 +259,21 @@ class AuditLog(Base):
     details = Column(Text, nullable=True)
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
 
+
+class OrderMessage(Base):
+    __tablename__ = "order_messages"
+    
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    order_id = Column(String(36), ForeignKey("orders.id"), nullable=False, index=True)
+    sender_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    sender_role = Column(String(20), nullable=False) # customer, runner, vendor, admin
+    sender_name = Column(String(100), nullable=False)
+    message_type = Column(String(30), nullable=False, default="TEXT") # TEXT, LOCATION_PIN, LIVE_LOCATION_START, LIVE_LOCATION_STOP
+    content = Column(Text, nullable=True)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+    location_title = Column(String(150), nullable=True)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
+
+    order = relationship("Order", back_populates="messages")
+    sender = relationship("User")

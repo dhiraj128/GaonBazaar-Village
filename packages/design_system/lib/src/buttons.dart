@@ -179,11 +179,15 @@ class GBAddToCartButton extends StatelessWidget {
 class GBVoiceMicButton extends StatelessWidget {
   final bool isListening;
   final VoidCallback onTap;
+  final double size;
+  final EdgeInsetsGeometry padding;
 
   const GBVoiceMicButton({
     super.key,
     required this.isListening,
     required this.onTap,
+    this.size = 20,
+    this.padding = const EdgeInsets.all(6),
   });
 
   @override
@@ -192,22 +196,22 @@ class GBVoiceMicButton extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.all(10),
+        padding: padding,
         decoration: BoxDecoration(
           color: isListening ? GBColors.error : GBColors.primary,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
               color: (isListening ? GBColors.error : GBColors.primary).withOpacity(0.35),
-              blurRadius: isListening ? 12 : 6,
-              spreadRadius: isListening ? 3 : 1,
+              blurRadius: isListening ? 8 : 4,
+              spreadRadius: isListening ? 2 : 0,
             ),
           ],
         ),
         child: Icon(
           isListening ? Icons.mic : Icons.mic_none,
           color: Colors.white,
-          size: 22,
+          size: size,
         ),
       ),
     );
