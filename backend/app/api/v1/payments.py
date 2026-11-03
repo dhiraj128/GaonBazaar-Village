@@ -145,11 +145,44 @@ async def verify_razorpay_payment(
     Verifies the Razorpay payment signature via strict HMAC-SHA256.
     Transitions order payment status to PAID and records a timeline event.
     Mock signatures and bypasses (test_sig) are strictly forbidden.
+    Enforces user authorization (IDOR prevention), order state checks, and idempotency.
     """
     res = await db.execute(select(Order).where(Order.id == data.order_id))
     order = res.scalars().first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+
+    user_id = payload.get("sub")
+    role = payload.get("role")
+
+    # 1. Authorization check: customer must own order, or must be admin
+    if order.customer_id != user_id and role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to verify payment for this order"
+        )
+
+    # 2. State validation: Cannot verify payment for CANCELLED order
+    if order.status == "CANCELLED":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot pay for a cancelled order"
+        )
+
+    # 3. Idempotency: If already marked PAID, return existing transaction status
+    if order.payment_status == "PAID":
+        return RazorpayVerifyResponse(
+            status="SUCCESS",
+            order_id=order.id,
+            payment_id=order.transaction_id or data.razorpay_payment_id
+        )
+
+    # 4. Consistency: If order was bound to a specific razorpay order id, verify match
+    if order.payment_order_id and order.payment_order_id != data.razorpay_order_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mismatched Razorpay order ID"
+        )
 
     # Strict HMAC-SHA256 signature verification
     msg = f"{data.razorpay_order_id}|{data.razorpay_payment_id}"
@@ -196,10 +229,14 @@ async def razorpay_webhook(
     """
     Handles Razorpay server-to-server webhooks (e.g. payment.captured).
     Strictly verifies webhook HMAC-SHA256 signature before processing.
+    Validates currency is INR and amount matches expected order paise.
     """
     body_bytes = await request.body()
     if not x_razorpay_signature:
         raise HTTPException(status_code=400, detail="Missing webhook signature")
+
+    if not settings.RAZORPAY_WEBHOOK_SECRET:
+        raise HTTPException(status_code=503, detail="Webhook secret not configured")
 
     expected_sig = hmac.new(
         settings.RAZORPAY_WEBHOOK_SECRET.encode("utf-8"),
@@ -218,23 +255,39 @@ async def razorpay_webhook(
             payment_entity = payload_data.get("payload", {}).get("payment", {}).get("entity", {})
             rzp_order_id = payment_entity.get("order_id")
             rzp_payment_id = payment_entity.get("id")
+            currency = payment_entity.get("currency")
+            amount = payment_entity.get("amount")
+
+            if currency != "INR":
+                raise HTTPException(status_code=400, detail=f"Invalid currency: {currency}")
+
             if rzp_order_id:
                 res = await db.execute(select(Order).where(Order.payment_order_id == rzp_order_id))
                 order = res.scalars().first()
-                if order and order.payment_status != "PAID":
-                    order.payment_status = "PAID"
-                    order.transaction_id = rzp_payment_id
-                    order.payment_method = "ONLINE"
-                    now = datetime.now(timezone.utc)
-                    db.add(OrderTimeline(
-                        order_id=order.id,
-                        status=order.status,
-                        title="ऑनलाइन भुगतान सफल (Payment Captured via Webhook)",
-                        description=f"Razorpay Payment ID: {rzp_payment_id}",
-                        timestamp=now
-                    ))
-                    await db.commit()
-    except Exception:
-        pass
+                if order:
+                    expected_paise = int(round(order.total_amount * 100))
+                    if amount != expected_paise:
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Amount mismatch: received {amount} paise, expected {expected_paise} paise"
+                        )
+
+                    if order.payment_status != "PAID":
+                        order.payment_status = "PAID"
+                        order.transaction_id = rzp_payment_id
+                        order.payment_method = "ONLINE"
+                        now = datetime.now(timezone.utc)
+                        db.add(OrderTimeline(
+                            order_id=order.id,
+                            status=order.status,
+                            title="ऑनलाइन भुगतान सफल (Payment Captured via Webhook)",
+                            description=f"Razorpay Payment ID: {rzp_payment_id}",
+                            timestamp=now
+                        ))
+                        await db.commit()
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Webhook processing error: {str(e)}")
 
     return {"status": "ok"}

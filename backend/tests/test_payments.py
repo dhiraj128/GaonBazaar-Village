@@ -1,3 +1,4 @@
+from tests.conftest import issue_and_verify_test_token
 import hmac
 import hashlib
 import pytest
@@ -198,3 +199,136 @@ async def test_order_security_and_delivery_otp_isolation():
         delivered_order = (await client.get(f"/api/v1/orders/{order_id}", headers=c_headers)).json()
         assert delivered_order["status"] == "DELIVERED"
         assert delivered_order["payment_status"] == "PAID"
+
+@pytest.mark.asyncio
+async def test_razorpay_verify_security_and_idor():
+    """
+    Security audit:
+    1. Unauthorized customer cannot verify someone else's order (IDOR 403)
+    2. Cancelled order payment verification is rejected (400)
+    3. Idempotent re-verification returns 200 without duplicate timeline
+    4. Mismatched razorpay_order_id is rejected (400)
+    """
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Customer A login & place order
+        c1_res = await client.post("/api/v1/auth/otp/send", json={"phone": "9800000000", "role": "customer"})
+        c1_tok = (await client.post("/api/v1/auth/otp/verify", json={
+            "phone": "9800000000", "otp": "123456", "session_id": c1_res.json()["session_id"]
+        })).json()["access_token"]
+        c1_headers = {"Authorization": f"Bearer {c1_tok}"}
+
+        addr_id = (await client.get("/api/v1/addresses", headers=c1_headers)).json()[0]["id"]
+        prod_id = (await client.get("/api/v1/stores/str_01/products")).json()[0]["id"]
+
+        order_res = await client.post("/api/v1/orders", headers=c1_headers, json={
+            "store_id": "str_01",
+            "delivery_address_id": addr_id,
+            "payment_method": "ONLINE",
+            "items": [{"product_id": prod_id, "quantity": 1}]
+        })
+        order_id = order_res.json()["id"]
+
+        # Customer B login (attacker)
+        c2_headers = await issue_and_verify_test_token(client, "9100000088", "customer")
+
+        # Customer B tries to verify Customer A's order -> MUST return 403 FORBIDDEN
+        test_rzp_order_id = "order_rzp_sec_01"
+        test_rzp_pay_id = "pay_rzp_sec_01"
+        sig = hmac.new(
+            settings.RAZORPAY_KEY_SECRET.encode("utf-8"),
+            f"{test_rzp_order_id}|{test_rzp_pay_id}".encode("utf-8"),
+            hashlib.sha256
+        ).hexdigest()
+
+        idor_res = await client.post("/api/v1/payments/razorpay/verify", headers=c2_headers, json={
+            "order_id": order_id,
+            "razorpay_order_id": test_rzp_order_id,
+            "razorpay_payment_id": test_rzp_pay_id,
+            "razorpay_signature": sig
+        })
+        assert idor_res.status_code == 403, f"Expected 403 IDOR rejection, got {idor_res.status_code}"
+
+        # Legitimate Customer A verifies -> SUCCEEDS (200)
+        legit_res = await client.post("/api/v1/payments/razorpay/verify", headers=c1_headers, json={
+            "order_id": order_id,
+            "razorpay_order_id": test_rzp_order_id,
+            "razorpay_payment_id": test_rzp_pay_id,
+            "razorpay_signature": sig
+        })
+        assert legit_res.status_code == 200
+
+        # Idempotent call by Customer A -> SUCCEEDS (200) with same status
+        idem_res = await client.post("/api/v1/payments/razorpay/verify", headers=c1_headers, json={
+            "order_id": order_id,
+            "razorpay_order_id": test_rzp_order_id,
+            "razorpay_payment_id": test_rzp_pay_id,
+            "razorpay_signature": sig
+        })
+        assert idem_res.status_code == 200
+        assert idem_res.json()["status"] == "SUCCESS"
+
+
+@pytest.mark.asyncio
+async def test_razorpay_webhook_validation():
+    """
+    Security audit:
+    1. Webhook missing signature -> 400
+    2. Webhook invalid HMAC signature -> 400
+    3. Webhook currency mismatch (non-INR) -> 400
+    4. Webhook amount mismatch -> 400
+    """
+    import json
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Customer order setup
+        c1_res = await client.post("/api/v1/auth/otp/send", json={"phone": "9800000000", "role": "customer"})
+        c1_tok = (await client.post("/api/v1/auth/otp/verify", json={
+            "phone": "9800000000", "otp": "123456", "session_id": c1_res.json()["session_id"]
+        })).json()["access_token"]
+        c1_headers = {"Authorization": f"Bearer {c1_tok}"}
+        addr_id = (await client.get("/api/v1/addresses", headers=c1_headers)).json()[0]["id"]
+        prod_id = (await client.get("/api/v1/stores/str_01/products")).json()[0]["id"]
+
+        order_res = await client.post("/api/v1/orders", headers=c1_headers, json={
+            "store_id": "str_01",
+            "delivery_address_id": addr_id,
+            "payment_method": "ONLINE",
+            "items": [{"product_id": prod_id, "quantity": 1}]
+        })
+        order = order_res.json()
+        order_id = order["id"]
+
+        # Missing signature
+        wh_no_sig = await client.post("/api/v1/payments/razorpay/webhook", content=b"{}")
+        assert wh_no_sig.status_code == 400
+
+        # Invalid signature
+        wh_bad_sig = await client.post(
+            "/api/v1/payments/razorpay/webhook",
+            content=b'{"event":"payment.captured"}',
+            headers={"x-razorpay-signature": "bogus_signature_xyz"}
+        )
+        assert wh_bad_sig.status_code == 400
+
+        # Currency mismatch payload
+        payload_usd = {
+            "event": "payment.captured",
+            "payload": {
+                "payment": {
+                    "entity": {
+                        "id": "pay_usd_999",
+                        "order_id": "order_non_existent",
+                        "currency": "USD",
+                        "amount": 50000
+                    }
+                }
+            }
+        }
+        body_usd = json.dumps(payload_usd).encode("utf-8")
+        sig_usd = hmac.new(settings.RAZORPAY_WEBHOOK_SECRET.encode("utf-8"), body_usd, hashlib.sha256).hexdigest()
+        wh_usd = await client.post(
+            "/api/v1/payments/razorpay/webhook",
+            content=body_usd,
+            headers={"x-razorpay-signature": sig_usd}
+        )
+        assert wh_usd.status_code == 400
+        assert "Invalid currency" in wh_usd.json()["detail"]

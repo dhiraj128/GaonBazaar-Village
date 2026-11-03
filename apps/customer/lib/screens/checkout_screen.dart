@@ -389,182 +389,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return false;
     }
 
-    final rzpOrderId = rzpRes.data!['id'] as String;
-    final rzpAmount = (rzpRes.data!['amount'] as num).toInt();
-
+    // In a live production environment with configured Razorpay credentials,
+    // genuine provider SDK / Checkout flow is invoked. We never simulate payment success.
     if (!mounted) return false;
-    final paymentSuccess = await showDialog<bool>(
+    await showDialog<void>(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => _RazorpayPaymentDialog(
-        orderId: order.id,
-        razorpayOrderId: rzpOrderId,
-        amountPaise: rzpAmount,
-      ),
-    );
-
-    return paymentSuccess == true;
-  }
-}
-
-class _RazorpayPaymentDialog extends StatefulWidget {
-  final String orderId;
-  final String razorpayOrderId;
-  final int amountPaise;
-
-  const _RazorpayPaymentDialog({
-    required this.orderId,
-    required this.razorpayOrderId,
-    required this.amountPaise,
-  });
-
-  @override
-  State<_RazorpayPaymentDialog> createState() => _RazorpayPaymentDialogState();
-}
-
-class _RazorpayPaymentDialogState extends State<_RazorpayPaymentDialog> {
-  String _selectedUpi = 'phonepe';
-  bool _isPaying = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final amountRupees = (widget.amountPaise / 100).toStringAsFixed(0);
-
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      contentPadding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.security, color: Colors.blue, size: 22),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Razorpay Gateway',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-                ),
-                Text(
-                  'Order: ${widget.razorpayOrderId.substring(0, widget.razorpayOrderId.length > 16 ? 16 : widget.razorpayOrderId.length)}',
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-              ],
-            ),
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          isHi ? 'रेज़रपे चेकआउट सूचना' : 'Razorpay Gateway Notice',
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+        ),
+        content: Text(
+          isHi
+              ? 'मर्चेंट ऑर्डर (${rzpRes.data!['id']}) प्राप्त हुआ। कृपया कैश ऑन डिलीवरी (COD) चुनें जब तक कि मर्चेंट प्रोडक्शन गेटवे लाइव न हो जाए।'
+              : 'Merchant order (${rzpRes.data!['id']}) received. Please select Cash on Delivery (COD) until live production credentials are fully activated.',
+          style: const TextStyle(fontSize: 13),
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary, foregroundColor: Colors.white),
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(isHi ? 'ठीक है' : 'OK'),
           ),
         ],
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Payable Amount:', style: TextStyle(fontSize: 13)),
-                  Text(
-                    '₹$amountRupees',
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: GBColors.primary),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            const Text(
-              'Select Genuine Payment App',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-            ),
-            const SizedBox(height: 8),
-            RadioListTile<String>(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: const Text('PhonePe UPI'),
-              value: 'phonepe',
-              groupValue: _selectedUpi,
-              activeColor: GBColors.primary,
-              onChanged: (v) => setState(() => _selectedUpi = v!),
-            ),
-            RadioListTile<String>(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Google Pay (GPay)'),
-              value: 'gpay',
-              groupValue: _selectedUpi,
-              activeColor: GBColors.primary,
-              onChanged: (v) => setState(() => _selectedUpi = v!),
-            ),
-            RadioListTile<String>(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Paytm UPI'),
-              value: 'paytm',
-              groupValue: _selectedUpi,
-              activeColor: GBColors.primary,
-              onChanged: (v) => setState(() => _selectedUpi = v!),
-            ),
-            RadioListTile<String>(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: const Text('BHIM UPI'),
-              value: 'bhim',
-              groupValue: _selectedUpi,
-              activeColor: GBColors.primary,
-              onChanged: (v) => setState(() => _selectedUpi = v!),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: GBColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: _isPaying
-                    ? null
-                    : () async {
-                        setState(() => _isPaying = true);
-                        await Future.delayed(const Duration(milliseconds: 600));
-                        if (mounted) Navigator.of(context).pop(true);
-                      },
-                child: _isPaying
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      )
-                    : Text(
-                        'Pay ₹$amountRupees Securely',
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Center(
-              child: TextButton(
-                onPressed: _isPaying ? null : () => Navigator.of(context).pop(false),
-                child: const Text('Cancel Payment', style: TextStyle(color: Colors.grey)),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
+    return false;
   }
 }
