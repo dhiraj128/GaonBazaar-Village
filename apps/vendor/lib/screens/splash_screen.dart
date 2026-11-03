@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../state/vendor_state.dart';
 import 'vendor_auth_screen.dart';
 import 'vendor_dashboard_screen.dart';
@@ -22,6 +23,25 @@ class _VendorSplashScreenState extends State<VendorSplashScreen> {
     Timer(const Duration(milliseconds: 1800), () {
       if (!mounted) return;
       final state = VendorStateProvider.of(context);
+      SharedPreferences.getInstance().then((prefs) {
+        final screen = prefs.getString('gb_v_pdf_screen');
+        if (screen == 'language') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const VendorLanguageSelectionScreen()));
+          return;
+        } else if (screen == 'auth') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const VendorAuthScreen()));
+          return;
+        } else if (screen == 'onboarding') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const VendorOnboardingWizard()));
+          return;
+        } else if (screen == 'pending') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const VendorPendingApprovalScreen()));
+          return;
+        } else if (screen == 'dashboard') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const VendorDashboardScreen()));
+          return;
+        }
+      });
       if (state.currentUser != null) {
         if (state.myStore == null) {
           Navigator.of(context).pushReplacement(

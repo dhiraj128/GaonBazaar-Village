@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../state/runner_state.dart';
 import 'runner_auth_screen.dart';
 import 'runner_dashboard_screen.dart';
@@ -21,6 +22,25 @@ class _RunnerSplashScreenState extends State<RunnerSplashScreen> {
     Timer(const Duration(milliseconds: 1800), () {
       if (!mounted) return;
       final state = RunnerStateProvider.of(context);
+      SharedPreferences.getInstance().then((prefs) {
+        final screen = prefs.getString('gb_r_pdf_screen');
+        if (screen == 'language') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const RunnerLanguageSelectionScreen()));
+          return;
+        } else if (screen == 'auth') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const RunnerAuthScreen()));
+          return;
+        } else if (screen == 'onboarding') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const RunnerOnboardingWizard()));
+          return;
+        } else if (screen == 'pending') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const RunnerPendingApprovalScreen()));
+          return;
+        } else if (screen == 'dashboard') {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const RunnerDashboardScreen()));
+          return;
+        }
+      });
       if (state.currentUser != null) {
         if (state.runnerProfile == null) {
           Navigator.of(context).pushReplacement(
