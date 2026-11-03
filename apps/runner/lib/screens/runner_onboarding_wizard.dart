@@ -80,6 +80,16 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
       _accountNumberCtrl.text = prefs.getString('gb_r_pdf_acct') ?? '';
       _ifscCtrl.text = prefs.getString('gb_r_pdf_ifsc') ?? '';
       _pennyDropVerified = prefs.getBool('gb_r_pdf_penny') ?? false;
+
+      final savedPage = prefs.getInt('gb_r_pdf_page');
+      if (savedPage != null && savedPage >= 0 && savedPage < 3) {
+        _currentPage = savedPage;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_pageController.hasClients) {
+            _pageController.jumpToPage(savedPage);
+          }
+        });
+      }
     });
   }
 

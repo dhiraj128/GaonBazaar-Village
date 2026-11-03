@@ -123,6 +123,16 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
 
       _fssaiCtrl.text = prefs.getString('gb_v_pdf_fssai') ?? '';
       _gstCtrl.text = prefs.getString('gb_v_pdf_gst') ?? '';
+
+      final savedPage = prefs.getInt('gb_v_pdf_page');
+      if (savedPage != null && savedPage >= 0 && savedPage < 5) {
+        _currentPage = savedPage;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_pageController.hasClients) {
+            _pageController.jumpToPage(savedPage);
+          }
+        });
+      }
     });
   }
 

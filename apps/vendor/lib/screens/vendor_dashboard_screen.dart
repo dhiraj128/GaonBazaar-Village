@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:localization/localization.dart';
 import 'package:shared_models/shared_models.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../state/vendor_state.dart';
 import 'vendor_auth_screen.dart';
@@ -30,6 +31,16 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
   void initState() {
     super.initState();
     _ordersTabController = TabController(length: 3, vsync: this);
+    SharedPreferences.getInstance().then((prefs) {
+      final nav = prefs.getInt('gb_v_pdf_nav');
+      if (nav != null && nav >= 0 && nav < 4 && mounted) {
+        setState(() => _navIndex = nav);
+      }
+      final sub = prefs.getInt('gb_v_pdf_orders_sub');
+      if (sub != null && sub >= 0 && sub < 3 && mounted) {
+        _ordersTabController.index = sub;
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = VendorStateProvider.of(context);
       state.fetchStoreProfile();

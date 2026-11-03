@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
 import 'package:shared_models/shared_models.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../state/runner_state.dart';
 import 'runner_auth_screen.dart';
@@ -22,6 +23,12 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    SharedPreferences.getInstance().then((prefs) {
+      final nav = prefs.getInt('gb_r_pdf_nav');
+      if (nav != null && nav >= 0 && nav < 4 && mounted) {
+        setState(() => _navIndex = nav);
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = RunnerStateProvider.of(context);
       state.fetchProfile();
