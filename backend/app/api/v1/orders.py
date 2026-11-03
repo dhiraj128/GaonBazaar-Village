@@ -427,10 +427,24 @@ async def get_vendor_finances(
         raise HTTPException(status_code=404, detail="Store not found")
         
     orders_res = await db.execute(
-        select(Order).where(Order.store_id == store.id, Order.status == "DELIVERED")
+        select(Order).where(Order.store_id == store.id, Order.status == "DELIVERED").order_by(Order.delivered_at.desc())
     )
     delivered_orders = orders_res.scalars().all()
     total_sales = sum(o.subtotal for o in delivered_orders)
+
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=now.weekday())
+
+    def _is_after(dt, threshold):
+        if not dt:
+            return False
+        aware = dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
+        return aware >= threshold
+
+    today_sales = sum(o.subtotal for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, today_start))
+    weekly_sales = sum(o.subtotal for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, week_start))
+    today_orders_count = sum(1 for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, today_start))
     
     recent_settlements = [
         {
@@ -440,12 +454,15 @@ async def get_vendor_finances(
             "status": "Settled (UPI)" if o.payment_status == "PAID" else "Processing (Tonight)",
             "payment_method": o.payment_method
         }
-        for o in delivered_orders[:10]
+        for o in delivered_orders[:15]
     ]
     
     return {
         "store_id": store.id,
         "total_sales": total_sales,
+        "today_sales": today_sales,
+        "weekly_sales": weekly_sales,
+        "today_orders_count": today_orders_count,
         "commission_rate": store.commission_rate,
         "commission_deducted": round(total_sales * (store.commission_rate / 100.0), 2),
         "net_payout_due": total_sales - round(total_sales * (store.commission_rate / 100.0), 2),
@@ -499,22 +516,58 @@ async def get_runner_finances(
         raise HTTPException(status_code=404, detail="Runner profile not found")
         
     orders_res = await db.execute(
-        select(Order).where(Order.runner_id == runner.id, Order.status == "DELIVERED")
+        select(Order)
+        .options(selectinload(Order.store), selectinload(Order.delivery_address))
+        .where(Order.runner_id == runner.id, Order.status == "DELIVERED")
+        .order_by(Order.delivered_at.desc())
     )
     delivered_orders = orders_res.scalars().all()
-    # Authoritative server-side runner payout from pricing matrix (₹10-₹28), not raw customer delivery fee
-    total_delivery_fees = sum(
-        getattr(o, 'runner_payout', None) if getattr(o, 'runner_payout', None) is not None
-        else (10.0 if o.delivery_fee <= 15.0 else (14.0 if o.delivery_fee <= 20.0 else (18.0 if o.delivery_fee <= 25.0 else (22.0 if o.delivery_fee <= 30.0 else 28.0))))
-        for o in delivered_orders
-    )
+
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=now.weekday())
+
+    def _get_payout(o):
+        return getattr(o, 'runner_payout', None) or (
+            10.0 if o.delivery_fee <= 15.0 else (14.0 if o.delivery_fee <= 20.0 else (18.0 if o.delivery_fee <= 25.0 else (22.0 if o.delivery_fee <= 30.0 else 28.0)))
+        )
+
+    def _is_after(dt, threshold):
+        if not dt:
+            return False
+        aware = dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
+        return aware >= threshold
+
+    total_delivery_fees = sum(_get_payout(o) for o in delivered_orders)
+    today_earnings = sum(_get_payout(o) for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, today_start))
+    weekly_earnings = sum(_get_payout(o) for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, week_start))
+    today_deliveries_count = sum(1 for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, today_start))
+    cash_collected = sum(o.total_amount for o in delivered_orders if o.payment_method == "COD")
+
+    recent_trips = [
+        {
+            "order_id": o.id,
+            "delivered_at": o.delivered_at.isoformat() if o.delivered_at else (o.placed_at.isoformat() if o.placed_at else None),
+            "store_name": o.store.shop_name if o.store else "GaonBazaar Store",
+            "customer_village": o.delivery_address.village if o.delivery_address else "Local Delivery",
+            "distance_km": getattr(o, "distance_km", None) or 1.2,
+            "runner_payout": _get_payout(o),
+            "payment_method": o.payment_method,
+            "cod_amount": o.total_amount if o.payment_method == "COD" else 0.0,
+        }
+        for o in delivered_orders[:30]
+    ]
     
     return {
         "runner_id": runner.id,
         "total_delivery_earnings": total_delivery_fees,
+        "today_earnings": today_earnings,
+        "weekly_earnings": weekly_earnings,
         "total_deliveries_count": len(delivered_orders),
-        "cash_collected_to_remit": sum(o.total_amount for o in delivered_orders if o.payment_method == "COD"),
-        "upi_id": runner.upi_id
+        "today_deliveries_count": today_deliveries_count,
+        "cash_collected_to_remit": cash_collected,
+        "upi_id": runner.upi_id or "Not configured",
+        "trips": recent_trips
     }
 
 class RunnerStatusUpdate(BaseModel):
@@ -819,7 +872,8 @@ async def _format_order_response(
     res = await db.execute(
         select(Order)
         .options(
-            selectinload(Order.store),
+            selectinload(Order.store).selectinload(Store.owner),
+            selectinload(Order.customer),
             selectinload(Order.runner).selectinload(Runner.user),
             selectinload(Order.delivery_address),
             selectinload(Order.items),
@@ -898,8 +952,11 @@ async def _format_order_response(
     return OrderResponse(
         id=order.id,
         customer_id=order.customer_id,
+        customer_name=order.customer.name if order.customer else None,
+        customer_phone=order.customer.phone if (order.customer and (is_cust or is_assigned_runner or is_admin)) else None,
         store_id=order.store_id,
         store_name=order.store.shop_name if order.store else "GaonBazaar Store",
+        store_phone=order.store.owner.phone if (order.store and order.store.owner) else None,
         runner_id=order.runner_id,
         runner_name=order.runner.full_name if order.runner else None,
         runner_phone=(
@@ -908,6 +965,16 @@ async def _format_order_response(
             else ("9800000003" if order.runner else None)
         ),
         delivery_address=deliv_addr,
+        store_latitude=order.store.latitude if order.store else None,
+        store_longitude=order.store.longitude if order.store else None,
+        store_address=(
+            f"{order.store.shop_name}, {order.store.village}" + (f", {order.store.landmark}" if order.store.landmark else "")
+            if order.store else None
+        ),
+        delivery_latitude=order.delivery_address.latitude if (order.delivery_address and (is_cust or is_assigned_runner or is_admin)) else None,
+        delivery_longitude=order.delivery_address.longitude if (order.delivery_address and (is_cust or is_assigned_runner or is_admin)) else None,
+        distance_km=getattr(order, "distance_km", None) or 1.2,
+        cancellation_reason=getattr(order, "cancellation_reason", None),
         status=order.status,
         subtotal=order.subtotal,
         delivery_fee=order.delivery_fee,

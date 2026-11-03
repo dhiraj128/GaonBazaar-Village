@@ -31,6 +31,35 @@ class RunnerAppState extends ChangeNotifier {
 
   bool get isHindi => currentLocale == 'hi';
 
+  double get totalDeliveryEarnings => (finances?['total_delivery_earnings'] as num?)?.toDouble() ?? todayEarnings;
+  double get todayEarningsTotal => (finances?['today_earnings'] as num?)?.toDouble() ?? todayEarnings;
+  double get weeklyEarnings => (finances?['weekly_earnings'] as num?)?.toDouble() ?? 0.0;
+  List<Map<String, dynamic>> get trips => (finances?['trips'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+  String get linkedUpiId => (finances?['upi_id'] as String?)?.isNotEmpty == true
+      ? (finances!['upi_id'] as String)
+      : (runnerProfile?['upi_id'] as String? ?? '');
+
+  GBOrder? get activeMission {
+    final runnerId = runnerProfile?['id'] as String? ?? currentUser?.id;
+    const activeStatuses = ['RUNNER_ASSIGNED', 'PICKED_UP', 'OUT_FOR_DELIVERY'];
+    try {
+      return activeJobs.firstWhere((o) =>
+          (o.runnerId == runnerId || (o.runnerId != null && o.runnerId!.isNotEmpty)) &&
+          activeStatuses.contains(o.status));
+    } catch (_) {
+      try {
+        return activeJobs.firstWhere((o) => activeStatuses.contains(o.status));
+      } catch (_) {
+        return null;
+      }
+    }
+  }
+
+  List<GBOrder> get availableJobs {
+    const activeStatuses = ['RUNNER_ASSIGNED', 'PICKED_UP', 'OUT_FOR_DELIVERY'];
+    return activeJobs.where((o) => !activeStatuses.contains(o.status) || o.runnerId == null || o.runnerId!.isEmpty).toList();
+  }
+
   Future<void> init() async {
     try {
       await apiClient.probeAndSelectHost();
@@ -153,77 +182,10 @@ class RunnerAppState extends ChangeNotifier {
 
     final res = await apiClient.getRunnerJobs();
     isLoadingJobs = false;
-    if (res.isSuccess && res.data != null && res.data!.isNotEmpty) {
+    if (res.isSuccess && res.data != null) {
       activeJobs = res.data!;
-    } else if (activeJobs.isEmpty) {
-      activeJobs = [
-        GBOrder(
-          id: 'ord_mnp_8842',
-          customerId: 'usr_c1',
-          storeId: 'str_minapur_1',
-          storeName: 'Raju Kirana Store (राजू किराना स्टोर)',
-          runnerId: 'run_01',
-          runnerName: 'Vikram Singh',
-          runnerPhone: '+91 98222 22222',
-          deliveryAddress: 'Ward 4, Near Shiv Mandir, Chaturshi, Minapur, Muzaffarpur',
-          status: 'OUT_FOR_DELIVERY',
-          subtotal: 310.0,
-          deliveryFee: 15.0,
-          platformFee: 3.0,
-          totalAmount: 328.0,
-          paymentMethod: 'COD',
-          paymentStatus: 'PENDING',
-          deliveryOtp: '4821',
-          placedAt: DateTime.now().subtract(const Duration(minutes: 18)),
-          cancelUntil: DateTime.now().subtract(const Duration(minutes: 15)),
-          canCancel: false,
-          cancelSecondsRemaining: 0,
-          items: [
-            GBOrderItem(
-              id: 'item_1',
-              productId: 'cat_atta',
-              nameEn: 'Aashirvaad Shudh Chakki Atta 5kg',
-              nameHi: 'आशीर्वाद शुद्ध चक्की आटा 5 किग्रा',
-              unit: '5 kg',
-              unitPrice: 210.0,
-              quantity: 1,
-              totalPrice: 210.0,
-              imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80',
-            ),
-            GBOrderItem(
-              id: 'item_2',
-              productId: 'cat_mustard_oil',
-              nameEn: 'Fortune Kachi Ghani Mustard Oil 1L',
-              nameHi: 'फॉर्च्यून कच्ची घानी सरसों तेल 1 ली',
-              unit: '1 L',
-              unitPrice: 100.0,
-              quantity: 1,
-              totalPrice: 100.0,
-              imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80',
-            ),
-          ],
-          timeline: [
-            GBOrderTimelineItem(
-              status: 'PLACED',
-              title: 'Order Placed',
-              description: 'Customer placed order with COD',
-              timestamp: DateTime.now().subtract(const Duration(minutes: 18)),
-            ),
-            GBOrderTimelineItem(
-              status: 'PACKED',
-              title: 'Order Packed',
-              description: 'Store confirmed and packed items',
-              timestamp: DateTime.now().subtract(const Duration(minutes: 10)),
-            ),
-            GBOrderTimelineItem(
-              status: 'OUT_FOR_DELIVERY',
-              title: 'Out for Delivery',
-              description: 'Delivery partner picked up package',
-              timestamp: DateTime.now().subtract(const Duration(minutes: 4)),
-            ),
-          ],
-        )
-      ];
+    } else {
+      activeJobs = [];
     }
     notifyListeners();
   }
@@ -232,7 +194,9 @@ class RunnerAppState extends ChangeNotifier {
     final res = await apiClient.getRunnerFinances();
     if (res.isSuccess && res.data != null) {
       finances = res.data!;
-      todayEarnings = (res.data!['total_delivery_earnings'] as num?)?.toDouble() ?? todayEarnings;
+      todayEarnings = (res.data!['today_earnings'] as num?)?.toDouble() ??
+          (res.data!['total_delivery_earnings'] as num?)?.toDouble() ??
+          todayEarnings;
       completedTrips = (res.data!['total_deliveries_count'] as int?) ?? completedTrips;
       cashCollectedToRemit = (res.data!['cash_collected_to_remit'] as num?)?.toDouble() ?? 0.0;
       notifyListeners();
@@ -270,6 +234,7 @@ class RunnerAppState extends ChangeNotifier {
     }
     return false;
   }
+
   Future<void> fetchNotifications() async {
     try {
       final res = await apiClient.getNotifications();
@@ -281,21 +246,21 @@ class RunnerAppState extends ChangeNotifier {
             id: 'notif_run_welcome',
             title: isHindi ? 'डिलीवरी साथी ऐप में आपका स्वागत है!' : 'Welcome to Runner Partner App!',
             body: isHindi
-                ? 'मीनापुर क्लस्टर में पारदर्शी 5-स्तरीय पेआउट और तत्काल यूपीआई सेटलमेंट।'
-                : 'Transparent 5-tier distance payouts and direct UPI settlements in Minapur cluster.',
+                ? 'पारदर्शी 5-स्तरीय दूरी पेआउट और तत्काल बैंक/यूपीआई सेटलमेंट।'
+                : 'Transparent 5-tier distance payouts and direct bank/UPI settlements.',
             timestamp: DateTime.now().subtract(const Duration(minutes: 20)),
             isRead: false,
             type: 'system',
           ),
           GBNotification(
-            id: 'notif_run_batch',
-            title: isHindi ? 'मल्टी-ऑर्डर बैच प्रोत्साहन' : 'Multi-order Batch Incentive',
+            id: 'notif_run_safety',
+            title: isHindi ? 'सड़क सुरक्षा एवं डिलीवरी दिशानिर्देश' : 'Road Safety & Delivery Guidelines',
             body: isHindi
-                ? 'एक ही ट्रिप में एकाधिक डिलीवरी पूर्ण करने पर प्रति अतिरिक्त ऑर्डर अतिरिक्त पेआउट।'
-                : 'Earn bonus batch payouts for bundled drop-offs along the same rural route.',
-            timestamp: DateTime.now().subtract(const Duration(hours: 4)),
+                ? 'सुरक्षित गति बनाए रखें एवं सामान सौंपते समय ग्राहक से 4-अंकीय ओटीपी अवश्य सत्यापित करें।'
+                : 'Maintain safe speeds and always verify the 4-digit PIN before completing delivery.',
+            timestamp: DateTime.now().subtract(const Duration(hours: 3)),
             isRead: true,
-            type: 'payout',
+            type: 'safety',
           ),
         ];
       }

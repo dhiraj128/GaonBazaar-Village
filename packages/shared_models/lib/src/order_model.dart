@@ -62,12 +62,22 @@ class GBOrderTimelineItem {
 class GBOrder {
   final String id;
   final String customerId;
+  final String? customerName;
+  final String? customerPhone;
   final String storeId;
   final String storeName;
+  final String? storePhone;
   final String? runnerId;
   final String? runnerName;
   final String? runnerPhone;
   final String deliveryAddress;
+  final double? storeLatitude;
+  final double? storeLongitude;
+  final String? storeAddress;
+  final double? deliveryLatitude;
+  final double? deliveryLongitude;
+  final double? distanceKm;
+  final String? cancellationReason;
   final String status; // PLACED, ACCEPTED, PACKED, RUNNER_ASSIGNED, PICKED_UP, OUT_FOR_DELIVERY, DELIVERED, CANCELLED
   final double subtotal;
   final double deliveryFee;
@@ -87,12 +97,22 @@ class GBOrder {
   GBOrder({
     required this.id,
     required this.customerId,
+    this.customerName,
+    this.customerPhone,
     required this.storeId,
     required this.storeName,
+    this.storePhone,
     this.runnerId,
     this.runnerName,
     this.runnerPhone,
     required this.deliveryAddress,
+    this.storeLatitude,
+    this.storeLongitude,
+    this.storeAddress,
+    this.deliveryLatitude,
+    this.deliveryLongitude,
+    this.distanceKm,
+    this.cancellationReason,
     required this.status,
     required this.subtotal,
     required this.deliveryFee,
@@ -114,12 +134,22 @@ class GBOrder {
     return GBOrder(
       id: json['id'] as String,
       customerId: json['customer_id'] as String,
+      customerName: json['customer_name'] as String?,
+      customerPhone: json['customer_phone'] as String?,
       storeId: json['store_id'] as String,
       storeName: json['store_name'] as String,
+      storePhone: json['store_phone'] as String?,
       runnerId: json['runner_id'] as String?,
       runnerName: json['runner_name'] as String?,
       runnerPhone: json['runner_phone'] as String?,
       deliveryAddress: json['delivery_address'] as String,
+      storeLatitude: (json['store_latitude'] as num?)?.toDouble(),
+      storeLongitude: (json['store_longitude'] as num?)?.toDouble(),
+      storeAddress: json['store_address'] as String?,
+      deliveryLatitude: (json['delivery_latitude'] as num?)?.toDouble(),
+      deliveryLongitude: (json['delivery_longitude'] as num?)?.toDouble(),
+      distanceKm: (json['distance_km'] as num?)?.toDouble(),
+      cancellationReason: json['cancellation_reason'] as String?,
       status: json['status'] as String,
       subtotal: (json['subtotal'] as num).toDouble(),
       deliveryFee: (json['delivery_fee'] as num).toDouble(),

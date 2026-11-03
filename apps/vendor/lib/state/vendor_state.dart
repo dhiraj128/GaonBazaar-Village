@@ -98,6 +98,11 @@ class VendorAppState extends ChangeNotifier {
     fetchNotifications();
   }
 
+  void updateStore(GBStore updated) {
+    myStore = updated;
+    notifyListeners();
+  }
+
   void logout() async {
     currentUser = null;
     authToken = null;

@@ -6,7 +6,6 @@ import '../state/vendor_state.dart';
 import 'vendor_dashboard_screen.dart';
 import 'vendor_pending_approval_screen.dart';
 import 'vendor_onboarding_wizard.dart';
-import 'vendor_onboarding_wizard.dart';
 
 class VendorAuthScreen extends StatefulWidget {
   const VendorAuthScreen({super.key});
@@ -24,6 +23,7 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
   String? _errorMessage;
 
   Future<void> _handleSendOtp() async {
+    final state = VendorStateProvider.of(context);
     final phone = _phoneController.text.trim();
     final loc = GBLocalizations.of(context);
     if (!RegExp(r'^[6-9]\d{9}$').hasMatch(phone)) {
@@ -38,7 +38,6 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
       _errorMessage = null;
     });
 
-    final state = VendorStateProvider.of(context);
     final res = await state.apiClient.sendOtp(phone: phone, role: 'vendor');
 
     setState(() => _isLoading = false);
@@ -52,6 +51,7 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
   }
 
   Future<void> _handleVerifyOtp() async {
+    final state = VendorStateProvider.of(context);
     final phone = _phoneController.text.trim();
     final otp = _otpController.text.trim();
     final loc = GBLocalizations.of(context);
@@ -66,7 +66,6 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
       _errorMessage = null;
     });
 
-    final state = VendorStateProvider.of(context);
     final res = await state.apiClient.verifyOtp(
       phone: phone,
       otp: otp,
@@ -105,7 +104,6 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = VendorStateProvider.of(context);
     final loc = GBLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 

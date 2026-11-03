@@ -88,4 +88,48 @@ class GBStore {
       'commission_rate': commissionRate,
     };
   }
+
+  GBStore copyWith({
+    String? id,
+    String? ownerId,
+    String? shopName,
+    String? ownerName,
+    String? category,
+    double? latitude,
+    double? longitude,
+    String? village,
+    String? landmark,
+    String? block,
+    String? district,
+    bool? isOnline,
+    bool? isApproved,
+    bool? isFeatured,
+    double? rating,
+    String? bannerUrl,
+    double? distanceKm,
+    String? upiId,
+    double? commissionRate,
+  }) {
+    return GBStore(
+      id: id ?? this.id,
+      ownerId: ownerId ?? this.ownerId,
+      shopName: shopName ?? this.shopName,
+      ownerName: ownerName ?? this.ownerName,
+      category: category ?? this.category,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      village: village ?? this.village,
+      landmark: landmark ?? this.landmark,
+      block: block ?? this.block,
+      district: district ?? this.district,
+      isOnline: isOnline ?? this.isOnline,
+      isApproved: isApproved ?? this.isApproved,
+      isFeatured: isFeatured ?? this.isFeatured,
+      rating: rating ?? this.rating,
+      bannerUrl: bannerUrl ?? this.bannerUrl,
+      distanceKm: distanceKm ?? this.distanceKm,
+      upiId: upiId ?? this.upiId,
+      commissionRate: commissionRate ?? this.commissionRate,
+    );
+  }
 }

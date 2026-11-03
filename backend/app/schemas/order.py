@@ -48,12 +48,22 @@ class OrderTimelineDetail(BaseModel):
 class OrderResponse(BaseModel):
     id: str
     customer_id: str
+    customer_name: Optional[str] = None
+    customer_phone: Optional[str] = None
     store_id: str
     store_name: str
+    store_phone: Optional[str] = None
     runner_id: Optional[str]
     runner_name: Optional[str]
     runner_phone: Optional[str]
     delivery_address: str
+    store_latitude: Optional[float] = None
+    store_longitude: Optional[float] = None
+    store_address: Optional[str] = None
+    delivery_latitude: Optional[float] = None
+    delivery_longitude: Optional[float] = None
+    distance_km: Optional[float] = None
+    cancellation_reason: Optional[str] = None
     status: str
     subtotal: float
     delivery_fee: float
