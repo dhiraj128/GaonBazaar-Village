@@ -4,7 +4,11 @@ from jose import jwt, JWTError
 from passlib.context import CryptContext
 from fastapi import HTTPException, status, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, APIKeyHeader
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.core.config import settings
+from app.db.session import get_db
+from app.models.base import User
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security_bearer = HTTPBearer(auto_error=False)
@@ -49,16 +53,39 @@ async def get_current_user_payload(credentials: Optional[HTTPAuthorizationCreden
 async def get_current_admin(
     request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer),
-    api_key: Optional[str] = Depends(admin_key_header)
+    api_key: Optional[str] = Depends(admin_key_header),
+    db: AsyncSession = Depends(get_db)
 ) -> dict:
     # 1. API Key check
     if api_key and api_key == settings.ADMIN_API_KEY:
-        return {"sub": "admin_key_user", "role": "super_admin", "phone": "9800000099"}
+        return {"sub": "admin_key_user", "role": "super_admin", "phone": "9800000099", "is_active": True}
     
-    # 2. JWT Bearer Token check
+    # 2. JWT Bearer Token check with authoritative database validation
     if credentials:
         payload = decode_access_token(credentials.credentials)
         if payload and payload.get("role") in ["admin", "super_admin", "hub_manager"]:
+            user_id = payload.get("sub")
+            phone = payload.get("phone")
+            res = await db.execute(select(User).where((User.id == user_id) | (User.phone == phone)))
+            user = res.scalars().first()
+            if user:
+                if not user.is_active:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="प्रशासनिक खाता निलंबित है (Admin account has been suspended)"
+                    )
+                if user.role not in ["admin", "super_admin", "hub_manager"]:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="अपर्याप्त अनुमति (Insufficient privileges: User role revoked)"
+                    )
+                return {
+                    "sub": user.id,
+                    "phone": user.phone,
+                    "role": user.role,
+                    "name": user.name or payload.get("name", "Admin"),
+                    "is_active": user.is_active
+                }
             return payload
 
     raise HTTPException(

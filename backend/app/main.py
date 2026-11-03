@@ -813,6 +813,29 @@ async def init_db_and_seed():
                 ])
             await session.commit()
 
+        # Ensure Super Admin (9800000099) and Hub Manager (9800000098) always exist in DB
+        adm_check = await session.execute(select(User).where(User.phone == "9800000099"))
+        if not adm_check.scalars().first():
+            session.add(User(
+                id="usr_admin_01",
+                phone="9800000099",
+                name="GaonBazaar Super Admin",
+                role="admin",
+                preferred_language="en",
+                is_active=True
+            ))
+        hub_check = await session.execute(select(User).where(User.phone == "9800000098"))
+        if not hub_check.scalars().first():
+            session.add(User(
+                id="usr_hub_01",
+                phone="9800000098",
+                name="Minapur Hub Manager",
+                role="hub_manager",
+                preferred_language="hi",
+                is_active=True
+            ))
+        await session.commit()
+
 async def run_resilient_init_db(app: FastAPI):
     max_retries = 3
     retry_delay = 2
@@ -907,6 +930,14 @@ async def health_db():
             result = await session.execute(text("SELECT 1"))
             val = result.scalar()
             is_healthy = bool(getattr(app.state, "db_healthy", False))
+            if not is_healthy and val == 1:
+                try:
+                    store_check = await session.execute(text("SELECT 1 FROM stores LIMIT 1"))
+                    if store_check.scalar() is not None:
+                        app.state.db_healthy = True
+                        is_healthy = True
+                except Exception:
+                    pass
             return {
                 "status": "connected",
                 "database_engine": "postgresql" if "postgresql" in settings.ASYNC_DATABASE_URL else "sqlite",

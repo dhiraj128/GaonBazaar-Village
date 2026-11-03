@@ -518,20 +518,30 @@ export const KycUsersView: React.FC<KycUsersViewProps> = ({
                 </div>
 
                 {/* 1. Penny Drop Bank Verification */}
-                <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 space-y-2">
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-emerald-900 flex items-center gap-1.5">
+                    <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
                       <CheckCircle className="w-4 h-4 text-emerald-600" /> Penny Drop Bank Validation
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-600 text-white">
-                      100% MATCH
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                      selectedDetail.api_verified.penny_drop_bank_match.account_status === 'VERIFIED'
+                        ? 'bg-emerald-600 text-white'
+                        : selectedDetail.api_verified.penny_drop_bank_match.account_status === 'NOT_CONFIGURED'
+                        ? 'bg-slate-200 text-slate-700'
+                        : 'bg-amber-100 text-amber-800 border border-amber-300'
+                    }`}>
+                      {selectedDetail.api_verified.penny_drop_bank_match.account_status === 'VERIFIED'
+                        ? '100% MATCH'
+                        : selectedDetail.api_verified.penny_drop_bank_match.account_status === 'NOT_CONFIGURED'
+                        ? 'NOT CONFIGURED'
+                        : 'PENDING VERIFICATION'}
                     </span>
                   </div>
 
                   <div className="space-y-1 text-xs">
                     <div className="text-slate-600">
                       Verified Bank Holder:{' '}
-                      <strong className="text-emerald-950">
+                      <strong className="text-slate-950">
                         {selectedDetail.api_verified.penny_drop_bank_match.verified_account_holder}
                       </strong>
                     </div>
@@ -542,7 +552,7 @@ export const KycUsersView: React.FC<KycUsersViewProps> = ({
                       </span>
                     </div>
                     <div className="text-slate-500 text-[11px]">
-                      Ref ID: {selectedDetail.api_verified.penny_drop_bank_match.penny_drop_reference}
+                      Ref ID: {selectedDetail.api_verified.penny_drop_bank_match.penny_drop_reference || 'N/A (Pending Live Ping)'}
                     </div>
                   </div>
                 </div>
@@ -553,8 +563,14 @@ export const KycUsersView: React.FC<KycUsersViewProps> = ({
                     <span className="text-xs font-extrabold text-blue-900 flex items-center gap-1.5">
                       <ShieldCheck className="w-4 h-4 text-blue-600" /> Aadhaar & Liveness Check
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white">
-                      PASSED
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                      selectedDetail.api_verified.aadhaar_liveness.aadhaar_uidai_status === 'VERIFIED'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-amber-100 text-amber-800 border border-amber-300'
+                    }`}>
+                      {selectedDetail.api_verified.aadhaar_liveness.aadhaar_uidai_status === 'VERIFIED'
+                        ? 'PASSED'
+                        : 'MANUAL REVIEW'}
                     </span>
                   </div>
 
@@ -562,7 +578,9 @@ export const KycUsersView: React.FC<KycUsersViewProps> = ({
                     <div className="flex items-center justify-between">
                       <span className="text-slate-600">Liveness Match Score:</span>
                       <strong className="text-blue-950 text-sm">
-                        {selectedDetail.api_verified.aadhaar_liveness.liveness_score}%
+                        {selectedDetail.api_verified.aadhaar_liveness.liveness_score != null
+                          ? `${selectedDetail.api_verified.aadhaar_liveness.liveness_score}%`
+                          : 'Pending Review'}
                       </strong>
                     </div>
                     <div className="text-slate-600 text-[11px]">

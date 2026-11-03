@@ -98,15 +98,16 @@ export interface KycSideBySideDetail {
       bank_name: string;
       account_status: string;
       match_status: string;
-      penny_drop_reference: string;
+      penny_drop_reference?: string | null;
     };
     aadhaar_liveness: {
-      liveness_score: number;
+      liveness_score?: number | null;
       liveness_check: string;
       face_match_confidence: string;
       aadhaar_uidai_status: string;
       address_state_match?: string;
       dl_vahan_status?: string;
+      review_mode?: string;
     };
   };
 }

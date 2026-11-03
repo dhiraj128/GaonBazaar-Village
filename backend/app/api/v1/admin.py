@@ -569,8 +569,9 @@ async def get_kyc_side_by_side_detail(
 ):
     """
     Approval Detail View Side-by-Side comparison:
-    - Left: User-submitted details (Name, Village, Phone, Bank A/C)
-    - Right: API-verified data (Penny Drop Bank Name match, Aadhaar Liveness Match Score)
+    - Left: Genuine user-submitted details (Real photos, real addresses, real bank data)
+    - Right: Authoritative verification records (NOT_VERIFIED, PENDING, or confirmed external gateway result)
+    Never fabricates 98.6% scores or fake penny drop references.
     """
     app_type = applicant_type.lower()
     if app_type == "vendor":
@@ -582,13 +583,19 @@ async def get_kyc_side_by_side_detail(
             raise HTTPException(status_code=404, detail="Vendor store not found")
 
         # Parse bank account info if available
-        bank_ac = "918237465019"
-        ifsc = "SBIN0001234"
+        bank_ac = "NOT_CONFIGURED"
+        ifsc = "NOT_CONFIGURED"
+        has_bank = False
         if store.bank_account_info:
             try:
                 b_data = json.loads(store.bank_account_info)
-                bank_ac = b_data.get("account_number", bank_ac)
-                ifsc = b_data.get("ifsc", ifsc)
+                raw_ac = b_data.get("account_number") or b_data.get("bank_account")
+                raw_ifsc = b_data.get("ifsc_code") or b_data.get("ifsc")
+                if raw_ac and raw_ac.strip():
+                    bank_ac = raw_ac.strip()
+                    has_bank = True
+                if raw_ifsc and raw_ifsc.strip():
+                    ifsc = raw_ifsc.strip().upper()
             except Exception:
                 pass
 
@@ -606,25 +613,26 @@ async def get_kyc_side_by_side_detail(
                 "phone": store.owner.phone if store.owner else "",
                 "bank_account_number": bank_ac,
                 "bank_ifsc": ifsc,
-                "upi_id": store.upi_id or f"{store.owner.phone if store.owner else 'vendor'}@upi",
-                "selfie_url": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400",
-                "shop_photo_url": store.banner_url or "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=400",
-                "aadhaar_document_url": "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400"
+                "upi_id": store.upi_id or "NOT_CONFIGURED",
+                "selfie_url": None,
+                "shop_photo_url": store.banner_url,
+                "aadhaar_document_url": None
             },
             "api_verified": {
                 "penny_drop_bank_match": {
-                    "verified_account_holder": user_name_upper,
-                    "bank_name": "State Bank of India - Minapur Branch",
-                    "account_status": "ACTIVE_VALIDATED",
-                    "match_status": "100% Exact Name Match",
-                    "penny_drop_reference": f"PDR_{secrets.token_hex(4).upper()}",
+                    "verified_account_holder": user_name_upper if has_bank else "NOT_CONFIGURED",
+                    "bank_name": "UNVERIFIED" if has_bank else "NOT_CONFIGURED",
+                    "account_status": "PENDING_VERIFICATION" if has_bank else "NOT_CONFIGURED",
+                    "match_status": "MANUAL_REVIEW_REQUIRED" if has_bank else "NOT_CONFIGURED",
+                    "penny_drop_reference": None,
                 },
                 "aadhaar_liveness": {
-                    "liveness_score": 98.6,
-                    "liveness_check": "PASSED (Passive Liveness v2)",
-                    "face_match_confidence": "99.1% High Match",
-                    "aadhaar_uidai_status": "DIGILOCKER_VERIFIED",
-                    "address_state_match": "Bihar, Muzaffarpur, Minapur (Matched)"
+                    "liveness_score": None,
+                    "liveness_check": "NOT_VERIFIED",
+                    "face_match_confidence": "NOT_VERIFIED",
+                    "aadhaar_uidai_status": "NOT_VERIFIED",
+                    "address_state_match": f"Bihar, Muzaffarpur, {store.village} (Pending Manual Verification)",
+                    "review_mode": "MANUAL_ADMIN_REVIEW_REQUIRED"
                 }
             }
         }
@@ -638,6 +646,16 @@ async def get_kyc_side_by_side_detail(
 
         runner_name_upper = runner.full_name.strip().upper()
 
+        bank_ac = "NOT_CONFIGURED"
+        ifsc = "NOT_CONFIGURED"
+        has_bank = False
+        if runner.upi_id and runner.upi_id.startswith("A/C:"):
+            parts = runner.upi_id.split(":")
+            if len(parts) >= 3:
+                bank_ac = f"Ending in {parts[1]}"
+                ifsc = parts[2]
+                has_bank = True
+
         return {
             "applicant_type": "RUNNER",
             "id": runner.id,
@@ -645,30 +663,31 @@ async def get_kyc_side_by_side_detail(
             "user_submitted": {
                 "name": runner.full_name,
                 "vehicle_type": runner.vehicle_type,
-                "vehicle_number": runner.vehicle_number or "BR-06-AB-9821",
-                "driving_license_no": runner.driving_licence_no or "DL-BR-2022-09418",
+                "vehicle_number": runner.vehicle_number or "NOT_CONFIGURED",
+                "driving_license_no": runner.driving_licence_no or "NOT_CONFIGURED",
                 "phone": runner.user.phone if runner.user else "",
-                "village": "Chaturshi / Minapur",
-                "bank_account_number": "50100492817291",
-                "bank_ifsc": "PUNB0182300",
-                "upi_id": runner.upi_id or f"{runner.user.phone if runner.user else 'runner'}@paytm",
-                "selfie_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
-                "driving_license_url": "https://images.unsplash.com/photo-1589330694653-dad6d3240a2b?w=400"
+                "village": "Rural Pilot Hub",
+                "bank_account_number": bank_ac,
+                "bank_ifsc": ifsc,
+                "upi_id": runner.upi_id or "NOT_CONFIGURED",
+                "selfie_url": None,
+                "driving_license_url": None
             },
             "api_verified": {
                 "penny_drop_bank_match": {
-                    "verified_account_holder": runner_name_upper,
-                    "bank_name": "Punjab National Bank - Minapur",
-                    "account_status": "ACTIVE_VALIDATED",
-                    "match_status": "100% Exact Name Match",
-                    "penny_drop_reference": f"PDR_{secrets.token_hex(4).upper()}",
+                    "verified_account_holder": runner_name_upper if has_bank else "NOT_CONFIGURED",
+                    "bank_name": "UNVERIFIED" if has_bank else "NOT_CONFIGURED",
+                    "account_status": "PENDING_VERIFICATION" if has_bank else "NOT_CONFIGURED",
+                    "match_status": "MANUAL_REVIEW_REQUIRED" if has_bank else "NOT_CONFIGURED",
+                    "penny_drop_reference": None,
                 },
                 "aadhaar_liveness": {
-                    "liveness_score": 97.9,
-                    "liveness_check": "PASSED (Live Blink & Head Turn Validated)",
-                    "face_match_confidence": "98.4% Match with Driving License",
-                    "aadhaar_uidai_status": "DIGILOCKER_VERIFIED",
-                    "dl_vahan_status": "ACTIVE_DRIVING_LICENSE"
+                    "liveness_score": None,
+                    "liveness_check": "NOT_VERIFIED",
+                    "face_match_confidence": "NOT_VERIFIED",
+                    "aadhaar_uidai_status": "NOT_VERIFIED",
+                    "dl_vahan_status": "PENDING_VAHAN_VERIFICATION" if runner.driving_licence_no else "NOT_CONFIGURED",
+                    "review_mode": "MANUAL_ADMIN_REVIEW_REQUIRED"
                 }
             }
         }
@@ -1045,24 +1064,60 @@ async def god_mode_cancel_order(
     order.status = "CANCELLED"
     now = datetime.now(timezone.utc)
 
-    # Issue instant refund if order was paid online
+    # Issue verified refund if order was paid online
     refund_record = None
     if auto_refund and order.payment_method == "ONLINE" and order.payment_status == "PAID":
-        order.payment_status = "REFUNDED"
-        refund_record = Refund(
-            order_id=order.id,
-            payment_id=order.transaction_id or f"pay_sandbox_{secrets.token_hex(4)}",
-            gateway_refund_id=f"rfnd_godmode_{secrets.token_hex(6)}",
-            amount=order.total_amount,
-            currency="INR",
-            reason=reason,
-            status="COMPLETED",
-            refund_type="FULL",
-            admin_notes=f"Authorized via Super Admin God Mode by {_admin.get('phone', 'admin')}",
-            created_at=now,
-            updated_at=now
+        # Calculate remaining refundable
+        res_ref = await db.execute(
+            select(Refund).where(
+                Refund.order_id == order.id,
+                Refund.status.in_(["COMPLETED", "PROCESSING", "PENDING"])
+            )
         )
-        db.add(refund_record)
+        existing_refunds = res_ref.scalars().all()
+        total_already = sum(r.amount for r in existing_refunds)
+        rem_ref = round(order.total_amount - total_already, 2)
+
+        if rem_ref > 0 and order.transaction_id:
+            from app.api.v1.payments import is_razorpay_configured
+            gw_ref_id = None
+            ref_status = "COMPLETED"
+            if is_razorpay_configured():
+                try:
+                    async with httpx.AsyncClient(timeout=10.0) as client:
+                        resp = await client.post(
+                            f"https://api.razorpay.com/v1/payments/{order.transaction_id}/refund",
+                            auth=(settings.RESOLVED_RAZORPAY_KEY_ID, settings.RESOLVED_RAZORPAY_KEY_SECRET),
+                            json={"amount": int(round(rem_ref * 100)), "notes": {"order_id": order.id, "reason": reason}}
+                        )
+                        if resp.status_code in (200, 201):
+                            rzp_d = resp.json()
+                            gw_ref_id = rzp_d.get("id")
+                            ref_status = "COMPLETED" if rzp_d.get("status") in ("processed", "completed") else "PROCESSING"
+                        else:
+                            ref_status = "FAILED"
+                except Exception:
+                    ref_status = "FAILED"
+            elif order.transaction_id.startswith("pay_rzp_test_") or settings.TESTING:
+                gw_ref_id = f"rfnd_sbx_{order.id[:8]}_{int(now.timestamp())}"
+                ref_status = "COMPLETED"
+
+            if ref_status != "FAILED":
+                order.payment_status = "REFUNDED"
+                refund_record = Refund(
+                    order_id=order.id,
+                    payment_id=order.transaction_id,
+                    gateway_refund_id=gw_ref_id,
+                    amount=rem_ref,
+                    currency="INR",
+                    reason=reason,
+                    status=ref_status,
+                    refund_type="FULL",
+                    admin_notes=f"Authorized via Super Admin God Mode Cancellation by {_admin.get('phone', 'admin')}",
+                    created_at=now,
+                    updated_at=now
+                )
+                db.add(refund_record)
 
     audit = AuditLog(
         action="GOD_MODE_ORDER_CANCELLED",
@@ -1097,47 +1152,125 @@ async def god_mode_issue_refund(
     _admin: dict = Depends(require_super_admin)
 ):
     """
-    Super Admin God Mode: Issue instant refund to customer.
+    Super Admin God Mode: Issue authoritative refund to customer.
+    Validates original captured payment, remaining refundable balance, and executes real Razorpay refund.
+    Never marks a failed gateway call as completed.
     """
     res = await db.execute(select(Order).where(Order.id == order_id))
     order = res.scalars().first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
+    # Check remaining refundable balance
+    res_ref = await db.execute(
+        select(Refund).where(
+            Refund.order_id == order.id,
+            Refund.status.in_(["COMPLETED", "PROCESSING", "PENDING"])
+        )
+    )
+    existing_refunds = res_ref.scalars().all()
+    total_already_refunded = sum(r.amount for r in existing_refunds)
+    remaining_refundable = round(order.total_amount - total_already_refunded, 2)
+
+    if remaining_refundable <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Order has already been fully refunded"
+        )
+
+    if req.amount <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Refund amount must be greater than zero"
+        )
+
+    if req.amount > remaining_refundable:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Refund amount (₹{req.amount}) exceeds remaining refundable balance (₹{remaining_refundable})"
+        )
+
     now = datetime.now(timezone.utc)
-    gateway_refund_id = f"rfnd_{secrets.token_hex(8)}"
+    gateway_refund_id = None
+    refund_status = "COMPLETED"
+
+    if order.payment_method == "ONLINE":
+        if not order.transaction_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot refund ONLINE order without confirmed payment transaction ID"
+            )
+        
+        from app.api.v1.payments import is_razorpay_configured
+        if is_razorpay_configured():
+            amount_paise = int(round(req.amount * 100))
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    resp = await client.post(
+                        f"https://api.razorpay.com/v1/payments/{order.transaction_id}/refund",
+                        auth=(settings.RESOLVED_RAZORPAY_KEY_ID, settings.RESOLVED_RAZORPAY_KEY_SECRET),
+                        json={
+                            "amount": amount_paise,
+                            "notes": {"order_id": order.id, "reason": req.reason, "admin": _admin.get("phone", "admin")}
+                        }
+                    )
+                    if resp.status_code not in (200, 201):
+                        raise HTTPException(
+                            status_code=status.HTTP_502_BAD_GATEWAY,
+                            detail=f"Payment gateway refund failed: {resp.text}"
+                        )
+                    rzp_data = resp.json()
+                    gateway_refund_id = rzp_data.get("id")
+                    refund_status = "COMPLETED" if rzp_data.get("status") in ("processed", "completed") else "PROCESSING"
+            except httpx.RequestError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail=f"Payment gateway unreachable: {str(e)}"
+                )
+        else:
+            if order.transaction_id.startswith("pay_rzp_test_") or settings.TESTING:
+                gateway_refund_id = f"rfnd_sbx_{order.id[:8]}_{int(now.timestamp())}"
+                refund_status = "COMPLETED"
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Online payment gateway unconfigured for processing production refunds"
+                )
+    else:
+        gateway_refund_id = f"cod_disb_{order.id[:8]}_{int(now.timestamp())}"
+        refund_status = "COMPLETED"
 
     refund = Refund(
         order_id=order.id,
-        payment_id=order.transaction_id or f"pay_rzp_{secrets.token_hex(4)}",
+        payment_id=order.transaction_id or f"cod_{order.id}",
         gateway_refund_id=gateway_refund_id,
         amount=req.amount,
         currency="INR",
         reason=req.reason,
-        status="COMPLETED",
+        status=refund_status,
         refund_type="FULL" if req.amount >= order.total_amount else "PARTIAL",
-        admin_notes=f"God mode refund issued by {_admin.get('phone', 'admin')}",
+        admin_notes=f"Authorized God Mode refund by {_admin.get('phone', 'admin')}",
         created_at=now,
         updated_at=now
     )
     db.add(refund)
-    order.payment_status = "REFUNDED"
+    order.payment_status = "REFUNDED" if (total_already_refunded + req.amount) >= order.total_amount else "PARTIALLY_REFUNDED"
 
     audit = AuditLog(
         action="GOD_MODE_REFUND_ISSUED",
         target_type="ORDER",
         target_id=order.id,
-        details=f"Issued refund ₹{req.amount} for Order {order.id}. Gateway ID: {gateway_refund_id}"
+        details=f"Issued refund ₹{req.amount} for Order {order.id}. Gateway ID: {gateway_refund_id}. Status: {refund_status}"
     )
     db.add(audit)
     await db.commit()
 
     return {
-        "message": f"Instant refund of ₹{req.amount} completed successfully",
+        "message": f"Refund of ₹{req.amount} processed successfully ({refund_status})",
         "refund_id": refund.id,
         "gateway_refund_id": gateway_refund_id,
         "order_id": order.id,
-        "status": "COMPLETED"
+        "status": refund_status
     }
 
 
@@ -1264,8 +1397,9 @@ async def get_map_riders(
     _admin: dict = Depends(require_hub_manager_or_super_admin)
 ):
     """
-    Rider Tracking: Green = Idle, Orange = Busy/On Delivery, Red = Offline/Issue.
-    Pinging Lat/Lng every 10s.
+    Live map telemetry: Genuine authenticated runner GPS coordinates.
+    Never fabricates GPS coordinates, fake battery percentage, or fake speed.
+    Displays LOCATION_UNAVAILABLE or LOCATION_STALE where appropriate.
     """
     runners_res = await db.execute(
         select(Runner).options(selectinload(Runner.user), selectinload(Runner.orders))
@@ -1279,49 +1413,50 @@ async def get_map_riders(
     active_orders = active_orders_res.scalars().all()
     assigned_orders_by_runner = {o.runner_id: o for o in active_orders if o.runner_id}
 
-    # Reference village coordinates in Minapur block
-    pilot_coords = [
-        (26.1950, 85.3450, "Chaturshi"),
-        (26.2100, 85.3550, "Benaghara"),
-        (26.2250, 85.3600, "Sivay Patti"),
-        (26.1880, 85.3320, "Tulsi Ganj"),
-    ]
-
     rider_pins = []
-    for idx, r in enumerate(runners):
-        assigned_order = assigned_orders_by_runner.get(r.id)
 
-        # Determine state: Green = Idle, Orange = Busy, Red = Offline/Issue
+    for r in runners:
+        assigned_order = assigned_orders_by_runner.get(r.id)
+        has_coords = (r.current_latitude is not None and r.current_longitude is not None)
         has_sos = any(s["runner_id"] == r.id for s in _ACTIVE_SOS_ALERTS)
-        if has_sos or not r.is_online or not r.is_approved:
-            state = "OFFLINE" if not r.is_online else "ISSUE"
+
+        if has_sos:
+            state = "ISSUE"
             color = "red"
+            location_status = "LIVE" if has_coords else "LOCATION_UNAVAILABLE"
+        elif not has_coords:
+            state = "LOCATION_UNAVAILABLE"
+            color = "gray"
+            location_status = "LOCATION_UNAVAILABLE"
+        elif not r.is_online or not r.is_approved:
+            state = "OFFLINE"
+            color = "red"
+            location_status = "LOCATION_STALE"
         elif assigned_order is not None:
             state = "BUSY"
             color = "orange"
+            location_status = "LIVE"
         else:
             state = "IDLE"
             color = "green"
-
-        ref_c = pilot_coords[idx % len(pilot_coords)]
-        lat = r.current_latitude or ref_c[0]
-        lng = r.current_longitude or ref_c[1]
+            location_status = "LIVE"
 
         rider_pins.append({
             "runner_id": r.id,
             "name": r.full_name,
-            "phone": r.user.phone if r.user else "+91 98000 00000",
+            "phone": r.user.phone if r.user else "",
             "vehicle_type": r.vehicle_type,
-            "vehicle_number": r.vehicle_number or "BR-06-AB-1234",
-            "latitude": lat,
-            "longitude": lng,
+            "vehicle_number": r.vehicle_number or "NOT_CONFIGURED",
+            "latitude": r.current_latitude if has_coords else None,
+            "longitude": r.current_longitude if has_coords else None,
+            "location_status": location_status,
             "state": state,
-            "color": color, # green, orange, red
+            "color": color, # green, orange, red, gray
             "assigned_order_id": assigned_order.id if assigned_order else None,
             "assigned_order_status": assigned_order.status if assigned_order else None,
-            "battery_level": 88 - (idx * 7) % 40,
-            "speed_kmh": 22 if state == "BUSY" else 0,
-            "last_ping": datetime.now(timezone.utc).isoformat()
+            "battery_level": None,
+            "speed_kmh": None,
+            "last_ping": datetime.now(timezone.utc).isoformat() if has_coords else None
         })
 
     return rider_pins
@@ -1371,46 +1506,88 @@ async def get_demand_heatmaps(
     _admin: dict = Depends(require_hub_manager_or_super_admin)
 ):
     """
-    Visual overlays showing areas with high order volume but low rider density ("Red Zones").
+    Dynamically calculated demand heatmaps based on real active orders and available runners.
+    Calculates operational clusters from registered stores and live order activity.
     """
-    return [
-        {
-            "zone_id": "zone_chaturshi",
-            "zone_name": "Chaturshi Market Hub",
-            "latitude": 26.1950,
-            "longitude": 85.3450,
+    res_orders = await db.execute(
+        select(Order).options(selectinload(Order.store), selectinload(Order.delivery_address))
+        .where(Order.status.in_(["PLACED", "ACCEPTED", "PACKED", "RUNNER_ASSIGNED", "PICKED_UP", "OUT_FOR_DELIVERY"]))
+    )
+    active_orders = res_orders.scalars().all()
+
+    # Query all approved stores to define operating clusters
+    res_stores = await db.execute(select(Store).where(Store.is_approved == True))
+    stores = res_stores.scalars().all()
+
+    # Query online available runners
+    res_runners = await db.execute(
+        select(Runner).where(and_(Runner.is_online == True, Runner.is_approved == True))
+    )
+    online_runners = res_runners.scalars().all()
+    available_runners_count = len(online_runners)
+
+    # Initialize clusters from stores
+    clusters: Dict[str, Dict[str, Any]] = {}
+    for st in stores:
+        village_clean = st.village.split("/")[0].strip()
+        zid = f"zone_{village_clean.lower().replace(' ', '_')}"
+        if zid not in clusters:
+            clusters[zid] = {
+                "zone_id": zid,
+                "zone_name": f"{village_clean} Market Hub",
+                "latitude": st.latitude,
+                "longitude": st.longitude,
+                "radius_meters": 1200,
+                "active_orders": 0,
+                "available_riders": 0
+            }
+
+    # If no stores yet, fallback to default operational hub
+    if not clusters:
+        clusters["zone_minapur_hub"] = {
+            "zone_id": "zone_minapur_hub",
+            "zone_name": "Minapur Rural Hub",
+            "latitude": 26.2230,
+            "longitude": 85.3520,
             "radius_meters": 1200,
-            "intensity": 0.88,
-            "is_red_zone": True,
-            "active_orders": 8,
-            "available_riders": 1,
-            "description": "High demand spike: 8 pending orders, only 1 runner idle."
-        },
-        {
-            "zone_id": "zone_sivay",
-            "zone_name": "Sivay Patti High School Chowk",
-            "latitude": 26.2250,
-            "longitude": 85.3600,
-            "radius_meters": 1000,
-            "intensity": 0.65,
-            "is_red_zone": True,
-            "active_orders": 5,
-            "available_riders": 0,
-            "description": "Red Zone: 5 orders waiting for pickup, 0 idle riders."
-        },
-        {
-            "zone_id": "zone_tubanaghara",
-            "zone_name": "Benaghara Bazar",
-            "latitude": 26.2100,
-            "longitude": 85.3550,
-            "radius_meters": 900,
-            "intensity": 0.35,
-            "is_red_zone": False,
-            "active_orders": 2,
-            "available_riders": 3,
-            "description": "Normal density: 2 orders, 3 idle riders."
+            "active_orders": 0,
+            "available_riders": 0
         }
-    ]
+
+    # Distribute active orders across clusters
+    for o in active_orders:
+        if o.store and o.store.village:
+            v_key = o.store.village.split("/")[0].strip().lower().replace(' ', '_')
+            zid = f"zone_{v_key}"
+            if zid in clusters:
+                clusters[zid]["active_orders"] += 1
+
+    # Distribute runners to nearest cluster
+    for r in online_runners:
+        if r.current_latitude and r.current_longitude:
+            # find closest cluster
+            closest_zid = min(
+                clusters.keys(),
+                key=lambda k: (clusters[k]["latitude"] - r.current_latitude)**2 + (clusters[k]["longitude"] - r.current_longitude)**2
+            )
+            clusters[closest_zid]["available_riders"] += 1
+        elif clusters:
+            # assign to first cluster
+            first_k = next(iter(clusters.keys()))
+            clusters[first_k]["available_riders"] += 1
+
+    results = []
+    for c in clusters.values():
+        c_orders = c["active_orders"]
+        c_riders = c["available_riders"]
+        # Red zone if orders exceed riders or no riders available in that cluster
+        is_red = (c_riders == 0) or (c_orders > c_riders)
+        c["is_red_zone"] = is_red
+        c["intensity"] = 0.85 if is_red else round(min(1.0, (c_orders + 1) / max(2, (c_riders + 1) * 2)), 2)
+        c["description"] = f"{'Red Zone: ' if is_red else 'Normal: '}{c_orders} active order(s), {c_riders} available runner(s)."
+        results.append(c)
+
+    return results
 
 
 @router.post("/map/heatmaps/notify-riders")
@@ -1468,6 +1645,15 @@ async def get_settlements_ledger(
         if o.store_id:
             s_name = o.store.shop_name if o.store else "Store"
             if o.store_id not in vendor_totals:
+                b_ac = "NOT_CONFIGURED"
+                b_ifsc = "NOT_CONFIGURED"
+                if o.store and o.store.bank_account_info:
+                    try:
+                        bd = json.loads(o.store.bank_account_info)
+                        b_ac = bd.get("account_number") or "NOT_CONFIGURED"
+                        b_ifsc = bd.get("ifsc_code") or bd.get("ifsc") or "NOT_CONFIGURED"
+                    except Exception:
+                        pass
                 vendor_totals[o.store_id] = {
                     "store_id": o.store_id,
                     "store_name": s_name,
@@ -1475,8 +1661,8 @@ async def get_settlements_ledger(
                     "platform_commission": 0.0,
                     "total_payout": 0.0,
                     "order_count": 0,
-                    "bank_account": "918237465019",
-                    "ifsc": "SBIN0001234"
+                    "bank_account": b_ac,
+                    "ifsc": b_ifsc
                 }
             commission = round(o.subtotal * (settings.DEFAULT_VENDOR_COMMISSION_PCT / 100.0), 2)
             net_payout = o.subtotal - commission
@@ -1489,6 +1675,13 @@ async def get_settlements_ledger(
         if o.runner_id:
             r_name = o.runner.full_name if o.runner else "Runner"
             if o.runner_id not in runner_totals:
+                r_ac = "NOT_CONFIGURED"
+                r_ifsc = "NOT_CONFIGURED"
+                if o.runner and o.runner.upi_id and o.runner.upi_id.startswith("A/C:"):
+                    parts = o.runner.upi_id.split(":")
+                    if len(parts) >= 3:
+                        r_ac = f"A/C Ending in {parts[1]}"
+                        r_ifsc = parts[2]
                 runner_totals[o.runner_id] = {
                     "runner_id": o.runner_id,
                     "runner_name": r_name,
@@ -1496,8 +1689,8 @@ async def get_settlements_ledger(
                     "bonuses": 0.0,
                     "total_payout": 0.0,
                     "order_count": 0,
-                    "bank_account": "50100492817291",
-                    "ifsc": "PUNB0182300"
+                    "bank_account": r_ac,
+                    "ifsc": r_ifsc
                 }
             runner_totals[o.runner_id]["delivery_fees"] += o.delivery_fee
             runner_totals[o.runner_id]["total_payout"] += o.delivery_fee
@@ -1567,8 +1760,32 @@ async def record_cod_cash_deposit(
 ):
     """
     Hub Manager records runner COD cash deposit at local hub.
-    Updates order payment_status to 'PAID' and logs reconciliation receipt.
+    Amount-accurate COD accounting: Supports partial deposits, prevents double reconciliation,
+    and only clears liability up to the verified cash deposited.
     """
+    if req.amount <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Deposit amount must be greater than zero"
+        )
+
+    # Check idempotency of receipt_reference to prevent double deposit
+    if req.receipt_reference:
+        dup_check = await db.execute(
+            select(AuditLog).where(
+                and_(
+                    AuditLog.action == "COD_CASH_DEPOSITED_AT_HUB",
+                    AuditLog.details.like(f"%Receipt #{req.receipt_reference}%")
+                )
+            )
+        )
+        if dup_check.scalars().first():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Duplicate deposit: Receipt reference '{req.receipt_reference}' has already been processed"
+            )
+
+    # Fetch delivered COD orders pending payment for this runner in FIFO order
     res = await db.execute(
         select(Order).where(
             and_(
@@ -1577,34 +1794,49 @@ async def record_cod_cash_deposit(
                 Order.status == "DELIVERED",
                 Order.payment_status != "PAID"
             )
-        )
+        ).order_by(Order.placed_at.asc())
     )
     orders_to_settle = res.scalars().all()
+    total_unpaid = sum(o.total_amount for o in orders_to_settle)
+
+    # Amount-accurate FIFO allocation: only mark individual orders as PAID if fully covered
+    remaining_cash = req.amount
     settled_count = 0
-    total_reconciled = 0.0
+    total_cleared = 0.0
+    cleared_order_ids = []
 
     for o in orders_to_settle:
-        o.payment_status = "PAID"
-        total_reconciled += o.total_amount
-        settled_count += 1
+        if remaining_cash >= o.total_amount:
+            o.payment_status = "PAID"
+            remaining_cash -= o.total_amount
+            total_cleared += o.total_amount
+            settled_count += 1
+            cleared_order_ids.append(o.id)
+        else:
+            # Partial amount remaining cannot clear the next full order
+            break
 
+    remaining_liability = max(0.0, round(total_unpaid - total_cleared, 2))
     receipt_no = req.receipt_reference or f"HUB-COD-{int(datetime.now(timezone.utc).timestamp())}"
 
     audit = AuditLog(
         action="COD_CASH_DEPOSITED_AT_HUB",
         target_type="RUNNER_COD",
         target_id=req.runner_id,
-        details=f"Received ₹{req.amount} COD cash from runner {req.runner_id}. Receipt #{receipt_no}. Orders Reconciled: {settled_count}. Notes: {req.notes or 'None'}"
+        details=f"Received ₹{req.amount} COD cash from runner {req.runner_id}. Receipt #{receipt_no}. Orders Cleared: {settled_count} ({cleared_order_ids}). Total Cleared: ₹{total_cleared}. Remaining Liability: ₹{remaining_liability}. Notes: {req.notes or 'None'}"
     )
     db.add(audit)
     await db.commit()
 
     return {
-        "message": f"Successfully received ₹{req.amount} COD cash and deposited to Minapur Hub ledger",
+        "message": f"Successfully received ₹{req.amount} COD cash. Cleared {settled_count} order(s). Remaining liability: ₹{remaining_liability}.",
         "receipt_number": receipt_no,
         "runner_id": req.runner_id,
         "amount_deposited": req.amount,
+        "amount_cleared": total_cleared,
         "orders_reconciled": settled_count,
+        "remaining_liability": remaining_liability,
+        "cleared_order_ids": cleared_order_ids,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
@@ -1627,11 +1859,20 @@ async def export_vendor_payouts_csv(
     for o in delivered:
         if o.store_id:
             s_name = o.store.shop_name if o.store else "Store"
+            b_ac = "NOT_CONFIGURED"
+            b_ifsc = "NOT_CONFIGURED"
+            if o.store and o.store.bank_account_info:
+                try:
+                    bd = json.loads(o.store.bank_account_info)
+                    b_ac = bd.get("account_number") or "NOT_CONFIGURED"
+                    b_ifsc = bd.get("ifsc_code") or bd.get("ifsc") or "NOT_CONFIGURED"
+                except Exception:
+                    pass
             if o.store_id not in vendor_totals:
                 vendor_totals[o.store_id] = {
                     "name": s_name,
-                    "account": "918237465019",
-                    "ifsc": "SBIN0001234",
+                    "account": b_ac,
+                    "ifsc": b_ifsc,
                     "amount": 0.0
                 }
             net = o.subtotal - (o.subtotal * settings.DEFAULT_VENDOR_COMMISSION_PCT / 100.0)
@@ -1642,6 +1883,9 @@ async def export_vendor_payouts_csv(
     # Corporate bulk payout header (NEFT/RTGS standard)
     writer.writerow(["Beneficiary Name", "Account Number", "IFSC Code", "Amount (INR)", "Payment Reference", "Remarks"])
     for sid, v in vendor_totals.items():
+        # Exclude unconfigured bank accounts from direct corporate bank batch files
+        if v["account"] == "NOT_CONFIGURED" or len(v["account"]) < 9:
+            continue
         ref = f"GBV-{sid[:8]}-{int(datetime.now(timezone.utc).timestamp())}"
         writer.writerow([v["name"], v["account"], v["ifsc"], round(v["amount"], 2), ref, "GaonBazaar Vendor Weekly Settlement"])
 
@@ -1670,11 +1914,18 @@ async def export_runner_payouts_csv(
     for o in delivered:
         if o.runner_id:
             r_name = o.runner.full_name if o.runner else "Runner"
+            r_ac = "NOT_CONFIGURED"
+            r_ifsc = "NOT_CONFIGURED"
+            if o.runner and o.runner.upi_id and o.runner.upi_id.startswith("A/C:"):
+                parts = o.runner.upi_id.split(":")
+                if len(parts) >= 3:
+                    r_ac = parts[1]
+                    r_ifsc = parts[2]
             if o.runner_id not in runner_totals:
                 runner_totals[o.runner_id] = {
                     "name": r_name,
-                    "account": "50100492817291",
-                    "ifsc": "PUNB0182300",
+                    "account": r_ac,
+                    "ifsc": r_ifsc,
                     "amount": 0.0
                 }
             runner_totals[o.runner_id]["amount"] += o.delivery_fee
@@ -1683,6 +1934,9 @@ async def export_runner_payouts_csv(
     writer = csv.writer(output)
     writer.writerow(["Beneficiary Name", "Account Number", "IFSC Code", "Amount (INR)", "Payment Reference", "Remarks"])
     for rid, r in runner_totals.items():
+        # Exclude unconfigured accounts from corporate bank batch file
+        if r["account"] == "NOT_CONFIGURED" or len(r["account"]) < 9:
+            continue
         ref = f"GBR-{rid[:8]}-{int(datetime.now(timezone.utc).timestamp())}"
         writer.writerow([r["name"], r["account"], r["ifsc"], round(r["amount"], 2), ref, "GaonBazaar Runner Delivery Settlement"])
 
@@ -1828,7 +2082,7 @@ async def update_platform_settings(
         settings.DEFAULT_VENDOR_COMMISSION_PCT = req.vendor_commission_pct
 
     audit = AuditLog(
-        action="PRICING_ENGINE_SETTINGS_UPDATED",
+        action="SETTINGS_UPDATED",
         target_type="PLATFORM_SETTINGS",
         target_id="global",
         details=f"Radius: {settings.MAX_DELIVERY_RADIUS_KM}km, MOV: ₹{req.min_order_value or 99}, BaseDelivery: ₹{req.base_delivery_fee or 15}, PerKM: ₹{req.per_km_fee or 5}, PlatformFee: ₹{settings.PLATFORM_FEE}, Commission: {settings.DEFAULT_VENDOR_COMMISSION_PCT}%"

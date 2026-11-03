@@ -1,6 +1,7 @@
 import pytest
 import io
 import csv
+import secrets
 from httpx import AsyncClient, ASGITransport
 from datetime import datetime, timezone, timedelta
 from app.main import app
@@ -88,12 +89,30 @@ async def test_scenario_c_live_orders_and_god_mode():
     headers = {"Authorization": f"Bearer {admin_token}"}
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # 0. Place a fresh order to test God Mode operations with complete test isolation
+        c_login = await client.post("/api/v1/auth/otp/send", json={"phone": "9800000000", "role": "customer"})
+        c_sess = c_login.json()["session_id"]
+        c_tok = (await client.post("/api/v1/auth/otp/verify", json={"phone": "9800000000", "otp": "123456", "session_id": c_sess})).json()["access_token"]
+        c_headers = {"Authorization": f"Bearer {c_tok}"}
+
+        addr_id = (await client.get("/api/v1/addresses", headers=c_headers)).json()[0]["id"]
+        prod_id = (await client.get("/api/v1/stores/str_01/products")).json()[0]["id"]
+
+        order_res = await client.post("/api/v1/orders", headers=c_headers, json={
+            "store_id": "str_01",
+            "delivery_address_id": addr_id,
+            "payment_method": "COD",
+            "items": [{"product_id": prod_id, "quantity": 2}]
+        })
+        assert order_res.status_code == 201
+        target_order = order_res.json()
+        order_id = target_order["id"]
+
+        # Verify Admin can see it in live feed
         orders_res = await client.get("/api/v1/admin/orders", headers=headers)
         assert orders_res.status_code == 200
         orders = orders_res.json()
-        assert len(orders) > 0
-        target_order = orders[0]
-        order_id = target_order["id"]
+        assert any(o["id"] == order_id for o in orders)
 
         # 1. Update Order Status
         status_res = await client.patch(f"/api/v1/admin/orders/{order_id}/status", json={"status": "PACKED"}, headers=headers)
@@ -112,10 +131,11 @@ async def test_scenario_c_live_orders_and_god_mode():
         assert reassign_res.status_code == 200
         assert reassign_res.json()["runner_id"] == new_runner_id
 
-        # 3. God Mode Instant Refund
+        # 3. God Mode Instant Refund (validating eligible amount within remaining refundable balance)
+        refund_amount = min(10.0, float(target_order.get("total_amount", 50.0)))
         refund_res = await client.post(
             f"/api/v1/admin/orders/{order_id}/god-mode/refund",
-            json={"amount": 49.0, "reason": "Damaged item replacement"},
+            json={"amount": refund_amount, "reason": "Damaged item replacement"},
             headers=headers
         )
         assert refund_res.status_code == 200
@@ -238,16 +258,26 @@ async def test_scenario_g_financials_cod_deposit_and_batch_csv():
         cod_res = await client.get("/api/v1/admin/settlements/cod", headers=headers)
         assert cod_res.status_code == 200
 
-        # 3. Hub Manager records COD deposit
+        # 3. Hub Manager records COD deposit with unique receipt reference and idempotency verification
         runners_res = await client.get("/api/v1/admin/runners", headers=headers)
         r_id = runners_res.json()[0]["id"]
+        test_ref = f"TEST-REC-{secrets.token_hex(4)}"
         dep_res = await client.post(
             "/api/v1/admin/settlements/cod-deposit",
-            json={"runner_id": r_id, "amount": 350.0, "receipt_reference": "TEST-REC-001"},
+            json={"runner_id": r_id, "amount": 350.0, "receipt_reference": test_ref},
             headers=headers
         )
         assert dep_res.status_code == 200
-        assert "HUB-COD" in dep_res.json()["receipt_number"] or "TEST-REC-001" in dep_res.json()["receipt_number"]
+        assert test_ref in dep_res.json()["receipt_number"]
+
+        # Duplicate submission must be blocked by idempotency control
+        dup_res = await client.post(
+            "/api/v1/admin/settlements/cod-deposit",
+            json={"runner_id": r_id, "amount": 350.0, "receipt_reference": test_ref},
+            headers=headers
+        )
+        assert dup_res.status_code == 400
+        assert "Duplicate deposit" in dup_res.json()["detail"]
 
         # 4. Super Admin exports Vendor Payouts Batch CSV
         csv_v_res = await client.get("/api/v1/admin/settlements/payouts/vendor-csv", headers=headers)
