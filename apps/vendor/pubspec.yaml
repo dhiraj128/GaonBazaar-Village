@@ -14,6 +14,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.3.2
   url_launcher: ^6.3.0
+  geolocator: ^14.1.2
+  image_picker: ^1.1.2
   design_system:
     path: ../../packages/design_system
   localization:

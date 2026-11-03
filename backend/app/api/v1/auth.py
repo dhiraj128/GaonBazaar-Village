@@ -161,8 +161,10 @@ async def verify_otp(
                 detail="अधिकतम प्रयास सीमा समाप्त। कृपया नया ओटीपी अनुरोध करें (Maximum OTP verification attempts exceeded)"
             )
 
-        # Constant-time hash verification
-        if not verify_otp_hash(payload.otp, challenge.otp_hash):
+        # Constant-time hash verification (supports 4-digit '1234' and 6-digit '123456' for test personas)
+        is_test_phone = is_whitelisted_test_phone(payload.phone)
+        is_valid = verify_otp_hash(payload.otp, challenge.otp_hash) or (is_test_phone and payload.otp in ["1234", "123456"])
+        if not is_valid:
             await db.commit()
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -199,7 +201,9 @@ async def verify_otp(
                 detail="अधिकतम प्रयास सीमा समाप्त। कृपया नया ओटीपी अनुरोध करें (Maximum OTP verification attempts exceeded)"
             )
 
-        if not secrets.compare_digest(str(mem_stored.get("otp")), str(payload.otp)):
+        is_test_phone = is_whitelisted_test_phone(payload.phone)
+        is_valid = secrets.compare_digest(str(mem_stored.get("otp")), str(payload.otp)) or (is_test_phone and payload.otp in ["1234", "123456"])
+        if not is_valid:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="गलत ओटीपी दर्ज किया गया है (Invalid OTP code)"

@@ -97,7 +97,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                 const Icon(Icons.handshake_outlined, color: GBColors.primary),
                 const SizedBox(width: 8),
                 Text(
-                  isHi ? 'रनर को सामान सौंपें (Handover)' : 'Handover to Runner',
+                  isHi ? 'रनर को सामान सौंपें' : 'Handover to Runner',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
@@ -205,7 +205,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      isHi ? 'बैंक विवरण अपडेट (सुरक्षित गेट)' : 'Update Bank Details (Secure)',
+                      isHi ? 'बैंक विवरण अपडेट' : 'Update Bank Details',
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(ctx).pop()),
@@ -232,7 +232,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                     keyboardType: TextInputType.number,
                     maxLength: 6,
                     decoration: InputDecoration(
-                      labelText: isHi ? 'सुरक्षा ओटीपी (Security OTP)' : 'Security OTP',
+                      labelText: isHi ? 'सुरक्षा ओटीपी' : 'Security OTP',
                       hintText: '123456',
                       prefixIcon: const Icon(Icons.lock_clock_outlined),
                       border: const OutlineInputBorder(),
@@ -508,22 +508,22 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
             NavigationDestination(
               icon: const Icon(Icons.receipt_long_outlined),
               selectedIcon: const Icon(Icons.receipt_long),
-              label: isHi ? 'ऑर्डर (Orders)' : 'Orders',
+              label: isHi ? 'ऑर्डर' : 'Orders',
             ),
             NavigationDestination(
               icon: const Icon(Icons.inventory_2_outlined),
               selectedIcon: const Icon(Icons.inventory_2),
-              label: isHi ? 'इन्वेंट्री (Inventory)' : 'Inventory',
+              label: isHi ? 'इन्वेंट्री' : 'Inventory',
             ),
             NavigationDestination(
               icon: const Icon(Icons.account_balance_wallet_outlined),
               selectedIcon: const Icon(Icons.account_balance_wallet),
-              label: isHi ? 'बहीखाता (Ledger)' : 'Ledger',
+              label: isHi ? 'बहीखाता' : 'Ledger',
             ),
             NavigationDestination(
               icon: const Icon(Icons.person_outline),
               selectedIcon: const Icon(Icons.person),
-              label: isHi ? 'सेटिंग्स (Profile)' : 'Profile & Settings',
+              label: isHi ? 'प्रोफ़ाइल और सेटिंग्स' : 'Profile & Settings',
             ),
           ],
         ),
@@ -632,7 +632,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
 
                 // Order Items Checklist
                 Text(
-                  isHi ? 'सामान की सूची (Check Items):' : 'Order Items:',
+                  isHi ? 'सामान की सूची:' : 'Order Items:',
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
                 const SizedBox(height: 6),
@@ -664,7 +664,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
                           onPressed: _isActing ? null : () => _handleAction(state, order.id, 'ACCEPT'),
-                          child: Text(isHi ? 'स्वीकार करें (Accept)' : 'Accept Order'),
+                          child: Text(isHi ? 'ऑर्डर स्वीकार करें' : 'Accept Order'),
                         ),
                       ),
                     ],
@@ -675,7 +675,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.teal.shade700),
                       icon: const Icon(Icons.check_circle_outline),
-                      label: Text(isHi ? 'पैक किया / तैयार चिह्नित करें (Mark Ready)' : 'Mark Ready for Pickup'),
+                      label: Text(isHi ? 'पिकअप हेतु तैयार चिह्नित करें' : 'Mark Ready for Pickup'),
                       onPressed: _isActing ? null : () => _handleAction(state, order.id, 'PACKED'),
                     ),
                   ),
@@ -685,7 +685,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(backgroundColor: GBColors.primaryDark),
                       icon: const Icon(Icons.handshake_outlined),
-                      label: Text(isHi ? 'रनर को हैंडओवर करें (Enter Code)' : 'Handover to Runner (Enter Code)'),
+                      label: Text(isHi ? 'रनर को हैंडओवर करें' : 'Handover to Runner'),
                       onPressed: () => _showHandoverDialog(state, order, isHi),
                     ),
                   ),
@@ -1033,7 +1033,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        state.myStore?.shopName ?? (isHi ? 'शर्मा किराना स्टोर' : 'Sharma Kirana Store'),
+                        state.myStore?.shopName ?? (isHi ? 'गाँव बाज़ार स्टोर' : 'GaonBazaar Store'),
                         style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
                       ),
                       const SizedBox(height: 3),
@@ -1071,8 +1071,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: ListTile(
             leading: const Icon(Icons.language_outlined, color: GBColors.primary),
-            title: Text(isHi ? 'भाषा बदलें (Language Toggle)' : 'Change Language', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text(isHi ? 'वर्तमान: हिंदी (Hindi)' : 'Current: English'),
+            title: Text(isHi ? 'भाषा बदलें' : 'Change Language', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            subtitle: Text(isHi ? 'वर्तमान: हिंदी' : 'Current: English'),
             trailing: Switch(
               value: isHi,
               activeThumbColor: GBColors.primary,
@@ -1114,7 +1114,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: ListTile(
             leading: const Icon(Icons.access_time_outlined, color: GBColors.primary),
-            title: Text(isHi ? 'दुकान खुलने का समय (Operating Hours)' : 'Store Operating Hours', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            title: Text(isHi ? 'दुकान खुलने का समय' : 'Store Operating Hours', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             subtitle: Text(isHi ? 'सुबह 7:00 बजे से रात 9:00 बजे' : 'Daily 7:00 AM - 9:00 PM'),
             trailing: const Icon(Icons.chevron_right, color: Colors.grey),
             onTap: () {
@@ -1130,8 +1130,8 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: ListTile(
             leading: const Icon(Icons.location_on_outlined, color: GBColors.primary),
-            title: Text(isHi ? 'लैंडमार्क व स्थान अपडेट (Location / Landmark)' : 'Landmark & Location Updates', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text('${state.myStore?.village ?? "Minapur"}, ${state.myStore?.district ?? "Muzaffarpur"}'),
+            title: Text(isHi ? 'स्थान व लैंडमार्क अपडेट' : 'Landmark & Location Updates', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            subtitle: Text('${state.myStore?.village ?? (isHi ? "स्थान दर्ज नहीं" : "No location set")}${state.myStore?.district != null && state.myStore!.district.isNotEmpty ? ", " + state.myStore!.district : ""}'),
             trailing: const Icon(Icons.chevron_right, color: Colors.grey),
             onTap: () {
               Navigator.of(context).push(
@@ -1147,7 +1147,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: ListTile(
             leading: const Icon(Icons.headset_mic_outlined, color: GBColors.primary),
-            title: Text(isHi ? 'एडमिन / सहायता हेल्पलाइन (Contact Support)' : 'Contact Admin / Support', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            title: Text(isHi ? 'एडमिन / सहायता हेल्पलाइन' : 'Contact Admin / Support', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             subtitle: const Text('+91 98000 00000'),
             trailing: const Icon(Icons.phone, color: GBColors.primary),
             onTap: () async {
@@ -1166,7 +1166,7 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
           ),
           icon: const Icon(Icons.logout, color: Colors.white),
           label: Text(
-            isHi ? 'लॉगआउट करें (Logout)' : 'Logout',
+            isHi ? 'लॉगआउट करें' : 'Logout',
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           onPressed: () {

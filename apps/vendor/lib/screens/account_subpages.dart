@@ -82,6 +82,17 @@ class _VendorPersonalProfileScreenState extends State<VendorPersonalProfileScree
                     if (state.myStore != null) {
                       final updated = state.myStore!.copyWith(ownerName: _nameCtrl.text.trim());
                       state.updateStore(updated);
+                      await state.onboardStore({
+                        'shop_name': updated.shopName,
+                        'owner_name': _nameCtrl.text.trim(),
+                        'category': updated.category,
+                        'latitude': updated.latitude,
+                        'longitude': updated.longitude,
+                        'village': updated.village,
+                        'landmark': updated.landmark,
+                        'block': updated.block,
+                        'district': updated.district,
+                      });
                     }
                     setState(() => _isSaving = false);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -178,6 +189,17 @@ class _VendorMyStoreScreenState extends State<VendorMyStoreScreen> {
                         category: _category,
                       );
                       state.updateStore(updated);
+                      await state.onboardStore({
+                        'shop_name': _shopNameCtrl.text.trim(),
+                        'owner_name': updated.ownerName,
+                        'category': _category,
+                        'latitude': updated.latitude,
+                        'longitude': updated.longitude,
+                        'village': updated.village,
+                        'landmark': updated.landmark,
+                        'block': updated.block,
+                        'district': updated.district,
+                      });
                     }
                     setState(() => _isSaving = false);
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -215,8 +237,8 @@ class _VendorStoreLocationScreenState extends State<VendorStoreLocationScreen> {
     final state = VendorStateProvider.of(context);
     _villageCtrl.text = state.myStore?.village ?? '';
     _landmarkCtrl.text = state.myStore?.landmark ?? '';
-    _blockCtrl.text = state.myStore?.block ?? 'Minapur';
-    _districtCtrl.text = state.myStore?.district ?? 'Muzaffarpur';
+    _blockCtrl.text = state.myStore?.block ?? '';
+    _districtCtrl.text = state.myStore?.district ?? '';
   }
 
   @override
@@ -232,8 +254,8 @@ class _VendorStoreLocationScreenState extends State<VendorStoreLocationScreen> {
   Widget build(BuildContext context) {
     final state = VendorStateProvider.of(context);
     final isHi = state.isHindi;
-    final lat = state.myStore?.latitude ?? 26.2230;
-    final lng = state.myStore?.longitude ?? 85.3520;
+    final lat = state.myStore?.latitude ?? 0.0;
+    final lng = state.myStore?.longitude ?? 0.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -287,7 +309,7 @@ class _VendorStoreLocationScreenState extends State<VendorStoreLocationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(isHi ? 'प्रखंड (Block)' : 'Block', style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(isHi ? 'प्रखंड' : 'Block', style: const TextStyle(fontWeight: FontWeight.w700)),
                     const SizedBox(height: 6),
                     TextField(controller: _blockCtrl, decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
                   ],
@@ -298,7 +320,7 @@ class _VendorStoreLocationScreenState extends State<VendorStoreLocationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(isHi ? 'जिला (District)' : 'District', style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(isHi ? 'जिला' : 'District', style: const TextStyle(fontWeight: FontWeight.w700)),
                     const SizedBox(height: 6),
                     TextField(controller: _districtCtrl, decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)))),
                   ],
@@ -309,7 +331,7 @@ class _VendorStoreLocationScreenState extends State<VendorStoreLocationScreen> {
           const SizedBox(height: 24),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary, padding: const EdgeInsets.symmetric(vertical: 12)),
-            onPressed: () {
+            onPressed: () async {
               if (state.myStore != null) {
                 final updated = state.myStore!.copyWith(
                   village: _villageCtrl.text.trim(),
@@ -318,7 +340,19 @@ class _VendorStoreLocationScreenState extends State<VendorStoreLocationScreen> {
                   district: _districtCtrl.text.trim(),
                 );
                 state.updateStore(updated);
+                await state.onboardStore({
+                  'shop_name': updated.shopName,
+                  'owner_name': updated.ownerName,
+                  'category': updated.category,
+                  'latitude': updated.latitude,
+                  'longitude': updated.longitude,
+                  'village': _villageCtrl.text.trim(),
+                  'landmark': _landmarkCtrl.text.trim(),
+                  'block': _blockCtrl.text.trim(),
+                  'district': _districtCtrl.text.trim(),
+                });
               }
+              if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(isHi ? 'स्थान पता अपडेट हो गया' : 'Location address updated'), backgroundColor: GBColors.success),
               );
@@ -373,7 +407,7 @@ class VendorBusinessVerificationScreen extends StatelessWidget {
                       Text(
                         isApproved
                             ? (isHi ? '✓ सुपर एडमिन द्वारा सत्यापित दुकान' : '✓ Verified Vendor Account')
-                            : (isHi ? 'सत्यापन समीक्षाधीन (Under Review)' : 'Pending Verification Review'),
+                            : (isHi ? 'सत्यापन समीक्षाधीन' : 'Pending Verification Review'),
                         style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 15,
@@ -492,7 +526,7 @@ class _VendorBankPayoutScreenState extends State<VendorBankPayoutScreen> {
           ),
           const SizedBox(height: 20),
 
-          Text(isHi ? 'प्राथमिक यूपीआई आईडी (UPI ID) *' : 'Primary UPI ID for Payouts *', style: const TextStyle(fontWeight: FontWeight.w700)),
+          Text(isHi ? 'प्राथमिक यूपीआई आईडी *' : 'Primary UPI ID for Payouts *', style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
           TextField(
             controller: _upiCtrl,
@@ -528,7 +562,7 @@ class _VendorBankPayoutScreenState extends State<VendorBankPayoutScreen> {
             controller: _ifscCtrl,
             textCapitalization: TextCapitalization.characters,
             decoration: InputDecoration(
-              labelText: isHi ? 'आईएफएससी कोड (IFSC)' : 'IFSC Code',
+              labelText: isHi ? 'आईएफएससी कोड' : 'IFSC Code',
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
@@ -579,7 +613,7 @@ class VendorOperatingHoursScreen extends StatefulWidget {
 class _VendorOperatingHoursScreenState extends State<VendorOperatingHoursScreen> {
   String _openingTime = '07:00 AM';
   String _closingTime = '09:00 PM';
-  String _prepTime = '5-10 मिनट (Minutes)';
+  String _prepTime = '5-10 मिनट';
 
   @override
   Widget build(BuildContext context) {

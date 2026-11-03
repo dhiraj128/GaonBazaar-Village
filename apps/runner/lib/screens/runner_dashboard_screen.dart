@@ -1,3 +1,4 @@
+import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
@@ -48,9 +49,26 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
   void _setupGpsTracking(RunnerAppState state) {
     _gpsTimer?.cancel();
     // PDF Page 3: Duty ON triggers background GPS tracking every 10s
-    _gpsTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+    _gpsTimer = Timer.periodic(const Duration(seconds: 10), (timer) async {
       if (state.isOnline) {
-        state.sendLocationUpdate(26.2230, 85.3520);
+        try {
+          final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+          if (serviceEnabled) {
+            final permission = await Geolocator.checkPermission();
+            if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+              final pos = await Geolocator.getCurrentPosition(
+                locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: Duration(seconds: 5)),
+              );
+              state.sendLocationUpdate(pos.latitude, pos.longitude);
+              return;
+            }
+          }
+        } catch (_) {}
+        final profLat = (state.runnerProfile?['latitude'] as num?)?.toDouble();
+        final profLng = (state.runnerProfile?['longitude'] as num?)?.toDouble();
+        if (profLat != null && profLng != null && profLat != 0.0 && profLng != 0.0) {
+          state.sendLocationUpdate(profLat, profLng);
+        }
       }
     });
   }
@@ -261,7 +279,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                     keyboardType: TextInputType.number,
                     maxLength: 6,
                     decoration: InputDecoration(
-                      labelText: isHi ? 'सुरक्षा ओटीपी (Security OTP)' : 'Security OTP',
+                      labelText: isHi ? 'सुरक्षा ओटीपी' : 'Security OTP',
                       hintText: '123456',
                       prefixIcon: const Icon(Icons.lock_clock_outlined),
                       border: const OutlineInputBorder(),
@@ -415,7 +433,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
           children: [
             const Icon(Icons.emergency, color: Colors.red),
             const SizedBox(width: 8),
-            Text(isHi ? 'आपातकालीन सहायता (Emergency)' : 'Emergency Partner Support'),
+            Text(isHi ? 'आपातकालीन सहायता' : 'Emergency Partner Support'),
           ],
         ),
         content: Column(
@@ -429,7 +447,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
             const SizedBox(height: 14),
             ListTile(
               leading: const Icon(Icons.build_circle_outlined, color: Colors.orange),
-              title: Text(isHi ? 'वाहन खराबी (Bike Breakdown)' : 'Bike / Vehicle Breakdown'),
+              title: Text(isHi ? 'वाहन खराबी' : 'Bike / Vehicle Breakdown'),
               onTap: () {
                 Navigator.of(ctx).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -439,7 +457,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.local_hospital_outlined, color: Colors.red),
-              title: Text(isHi ? 'दुर्घटना सहायता (Accident Emergency)' : 'Accident Emergency Support'),
+              title: Text(isHi ? 'दुर्घटना सहायता' : 'Accident Emergency Support'),
               onTap: () {
                 Navigator.of(ctx).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -514,7 +532,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
               Text(
                 state.runnerProfile?['village'] != null
                     ? '${state.runnerProfile!['village']}, ${state.runnerProfile!['district'] ?? ""}'
-                    : (isHi ? 'पायलट ज़ोन: मीनापुर क्लस्टर' : 'Pilot Zone: Minapur Cluster'),
+                    : (isHi ? 'सक्रिय डिलीवरी ज़ोन' : 'Active Delivery Zone'),
                 style: const TextStyle(fontSize: 11, color: Colors.grey),
               ),
             ],
@@ -567,22 +585,22 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
             NavigationDestination(
               icon: const Icon(Icons.explore_outlined),
               selectedIcon: const Icon(Icons.explore),
-              label: isHi ? 'मिशन (Missions)' : 'Missions',
+              label: isHi ? 'मिशन' : 'Missions',
             ),
             NavigationDestination(
               icon: const Icon(Icons.local_shipping_outlined),
               selectedIcon: const Icon(Icons.local_shipping),
-              label: isHi ? 'सक्रिय डिलीवरी (Run)' : 'Active Run',
+              label: isHi ? 'सक्रिय डिलीवरी' : 'Active Run',
             ),
             NavigationDestination(
               icon: const Icon(Icons.account_balance_wallet_outlined),
               selectedIcon: const Icon(Icons.account_balance_wallet),
-              label: isHi ? 'बहीखाता (Ledger)' : 'Ledger',
+              label: isHi ? 'बहीखाता' : 'Ledger',
             ),
             NavigationDestination(
               icon: const Icon(Icons.person_outline),
               selectedIcon: const Icon(Icons.person),
-              label: isHi ? 'सेटिंग्स (Profile)' : 'Profile & Settings',
+              label: isHi ? 'प्रोफ़ाइल और सेटिंग्स' : 'Profile & Settings',
             ),
           ],
         ),
@@ -644,7 +662,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        state.isOnline ? (isHi ? 'ड्यूटी चालू (DUTY ON)' : 'DUTY ON (ONLINE)') : (isHi ? 'ड्यूटी बंद (DUTY OFF)' : 'DUTY OFF (OFFLINE)'),
+                        state.isOnline ? (isHi ? 'ड्यूटी चालू' : 'DUTY ON') : (isHi ? 'ड्यूटी बंद' : 'DUTY OFF'),
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 17),
                       ),
                       Text(
@@ -661,7 +679,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                 scale: 1.2,
                 child: Switch(
                   value: state.isOnline,
-                  activeColor: Colors.lightGreenAccent,
+                  activeThumbColor: Colors.lightGreenAccent,
                   activeTrackColor: Colors.white24,
                   inactiveThumbColor: Colors.grey.shade400,
                   inactiveTrackColor: Colors.white12,
@@ -697,7 +715,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                     const Icon(Icons.currency_rupee, color: GBColors.primary, size: 22),
                     const SizedBox(height: 6),
                     Text(
-                      isHi ? 'आज की कमाई (Earnings)' : 'Today\'s Earnings',
+                      isHi ? 'आज की कमाई' : 'Today\'s Earnings',
                       style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 2),
@@ -724,7 +742,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                     const Icon(Icons.payments_outlined, color: Colors.orange, size: 22),
                     const SizedBox(height: 6),
                     Text(
-                      isHi ? 'हाथ में नकद (COD in Hand)' : 'Cash in Hand (COD)',
+                      isHi ? 'हाथ में नकद राशि' : 'Cash in Hand (COD)',
                       style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 2),
@@ -820,7 +838,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
   Widget _buildMissionAlertCard(GBOrder order, RunnerAppState state, bool isHi) {
     final displayId = order.id.length > 8 ? order.id.substring(0, 8) : order.id;
     final payout = (order.runnerPayout != null && order.runnerPayout! > 0) ? order.runnerPayout! : 14.0;
-    final storeName = order.storeName.isNotEmpty ? order.storeName : (isHi ? 'शर्मा किराना स्टोर' : 'Sharma Kirana');
+    final storeName = order.storeName.isNotEmpty ? order.storeName : (isHi ? 'गाँव बाज़ार स्टोर' : 'GaonBazaar Store');
     final customerAddress = order.deliveryAddress.isNotEmpty ? order.deliveryAddress : (isHi ? 'ग्राम पंचायत क्षेत्र' : 'Gram Panchayat Area');
     final pickupDistance = '0.6 km';
     final dropDistance = '${(order.distanceKm != null && order.distanceKm! > 0) ? order.distanceKm! : 1.2} km';
@@ -918,7 +936,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                 style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
                 icon: const Icon(Icons.check, color: Colors.white),
                 label: Text(
-                  isHi ? 'मिशन स्वीकार करें (Accept Mission)' : 'Accept Mission',
+                  isHi ? 'मिशन स्वीकार करें' : 'Accept Mission',
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 onPressed: _isActing ? null : () => _handleAction(state, order.id, 'ACCEPT'),
@@ -1015,10 +1033,10 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                   Text(isHi ? 'दुकान का विवरण (Pickup Store):' : 'Pickup Store Details:', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
                   const SizedBox(height: 6),
                   Text(
-                    order.storeName.isNotEmpty ? order.storeName : (isHi ? 'शर्मा किराना स्टोर' : 'Sharma Kirana Store'),
+                    order.storeName.isNotEmpty ? order.storeName : (isHi ? 'गाँव बाज़ार स्टोर' : 'GaonBazaar Store'),
                     style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
                   ),
-                  Text(order.storeAddress ?? 'Minapur, Muzaffarpur'),
+                  Text(order.storeAddress ?? (isHi ? 'दुकानदार पता' : 'Store Address')),
                   const Divider(height: 20),
 
                   // Runner's 4-Digit Handover Code
@@ -1047,11 +1065,11 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                       Expanded(
                         child: OutlinedButton.icon(
                           icon: const Icon(Icons.navigation),
-                          label: Text(isHi ? 'नेविगेट (Google Maps)' : 'Navigate'),
+                          label: Text(isHi ? 'नेविगेट करें' : 'Navigate'),
                           onPressed: () async {
-                            final lat = order.storeLatitude ?? 26.2230;
-                            final lng = order.storeLongitude ?? 85.3520;
-                            final url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+                            final url = (order.storeLatitude != null && order.storeLongitude != null)
+                                ? Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${order.storeLatitude},${order.storeLongitude}')
+                                : Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(order.storeAddress ?? order.storeName)}');
                             if (await canLaunchUrl(url)) await launchUrl(url);
                           },
                         ),
@@ -1061,7 +1079,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
                           icon: const Icon(Icons.check),
-                          label: Text(isHi ? 'सामान प्राप्त हुआ (Picked Up)' : 'Order Picked Up'),
+                          label: Text(isHi ? 'सामान प्राप्त हुआ' : 'Order Picked Up'),
                           onPressed: _isActing ? null : () => _handleAction(state, order.id, 'PICKUP'),
                         ),
                       ),
@@ -1083,7 +1101,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                   Text(isHi ? 'ग्राहक लैंडमार्क विवरण (Drop-off):' : 'Customer Drop-off Details:', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
                   const SizedBox(height: 6),
                   Text(
-                    order.deliveryAddress.isNotEmpty ? order.deliveryAddress : (isHi ? 'ग्राम पंचायत क्षेत्र, मीनापुर' : 'Gram Panchayat Area, Minapur'),
+                    order.deliveryAddress.isNotEmpty ? order.deliveryAddress : (isHi ? 'ग्राम पंचायत क्षेत्र' : 'Gram Panchayat Area'),
                     style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
                   ),
                   const Divider(height: 20),
@@ -1094,11 +1112,11 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                     height: 44,
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.navigation, color: GBColors.primary),
-                      label: Text(isHi ? 'ग्राहक पते पर नेविगेट करें (Google Maps)' : 'Navigate to Customer Coordinates'),
+                      label: Text(isHi ? 'ग्राहक पते पर नेविगेट करें' : 'Navigate to Customer Coordinates'),
                       onPressed: () async {
-                        final lat = order.deliveryLatitude ?? 26.2250;
-                        final lng = order.deliveryLongitude ?? 85.3540;
-                        final url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
+                        final url = (order.deliveryLatitude != null && order.deliveryLongitude != null)
+                            ? Uri.parse('https://www.google.com/maps/dir/?api=1&destination=${order.deliveryLatitude},${order.deliveryLongitude}')
+                            : Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(order.deliveryAddress)}');
                         if (await canLaunchUrl(url)) await launchUrl(url);
                       },
                     ),
@@ -1113,7 +1131,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                       style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
                       icon: const Icon(Icons.verified),
                       label: Text(
-                        isHi ? 'डिलीवरी पूर्ण करें (4-अंकीय OTP)' : 'Complete Delivery (4-digit OTP)',
+                        isHi ? 'डिलीवरी पूर्ण करें' : 'Complete Delivery',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                       onPressed: () => _showDeliveryOtpDialog(state, order, isHi),
@@ -1137,13 +1155,13 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
     final todayEarnings = (finances?['today_earnings'] as num?)?.toDouble() ?? 0.0;
     final totalCodCollected = (finances?['cod_collected'] as num?)?.toDouble() ?? (finances?['cash_in_hand'] as num?)?.toDouble() ?? 0.0;
     final trips = state.trips;
-    final hubName = state.runnerProfile?['village'] != null ? '${state.runnerProfile!['village']} Hub' : 'Minapur Local Hub';
+    final hubName = (state.runnerProfile?['village'] != null && state.runnerProfile!['village'].toString().isNotEmpty) ? '${state.runnerProfile!['village']} Hub' : (isHi ? 'गाँव बाज़ार स्थानीय हब' : 'Local Hub');
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Text(
-          isHi ? 'डिलीवरी साथी बहीखाता (Ledger)' : 'Delivery Partner Ledger',
+          isHi ? 'डिलीवरी साथी बहीखाता' : 'Delivery Partner Ledger',
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
         ),
         const SizedBox(height: 6),
@@ -1165,7 +1183,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isHi ? 'आज की कुल कमाई (Net Payout):' : 'Today\'s Earnings (Net Payout):',
+                isHi ? 'आज की कुल कमाई:' : 'Today\'s Earnings (Net Payout):',
                 style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
               ),
               Text(
@@ -1192,7 +1210,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    isHi ? 'एकत्रित नकद देयता (Total COD Collected):' : 'Total COD Collected Liability:',
+                    isHi ? 'एकत्रित नकद देयता:' : 'Total COD Collected Liability:',
                     style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
                   ),
                   Text(
@@ -1215,7 +1233,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700),
                   icon: const Icon(Icons.account_balance_wallet, color: Colors.white),
                   label: Text(
-                    isHi ? 'हब में नकद जमा करें (Deposit Cash)' : 'Deposit Cash at Local Hub',
+                    isHi ? 'हब में नकद जमा करें' : 'Deposit Cash at Local Hub',
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                   onPressed: () {
@@ -1317,7 +1335,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        state.runnerProfile?['full_name'] as String? ?? state.currentUser?.name ?? (isHi ? 'अमित कुमार' : 'Amit Kumar'),
+                        state.runnerProfile?['full_name'] as String? ?? state.currentUser?.name ?? (isHi ? 'डिलीवरी साथी' : 'Delivery Partner'),
                         style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
                       ),
                       const SizedBox(height: 2),
@@ -1351,8 +1369,8 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: ListTile(
             leading: const Icon(Icons.language_outlined, color: GBColors.primary),
-            title: Text(isHi ? 'भाषा बदलें (Language Toggle)' : 'Change Language', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text(isHi ? 'वर्तमान: हिंदी (Hindi)' : 'Current: English'),
+            title: Text(isHi ? 'भाषा बदलें' : 'Change Language', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            subtitle: Text(isHi ? 'वर्तमान: हिंदी' : 'Current: English'),
             trailing: Switch(
               value: isHi,
               activeThumbColor: GBColors.primary,
@@ -1394,8 +1412,8 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: ListTile(
             leading: const Icon(Icons.two_wheeler_outlined, color: GBColors.primary),
-            title: Text(isHi ? 'वाहन विवरण (Bicycle to Motorcycle)' : 'Vehicle Details (Upgrade Vehicle)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text('${state.runnerProfile?["vehicle_type"] ?? "Motorcycle"} (${state.runnerProfile?["vehicle_number"] ?? "BR06AB1234"})'),
+            title: Text(isHi ? 'वाहन विवरण' : 'Vehicle Details', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            subtitle: Text('${state.runnerProfile?["vehicle_type"] ?? "Motorcycle"} ${state.runnerProfile?["vehicle_number"] != null ? "(" + state.runnerProfile!["vehicle_number"] + ")" : ""}'),
             trailing: const Icon(Icons.chevron_right, color: Colors.grey),
             onTap: () {
               Navigator.of(context).push(
@@ -1411,7 +1429,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           child: ListTile(
             leading: const Icon(Icons.emergency, color: Colors.red),
-            title: Text(isHi ? 'आपातकालीन सहायता टिकट (Breakdown / Accident)' : 'Raise Emergency Tickets', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            title: Text(isHi ? 'आपातकालीन सहायता टिकट' : 'Raise Emergency Tickets', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             subtitle: const Text('+91 98000 00000'),
             trailing: const Icon(Icons.phone, color: Colors.red),
             onTap: () => _showEmergencySupportDialog(isHi),
@@ -1427,7 +1445,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
           ),
           icon: const Icon(Icons.logout, color: Colors.white),
           label: Text(
-            isHi ? 'लॉगआउट करें (Logout)' : 'Logout',
+            isHi ? 'लॉगआउट करें' : 'Logout',
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           onPressed: () {

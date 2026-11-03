@@ -579,6 +579,16 @@ class RunnerOnboardRequest(BaseModel):
     vehicle_number: Optional[str] = None
     driving_licence_no: Optional[str] = None
     upi_id: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    father_name: Optional[str] = None
+    emergency_contact: Optional[str] = None
+    aadhaar_front_url: Optional[str] = None
+    aadhaar_back_url: Optional[str] = None
+    selfie_url: Optional[str] = None
+    account_holder_name: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc_code: Optional[str] = None
 
 @router.post("/runner/onboard")
 async def onboard_runner(
@@ -601,6 +611,10 @@ async def onboard_runner(
         runner.driving_licence_no = data.driving_licence_no
         if clean_upi is not None or data.upi_id is not None:
             runner.upi_id = clean_upi
+        if data.latitude is not None:
+            runner.current_latitude = data.latitude
+        if data.longitude is not None:
+            runner.current_longitude = data.longitude
         runner.is_approved = False # Under Admin review
     else:
         runner = Runner(
@@ -612,8 +626,8 @@ async def onboard_runner(
             upi_id=clean_upi,
             is_approved=False,
             is_online=False,
-            current_latitude=26.2230,
-            current_longitude=85.3520
+            current_latitude=data.latitude,
+            current_longitude=data.longitude
         )
         db.add(runner)
 

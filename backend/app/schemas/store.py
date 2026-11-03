@@ -64,8 +64,8 @@ class StoreRegistrationRequest(BaseModel):
     longitude: float
     village: str
     landmark: Optional[str] = None
-    block: str = "Minapur"
-    district: str = "Muzaffarpur"
+    block: Optional[str] = "Rural Hub"
+    district: Optional[str] = "District"
     banner_url: Optional[str] = None
     upi_id: Optional[str] = None
     account_holder_name: Optional[str] = None

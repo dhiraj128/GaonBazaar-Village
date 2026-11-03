@@ -145,10 +145,10 @@ class _RunnerVehicleDetailsScreenState extends State<RunnerVehicleDetailsScreen>
             value: ['Motorcycle', 'Scooter', 'Bicycle', 'Electric Cycle'].contains(_vehicleType) ? _vehicleType : 'Motorcycle',
             decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
             items: [
-              DropdownMenuItem(value: 'Motorcycle', child: Text(isHi ? 'मोटरसाइकिल (Motorcycle)' : 'Motorcycle')),
-              DropdownMenuItem(value: 'Scooter', child: Text(isHi ? 'स्कूटर (Scooter)' : 'Scooter')),
-              DropdownMenuItem(value: 'Bicycle', child: Text(isHi ? 'साइकिल (Bicycle)' : 'Bicycle')),
-              DropdownMenuItem(value: 'Electric Cycle', child: Text(isHi ? 'इलेक्ट्रिक साइकिल (E-Cycle)' : 'Electric Cycle')),
+              DropdownMenuItem(value: 'Motorcycle', child: Text(isHi ? 'मोटरसाइकिल' : 'Motorcycle')),
+              DropdownMenuItem(value: 'Scooter', child: Text(isHi ? 'स्कूटर' : 'Scooter')),
+              DropdownMenuItem(value: 'Bicycle', child: Text(isHi ? 'साइकिल' : 'Bicycle')),
+              DropdownMenuItem(value: 'Electric Cycle', child: Text(isHi ? 'इलेक्ट्रिक साइकिल' : 'Electric Cycle')),
             ],
             onChanged: (val) {
               if (val != null) setState(() => _vehicleType = val);
@@ -156,7 +156,7 @@ class _RunnerVehicleDetailsScreenState extends State<RunnerVehicleDetailsScreen>
           ),
           const SizedBox(height: 16),
           if (isMotorized) ...[
-            Text(isHi ? 'गाड़ी नंबर (Vehicle Number) *' : 'Vehicle Number *', style: const TextStyle(fontWeight: FontWeight.w700)),
+            Text(isHi ? 'गाड़ी नंबर *' : 'Vehicle Number *', style: const TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
             TextField(
               controller: _vehNoCtrl,
@@ -164,7 +164,7 @@ class _RunnerVehicleDetailsScreenState extends State<RunnerVehicleDetailsScreen>
               decoration: InputDecoration(hintText: 'BR-06-AB-1234', border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
             ),
             const SizedBox(height: 16),
-            Text(isHi ? 'ड्राइविंग लाइसेंस (DL) नंबर *' : 'Driving Licence Number *', style: const TextStyle(fontWeight: FontWeight.w700)),
+            Text(isHi ? 'ड्राइविंग लाइसेंस नंबर *' : 'Driving Licence Number *', style: const TextStyle(fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
             TextField(
               controller: _dlCtrl,
@@ -248,8 +248,8 @@ class RunnerIdentityDocumentsScreen extends StatelessWidget {
                     children: [
                       Text(
                         isApproved
-                            ? (isHi ? '✓ सत्यापित डिलीवरी साथी (Verified)' : '✓ Verified Delivery Partner')
-                            : (isHi ? 'दस्तावेज समीक्षाधीन (Under Review)' : 'Documents Under Review'),
+                            ? (isHi ? '✓ सत्यापित डिलीवरी साथी' : '✓ Verified Delivery Partner')
+                            : (isHi ? 'दस्तावेज समीक्षाधीन' : 'Documents Under Review'),
                         style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 15,
@@ -281,7 +281,7 @@ class RunnerIdentityDocumentsScreen extends StatelessWidget {
           ListTile(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: Colors.grey.shade300)),
             leading: const Icon(Icons.credit_card_outlined, color: GBColors.secondary),
-            title: Text(isHi ? 'ड्राइविंग लाइसेंस (DL)' : 'Driving License'),
+            title: Text(isHi ? 'ड्राइविंग लाइसेंस' : 'Driving License'),
             subtitle: Text(state.runnerProfile?['dl_number'] ?? 'EXEMPT-BICYCLE'),
             trailing: Chip(
               label: Text(isApproved ? 'Approved' : 'Pending', style: TextStyle(fontSize: 11, color: isApproved ? Colors.green : Colors.amber.shade900)),
@@ -311,7 +311,7 @@ class _RunnerDeliveryAreaScreenState extends State<RunnerDeliveryAreaScreen> {
   void initState() {
     super.initState();
     final state = RunnerStateProvider.of(context);
-    _areaCtrl.text = state.runnerProfile?['village'] ?? 'Chaturshi, Minapur Cluster';
+    _areaCtrl.text = state.runnerProfile?['village'] ?? '';
   }
 
   @override
@@ -366,7 +366,11 @@ class _RunnerDeliveryAreaScreenState extends State<RunnerDeliveryAreaScreen> {
           const SizedBox(height: 24),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary, padding: const EdgeInsets.symmetric(vertical: 12)),
-            onPressed: () {
+            onPressed: () async {
+              await state.updateRunnerProfile({
+                'village': _areaCtrl.text.trim(),
+              });
+              if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(isHi ? 'कार्य क्षेत्र सुरक्षित हो गया' : 'Delivery area saved'), backgroundColor: GBColors.success),
               );
@@ -456,7 +460,7 @@ class _RunnerBankPayoutScreenState extends State<RunnerBankPayoutScreen> {
           ),
           const SizedBox(height: 20),
 
-          Text(isHi ? 'व्यक्तिगत यूपीआई आईडी (UPI ID) *' : 'Personal UPI ID for Payouts *', style: const TextStyle(fontWeight: FontWeight.w700)),
+          Text(isHi ? 'व्यक्तिगत यूपीआई आईडी *' : 'Personal UPI ID for Payouts *', style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
           TextField(
             controller: _upiCtrl,
