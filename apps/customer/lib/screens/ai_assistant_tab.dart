@@ -45,7 +45,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> with SingleTickerProvid
       'name_hi': 'ताज़ा चक्की आटा',
       'unit': '1 kg',
       'price': 38.0,
-      'image_url': 'https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg',
+      'image_url': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80',
       'keywords': ['atta', 'aata', 'flour', 'wheat', 'gehu', 'आटा', 'चक्की']
     },
     {
@@ -54,7 +54,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> with SingleTickerProvid
       'name_hi': 'कच्ची घानी सरसों तेल',
       'unit': '1 L',
       'price': 142.0,
-      'image_url': 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Dune_Aura_Mustard_oil_bottle_picture.jpg',
+      'image_url': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80',
       'keywords': ['mustard', 'oil', 'tel', 'sarson', 'सरसों', 'तेल']
     },
     {
@@ -81,7 +81,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> with SingleTickerProvid
       'name_hi': 'देशी लाल टमाटर',
       'unit': '1 kg',
       'price': 28.0,
-      'image_url': 'https://images.unsplash.com/photo-1546470427-227c7369a941?w=400',
+      'image_url': 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80',
       'keywords': ['tomato', 'tamatar', 'टमाटर']
     },
     {
@@ -108,8 +108,35 @@ class _AiAssistantTabState extends State<AiAssistantTab> with SingleTickerProvid
       'name_hi': '९ वॉट एलईडी बल्ब',
       'unit': '1 piece',
       'price': 85.0,
-      'image_url': 'https://upload.wikimedia.org/wikipedia/commons/4/4c/LED_bulb_800_Lm_Soft_white_2024.agr.jpg',
+      'image_url': 'https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=500&q=80',
       'keywords': ['bulb', 'led', 'light', 'बल्ब', 'बिजली']
+    },
+    {
+      'id': 'cat_bath_soap',
+      'name_en': 'Dettol / Lifebuoy Bath Soap',
+      'name_hi': 'नहाने का साबुन (डेटॉल/लाइफ़बॉय)',
+      'unit': '75 g',
+      'price': 36.0,
+      'image_url': 'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80',
+      'keywords': ['soap', 'bath', 'dettol', 'lifebuoy', 'साबुन', 'डेटॉल']
+    },
+    {
+      'id': 'cat_toothpaste',
+      'name_en': 'Colgate Dental Toothpaste',
+      'name_hi': 'कोलगेट टूथपेस्ट / मंजन',
+      'unit': '100 g',
+      'price': 58.0,
+      'image_url': 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&q=80',
+      'keywords': ['paste', 'toothpaste', 'colgate', 'dant', 'कोलगेट', 'पेस्ट']
+    },
+    {
+      'id': 'cat_notebook',
+      'name_en': 'School Notebook Copy',
+      'name_hi': 'क्लासमेट कॉपी / नोटबुक',
+      'unit': '1 book',
+      'price': 45.0,
+      'image_url': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80',
+      'keywords': ['copy', 'notebook', 'book', 'stationery', 'कॉपी', 'किताब']
     },
   ];
 
@@ -277,7 +304,7 @@ class _AiAssistantTabState extends State<AiAssistantTab> with SingleTickerProvid
         category: (matchedRaw['category'] as String?) ?? 'Grocery',
         unit: (matchedRaw['unit'] as String?) ?? '1 unit',
         price: ((matchedRaw['price'] ?? matchedRaw['suggested_price'] ?? 40.0) as num).toDouble(),
-        imageUrl: (matchedRaw['image_url'] as String?) ?? 'https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg',
+        imageUrl: (matchedRaw['image_url'] as String?) ?? 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80',
       );
     }
 

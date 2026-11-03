@@ -85,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error selecting photo: $e'), backgroundColor: GBColors.error),
+          SnackBar(content: Text(loc.isHindi ? 'फोटो चुनने में समस्या हुई। कृपया पुनः प्रयास करें।' : 'Could not select photo. Please try again.'), backgroundColor: GBColors.error),
         );
       }
     }

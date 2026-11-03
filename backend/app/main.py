@@ -48,6 +48,12 @@ async def init_db_and_seed():
             "ALTER TABLE users ADD COLUMN primary_panchayat VARCHAR(100);",
             "ALTER TABLE orders ADD COLUMN payment_order_id VARCHAR(100);",
             "ALTER TABLE orders ADD COLUMN transaction_id VARCHAR(100);",
+            "ALTER TABLE support_tickets ADD COLUMN category VARCHAR(50) DEFAULT 'GENERAL_HELP';",
+            "ALTER TABLE support_tickets ADD COLUMN affected_product_id VARCHAR(50);",
+            "ALTER TABLE support_tickets ADD COLUMN attachment_url TEXT;",
+            "ALTER TABLE support_tickets ADD COLUMN resolution_notes TEXT;",
+            "ALTER TABLE support_tickets ADD COLUMN resolved_at TIMESTAMP WITH TIME ZONE;",
+            "ALTER TABLE support_tickets ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE;",
         ]:
             try:
                 await conn.execute(text(col_stmt))
@@ -56,11 +62,16 @@ async def init_db_and_seed():
 
         # Update verified product image URLs in existing database rows
         url_updates = [
-            ("cat_atta", "https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg"),
-            ("cat_mustard_oil", "https://upload.wikimedia.org/wikipedia/commons/e/e1/Dune_Aura_Mustard_oil_bottle_picture.jpg"),
-            ("cat_led_bulb", "https://upload.wikimedia.org/wikipedia/commons/4/4c/LED_bulb_800_Lm_Soft_white_2024.agr.jpg"),
-            ("cat_soy_oil", "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400"),
-            ("cat_moong_dal", "https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400"),
+            ("cat_mustard_oil", "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"),
+            ("cat_soy_oil", "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=500&q=80"),
+            ("cat_atta", "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"),
+            ("cat_led_bulb", "https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=500&q=80"),
+            ("cat_tomato", "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80"),
+            ("cat_toor_dal", "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80"),
+            ("cat_moong_dal", "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80"),
+            ("cat_chana_dal", "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=500&q=80"),
+            ("cat_bath_soap", "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80"),
+            ("cat_detergent", "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&q=80"),
         ]
         for cat_id, new_url in url_updates:
             try:
@@ -68,6 +79,7 @@ async def init_db_and_seed():
                     text("UPDATE global_catalog SET image_url = :url WHERE id = :id"),
                     {"url": new_url, "id": cat_id}
                 )
+                # Protect legitimate vendor images: only update if NULL, empty, or one of the deprecated mock URLs
                 await conn.execute(
                     text("""
                         UPDATE store_products 
@@ -79,6 +91,11 @@ async def init_db_and_seed():
                             OR image_url LIKE '%photo-1574323347407-f5e1ad6d020b%' 
                             OR image_url LIKE '%photo-1620916566398-39f1143ab7be%' 
                             OR image_url LIKE '%photo-1507668077129-56e32842fceb%'
+                            OR image_url LIKE '%Dune_Aura%'
+                            OR image_url LIKE '%upload.wikimedia.org%'
+                            OR image_url LIKE '%photo-1546470427-227c7369a941%'
+                            OR image_url LIKE '%photo-1585994192701-f1a505c817ea%'
+                            OR image_url LIKE '%photo-1607006314144-8849b2f67232%'
                           )
                     """),
                     {"url": new_url, "id": cat_id}
@@ -99,7 +116,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 kg",
                     suggested_mrp=45.0,
-                    image_url="https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg",
+                    image_url="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
                     tags="atta,aata,wheat,flour,आटा"
                 ),
                 GlobalCatalogItem(
@@ -119,8 +136,8 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 L",
                     suggested_mrp=155.0,
-                    image_url="https://upload.wikimedia.org/wikipedia/commons/e/e1/Dune_Aura_Mustard_oil_bottle_picture.jpg",
-                    tags="oil,mustard,tel,सरसों तेल"
+                    image_url="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+                    tags="oil,mustard,tel,sarson,सरसों तेल"
                 ),
                 GlobalCatalogItem(
                     id="cat_milk",
@@ -159,7 +176,7 @@ async def init_db_and_seed():
                     category="Vegetables",
                     default_unit="1 kg",
                     suggested_mrp=35.0,
-                    image_url="https://images.unsplash.com/photo-1546470427-227c7369a941?w=400",
+                    image_url="https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80",
                     tags="tomato,tamatar,टमाटर"
                 ),
                 GlobalCatalogItem(
@@ -179,7 +196,7 @@ async def init_db_and_seed():
                     category="Electrical",
                     default_unit="1 piece",
                     suggested_mrp=99.0,
-                    image_url="https://upload.wikimedia.org/wikipedia/commons/4/4c/LED_bulb_800_Lm_Soft_white_2024.agr.jpg",
+                    image_url="https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=500&q=80",
                     tags="bulb,led,light,बल्ब"
                 ),
                 GlobalCatalogItem(
@@ -229,7 +246,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 kg",
                     suggested_mrp=145.0,
-                    image_url="https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400",
+                    image_url="https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80",
                     tags="dal,toor,arhar,दाल"
                 ),
                 GlobalCatalogItem(
@@ -249,7 +266,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 kg",
                     suggested_mrp=120.0,
-                    image_url="https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400",
+                    image_url="https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80",
                     tags="moong,dal,मूंग दाल"
                 ),
                 GlobalCatalogItem(
@@ -389,7 +406,7 @@ async def init_db_and_seed():
                     category="Household",
                     default_unit="1 piece (100g)",
                     suggested_mrp=35.0,
-                    image_url="https://images.unsplash.com/photo-1607006314144-8849b2f67232?w=400",
+                    image_url="https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80",
                     tags="soap,bath,साबुन"
                 ),
                 GlobalCatalogItem(
@@ -399,8 +416,68 @@ async def init_db_and_seed():
                     category="Household",
                     default_unit="1 kg",
                     suggested_mrp=75.0,
-                    image_url="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400",
+                    image_url="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&q=80",
                     tags="detergent,washing,powder,सर्फ"
+                ),
+                GlobalCatalogItem(
+                    id="cat_toothpaste",
+                    name_en="Colgate Strong Teeth Toothpaste",
+                    name_hi="कोलगेट टूथपेस्ट",
+                    category="PersonalCare",
+                    default_unit="100 g",
+                    suggested_mrp=55.0,
+                    image_url="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&q=80",
+                    tags="toothpaste,colgate,dant,मंजन,पेस्ट"
+                ),
+                GlobalCatalogItem(
+                    id="cat_hair_oil",
+                    name_en="Pure Coconut Hair Oil (Nariyal Tel)",
+                    name_hi="शुद्ध नारियल केश तेल",
+                    category="PersonalCare",
+                    default_unit="100 ml",
+                    suggested_mrp=42.0,
+                    image_url="https://images.unsplash.com/photo-1526947425960-945c6e72858f?w=500&q=80",
+                    tags="hair,oil,coconut,nariyal,केश तेल"
+                ),
+                GlobalCatalogItem(
+                    id="cat_notebook",
+                    name_en="Ruled Student Notebook (Copy/Register)",
+                    name_hi="विद्यार्थी रूल कॉपी / रजिस्टर",
+                    category="Stationery",
+                    default_unit="1 piece (120 pages)",
+                    suggested_mrp=35.0,
+                    image_url="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80",
+                    tags="notebook,copy,register,book,कॉपी"
+                ),
+                GlobalCatalogItem(
+                    id="cat_pens",
+                    name_en="Blue Ballpoint Pens (Pack of 5)",
+                    name_hi="नीले बॉल पेन सेट (5 का पैक)",
+                    category="Stationery",
+                    default_unit="1 pack (5 pens)",
+                    suggested_mrp=25.0,
+                    image_url="https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=500&q=80",
+                    tags="pen,ballpen,blue,पेन,कलम"
+                ),
+                GlobalCatalogItem(
+                    id="cat_steel_scrubber",
+                    name_en="Stainless Steel Kitchen Scrubber (Pack of 3)",
+                    name_hi="स्टील बर्तन जूना (3 का पैक)",
+                    category="Kitchen",
+                    default_unit="1 pack (3 pcs)",
+                    suggested_mrp=30.0,
+                    image_url="https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=500&q=80",
+                    tags="scrubber,bartan,steel,जूना"
+                ),
+                GlobalCatalogItem(
+                    id="cat_matches",
+                    name_en="Safety Matchbox Bundle (10 Boxes)",
+                    name_hi="सुरक्षा माचिस बंडल (10 डिब्बी)",
+                    category="General",
+                    default_unit="1 bundle (10 pcs)",
+                    suggested_mrp=20.0,
+                    image_url="https://images.unsplash.com/photo-1517420704952-d9f39e95b43e?w=500&q=80",
+                    tags="matches,matchbox,aag,माचिस"
                 )
         ]
         new_items = [itm for itm in items if itm.id not in existing_item_ids]
@@ -539,15 +616,20 @@ async def init_db_and_seed():
                 ])
             await session.commit()
             
-            # Products for Store 1
+            # Products for Store 1 (General Store offering multiple daily-use categories)
             st1_products = [
-                StoreProduct(store_id="str_01", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=38.0, mrp=45.0, image_url="https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg"),
+                StoreProduct(store_id="str_01", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=38.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"),
                 StoreProduct(store_id="str_01", global_product_id="cat_rice", category="Grocery", unit="1 kg", price=54.0, mrp=65.0, image_url="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400"),
-                StoreProduct(store_id="str_01", global_product_id="cat_mustard_oil", category="Grocery", unit="1 L", price=142.0, mrp=155.0, image_url="https://upload.wikimedia.org/wikipedia/commons/e/e1/Dune_Aura_Mustard_oil_bottle_picture.jpg"),
+                StoreProduct(store_id="str_01", global_product_id="cat_mustard_oil", category="Grocery", unit="1 L", price=142.0, mrp=155.0, image_url="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"),
                 StoreProduct(store_id="str_01", global_product_id="cat_potato", category="Vegetables", unit="1 kg", price=24.0, mrp=30.0, image_url="https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400"),
                 StoreProduct(store_id="str_01", global_product_id="cat_onion", category="Vegetables", unit="1 kg", price=32.0, mrp=40.0, image_url="https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400"),
                 StoreProduct(store_id="str_01", global_product_id="cat_pooja_agarbatti", category="Pooja", unit="1 pack", price=20.0, mrp=25.0, image_url="https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400"),
-                StoreProduct(store_id="str_01", global_product_id="cat_led_bulb", category="Electrical", unit="1 piece", price=85.0, mrp=99.0, image_url="https://upload.wikimedia.org/wikipedia/commons/4/4c/LED_bulb_800_Lm_Soft_white_2024.agr.jpg"),
+                StoreProduct(store_id="str_01", global_product_id="cat_led_bulb", category="Electrical", unit="1 piece", price=85.0, mrp=99.0, image_url="https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=500&q=80"),
+                StoreProduct(store_id="str_01", global_product_id="cat_bath_soap", category="Household", unit="1 piece (100g)", price=30.0, mrp=35.0, image_url="https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80"),
+                StoreProduct(store_id="str_01", global_product_id="cat_toothpaste", category="PersonalCare", unit="100 g", price=48.0, mrp=55.0, image_url="https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&q=80"),
+                StoreProduct(store_id="str_01", global_product_id="cat_notebook", category="Stationery", unit="1 piece (120 pages)", price=28.0, mrp=35.0, image_url="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80"),
+                StoreProduct(store_id="str_01", global_product_id="cat_pens", category="Stationery", unit="1 pack (5 pens)", price=20.0, mrp=25.0, image_url="https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=500&q=80"),
+                StoreProduct(store_id="str_01", global_product_id="cat_matches", category="General", unit="1 bundle (10 pcs)", price=15.0, mrp=20.0, image_url="https://images.unsplash.com/photo-1517420704952-d9f39e95b43e?w=500&q=80"),
             ]
             session.add_all(st1_products)
             
@@ -555,8 +637,8 @@ async def init_db_and_seed():
             st2_products = [
                 StoreProduct(store_id="str_02", global_product_id="cat_milk", category="Dairy", unit="1 L", price=56.0, mrp=60.0, image_url="https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400"),
                 StoreProduct(store_id="str_02", global_product_id="cat_potato", category="Vegetables", unit="1 kg", price=25.0, mrp=30.0, image_url="https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400"),
-                StoreProduct(store_id="str_02", global_product_id="cat_tomato", category="Vegetables", unit="1 kg", price=28.0, mrp=35.0, image_url="https://images.unsplash.com/photo-1546470427-227c7369a941?w=400"),
-                StoreProduct(store_id="str_02", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=39.0, mrp=45.0, image_url="https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg"),
+                StoreProduct(store_id="str_02", global_product_id="cat_tomato", category="Vegetables", unit="1 kg", price=28.0, mrp=35.0, image_url="https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80"),
+                StoreProduct(store_id="str_02", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=39.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"),
             ]
             session.add_all(st2_products)
             

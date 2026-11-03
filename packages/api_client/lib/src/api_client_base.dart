@@ -561,8 +561,11 @@ class GBApiClient {
   // --- Support Desk & AI Chat ---
   Future<ApiResponse<Map<String, dynamic>>> createSupportTicket({
     String? orderId,
+    String category = "GENERAL_HELP",
     required String subject,
     required String message,
+    String? affectedProductId,
+    String? attachmentUrl,
   }) async {
     try {
       final response = await http.post(
@@ -570,13 +573,16 @@ class GBApiClient {
         headers: _headers(),
         body: jsonEncode({
           'order_id': orderId,
+          'category': category,
           'subject': subject,
           'message': message,
+          'affected_product_id': affectedProductId,
+          'attachment_url': attachmentUrl,
         }),
       ).timeout(const Duration(seconds: 8));
 
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 201 || response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
         return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
       }
       return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
@@ -589,6 +595,88 @@ class GBApiClient {
     try {
       final response = await http
           .get(Uri.parse('$baseUrl${Endpoints.supportTickets}'), headers: _headers())
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final list = (jsonDecode(response.body) as List).cast<Map<String, dynamic>>();
+        return ApiResponse(isSuccess: true, data: list, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> getTicketDetails(String ticketId) async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl${Endpoints.supportTickets}/$ticketId'), headers: _headers())
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> replyToTicket(
+    String ticketId,
+    String message, {
+    String? attachmentUrl,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl${Endpoints.supportTickets}/$ticketId/reply'),
+        headers: _headers(),
+        body: jsonEncode({
+          'message': message,
+          'attachment_url': attachmentUrl,
+        }),
+      ).timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<Map<String, dynamic>>> updateCustomerTicketStatus(
+    String ticketId,
+    String status, {
+    String? resolutionNotes,
+  }) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl${Endpoints.supportTickets}/$ticketId/status'),
+        headers: _headers(),
+        body: jsonEncode({
+          'status': status,
+          'resolution_notes': resolutionNotes,
+        }),
+      ).timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<List<Map<String, dynamic>>>> getRefundStatus() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl/api/v1/support/refund-status'), headers: _headers())
           .timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {

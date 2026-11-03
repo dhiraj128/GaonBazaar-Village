@@ -243,10 +243,34 @@ class SupportTicket(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
     order_id = Column(String(36), ForeignKey("orders.id"), nullable=True)
+    category = Column(String(50), default="GENERAL_HELP") # WHERE_IS_MY_ORDER, REPORT_ISSUE, REFUND_REQUEST, DAMAGED_ITEM, MISSING_ITEM, GENERAL_HELP
     subject = Column(String(150), nullable=False)
     message = Column(Text, nullable=False)
-    status = Column(String(30), default="OPEN") # OPEN, RESOLVED, CLOSED
+    affected_product_id = Column(String(50), nullable=True)
+    attachment_url = Column(Text, nullable=True)
+    status = Column(String(30), default="OPEN") # OPEN, IN_REVIEW, RESOLVED, CLOSED
+    resolution_notes = Column(Text, nullable=True)
+    resolved_at = Column(UTCDateTime, nullable=True)
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User")
+    order = relationship("Order")
+    messages = relationship("TicketMessage", back_populates="ticket", cascade="all, delete-orphan", order_by="TicketMessage.created_at")
+
+class TicketMessage(Base):
+    __tablename__ = "ticket_messages"
+    
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    ticket_id = Column(String(36), ForeignKey("support_tickets.id"), nullable=False)
+    sender_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    sender_role = Column(String(20), default="customer") # customer, admin, support
+    message = Column(Text, nullable=False)
+    attachment_url = Column(Text, nullable=True)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
+
+    ticket = relationship("SupportTicket", back_populates="messages")
+    sender = relationship("User")
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"

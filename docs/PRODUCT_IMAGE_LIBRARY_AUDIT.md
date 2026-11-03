@@ -24,7 +24,7 @@ Every one of the 14 mandatory products defined in Section 4 has been pre-seeded 
 | 9 | `cat_salt` | Tata Salt (Iodized) | टाटा नमक (आयोडीन युक्त) | Essentials | 1 kg | ₹28.00 | `https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500` | **VERIFIED** |
 | 10 | `cat_biscuits` | Parle-G Gold Biscuits | पारले-जी बिस्कुट | Snacks | 1 Packet | ₹10.00 | `https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500` | **VERIFIED** |
 | 11 | `cat_green_chili` | Fresh Green Chili & Coriander | ताजी हरी मिर्च व धनिया पत्ता | Vegetables | 250 g | ₹20.00 | `https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=500` | **VERIFIED** |
-| 12 | `cat_toor_dal` | Desi Toor Dal (Arhar) | देशी अरहर (तूर) दाल | Grains | 1 kg | ₹140.00 | `https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=500` | **VERIFIED** |
+| 12 | `cat_toor_dal` | Desi Toor Dal (Arhar) | देशी अरहर (तूर) दाल | Grains | 1 kg | ₹140.00 | `https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500` | **VERIFIED** |
 | 13 | `cat_pooja_agarbatti` | Chandan Agarbatti (Pooja Special) | शुद्ध चन्दन अगरबत्ती | Pooja | 1 Packet | ₹35.00 | `https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=500` | **VERIFIED** |
 | 14 | `cat_led_bulb` | 9W Energy Saver LED Bulb | 9 वाट एलईडी बल्ब (सिसका/फिलिप्स) | Electronics | 1 Piece | ₹90.00 | `https://images.unsplash.com/photo-1550985616-10810253b84d?w=500` | **VERIFIED** |
 

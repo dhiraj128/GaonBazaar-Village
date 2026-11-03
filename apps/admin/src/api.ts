@@ -259,7 +259,7 @@ let initialCatalog: CatalogItem[] = [
     category: 'Grocery & Ration',
     standard_unit: '1 Litre',
     suggested_price: 155.0,
-    image_url: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Dune_Aura_Mustard_oil_bottle_picture.jpg?w=500&q=80',
+    image_url: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80',
   },
   {
     id: 'cat_03',
@@ -304,7 +304,7 @@ let initialCatalog: CatalogItem[] = [
     category: 'Vegetables & Fruits',
     standard_unit: '1 kg',
     suggested_price: 32.0,
-    image_url: 'https://images.unsplash.com/photo-1546470427-227c7369a941?w=500&q=80',
+    image_url: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80',
   },
   {
     id: 'cat_08',
@@ -358,7 +358,7 @@ let initialCatalog: CatalogItem[] = [
     category: 'Grocery & Ration',
     standard_unit: '1 kg',
     suggested_price: 145.0,
-    image_url: 'https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=500&q=80',
+    image_url: 'https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80',
   },
   {
     id: 'cat_14',
@@ -368,6 +368,42 @@ let initialCatalog: CatalogItem[] = [
     standard_unit: '1 Pack',
     suggested_price: 30.0,
     image_url: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=500&q=80',
+  },
+  {
+    id: 'cat_15',
+    name_en: 'Dettol Antiseptic Bath Soap',
+    name_hi: 'डेटॉल बाथ साबुन',
+    category: 'Personal Care',
+    standard_unit: '75 g',
+    suggested_price: 36.0,
+    image_url: 'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80',
+  },
+  {
+    id: 'cat_16',
+    name_en: 'Surf Excel Detergent Powder',
+    name_hi: 'सर्फ एक्सेल डिटर्जेंट पाउडर',
+    category: 'Household Essentials',
+    standard_unit: '500 g',
+    suggested_price: 68.0,
+    image_url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&q=80',
+  },
+  {
+    id: 'cat_17',
+    name_en: 'Colgate Strong Teeth Toothpaste',
+    name_hi: 'कोलगेट टूथपेस्ट',
+    category: 'Personal Care',
+    standard_unit: '100 g',
+    suggested_price: 58.0,
+    image_url: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&q=80',
+  },
+  {
+    id: 'cat_18',
+    name_en: 'Classmate Ruled Notebook 120 Pages',
+    name_hi: 'क्लासमेट कॉपी (120 पेज)',
+    category: 'Stationery & Books',
+    standard_unit: '1 Piece',
+    suggested_price: 45.0,
+    image_url: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80',
   },
 ];
 
@@ -625,6 +661,18 @@ export const adminApi = {
         created_at: '2026-10-31T16:00:00Z',
       },
     ];
+  },
+
+  async replyTicket(id: string, message: string): Promise<any> {
+    try {
+      const res = await fetch(`${API_BASE}/tickets/${id}/reply`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ message }),
+      });
+      if (res.ok) return await res.json();
+    } catch {}
+    return null;
   },
 
   async updateTicketStatus(id: string, status: 'OPEN' | 'RESOLVED' | 'CLOSED'): Promise<void> {

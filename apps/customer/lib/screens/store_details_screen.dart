@@ -42,7 +42,7 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
           unit: '1 kg',
           price: 38.0,
           mrp: 45.0,
-          imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg',
+          imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80',
         ),
         GBProduct(
           id: 'prd_02',
@@ -53,7 +53,7 @@ class _StoreDetailsScreenState extends State<StoreDetailsScreen> {
           unit: '1 L',
           price: 142.0,
           mrp: 155.0,
-          imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Dune_Aura_Mustard_oil_bottle_picture.jpg',
+          imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80',
         ),
       ];
     }

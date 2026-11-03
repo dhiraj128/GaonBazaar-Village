@@ -40,6 +40,7 @@ class CustomerAppState extends ChangeNotifier {
   // Orders
   List<GBOrder> myOrders = [];
   bool isLoadingOrders = false;
+  List<GBOrder> get orders => myOrders;
 
   // Notifications (Part 1 & Part 2.2)
   List<GBNotification> notifications = [];

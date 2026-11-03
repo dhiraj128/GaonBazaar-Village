@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.db.session import get_db
-from app.models.base import Store, Runner, Order, User, GlobalCatalogItem, OrderItem, SupportTicket, AuditLog, Address
+from app.models.base import Store, Runner, Order, User, GlobalCatalogItem, OrderItem, SupportTicket, TicketMessage, AuditLog, Address, OrderTimeline
 from app.core.config import settings
 from app.core.security import get_current_admin, create_access_token
 
@@ -23,7 +23,12 @@ class SettingsUpdate(BaseModel):
     vendor_commission_pct: Optional[float] = None
 
 class TicketStatusUpdate(BaseModel):
-    status: str # OPEN, RESOLVED, CLOSED
+    status: str # OPEN, IN_REVIEW, RESOLVED, CLOSED
+    resolution_notes: Optional[str] = None
+
+class AdminTicketReply(BaseModel):
+    message: str
+    attachment_url: Optional[str] = None
 
 class AssignRunnerRequest(BaseModel):
     runner_id: str
@@ -369,27 +374,149 @@ async def assign_runner_to_order(order_id: str, req: AssignRunnerRequest, db: As
     }
 
 @router.get("/tickets")
-async def get_support_tickets(db: AsyncSession = Depends(get_db), _admin: dict = Depends(get_current_admin)):
-    res = await db.execute(select(SupportTicket).order_by(SupportTicket.created_at.desc()))
-    return res.scalars().all()
+async def get_support_tickets(
+    category: Optional[str] = None,
+    status: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+    _admin: dict = Depends(get_current_admin)
+):
+    query = select(SupportTicket).options(selectinload(SupportTicket.messages), selectinload(SupportTicket.user)).order_by(SupportTicket.created_at.desc())
+    if category:
+        query = query.where(SupportTicket.category == category)
+    if status:
+        query = query.where(SupportTicket.status == status)
+    res = await db.execute(query)
+    tickets = res.scalars().all()
+    return [
+        {
+            "id": t.id,
+            "user_id": t.user_id,
+            "user_name": t.user.name if t.user else "Customer",
+            "user_phone": t.user.phone if t.user else "",
+            "order_id": t.order_id,
+            "category": t.category or "GENERAL_HELP",
+            "subject": t.subject,
+            "message": t.message,
+            "status": t.status,
+            "affected_product_id": t.affected_product_id,
+            "attachment_url": t.attachment_url,
+            "resolution_notes": t.resolution_notes,
+            "resolved_at": t.resolved_at.isoformat() if t.resolved_at else None,
+            "created_at": t.created_at.isoformat() if t.created_at else "",
+            "reply_count": len(t.messages) if t.messages else 0
+        }
+        for t in tickets
+    ]
 
-@router.patch("/tickets/{ticket_id}")
-async def update_ticket_status(ticket_id: str, req: TicketStatusUpdate, db: AsyncSession = Depends(get_db), _admin: dict = Depends(get_current_admin)):
+@router.get("/tickets/{ticket_id}")
+async def get_support_ticket_detail(
+    ticket_id: str,
+    db: AsyncSession = Depends(get_db),
+    _admin: dict = Depends(get_current_admin)
+):
+    res = await db.execute(
+        select(SupportTicket)
+        .options(selectinload(SupportTicket.messages), selectinload(SupportTicket.user))
+        .where(SupportTicket.id == ticket_id)
+    )
+    t = res.scalars().first()
+    if not t:
+        raise HTTPException(status_code=404, detail="Support ticket not found")
+    return {
+        "id": t.id,
+        "user_id": t.user_id,
+        "user_name": t.user.name if t.user else "Customer",
+        "user_phone": t.user.phone if t.user else "",
+        "order_id": t.order_id,
+        "category": t.category or "GENERAL_HELP",
+        "subject": t.subject,
+        "message": t.message,
+        "status": t.status,
+        "affected_product_id": t.affected_product_id,
+        "attachment_url": t.attachment_url,
+        "resolution_notes": t.resolution_notes,
+        "resolved_at": t.resolved_at.isoformat() if t.resolved_at else None,
+        "created_at": t.created_at.isoformat() if t.created_at else "",
+        "messages": [
+            {
+                "id": m.id,
+                "ticket_id": m.ticket_id,
+                "sender_id": m.sender_id,
+                "sender_role": m.sender_role,
+                "message": m.message,
+                "attachment_url": m.attachment_url,
+                "created_at": m.created_at.isoformat() if m.created_at else ""
+            }
+            for m in (t.messages or [])
+        ]
+    }
+
+@router.post("/tickets/{ticket_id}/reply")
+async def admin_reply_to_ticket(
+    ticket_id: str,
+    req: AdminTicketReply,
+    db: AsyncSession = Depends(get_db),
+    _admin: dict = Depends(get_current_admin)
+):
     res = await db.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))
     ticket = res.scalars().first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Support ticket not found")
-    ticket.status = req.status
+
+    now = datetime.now(timezone.utc)
+    ticket.updated_at = now
+    msg = TicketMessage(
+        ticket_id=ticket.id,
+        sender_id=_admin.get("sub", "admin_01"),
+        sender_role="admin",
+        message=req.message.strip(),
+        attachment_url=req.attachment_url,
+        created_at=now
+    )
+    db.add(msg)
+    await db.commit()
+    await db.refresh(msg)
+    return {"message": "Admin reply sent successfully", "id": msg.id}
+
+@router.patch("/tickets/{ticket_id}")
+async def update_ticket_status(
+    ticket_id: str,
+    req: TicketStatusUpdate,
+    db: AsyncSession = Depends(get_db),
+    _admin: dict = Depends(get_current_admin)
+):
+    res = await db.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))
+    ticket = res.scalars().first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Support ticket not found")
+    
+    now = datetime.now(timezone.utc)
+    ticket.status = req.status.upper()
+    ticket.updated_at = now
+    if req.resolution_notes:
+        ticket.resolution_notes = req.resolution_notes
+    if ticket.status in ["RESOLVED", "CLOSED"]:
+        ticket.resolved_at = now
+        if ticket.order_id:
+            db.add(OrderTimeline(
+                order_id=ticket.order_id,
+                status="SUPPORT_RESOLVED",
+                title="सहायता टिकट निस्तारित (Ticket Resolved)",
+                description=f"Ticket #{ticket.id[:8]}: {req.resolution_notes or 'Resolved by admin'}",
+                timestamp=now
+            ))
 
     audit = AuditLog(
+        actor_id=_admin.get("sub", "admin"),
+        actor_role="admin",
         action="TICKET_STATUS_UPDATED",
         target_type="SUPPORT_TICKET",
         target_id=ticket.id,
-        details=f"Ticket {ticket.id} status changed to {req.status}"
+        details=f"Ticket {ticket.id} status changed to {ticket.status}. Notes: {req.resolution_notes or 'None'}"
     )
     db.add(audit)
     await db.commit()
-    return {"message": f"Ticket {ticket.id} updated to {req.status}", "status": ticket.status}
+    return {"message": f"Ticket {ticket.id} updated to {ticket.status}", "status": ticket.status}
 
 @router.get("/audit-logs")
 async def get_audit_logs(db: AsyncSession = Depends(get_db), _admin: dict = Depends(get_current_admin)):

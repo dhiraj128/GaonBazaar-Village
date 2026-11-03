@@ -614,7 +614,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
         unit: item.unit,
         price: item.unitPrice,
         mrp: item.unitPrice * 1.15,
-        imageUrl: item.imageUrl ?? 'https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg',
+        imageUrl: item.imageUrl ?? 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80',
       );
       for (int q = 0; q < item.quantity; q++) {
         state.addToCart(product, _order.storeName);

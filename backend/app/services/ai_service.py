@@ -9,7 +9,7 @@ ITEM_DICTIONARY = [
         "name_hi": "ताज़ा चक्की आटा",
         "unit": "1 kg",
         "price": 38.0,
-        "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg",
+        "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
         "keywords": ["atta", "aata", "gehu", "wheat", "आटा", "flour"]
     },
     {
@@ -27,7 +27,7 @@ ITEM_DICTIONARY = [
         "name_hi": "कच्ची घानी सरसों तेल",
         "unit": "1 L",
         "price": 142.0,
-        "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Dune_Aura_Mustard_oil_bottle_picture.jpg",
+        "image_url": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
         "keywords": ["oil", "tel", "sarson", "mustard", "सरसों तेल", "तेल"]
     },
     {
@@ -63,7 +63,7 @@ ITEM_DICTIONARY = [
         "name_hi": "देशी लाल टमाटर",
         "unit": "1 kg",
         "price": 28.0,
-        "image_url": "https://images.unsplash.com/photo-1546470427-227c7369a941?w=400",
+        "image_url": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80",
         "keywords": ["tomato", "tamatar", "टमाटर"]
     },
     {
@@ -81,7 +81,7 @@ ITEM_DICTIONARY = [
         "name_hi": "९ वॉट एलईडी बल्ब",
         "unit": "1 piece",
         "price": 85.0,
-        "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/LED_bulb_800_Lm_Soft_white_2024.agr.jpg",
+        "image_url": "https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=500&q=80",
         "keywords": ["bulb", "led", "बल्ब", "light", "bijli", "बिजली"]
     }
 ]

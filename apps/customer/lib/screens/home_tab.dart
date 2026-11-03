@@ -28,10 +28,16 @@ class _HomeTabState extends State<HomeTab> {
   final List<Map<String, dynamic>> _categories = [
     {'id': 'All', 'name_hi': 'सभी', 'name_en': 'All', 'icon': Icons.grid_view_rounded},
     {'id': 'Grocery', 'name_hi': 'किराना', 'name_en': 'Grocery', 'icon': Icons.shopping_basket_rounded},
+    {'id': 'General', 'name_hi': 'जनरल स्टोर', 'name_en': 'General Store', 'icon': Icons.storefront_rounded},
     {'id': 'Vegetables', 'name_hi': 'ताज़ी सब्ज़ी', 'name_en': 'Vegetables', 'icon': Icons.eco_rounded},
     {'id': 'Dairy', 'name_hi': 'दूध व डेयरी', 'name_en': 'Dairy', 'icon': Icons.water_drop_rounded},
-    {'id': 'Pooja', 'name_hi': 'पूजा सामग्री', 'name_en': 'Pooja', 'icon': Icons.wb_sunny_rounded},
+    {'id': 'Snacks', 'name_hi': 'नाश्ता व स्नैक्स', 'name_en': 'Snacks', 'icon': Icons.cookie_rounded},
+    {'id': 'Household', 'name_hi': 'घरेलू सामान', 'name_en': 'Household', 'icon': Icons.cleaning_services_rounded},
+    {'id': 'PersonalCare', 'name_hi': 'पर्सनल केयर', 'name_en': 'Personal Care', 'icon': Icons.face_retouching_natural_rounded},
+    {'id': 'Kitchen', 'name_hi': 'रसोई का सामान', 'name_en': 'Kitchen', 'icon': Icons.kitchen_rounded},
+    {'id': 'Stationery', 'name_hi': 'स्टेशनरी व पढ़ाई', 'name_en': 'Stationery', 'icon': Icons.menu_book_rounded},
     {'id': 'Electrical', 'name_hi': 'बिजली सामान', 'name_en': 'Electrical', 'icon': Icons.lightbulb_rounded},
+    {'id': 'Pooja', 'name_hi': 'पूजा सामग्री', 'name_en': 'Pooja', 'icon': Icons.wb_sunny_rounded},
   ];
 
   @override
@@ -117,7 +123,7 @@ class _HomeTabState extends State<HomeTab> {
         unit: '1 kg',
         price: 38.0,
         mrp: 45.0,
-        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg',
+        imageUrl: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_02',
@@ -128,7 +134,7 @@ class _HomeTabState extends State<HomeTab> {
         unit: '1 L',
         price: 142.0,
         mrp: 155.0,
-        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/e/e1/Dune_Aura_Mustard_oil_bottle_picture.jpg',
+        imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_03',
@@ -139,7 +145,7 @@ class _HomeTabState extends State<HomeTab> {
         unit: '1 L',
         price: 56.0,
         mrp: 60.0,
-        imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400',
+        imageUrl: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_04',
@@ -150,7 +156,7 @@ class _HomeTabState extends State<HomeTab> {
         unit: '1 kg',
         price: 24.0,
         mrp: 30.0,
-        imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400',
+        imageUrl: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_05',
@@ -161,7 +167,7 @@ class _HomeTabState extends State<HomeTab> {
         unit: '1 pack',
         price: 20.0,
         mrp: 25.0,
-        imageUrl: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400',
+        imageUrl: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_06',
@@ -172,7 +178,7 @@ class _HomeTabState extends State<HomeTab> {
         unit: '1 piece',
         price: 85.0,
         mrp: 99.0,
-        imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4c/LED_bulb_800_Lm_Soft_white_2024.agr.jpg',
+        imageUrl: 'https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_07',
@@ -183,7 +189,7 @@ class _HomeTabState extends State<HomeTab> {
         unit: '1 kg',
         price: 28.0,
         mrp: 35.0,
-        imageUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400',
+        imageUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_08',
@@ -194,7 +200,7 @@ class _HomeTabState extends State<HomeTab> {
         unit: '1 kg',
         price: 32.0,
         mrp: 40.0,
-        imageUrl: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400',
+        imageUrl: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_09',
@@ -205,7 +211,7 @@ class _HomeTabState extends State<HomeTab> {
         unit: '1 kg',
         price: 95.0,
         mrp: 110.0,
-        imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400',
+        imageUrl: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_10',
@@ -216,7 +222,7 @@ class _HomeTabState extends State<HomeTab> {
         unit: '1 kg',
         price: 46.0,
         mrp: 50.0,
-        imageUrl: 'https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=400',
+        imageUrl: 'https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_11',
@@ -227,18 +233,18 @@ class _HomeTabState extends State<HomeTab> {
         unit: '1 kg',
         price: 28.0,
         mrp: 30.0,
-        imageUrl: 'https://images.unsplash.com/photo-1626082896492-766af4eb6501?w=400',
+        imageUrl: 'https://images.unsplash.com/photo-1626082896492-766af4eb6501?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_12',
         storeId: 'str_01',
         nameEn: 'Parle-G Glucose Biscuits',
         nameHi: 'पारले-जी बिस्कुट',
-        category: 'Grocery',
+        category: 'Snacks',
         unit: '1 pack',
         price: 10.0,
         mrp: 10.0,
-        imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400',
+        imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_13',
@@ -249,7 +255,7 @@ class _HomeTabState extends State<HomeTab> {
         unit: '250 g',
         price: 20.0,
         mrp: 25.0,
-        imageUrl: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=400',
+        imageUrl: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=500&q=80',
       ),
       GBProduct(
         id: 'prd_14',
@@ -260,7 +266,96 @@ class _HomeTabState extends State<HomeTab> {
         unit: '1 kg',
         price: 140.0,
         mrp: 155.0,
-        imageUrl: 'https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400',
+        imageUrl: 'https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80',
+      ),
+      // General Store / Household / Stationery / Personal Care multi-category items
+      GBProduct(
+        id: 'prd_15',
+        storeId: 'str_01',
+        nameEn: 'Dettol Antiseptic Bath Soap',
+        nameHi: 'डेटॉल बाथ साबुन',
+        category: 'PersonalCare',
+        unit: '75 g',
+        price: 36.0,
+        mrp: 40.0,
+        imageUrl: 'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80',
+      ),
+      GBProduct(
+        id: 'prd_16',
+        storeId: 'str_01',
+        nameEn: 'Surf Excel Detergent Powder',
+        nameHi: 'सर्फ एक्सेल डिटर्जेंट पाउडर',
+        category: 'Household',
+        unit: '500 g',
+        price: 68.0,
+        mrp: 75.0,
+        imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&q=80',
+      ),
+      GBProduct(
+        id: 'prd_17',
+        storeId: 'str_01',
+        nameEn: 'Colgate Strong Teeth Toothpaste',
+        nameHi: 'कोलगेट टूथपेस्ट',
+        category: 'PersonalCare',
+        unit: '100 g',
+        price: 58.0,
+        mrp: 65.0,
+        imageUrl: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&q=80',
+      ),
+      GBProduct(
+        id: 'prd_18',
+        storeId: 'str_01',
+        nameEn: 'Dabur Amla Hair Oil',
+        nameHi: 'डाबर आंवला हेयर ऑयल',
+        category: 'PersonalCare',
+        unit: '100 ml',
+        price: 48.0,
+        mrp: 55.0,
+        imageUrl: 'https://images.unsplash.com/photo-1526947425960-945c6e72858f?w=500&q=80',
+      ),
+      GBProduct(
+        id: 'prd_19',
+        storeId: 'str_01',
+        nameEn: 'Classmate Ruled Notebook',
+        nameHi: 'क्लासमेट कॉपी (120 पेज)',
+        category: 'Stationery',
+        unit: '1 book',
+        price: 45.0,
+        mrp: 50.0,
+        imageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80',
+      ),
+      GBProduct(
+        id: 'prd_20',
+        storeId: 'str_01',
+        nameEn: 'Blue Ball Point Pens (Pack of 5)',
+        nameHi: 'बॉल पेन सेट (5 पीस)',
+        category: 'Stationery',
+        unit: '5 pens',
+        price: 25.0,
+        mrp: 30.0,
+        imageUrl: 'https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?w=500&q=80',
+      ),
+      GBProduct(
+        id: 'prd_21',
+        storeId: 'str_01',
+        nameEn: 'Safety Matchbox Bundle (Pack of 10)',
+        nameHi: 'माचिस बंडल (10 डिब्बी)',
+        category: 'Household',
+        unit: '1 pack',
+        price: 20.0,
+        mrp: 20.0,
+        imageUrl: 'https://images.unsplash.com/photo-1517420704952-d9f39e95b43e?w=500&q=80',
+      ),
+      GBProduct(
+        id: 'prd_22',
+        storeId: 'str_01',
+        nameEn: 'Stainless Steel Dish Scrubber',
+        nameHi: 'स्टील जूना / स्क्रबर',
+        category: 'Kitchen',
+        unit: '2 pack',
+        price: 30.0,
+        mrp: 35.0,
+        imageUrl: 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=500&q=80',
       ),
     ];
   }
@@ -457,8 +552,13 @@ class _HomeTabState extends State<HomeTab> {
 
     final query = _searchController.text.trim().toLowerCase();
     final filteredProducts = _products.where((p) {
-      if (_selectedCategory != 'All' && p.category != _selectedCategory) {
-        return false;
+      if (_selectedCategory != 'All') {
+        final catMatches = p.category.toLowerCase() == _selectedCategory.toLowerCase();
+        final generalMatches = _selectedCategory == 'General' &&
+            ['household', 'personalcare', 'stationery', 'kitchen', 'general'].contains(p.category.toLowerCase());
+        if (!catMatches && !generalMatches) {
+          return false;
+        }
       }
       if (query.isNotEmpty) {
         final nameEn = p.nameEn.toLowerCase();
@@ -853,8 +953,15 @@ class _HomeTabState extends State<HomeTab> {
                     child: GBEmptyState(
                       title: loc.tr('no_products_found'),
                       message: loc.isHindi
-                          ? 'कृपया अन्य श्रेणी या खोज शब्द आज़माएँ।'
-                          : 'Try another category or search keyword.',
+                          ? 'इस श्रेणी या खोज में कोई उत्पाद उपलब्ध नहीं है। कृपया अन्य श्रेणी या खोज शब्द आज़माएँ।'
+                          : 'No products available in this category or search query. Try another category or search keyword.',
+                      actionLabel: loc.isHindi ? 'सभी उत्पाद देखें' : 'View All Products',
+                      onAction: () {
+                        setState(() {
+                          _selectedCategory = 'All';
+                          _searchController.clear();
+                        });
+                      },
                     ),
                   ),
                 )

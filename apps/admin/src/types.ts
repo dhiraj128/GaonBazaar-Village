@@ -121,14 +121,29 @@ export interface CustomerItem {
   created_at: string;
 }
 
+export interface TicketMessageItem {
+  id: string;
+  sender_id: string;
+  sender_role: 'CUSTOMER' | 'ADMIN' | 'SYSTEM' | string;
+  message: string;
+  attachment_url?: string;
+  created_at: string;
+}
+
 export interface SupportTicketItem {
   id: string;
   user_id: string;
   order_id?: string;
+  category?: string;
+  affected_product_id?: string;
   subject: string;
   message: string;
+  attachment_url?: string;
   status: 'OPEN' | 'RESOLVED' | 'CLOSED';
+  resolution_notes?: string;
+  resolved_at?: string;
   created_at: string;
+  messages?: TicketMessageItem[];
 }
 
 export interface AuditLogItem {

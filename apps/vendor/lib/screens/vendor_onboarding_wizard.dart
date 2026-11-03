@@ -58,11 +58,16 @@ class _VendorOnboardingWizardState extends State<VendorOnboardingWizard> {
 
   final List<String> _categories = [
     'Grocery',
-    'Dairy',
+    'General Store',
     'Vegetables',
+    'Dairy',
+    'Snacks',
+    'Household',
+    'Personal Care',
+    'Kitchen',
+    'Stationery',
     'Electrical',
     'Pooja',
-    'General',
   ];
 
   List<Map<String, dynamic>> _pilotVillages = [

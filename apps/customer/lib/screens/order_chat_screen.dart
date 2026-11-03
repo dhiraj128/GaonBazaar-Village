@@ -224,7 +224,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('GPS error: $e'), backgroundColor: GBColors.error),
+          SnackBar(content: Text(isHi ? 'स्थान प्राप्त करने में असमर्थ। कृपया जीपीएस जांचें।' : 'Unable to acquire location. Please check GPS settings.'), backgroundColor: GBColors.error),
         );
       }
     }
