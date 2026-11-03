@@ -6,3 +6,4 @@ export 'src/theme.dart';
 export 'src/buttons.dart';
 export 'src/cards.dart';
 export 'src/states.dart';
+export 'src/notifications.dart';

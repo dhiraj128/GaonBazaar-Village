@@ -73,6 +73,7 @@ class User(Base):
     orders = relationship("Order", foreign_keys="[Order.customer_id]", back_populates="customer")
     store = relationship("Store", back_populates="owner", uselist=False)
     runner = relationship("Runner", back_populates="user", uselist=False)
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
 class Address(Base):
     __tablename__ = "addresses"
@@ -277,3 +278,18 @@ class OrderMessage(Base):
 
     order = relationship("Order", back_populates="messages")
     sender = relationship("User")
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+    
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    title = Column(String(200), nullable=False)
+    body = Column(Text, nullable=False)
+    type = Column(String(50), default="system") # 'order', 'delivery', 'payment', 'system', 'approval'
+    is_read = Column(Boolean, default=False, nullable=False)
+    metadata_json = Column(Text, nullable=True)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="notifications")

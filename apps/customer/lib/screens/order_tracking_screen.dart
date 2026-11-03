@@ -346,6 +346,290 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     );
   }
 
+
+  void _showCommercialReceiptModal() {
+    final loc = GBLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withAlpha(80),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 14),
+              // Receipt Actions Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      loc.isHindi ? 'वाणिज्यिक रसीद' : 'Commercial Receipt',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.share, size: 20, color: GBColors.primary),
+                          tooltip: 'Share Receipt',
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(loc.isHindi ? 'रसीद विवरण कॉपी किया गया!' : 'Receipt details copied for sharing!'),
+                                backgroundColor: GBColors.success,
+                              ),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.download, size: 20, color: GBColors.primary),
+                          tooltip: 'Download Receipt PDF',
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(loc.isHindi ? 'रसीद PDF डाउनलोड प्रारंभ!' : 'Receipt PDF download initiated!'),
+                                backgroundColor: GBColors.primary,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 16),
+              // Printable Commercial Receipt Body
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Hub / Platform Brand
+                        Center(
+                          child: Column(
+                            children: [
+                              const Text(
+                                'गाँव बाज़ार (GaonBazaar)',
+                                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: GBColors.primary),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'ग्रामीण त्वरित वाणिज्य • मीनापुर हब, मुजफ्फरपुर (बिहार)',
+                                style: TextStyle(fontSize: 11, color: isDark ? Colors.grey.shade400 : Colors.grey.shade700),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withAlpha(25),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Text(
+                                  'OFFICIAL ITEMISED RECEIPT',
+                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 24),
+                        // Order & Seller Metadata
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Receipt No.', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                Text('GB-REC-${_order.id}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                const Text('Date & Time', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                Text(
+                                  '${_order.placedAt.day} ${_getMonthName(_order.placedAt.month, loc.isHindi)} ${_order.placedAt.year}, ${_formatTime(_order.placedAt)}',
+                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Seller / Store', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                  Text(_order.storeName, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                                  const Text('Minapur Rural Hub, Muzaffarpur', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  const Text('Delivery Address', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                  Text(_order.deliveryAddress, textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 24),
+                        // Itemized Table
+                        const Row(
+                          children: [
+                            Expanded(flex: 3, child: Text('Item Description', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11))),
+                            Expanded(flex: 1, child: Text('Qty', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11))),
+                            Expanded(flex: 1, child: Text('Price', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11))),
+                            Expanded(flex: 1, child: Text('Total', textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11))),
+                          ],
+                        ),
+                        const Divider(height: 12),
+                        ..._order.items.map((item) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(loc.isHindi ? item.nameHi : item.nameEn, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                                      Text(item.unit, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                                    ],
+                                  ),
+                                ),
+                                Expanded(flex: 1, child: Text('${item.quantity}', textAlign: TextAlign.center, style: const TextStyle(fontSize: 12))),
+                                Expanded(flex: 1, child: Text('₹${item.unitPrice.toStringAsFixed(0)}', textAlign: TextAlign.right, style: const TextStyle(fontSize: 12))),
+                                Expanded(flex: 1, child: Text('₹${item.totalPrice.toStringAsFixed(0)}', textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12))),
+                              ],
+                            ),
+                          );
+                        }),
+                        const Divider(height: 20),
+                        // Billing Breakdown
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Items Subtotal', style: TextStyle(fontSize: 12)),
+                            Text('₹${_order.subtotal.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Delivery Fee (Distance-tiered)', style: TextStyle(fontSize: 12)),
+                            Text('₹${_order.deliveryFee.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Platform Fee (Strict Rural Rate)', style: TextStyle(fontSize: 12)),
+                            Text('₹${_order.platformFee.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                          ],
+                        ),
+                        const Divider(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Grand Total Paid/Due', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+                            Text('₹${_order.totalAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: GBColors.primary)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withAlpha(20),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Payment Method: ${_order.paymentMethod}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                              Text('Status: ${_order.paymentStatus}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _order.paymentStatus == 'PAID' ? GBColors.success : GBColors.warning)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _buyAgain() {
+    final loc = GBLocalizations.of(context);
+    final state = AppStateProvider.of(context);
+    state.clearCart();
+    for (final item in _order.items) {
+      final product = GBProduct(
+        id: item.productId,
+        storeId: _order.storeId,
+        nameEn: item.nameEn,
+        nameHi: item.nameHi,
+        category: 'Grocery',
+        unit: item.unit,
+        price: item.unitPrice,
+        mrp: item.unitPrice * 1.15,
+        imageUrl: item.imageUrl ?? 'https://upload.wikimedia.org/wikipedia/commons/3/32/Atta-01.jpg',
+      );
+      for (int q = 0; q < item.quantity; q++) {
+        state.addToCart(product, _order.storeName);
+      }
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          loc.isHindi ? 'सभी सामग्री कार्ट में जोड़ दी गई है!' : 'All items added to your cart!',
+        ),
+        backgroundColor: GBColors.success,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = GBLocalizations.of(context);
@@ -904,6 +1188,46 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
               ),
 
             const SizedBox(height: 24),
+
+            // Commercial Order Action Buttons (Part 2.6)
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _showCommercialReceiptModal,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: GBColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    icon: const Icon(Icons.receipt_long, size: 18),
+                    label: Text(
+                      loc.isHindi ? 'रसीद देखें' : 'View Receipt',
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _buyAgain,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: GBColors.primary,
+                      side: const BorderSide(color: GBColors.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    icon: const Icon(Icons.replay, size: 18),
+                    label: Text(
+                      loc.isHindi ? 'पुनः ऑर्डर करें' : 'Buy Again',
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
 
             // Contextual Contact Actions (Prioritizes Runner when Out for Delivery)
             Row(

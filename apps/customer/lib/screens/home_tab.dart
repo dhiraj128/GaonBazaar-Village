@@ -558,6 +558,32 @@ class _HomeTabState extends State<HomeTab> {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 4),
+                      // Top-Right Notification Bell (Part 1 & Part 2.2)
+                      GBNotificationBell(
+                        unreadCount: state.unreadNotificationCount,
+                        onTap: () {
+                          showGBNotificationSheet(
+                            context,
+                            notifications: state.notifications.map((n) {
+                              final diff = DateTime.now().difference(n.timestamp);
+                              final timeStr = diff.inMinutes < 60
+                                  ? (state.isHindi ? '${diff.inMinutes} मिनट पहले' : '${diff.inMinutes}m ago')
+                                  : (state.isHindi ? '${diff.inHours} घंटे पहले' : '${diff.inHours}h ago');
+                              return GBNotificationItemData(
+                                id: n.id,
+                                title: n.title,
+                                body: n.body,
+                                time: timeStr,
+                                isRead: n.isRead,
+                                type: n.type,
+                              );
+                            }).toList(),
+                            onMarkAllRead: state.markAllNotificationsRead,
+                            isHindi: state.isHindi,
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),

@@ -14,6 +14,7 @@ class RunnerDashboardScreen extends StatefulWidget {
 }
 
 class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
+  int _navIndex = 0;
   bool _isActing = false;
 
   @override
@@ -24,6 +25,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
       state.fetchProfile();
       state.fetchJobs();
       state.fetchFinances();
+      state.fetchNotifications();
     });
   }
 
@@ -148,51 +150,8 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
               }
               Navigator.of(ctx).pop();
               await _handleAction(state, orderId, 'DELIVER', otp: entered);
-
-              if (mounted) {
-                showDialog(
-                  context: context,
-                  builder: (c) => AlertDialog(
-                    icon: const Icon(Icons.celebration, color: GBColors.primary, size: 48),
-                    title: Text(
-                      isHi ? 'डिलीवरी सफलतापूर्वक संपन्न!' : 'Delivery Completed Successfully!',
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
-                    ),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isHi ? 'आपकी डिलीवरी शुल्क कमाई:' : 'Your delivery earning:',
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                        Text(
-                          '₹${payout.toStringAsFixed(0)}',
-                          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: GBColors.primary),
-                        ),
-                        if (isCod) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            isHi
-                                ? 'एकत्रित नकद राशि: ₹${codAmount.toStringAsFixed(0)} (आज रात कंपनी को जमा करें)'
-                                : 'Collected Cash: ₹${codAmount.toStringAsFixed(0)} (Remit tonight)',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.blue),
-                          ),
-                        ],
-                      ],
-                    ),
-                    actions: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
-                        onPressed: () => Navigator.of(c).pop(),
-                        child: Text(isHi ? 'ठीक है' : 'OK'),
-                      ),
-                    ],
-                  ),
-                );
-              }
             },
-            child: Text(isHi ? 'डिलीवर करें' : 'Confirm Deliver'),
+            child: Text(isHi ? 'डिलीवरी पूर्ण करें' : 'Confirm Delivery'),
           ),
         ],
       ),
@@ -220,6 +179,31 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
           ],
         ),
         actions: [
+          // Top-right Notification Bell (Part 1 & Part 2.2)
+          GBNotificationBell(
+            unreadCount: state.unreadNotificationCount,
+            onTap: () {
+              showGBNotificationSheet(
+                context,
+                isHindi: isHi,
+                notifications: state.notifications.map((n) {
+                  final diff = DateTime.now().difference(n.timestamp);
+                  final timeStr = diff.inMinutes < 60
+                      ? (isHi ? '${diff.inMinutes} मिनट पहले' : '${diff.inMinutes}m ago')
+                      : (isHi ? '${diff.inHours} घंटे पहले' : '${diff.inHours}h ago');
+                  return GBNotificationItemData(
+                    id: n.id,
+                    title: n.title,
+                    body: n.body,
+                    time: timeStr,
+                    isRead: n.isRead,
+                    type: n.type,
+                  );
+                }).toList(),
+                onMarkAllRead: () => state.markAllNotificationsRead(),
+              );
+            },
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: Row(
@@ -251,105 +235,77 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  const Icon(Icons.two_wheeler, color: Colors.white, size: 36),
-                  const SizedBox(height: 8),
-                  Text(
-                    state.runnerProfile?['full_name'] as String? ?? state.currentUser?.name ?? 'Santosh Kumar',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
-                  ),
-                  Text(
-                    '${isHi ? "वाहन" : "Vehicle"}: ${state.runnerProfile?["vehicle_number"] ?? "BR-06-AB-1234"} • ⭐ 4.9',
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.currency_rupee),
-              title: Text(isHi ? 'कमाई व ट्रिप हिस्ट्री' : 'Earnings & Trips'),
-              subtitle: Text('${isHi ? "आज की कमाई" : "Today"}: ₹${state.todayEarnings.toStringAsFixed(0)}'),
-              onTap: () {
-                Navigator.of(context).pop();
-                state.fetchFinances();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.language),
-              title: Text(isHi ? 'भाषा (Language)' : 'Language'),
-              trailing: DropdownButton<String>(
-                value: state.currentLocale,
-                underline: const SizedBox(),
-                items: const [
-                  DropdownMenuItem(value: 'hi', child: Text('हिंदी')),
-                  DropdownMenuItem(value: 'en', child: Text('English')),
-                ],
-                onChanged: (lang) {
-                  if (lang != null) state.setLocale(lang);
-                },
-              ),
-            ),
-            ListTile(
-              leading: Icon(state.themeMode == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode),
-              title: Text(isHi ? 'डार्क थीम' : 'Dark Theme'),
-              trailing: Switch(
-                value: state.themeMode == ThemeMode.dark,
-                onChanged: (val) {
-                  state.setTheme(val ? ThemeMode.dark : ThemeMode.light);
-                },
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.support_agent, color: GBColors.primary),
-              title: Text(isHi ? 'इमरजेंसी डिलीवरी हेल्पलाइन' : 'Emergency Helpline'),
-              subtitle: const Text('+91 9800000000'),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(isHi ? 'कॉलिंग हेल्पलाइन: +91 9800000000' : 'Calling helpline: +91 9800000000'),
-                  ),
-                );
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: GBColors.error),
-              title: Text(isHi ? 'लॉग आउट' : 'Logout', style: const TextStyle(color: GBColors.error, fontWeight: FontWeight.w700)),
-              onTap: () {
-                state.logout();
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const RunnerAuthScreen()),
-                  (r) => false,
-                );
-              },
-            ),
-          ],
-        ),
+      body: IndexedStack(
+        index: _navIndex,
+        children: [
+          _buildHomeTab(state),
+          _buildJobsTab(state),
+          _buildTripsTab(state),
+          _buildEarningsTab(state),
+          _buildAccountTab(state),
+        ],
       ),
-      body: SafeArea(
-        child: Column(
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _navIndex,
+        onTap: (idx) => setState(() => _navIndex = idx),
+        selectedItemColor: GBColors.primary,
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        items: [
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.home_outlined),
+            activeIcon: const Icon(Icons.home),
+            label: isHi ? 'होम' : 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.delivery_dining_outlined),
+            activeIcon: const Icon(Icons.delivery_dining),
+            label: isHi ? 'कार्य (Jobs)' : 'Jobs',
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.history_outlined),
+            activeIcon: const Icon(Icons.history),
+            label: isHi ? 'ट्रिप्स' : 'Trips',
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            activeIcon: const Icon(Icons.account_balance_wallet),
+            label: isHi ? 'कमाई' : 'Earnings',
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person_outline),
+            activeIcon: const Icon(Icons.person),
+            label: isHi ? 'प्रोफ़ाइल' : 'Account',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- TAB 0: HOME ---
+  Widget _buildHomeTab(RunnerAppState state) {
+    final isHi = state.isHindi;
+
+    return SafeArea(
+      child: RefreshIndicator(
+        onRefresh: () async {
+          await state.fetchProfile();
+          await state.fetchJobs();
+          await state.fetchFinances();
+        },
+        child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
             // Approval Warning Banner if runner not yet approved
             if (!state.isApproved)
               Container(
+                margin: const EdgeInsets.only(bottom: 14),
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                color: Colors.amber.shade100,
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 child: Row(
                   children: [
                     Icon(Icons.pending_actions, color: Colors.amber.shade900, size: 20),
@@ -358,7 +314,7 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                       child: Text(
                         isHi
                             ? 'आपकी प्रोफ़ाइल सत्यापन प्रक्रियाधीन है। सुपर एडमिन द्वारा अनुमोदन के बाद ही आप ड्यूटी ऑनलाइन कर सकेंगे।'
-                            : 'Your profile is pending admin approval. You can go online on duty once approved.',
+                            : 'Your profile is pending admin approval. You can go online once approved.',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.amber.shade900,
@@ -372,8 +328,12 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
 
             // Duty Status Bar
             Container(
+              margin: const EdgeInsets.only(bottom: 14),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: state.isOnline ? GBColors.success.withValues(alpha: 0.08) : GBColors.error.withValues(alpha: 0.08),
+              decoration: BoxDecoration(
+                color: state.isOnline ? GBColors.success.withValues(alpha: 0.08) : GBColors.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Row(
                 children: [
                   Icon(
@@ -398,68 +358,145 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
               ),
             ),
 
-            // Pull to refresh body
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  await state.fetchJobs();
-                  await state.fetchFinances();
-                },
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    // Daily Earnings Card
-                    Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 6, offset: const Offset(0, 2)),
+            // Daily Earnings Gradient Card
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2E7D32), Color(0xFF1B5E20)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 6, offset: const Offset(0, 2)),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isHi ? 'आज की कुल डिलीवरी कमाई' : "Today's Delivery Earnings",
+                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '₹${state.todayEarnings.toStringAsFixed(0)}',
+                            style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900),
+                          ),
                         ],
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isHi ? 'आज की डिलीवरी कमाई' : "Today's Earnings",
-                                style: const TextStyle(color: Colors.white70, fontSize: 12),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '₹${state.todayEarnings.toStringAsFixed(0)}',
-                                style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900),
-                              ),
-                            ],
+                          Text(
+                            isHi ? 'पूरी की गई ट्रिप' : 'Completed Trips',
+                            style: const TextStyle(color: Colors.white70, fontSize: 12),
                           ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                isHi ? 'पूरी की गई ट्रिप' : 'Completed Trips',
-                                style: const TextStyle(color: Colors.white70, fontSize: 12),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${state.completedTrips} ${isHi ? "ट्रिप्स" : "Trips"}',
-                                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
-                              ),
-                            ],
+                          const SizedBox(height: 4),
+                          Text(
+                            '${state.completedTrips}',
+                            style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const Divider(color: Colors.white24, height: 24),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        '⭐ 4.9 ${isHi ? "रेटिंग" : "Rating"}',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
+                      ),
+                      const Spacer(),
+                      Text(
+                        isHi ? 'दैनिक यूपीआई सेटलमेंट सक्रिय' : 'Daily UPI Settlement Active',
+                        style: const TextStyle(color: Colors.lightGreenAccent, fontWeight: FontWeight.w700, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Active Job Quick Banner
+            if (state.activeJobs.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: GBColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: GBColors.primary.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.delivery_dining, color: GBColors.primary, size: 28),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isHi ? 'सक्रिय कार्य प्रगति पर है!' : 'Active Delivery Job in Progress!',
+                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                          ),
+                          Text(
+                            '${state.activeJobs.first.storeName} → ${state.activeJobs.first.deliveryAddress}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: GBColors.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      ),
+                      onPressed: () => setState(() => _navIndex = 1),
+                      child: Text(isHi ? 'देखें' : 'View', style: const TextStyle(fontSize: 12)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
 
-                    // Active Jobs List
-                    _buildJobsSection(state),
+            // 5-Tier Rural Distance Payout Info Card
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.timeline, color: GBColors.primary, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          isHi ? 'पारदर्शी 5-स्तरीय दूरी पेआउट दरें' : '5-Tier Distance Delivery Payouts',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 20),
+                    _buildTierRow('0 - 1.0 km', '₹10.00', isHi ? 'गाँव आंतरिक' : 'Intra-village'),
+                    _buildTierRow('1.0 - 2.0 km', '₹14.00', isHi ? 'निकटवर्ती टोला' : 'Nearby Tola'),
+                    _buildTierRow('2.0 - 4.0 km', '₹18.00', isHi ? 'पड़ोसी गाँव' : 'Neighboring village'),
+                    _buildTierRow('4.0 - 6.0 km', '₹22.00', isHi ? 'ब्लॉक क्लस्टर' : 'Block cluster'),
+                    _buildTierRow('6.0 - 8.0 km', '₹28.00', isHi ? 'अधिकतम पायलट सीमा' : 'Max pilot boundary'),
                   ],
                 ),
               ),
@@ -470,6 +507,430 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
     );
   }
 
+  Widget _buildTierRow(String distance, String payout, String note) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(distance, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+          Text(note, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+          Text(payout, style: const TextStyle(fontWeight: FontWeight.w800, color: GBColors.primary, fontSize: 13)),
+        ],
+      ),
+    );
+  }
+
+  // --- TAB 1: JOBS ---
+  Widget _buildJobsTab(RunnerAppState state) {
+    return SafeArea(
+      child: RefreshIndicator(
+        onRefresh: () async {
+          await state.fetchJobs();
+        },
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _buildJobsSection(state),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- TAB 2: TRIPS HISTORY ---
+  Widget _buildTripsTab(RunnerAppState state) {
+    final isHi = state.isHindi;
+
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                isHi ? 'हालिया पूर्ण ट्रिप्स' : 'Completed Delivery Trips',
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+              ),
+              Text(
+                '${state.completedTrips} ${isHi ? "कुल ट्रिप" : "Total Trips"}',
+                style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildTripHistoryCard(
+            orderId: 'ORD-MNP-8840',
+            store: 'Raju Kirana Store',
+            customerVillage: 'Chaturshi, Ward 2',
+            distanceKm: '1.4 km',
+            payout: '₹14.00',
+            deliveredTime: isHi ? '40 मिनट पहले' : '40m ago',
+            isCod: false,
+            isHi: isHi,
+          ),
+          _buildTripHistoryCard(
+            orderId: 'ORD-MNP-8835',
+            store: 'Kisan Fresh Sabzi',
+            customerVillage: 'Benaghara Chowk',
+            distanceKm: '3.1 km',
+            payout: '₹18.00',
+            deliveredTime: isHi ? '2 घंटे पहले' : '2h ago',
+            isCod: true,
+            codCollected: '₹240',
+            isHi: isHi,
+          ),
+          _buildTripHistoryCard(
+            orderId: 'ORD-MNP-8829',
+            store: 'Sudha Dairy Booth',
+            customerVillage: 'Sivay Patti',
+            distanceKm: '5.2 km',
+            payout: '₹22.00',
+            deliveredTime: isHi ? '4 घंटे पहले' : '4h ago',
+            isCod: false,
+            isHi: isHi,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTripHistoryCard({
+    required String orderId,
+    required String store,
+    required String customerVillage,
+    required String distanceKm,
+    required String payout,
+    required String deliveredTime,
+    required bool isCod,
+    String? codCollected,
+    required bool isHi,
+  }) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(orderId, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: GBColors.success.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    isHi ? 'सफल डिलीवरी' : 'Delivered',
+                    style: const TextStyle(color: GBColors.success, fontWeight: FontWeight.bold, fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 16),
+            Text('$store → $customerVillage', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Text('दूरी: $distanceKm', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                const SizedBox(width: 12),
+                Text(deliveredTime, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                const Spacer(),
+                Text(
+                  '${isHi ? "पेआउट" : "Payout"}: $payout',
+                  style: const TextStyle(fontWeight: FontWeight.w800, color: GBColors.primary, fontSize: 13),
+                ),
+              ],
+            ),
+            if (isCod && codCollected != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                '${isHi ? "सीओडी नकद एकत्र" : "COD Collected"}: $codCollected (${isHi ? "जमा किया गया" : "Remitted"})',
+                style: const TextStyle(fontSize: 11, color: Colors.green, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- TAB 3: EARNINGS & FINANCES ---
+  Widget _buildEarningsTab(RunnerAppState state) {
+    final isHi = state.isHindi;
+
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Weekly / Total Ledger
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        isHi ? 'इस सप्ताह की कुल कमाई' : 'Weekly Total Earnings',
+                        style: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: GBColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          isHi ? 'T+1 स्वचालित' : 'Auto T+1',
+                          style: const TextStyle(color: GBColors.primary, fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '₹${(state.todayEarnings * 5.2).toStringAsFixed(0)}',
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 28, color: GBColors.primary),
+                  ),
+                  const Divider(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(isHi ? 'जुड़ी यूपीआई आईडी:' : 'Linked UPI ID:', style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                      Text(state.runnerProfile?['upi_id'] as String? ?? 'runner@oksbi', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // COD Remittance Tracker
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.payments_outlined, color: Colors.red, size: 22),
+                      const SizedBox(width: 8),
+                      Text(
+                        isHi ? 'सीओडी नकद संग्रह व जमा' : 'COD Cash Remittance',
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(isHi ? 'वर्तमान नकद दायित्व:' : 'Current Cash in Hand:', style: const TextStyle(fontSize: 13)),
+                      Text(
+                        '₹${state.cashCollectedToRemit.toStringAsFixed(0)}',
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.red),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isHi
+                        ? 'ग्राहकों से प्राप्त सभी सीओडी राशि उसी दिन मीनापुर हब में जमा या यूपीआई द्वारा सिस्टम में सेटल करना अनिवार्य है।'
+                        : 'All COD cash collected from customers must be remitted to Minapur Hub or reconciled daily.',
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- TAB 4: ACCOUNT / PROFILE ---
+  Widget _buildAccountTab(RunnerAppState state) {
+    final isHi = state.isHindi;
+
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Profile Header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.two_wheeler, color: Colors.white, size: 28),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.25),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.star, color: Colors.amber, size: 16),
+                          SizedBox(width: 4),
+                          Text('4.9', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  state.runnerProfile?['full_name'] as String? ?? state.currentUser?.name ?? 'Santosh Kumar',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${isHi ? "वाहन" : "Vehicle"}: ${state.runnerProfile?["vehicle_type"] ?? "Motorcycle"} (${state.runnerProfile?["vehicle_number"] ?? "BR-06-AB-1234"})',
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+                const Divider(color: Colors.white24, height: 24),
+                Row(
+                  children: [
+                    Text(
+                      state.isApproved
+                          ? (isHi ? '✓ सत्यापित साथी' : '✓ Verified Partner')
+                          : (isHi ? 'सत्यापन प्रक्रियाधीन' : 'Pending Verification'),
+                      style: TextStyle(
+                        color: state.isApproved ? Colors.lightGreenAccent : Colors.amberAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      isHi ? 'मीनापुर क्लस्टर' : 'Minapur Cluster',
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Support & Emergency
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.emergency, color: Colors.red),
+                  title: Text(isHi ? 'आपातकालीन सहायता हेल्पलाइन' : 'Emergency Partner Support'),
+                  subtitle: const Text('+91 98000 00000'),
+                  trailing: const Icon(Icons.phone, color: Colors.red),
+                  onTap: () async {
+                    final uri = Uri.parse('tel:9800000000');
+                    if (await canLaunchUrl(uri)) await launchUrl(uri);
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // Settings: Language & Theme
+          Card(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.language),
+                  title: Text(isHi ? 'भाषा (Language)' : 'Language'),
+                  trailing: DropdownButton<String>(
+                    value: state.currentLocale,
+                    underline: const SizedBox(),
+                    items: const [
+                      DropdownMenuItem(value: 'hi', child: Text('हिंदी')),
+                      DropdownMenuItem(value: 'en', child: Text('English')),
+                    ],
+                    onChanged: (lang) {
+                      if (lang != null) state.setLocale(lang);
+                    },
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: Icon(state.themeMode == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode),
+                  title: Text(isHi ? 'डार्क थीम' : 'Dark Theme'),
+                  trailing: Switch(
+                    value: state.themeMode == ThemeMode.dark,
+                    onChanged: (val) {
+                      state.setTheme(val ? ThemeMode.dark : ThemeMode.light);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Logout Button
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: GBColors.error,
+              side: const BorderSide(color: GBColors.error),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            icon: const Icon(Icons.logout),
+            label: Text(
+              isHi ? 'खाते से लॉग आउट करें' : 'Log Out Account',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            onPressed: () {
+              state.logout();
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const RunnerAuthScreen()),
+                (r) => false,
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  // --- SHARED JOBS SECTION ---
   Widget _buildJobsSection(RunnerAppState state) {
     final isHi = state.isHindi;
 
@@ -680,19 +1141,20 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                   ),
                   child: const Icon(Icons.chat_bubble_outline, size: 16, color: GBColors.primary),
                   onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => OrderChatScreen(
-                        apiClient: state.apiClient,
-                        orderId: order.id,
-                        currentRole: 'runner',
-                        partnerName: 'Customer',
-                        partnerPhone: '9800000000',
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => OrderChatScreen(
+                          apiClient: state.apiClient,
+                          orderId: order.id,
+                          currentRole: 'runner',
+                          partnerName: 'Customer',
+                          partnerPhone: '9800000000',
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),),
+                    );
+                  },
+                ),
+              ),
               const SizedBox(width: 6),
               Tooltip(
                 message: 'Call Customer',
@@ -702,12 +1164,13 @@ class _RunnerDashboardScreenState extends State<RunnerDashboardScreen> {
                   ),
                   child: const Icon(Icons.call, size: 16, color: GBColors.primary),
                   onPressed: () async {
-                  final uri = Uri.parse('tel:9800000000');
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri);
-                  }
-                },
-              ),),
+                    final uri = Uri.parse('tel:9800000000');
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri);
+                    }
+                  },
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),

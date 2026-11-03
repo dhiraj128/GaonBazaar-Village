@@ -499,6 +499,23 @@ class GBApiClient {
     }
   }
 
+    Future<ApiResponse<List<Map<String, dynamic>>>> getPilotLocalities() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl${Endpoints.pilotLocalities}'), headers: _headers())
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final list = (data['localities'] as List? ?? []).cast<Map<String, dynamic>>();
+        return ApiResponse(isSuccess: true, data: list, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
   Future<ApiResponse<bool>> deleteAddress(String addressId) async {
     try {
       final response = await http
@@ -1007,6 +1024,45 @@ class GBApiClient {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       if (response.statusCode == 200 || response.statusCode == 201) {
         return ApiResponse(isSuccess: true, data: GBOrderMessage.fromJson(data), statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+
+  Future<ApiResponse<List<GBNotification>>> getNotifications() async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl${Endpoints.notifications}'),
+            headers: _headers(),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final list = jsonDecode(response.body) as List<dynamic>;
+        final notifs = list.map((item) => GBNotification.fromJson(item as Map<String, dynamic>)).toList();
+        return ApiResponse(isSuccess: true, data: notifs, statusCode: 200);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
+  Future<ApiResponse<bool>> markAllNotificationsRead() async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl${Endpoints.notificationsMarkAllRead}'),
+            headers: _headers(),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        return ApiResponse(isSuccess: true, data: true, statusCode: 200);
       }
       return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
     } catch (e) {

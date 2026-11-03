@@ -9,8 +9,8 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.db.session import async_engine, AsyncSessionLocal
-from app.models.base import Base, User, Store, StoreProduct, GlobalCatalogItem, Runner, Address, OrderMessage
-from app.api.v1 import auth, addresses, stores, orders, ai, admin, support, payments
+from app.models.base import Base, User, Store, StoreProduct, GlobalCatalogItem, Runner, Address, OrderMessage, Notification
+from app.api.v1 import auth, addresses, stores, orders, ai, admin, support, payments, notifications
 
 logger = logging.getLogger("gaonbazaar")
 
@@ -407,6 +407,43 @@ async def init_db_and_seed():
         if new_items:
             for itm in new_items:
                 session.add(itm)
+            # 6. Seed Initial Role Notifications
+            notif_check = await session.execute(select(Notification))
+            if not notif_check.scalars().first():
+                session.add_all([
+                    Notification(
+                        id="notif_cust_01",
+                        user_id="usr_c0",
+                        title="गाँव बाज़ार में आपका स्वागत है!",
+                        body="मीनापुर पायलट क्षेत्र में ताज़ा किराना व सब्जियाँ सीधे घर तक उपलब्ध हैं।",
+                        type="system",
+                        is_read=False
+                    ),
+                    Notification(
+                        id="notif_cust_02",
+                        user_id="usr_c0",
+                        title="विशेष ग्रामीण डिलीवरी ऑफ़र",
+                        body="मीनापुर हब से 8.0 किमी दायरे में सुपरफ़ास्ट डिलीवरी सेवा सक्रिय है।",
+                        type="order",
+                        is_read=True
+                    ),
+                    Notification(
+                        id="notif_vend_01",
+                        user_id="usr_v1",
+                        title="दुकान खाता स्वीकृत (Store Approved)",
+                        body="माँ शारदा किराना स्टोर को 0% कमीशन पर सक्रिय कर दिया गया है।",
+                        type="approval",
+                        is_read=False
+                    ),
+                    Notification(
+                        id="notif_run_01",
+                        user_id="usr_r1",
+                        title="पार्टनर प्रोफ़ाइल सत्यापित",
+                        body="संतोष कुमार, आपका डिलीवरी प्रोफ़ाइल सक्रिय है। आप ड्यूटी ऑन कर सकते हैं।",
+                        type="approval",
+                        is_read=False
+                    ),
+                ])
             await session.commit()
             
         # 2. Pilot Stores in Minapur
@@ -463,6 +500,43 @@ async def init_db_and_seed():
                 banner_url="https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500"
             )
             session.add(st2)
+            # 6. Seed Initial Role Notifications
+            notif_check = await session.execute(select(Notification))
+            if not notif_check.scalars().first():
+                session.add_all([
+                    Notification(
+                        id="notif_cust_01",
+                        user_id="usr_c0",
+                        title="गाँव बाज़ार में आपका स्वागत है!",
+                        body="मीनापुर पायलट क्षेत्र में ताज़ा किराना व सब्जियाँ सीधे घर तक उपलब्ध हैं।",
+                        type="system",
+                        is_read=False
+                    ),
+                    Notification(
+                        id="notif_cust_02",
+                        user_id="usr_c0",
+                        title="विशेष ग्रामीण डिलीवरी ऑफ़र",
+                        body="मीनापुर हब से 8.0 किमी दायरे में सुपरफ़ास्ट डिलीवरी सेवा सक्रिय है।",
+                        type="order",
+                        is_read=True
+                    ),
+                    Notification(
+                        id="notif_vend_01",
+                        user_id="usr_v1",
+                        title="दुकान खाता स्वीकृत (Store Approved)",
+                        body="माँ शारदा किराना स्टोर को 0% कमीशन पर सक्रिय कर दिया गया है।",
+                        type="approval",
+                        is_read=False
+                    ),
+                    Notification(
+                        id="notif_run_01",
+                        user_id="usr_r1",
+                        title="पार्टनर प्रोफ़ाइल सत्यापित",
+                        body="संतोष कुमार, आपका डिलीवरी प्रोफ़ाइल सक्रिय है। आप ड्यूटी ऑन कर सकते हैं।",
+                        type="approval",
+                        is_read=False
+                    ),
+                ])
             await session.commit()
             
             # Products for Store 1
@@ -560,6 +634,43 @@ async def init_db_and_seed():
             )
             session.add(u_admin)
             
+            # 6. Seed Initial Role Notifications
+            notif_check = await session.execute(select(Notification))
+            if not notif_check.scalars().first():
+                session.add_all([
+                    Notification(
+                        id="notif_cust_01",
+                        user_id="usr_c0",
+                        title="गाँव बाज़ार में आपका स्वागत है!",
+                        body="मीनापुर पायलट क्षेत्र में ताज़ा किराना व सब्जियाँ सीधे घर तक उपलब्ध हैं।",
+                        type="system",
+                        is_read=False
+                    ),
+                    Notification(
+                        id="notif_cust_02",
+                        user_id="usr_c0",
+                        title="विशेष ग्रामीण डिलीवरी ऑफ़र",
+                        body="मीनापुर हब से 8.0 किमी दायरे में सुपरफ़ास्ट डिलीवरी सेवा सक्रिय है।",
+                        type="order",
+                        is_read=True
+                    ),
+                    Notification(
+                        id="notif_vend_01",
+                        user_id="usr_v1",
+                        title="दुकान खाता स्वीकृत (Store Approved)",
+                        body="माँ शारदा किराना स्टोर को 0% कमीशन पर सक्रिय कर दिया गया है।",
+                        type="approval",
+                        is_read=False
+                    ),
+                    Notification(
+                        id="notif_run_01",
+                        user_id="usr_r1",
+                        title="पार्टनर प्रोफ़ाइल सत्यापित",
+                        body="संतोष कुमार, आपका डिलीवरी प्रोफ़ाइल सक्रिय है। आप ड्यूटी ऑन कर सकते हैं।",
+                        type="approval",
+                        is_read=False
+                    ),
+                ])
             await session.commit()
 
 async def run_resilient_init_db(app: FastAPI):
@@ -625,6 +736,7 @@ app.include_router(ai.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(support.router, prefix=settings.API_V1_STR)
 app.include_router(payments.router, prefix=settings.API_V1_STR)
+app.include_router(notifications.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():

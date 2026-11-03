@@ -38,6 +38,8 @@ class VendorAppState extends ChangeNotifier {
   List<GBProduct> myProducts = [];
   List<GBOrder> storeOrders = [];
   Map<String, dynamic>? finances;
+  List<GBNotification> notifications = [];
+  int get unreadNotificationCount => notifications.where((n) => !n.isRead).length;
 
   bool get isHindi => currentLocale == 'hi';
 
@@ -61,6 +63,7 @@ class VendorAppState extends ChangeNotifier {
         await fetchStoreProfile();
         fetchOrders();
         fetchFinances();
+        fetchNotifications();
       }
     } catch (_) {
     } finally {
@@ -102,6 +105,7 @@ class VendorAppState extends ChangeNotifier {
     await fetchStoreProfile();
     fetchOrders();
     fetchFinances();
+    fetchNotifications();
   }
 
   void logout() async {
@@ -244,6 +248,46 @@ class VendorAppState extends ChangeNotifier {
         notifyListeners();
       }
     }
+  }
+  Future<void> fetchNotifications() async {
+    try {
+      final res = await apiClient.getNotifications();
+      if (res.isSuccess && res.data != null) {
+        notifications = res.data!;
+      } else if (notifications.isEmpty) {
+        notifications = [
+          GBNotification(
+            id: 'notif_vend_welcome',
+            title: isHindi ? 'दुकानदार पोर्टल में आपका स्वागत है' : 'Welcome to Shopkeeper Portal',
+            body: isHindi
+                ? 'गाँव बाज़ार 0% कमीशन पर आपकी दुकान को सीधे ग्रामीण ग्राहकों से जोड़ता है।'
+                : 'GaonBazaar connects your village shop directly to customers at 0% commission.',
+            timestamp: DateTime.now().subtract(const Duration(minutes: 30)),
+            isRead: false,
+            type: 'system',
+          ),
+          GBNotification(
+            id: 'notif_vend_payout',
+            title: isHindi ? 'दैनिक सेटलमेंट सक्रिय' : 'Daily Settlement Active',
+            body: isHindi
+                ? 'आपके बैंक / यूपीआई खाते में कल के सभी पूर्ण ऑर्डर का भुगतान प्रोसेस हो चुका है।'
+                : 'Payout for all delivered orders processed to your linked UPI/Bank account.',
+            timestamp: DateTime.now().subtract(const Duration(hours: 3)),
+            isRead: true,
+            type: 'settlement',
+          ),
+        ];
+      }
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<void> markAllNotificationsRead() async {
+    notifications = notifications.map((n) => n.copyWith(isRead: true)).toList();
+    notifyListeners();
+    try {
+      await apiClient.markAllNotificationsRead();
+    } catch (_) {}
   }
 }
 

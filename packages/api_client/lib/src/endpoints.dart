@@ -37,6 +37,7 @@ class Endpoints {
   static const String addresses = '/addresses';
   static String addressDetails(String id) => '/addresses/$id';
   static const String checkServiceability = '/addresses/serviceability/check';
+  static const String pilotLocalities = '/addresses/pilot-localities';
 
   // Cart & Orders
   static const String syncCart = '/cart/sync';
@@ -75,4 +76,8 @@ class Endpoints {
   static const String paymentStatus = '/payments/status';
   static const String razorpayOrder = '/payments/razorpay/order';
   static const String razorpayVerify = '/payments/razorpay/verify';
+
+  // Notifications
+  static const String notifications = '/notifications';
+  static const String notificationsMarkAllRead = '/notifications/mark-all-read';
 }

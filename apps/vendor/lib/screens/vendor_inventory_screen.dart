@@ -6,7 +6,8 @@ import '../state/vendor_state.dart';
 import 'product_library_screen.dart';
 
 class VendorInventoryScreen extends StatelessWidget {
-  const VendorInventoryScreen({super.key});
+  final bool isTab;
+  const VendorInventoryScreen({super.key, this.isTab = false});
 
   void _showEditStockDialog(BuildContext context, VendorAppState state, GBProduct product) {
     final loc = GBLocalizations.of(context);
@@ -326,11 +327,14 @@ class VendorInventoryScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: loc.isHindi ? 'पीछे जाएं' : 'Back',
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        automaticallyImplyLeading: !isTab,
+        leading: isTab
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: loc.isHindi ? 'पीछे जाएं' : 'Back',
+                onPressed: () => Navigator.of(context).pop(),
+              ),
         title: Text(
           loc.tr('menu_inventory'),
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),

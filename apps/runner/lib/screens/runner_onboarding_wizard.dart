@@ -14,92 +14,91 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
   int _currentStep = 0;
   bool _isSubmitting = false;
 
+  // Step 0: Personal Details
   final _fullNameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
+  final _altPhoneCtrl = TextEditingController();
+
+  // Step 1: Vehicle Selection
+  String _vehicleType = 'Motorcycle';
+  final List<String> _vehicleTypes = [
+    'Motorcycle',
+    'Scooter',
+    'Bicycle',
+    'Electric Cycle',
+  ];
+
+  // Step 2: Delivery Zone
+  String _preferredVillage = 'Chaturshi / Chatursi';
+  String _shiftTiming = 'पूर्ण दिवस (Full Day 8 AM - 8 PM)';
+  List<Map<String, dynamic>> _pilotVillages = [
+    {'name': 'Chaturshi / Chatursi', 'latitude': 26.2230, 'longitude': 85.3520},
+    {'name': 'Tubanaghara / Benaghara', 'latitude': 26.2080, 'longitude': 85.3370},
+    {'name': 'Sivay Patti', 'latitude': 26.2310, 'longitude': 85.3610},
+    {'name': 'Tulsi Ganj / Bangaon', 'latitude': 26.1980, 'longitude': 85.3420},
+  ];
+
+  // Step 3: Identity Verification (Test Mode)
+  final _aadhaarCtrl = TextEditingController();
+  bool _digiLockerConsented = false;
+
+  // Step 4: Vehicle Documents
   final _bikeNoCtrl = TextEditingController();
   final _dlCtrl = TextEditingController();
+
+  // Step 5: Bank & Payout
   final _upiCtrl = TextEditingController();
-  String _vehicleType = 'Motorcycle';
-  bool _digiLockerConsented = false;
+  final _bankNameCtrl = TextEditingController();
+  final _accountNoCtrl = TextEditingController();
+  final _ifscCtrl = TextEditingController();
+
+  // Step 6: Equipment Readiness
+  bool _hasDeliveryBag = true;
+  bool _hasSmartphone = true;
+  bool _hasHelmetOrVest = true;
+
+  // Step 7: Agreement
+  bool _agreedToTerms = false;
+  bool _agreedToCodRemittance = false;
+
+  bool get _isMotorized => _vehicleType == 'Motorcycle' || _vehicleType == 'Scooter';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final state = RunnerStateProvider.of(context);
+      if (state.currentUser != null) {
+        _fullNameCtrl.text = state.currentUser!.name ?? '';
+        _phoneCtrl.text = state.currentUser!.phone;
+      }
+      try {
+        final res = await state.apiClient.getPilotLocalities();
+        if (res.isSuccess && res.data != null && res.data!.isNotEmpty) {
+          setState(() {
+            _pilotVillages = res.data!;
+            if (!_pilotVillages.any((v) => v['name'] == _preferredVillage)) {
+              _preferredVillage = _pilotVillages.first['name'].toString();
+            }
+          });
+        }
+      } catch (_) {}
+    });
+  }
 
   @override
   void dispose() {
     _fullNameCtrl.dispose();
     _phoneCtrl.dispose();
+    _altPhoneCtrl.dispose();
+    _aadhaarCtrl.dispose();
     _bikeNoCtrl.dispose();
     _dlCtrl.dispose();
     _upiCtrl.dispose();
+    _bankNameCtrl.dispose();
+    _accountNoCtrl.dispose();
+    _ifscCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _submitApplication(RunnerAppState state) async {
-    final isHi = state.isHindi;
-
-    if (_fullNameCtrl.text.trim().isEmpty) {
-      _showError(isHi ? 'कृपया अपना पूरा नाम दर्ज करें' : 'Please enter your full name');
-      return;
-    }
-    if (_bikeNoCtrl.text.trim().isEmpty) {
-      _showError(isHi ? 'कृपया वाहन पंजीकरण संख्या दर्ज करें' : 'Please enter vehicle registration number');
-      return;
-    }
-    if (_dlCtrl.text.trim().isEmpty) {
-      _showError(isHi ? 'कृपया ड्राइविंग लाइसेंस संख्या दर्ज करें' : 'Please enter driving licence number');
-      return;
-    }
-    if (!_digiLockerConsented) {
-      _showError(isHi ? 'कृपया डिजीलॉकर सत्यापन सहमति स्वीकार करें' : 'Please accept DigiLocker verification consent');
-      return;
-    }
-    if (_upiCtrl.text.trim().isEmpty) {
-      _showError(isHi ? 'कृपया यूपीआई आईडी दर्ज करें' : 'Please enter UPI ID for payouts');
-      return;
-    }
-
-    setState(() => _isSubmitting = true);
-
-    final payload = {
-      'full_name': _fullNameCtrl.text.trim(),
-      'vehicle_type': _vehicleType,
-      'vehicle_number': _bikeNoCtrl.text.trim().toUpperCase(),
-      'driving_licence_no': _dlCtrl.text.trim().toUpperCase(),
-      'upi_id': _upiCtrl.text.trim().toLowerCase(),
-    };
-
-    await state.onboardRunner(payload);
-
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.check_circle_outline, color: GBColors.primary, size: 48),
-        title: Text(
-          isHi ? 'आवेदन सफलतापूर्वक जमा हुआ' : 'Application Submitted',
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
-        ),
-        content: Text(
-          isHi
-              ? 'आपका डिलीवरी साथी आवेदन सुपर एडमिन के पास समीक्षा के लिए जमा कर दिया गया है। अनुमोदन के बाद आप ड्यूटी ऑनलाइन कर सकेंगे।'
-              : 'Your delivery partner application has been submitted to Super Admin for verification. You can go on duty once approved.',
-          style: const TextStyle(fontSize: 13),
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const RunnerDashboardScreen()),
-              );
-            },
-            child: Text(isHi ? 'डैशबोर्ड पर जाएँ' : 'Go to Dashboard'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showError(String msg) {
@@ -108,11 +107,99 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
     );
   }
 
-  void _nextStep(RunnerAppState state) {
-    if (_currentStep < 3) {
+  void _nextStep(RunnerAppState state) async {
+    final isHi = state.isHindi;
+
+    // Step-by-step validations
+    if (_currentStep == 0) {
+      if (_fullNameCtrl.text.trim().isEmpty) {
+        _showError(isHi ? 'कृपया अपना पूरा नाम दर्ज करें' : 'Please enter your full name');
+        return;
+      }
+    } else if (_currentStep == 3) {
+      if (!_digiLockerConsented) {
+        _showError(isHi ? 'कृपया पहचान सत्यापन सहमति स्वीकार करें' : 'Please accept verification consent');
+        return;
+      }
+    } else if (_currentStep == 4) {
+      // Motorized partners must provide DL and Vehicle Reg No. Bicycle partners are EXEMPT!
+      if (_isMotorized) {
+        if (_bikeNoCtrl.text.trim().isEmpty) {
+          _showError(isHi ? 'मोटरसाइकिल/स्कूटर हेतु वाहन पंजीकरण संख्या अनिवार्य है' : 'Vehicle registration number is required for motorcycle/scooter');
+          return;
+        }
+        if (_dlCtrl.text.trim().isEmpty) {
+          _showError(isHi ? 'मोटरसाइकिल/स्कूटर हेतु ड्राइविंग लाइसेंस संख्या अनिवार्य है' : 'Driving licence number is required for motorcycle/scooter');
+          return;
+        }
+      }
+    } else if (_currentStep == 5) {
+      if (_upiCtrl.text.trim().isEmpty && _accountNoCtrl.text.trim().isEmpty) {
+        _showError(isHi ? 'कृपया पेआउट हेतु यूपीआई आईडी या बैंक खाता संख्या दर्ज करें' : 'Please enter UPI ID or Bank account for payouts');
+        return;
+      }
+    } else if (_currentStep == 6) {
+      if (!_hasSmartphone || !_hasDeliveryBag) {
+        _showError(isHi ? 'डिलीवरी हेतु स्मार्टफोन और डिलीवरी बैग आवश्यक है' : 'Smartphone and delivery bag are required');
+        return;
+      }
+    } else if (_currentStep == 7) {
+      if (!_agreedToTerms || !_agreedToCodRemittance) {
+        _showError(isHi ? 'कृपया सभी सेवा शर्तों और सीओडी नियमों को स्वीकार करें' : 'Please accept all terms and COD remittance rules');
+        return;
+      }
+    }
+
+    if (_currentStep < 7) {
       setState(() => _currentStep++);
     } else {
-      _submitApplication(state);
+      // Step 8: Submit Application to Backend
+      setState(() => _isSubmitting = true);
+
+      final payload = {
+        'full_name': _fullNameCtrl.text.trim(),
+        'vehicle_type': _vehicleType,
+        'vehicle_number': _isMotorized
+            ? _bikeNoCtrl.text.trim().toUpperCase()
+            : 'BICYCLE-${_fullNameCtrl.text.trim().toUpperCase().replaceAll(' ', '')}',
+        'driving_licence_no': _isMotorized ? _dlCtrl.text.trim().toUpperCase() : 'EXEMPT-BICYCLE',
+        'upi_id': _upiCtrl.text.trim().isEmpty ? 'runner@upi' : _upiCtrl.text.trim().toLowerCase(),
+      };
+
+      await state.onboardRunner(payload);
+
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          icon: const Icon(Icons.check_circle_outline, color: GBColors.primary, size: 48),
+          title: Text(
+            isHi ? 'आवेदन समीक्षाधीन (Pending Review)' : 'Application Under Review',
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+          ),
+          content: Text(
+            isHi
+                ? 'आपका 8-चरणीय डिलीवरी साथी आवेदन सुपर एडमिन के पास समीक्षा के लिए जमा कर दिया गया है। अनुमोदन के बाद आप ड्यूटी ऑनलाइन कर सकेंगे।'
+                : 'Your 8-step delivery partner application has been submitted to Super Admin. Once approved, you can start accepting orders.',
+            style: const TextStyle(fontSize: 13),
+          ),
+          actions: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: GBColors.primary),
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const RunnerDashboardScreen()),
+                );
+              },
+              child: Text(isHi ? 'डैशबोर्ड पर जाएँ' : 'Go to Dashboard'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -124,7 +211,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          isHi ? 'डिलीवरी साथी पंजीकरण' : 'Delivery Partner Registration',
+          isHi ? 'डिलीवरी साथी पंजीकरण (8 चरण)' : 'Runner Onboarding (8 Steps)',
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
       ),
@@ -142,9 +229,9 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
                 children: [
                   Expanded(
                     child: GBPrimaryButton(
-                      label: _currentStep == 3
-                          ? (isHi ? 'आवेदन जमा करें' : 'Submit Application')
-                          : (isHi ? 'आगे बढ़ें' : 'Next Step'),
+                      label: _currentStep == 7
+                          ? (isHi ? 'आवेदन जमा करें (Submit)' : 'Submit Application')
+                          : (isHi ? 'आगे बढ़ें (Next)' : 'Next Step'),
                       isLoading: _isSubmitting,
                       onPressed: details.onStepContinue,
                     ),
@@ -161,85 +248,363 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
             );
           },
           steps: [
-            // Step 1: Personal Details
+            // Step 0: Personal & Contact Information
             Step(
-              title: Text(isHi ? 'व्यक्तिगत जानकारी' : 'Personal Details'),
+              title: Text(isHi ? '1. व्यक्तिगत जानकारी' : '1. Personal Info'),
               isActive: _currentStep >= 0,
               content: Column(
                 children: [
-                  TextFormField(
+                  TextField(
                     controller: _fullNameCtrl,
                     decoration: InputDecoration(
-                      labelText: isHi ? 'पूरा नाम' : 'Full Name',
-                      hintText: isHi ? 'उदा. संतोष कुमार' : 'e.g. Santosh Kumar',
-                      border: const OutlineInputBorder(),
+                      labelText: isHi ? 'पूरा नाम (आधार कार्ड के अनुसार) *' : 'Full Name (as per ID) *',
+                      prefixIcon: const Icon(Icons.person_outline),
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  TextFormField(
+                  const SizedBox(height: 12),
+                  TextField(
                     controller: _phoneCtrl,
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
-                      labelText: isHi ? 'मोबाइल नंबर' : 'Phone Number',
-                      hintText: isHi ? 'उदा. 9876543210' : 'e.g. 9876543210',
-                      prefixText: '+91 ',
-                      border: const OutlineInputBorder(),
+                      labelText: isHi ? 'मोबाइल नंबर *' : 'Mobile Number *',
+                      prefixIcon: const Icon(Icons.phone_android),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _altPhoneCtrl,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'आपातकालीन संपर्क नंबर (वैकल्पिक)' : 'Emergency Contact Phone (Optional)',
+                      prefixIcon: const Icon(Icons.contact_phone_outlined),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // Step 2: Vehicle & Driving Licence
+            // Step 1: Vehicle & Transport Selection
             Step(
-              title: Text(isHi ? 'वाहन व ड्राइविंग लाइसेंस' : 'Vehicle & Licence'),
+              title: Text(isHi ? '2. वाहन प्रकार' : '2. Vehicle Selection'),
               isActive: _currentStep >= 1,
               content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   DropdownButtonFormField<String>(
                     value: _vehicleType,
                     decoration: InputDecoration(
-                      labelText: isHi ? 'वाहन का प्रकार' : 'Vehicle Type',
-                      border: const OutlineInputBorder(),
+                      labelText: isHi ? 'डिलीवरी वाहन चुनें *' : 'Select Delivery Vehicle *',
+                      prefixIcon: const Icon(Icons.two_wheeler),
                     ),
-                    items: [
-                      DropdownMenuItem(
-                        value: 'Motorcycle',
-                        child: Text(isHi ? 'मोटरसाइकिल / बाइक' : 'Motorcycle / Bike'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Bicycle',
-                        child: Text(isHi ? 'साइकिल' : 'Bicycle'),
-                      ),
-                    ],
+                    items: _vehicleTypes
+                        .map((v) => DropdownMenuItem(
+                              value: v,
+                              child: Text(
+                                v == 'Bicycle'
+                                    ? (isHi ? 'साइकिल (Bicycle) — DL/RC की आवश्यकता नहीं' : 'Bicycle — No DL/RC needed')
+                                    : v == 'Electric Cycle'
+                                        ? (isHi ? 'इलेक्ट्रिक साइकिल (E-Cycle)' : 'Electric Cycle')
+                                        : v,
+                              ),
+                            ))
+                        .toList(),
                     onChanged: (v) => setState(() => _vehicleType = v!),
                   ),
-                  const SizedBox(height: 14),
-                  TextFormField(
-                    controller: _bikeNoCtrl,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'बाइक पंजीकरण संख्या' : 'Vehicle Registration Number',
-                      hintText: isHi ? 'उदा. BR-06-AB-1234' : 'e.g. BR-06-AB-1234',
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  TextFormField(
-                    controller: _dlCtrl,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'ड्राइविंग लाइसेंस नंबर' : 'Driving Licence Number',
-                      hintText: isHi ? 'उदा. DL-062024009876' : 'e.g. DL-062024009876',
-                      border: const OutlineInputBorder(),
+                  const SizedBox(height: 10),
+                  Text(
+                    _isMotorized
+                        ? (isHi
+                            ? 'नोट: मोटरसाइकिल/स्कूटर हेतु वैध ड्राइविंग लाइसेंस अनिवार्य है।'
+                            : 'Note: Valid Driving Licence is required for motorcycle/scooter.')
+                        : (isHi
+                            ? '✓ साइकिल/ई-साइकिल डिलीवरी हेतु ड्राइविंग लाइसेंस आवश्यक नहीं है।'
+                            : '✓ Bicycle partners are exempt from DL and vehicle RC requirements.'),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _isMotorized ? Colors.blue.shade800 : Colors.green.shade800,
                     ),
                   ),
                 ],
               ),
             ),
 
-            // Step 3: Identity & DigiLocker
+            // Step 2: Delivery Operating Zone
             Step(
-              title: Text(isHi ? 'पहचान व डिजीलॉकर सत्यापन' : 'Identity Verification'),
+              title: Text(isHi ? '3. कार्य क्षेत्र व शिफ्ट' : '3. Zone & Shift'),
               isActive: _currentStep >= 2,
+              content: Column(
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: _preferredVillage,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'प्राथमिक गाँव / टोला चुनें *' : 'Primary Operating Village *',
+                      prefixIcon: const Icon(Icons.map_outlined),
+                    ),
+                    items: _pilotVillages
+                        .map((v) => DropdownMenuItem(
+                              value: v['name'] as String,
+                              child: Text(v['name'] as String),
+                            ))
+                        .toList(),
+                    onChanged: (v) => setState(() => _preferredVillage = v!),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    value: _shiftTiming,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'पसंदीदा शिफ्ट समय' : 'Preferred Shift Timing',
+                      prefixIcon: const Icon(Icons.access_time),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'पूर्ण दिवस (Full Day 8 AM - 8 PM)', child: Text('8 AM - 8 PM (Full Day)')),
+                      DropdownMenuItem(value: 'प्रातः शिफ्ट (Morning 7 AM - 1 PM)', child: Text('7 AM - 1 PM (Morning)')),
+                      DropdownMenuItem(value: 'सायं शिफ्ट (Evening 3 PM - 9 PM)', child: Text('3 PM - 9 PM (Evening)')),
+                    ],
+                    onChanged: (v) => setState(() => _shiftTiming = v!),
+                  ),
+                ],
+              ),
+            ),
+
+            // Step 3: Identity Verification (TEST MODE)
+            Step(
+              title: Text(isHi ? '4. डिजिटल पहचान (KYC)' : '4. Identity Verification'),
+              isActive: _currentStep >= 3,
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Test mode banner
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.shade400, width: 1.5),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, color: Colors.amber.shade900, size: 24),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isHi
+                                    ? 'परीक्षण मोड — वास्तविक पहचान सत्यापन नहीं है'
+                                    : 'TEST MODE — NOT REAL IDENTITY VERIFICATION',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 12,
+                                  color: Colors.amber.shade900,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isHi
+                                    ? 'स्टेजिंग वातावरण में केवल अंतिम 4 अंक दर्ज किए जा सकते हैं।'
+                                    : 'Staging environment simulation. Please do not submit real Aadhaar/DL documents.',
+                                style: TextStyle(fontSize: 11, color: Colors.amber.shade900),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextField(
+                    controller: _aadhaarCtrl,
+                    keyboardType: TextInputType.number,
+                    maxLength: 4,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'आधार के अंतिम 4 अंक' : 'Aadhaar Last 4 Digits',
+                      hintText: 'XXXX',
+                      prefixIcon: const Icon(Icons.credit_card),
+                    ),
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _digiLockerConsented,
+                    onChanged: (v) => setState(() => _digiLockerConsented = v ?? false),
+                    title: Text(
+                      isHi
+                          ? 'मैं डिजिटल पहचान सत्यापन और डिलीवरी साथी नियमों की सहमति देता/देती हूँ।'
+                          : 'I consent to digital partner KYC verification and delivery conduct policies.',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                ],
+              ),
+            ),
+
+            // Step 4: Vehicle Documents (Conditional)
+            Step(
+              title: Text(isHi ? '5. वाहन दस्तावेज़' : '5. Vehicle Documents'),
+              isActive: _currentStep >= 4,
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!_isMotorized) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.pedal_bike, color: Colors.green.shade800, size: 28),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              isHi
+                                  ? 'साइकिल डिलीवरी साथी: किसी ड्राइविंग लाइसेंस या वाहन पंजीकरण की आवश्यकता नहीं है। आप सीधे ऑनबोर्ड हो सकते हैं!'
+                                  : 'Bicycle Partner: No driving licence or vehicle registration required. You are ready to deliver!',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.green.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: isHi ? 'साइकिल का रंग / ब्रांड (वैकल्पिक)' : 'Bicycle Color / Brand (Optional)',
+                        hintText: isHi ? 'उदा. हरा एटलस' : 'e.g. Green Hero',
+                        prefixIcon: const Icon(Icons.pedal_bike_outlined),
+                      ),
+                    ),
+                  ] else ...[
+                    TextField(
+                      controller: _bikeNoCtrl,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: InputDecoration(
+                        labelText: isHi ? 'वाहन पंजीकरण संख्या (RC) *' : 'Vehicle Registration No. (RC) *',
+                        hintText: 'BR-06-AB-1234',
+                        prefixIcon: const Icon(Icons.pin_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _dlCtrl,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: InputDecoration(
+                        labelText: isHi ? 'ड्राइविंग लाइसेंस संख्या (DL) *' : 'Driving Licence Number (DL) *',
+                        hintText: 'DL-0620240099881',
+                        prefixIcon: const Icon(Icons.badge_outlined),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // Step 5: Bank Account & Payout Setup
+            Step(
+              title: Text(isHi ? '6. बैंक व पेआउट' : '6. Payout & Bank'),
+              isActive: _currentStep >= 5,
+              content: Column(
+                children: [
+                  TextField(
+                    controller: _upiCtrl,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'यूपीआई आईडी (दैनिक पेआउट हेतु) *' : 'UPI ID (For daily payouts) *',
+                      hintText: 'runner@oksbi',
+                      prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _bankNameCtrl,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'बैंक का नाम (वैकल्पिक)' : 'Bank Name (Optional)',
+                      hintText: 'State Bank of India',
+                      prefixIcon: const Icon(Icons.account_balance_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _accountNoCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'खाता संख्या (वैकल्पिक)' : 'Account Number (Optional)',
+                      prefixIcon: const Icon(Icons.numbers_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _ifscCtrl,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      labelText: isHi ? 'आईएफएससी कोड (IFSC)' : 'IFSC Code',
+                      hintText: 'SBIN0001234',
+                      prefixIcon: const Icon(Icons.code),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Step 6: Equipment Readiness
+            Step(
+              title: Text(isHi ? '7. डिलीवरी तैयारी' : '7. Equipment'),
+              isActive: _currentStep >= 6,
+              content: Column(
+                children: [
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _hasSmartphone,
+                    onChanged: (v) => setState(() => _hasSmartphone = v ?? false),
+                    title: Text(
+                      isHi
+                          ? 'मेरे पास 4G इंटरनेट और जीपीएस युक्त स्मार्टफोन है।'
+                          : 'I have a 4G-enabled smartphone with GPS.',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _hasDeliveryBag,
+                    onChanged: (v) => setState(() => _hasDeliveryBag = v ?? false),
+                    title: Text(
+                      isHi
+                          ? 'मेरे पास सामान सुरक्षित ले जाने हेतु मजबूत डिलीवरी बैग/कैरियर है।'
+                          : 'I have a sturdy bag or vehicle carrier to transport items safely.',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _hasHelmetOrVest,
+                    onChanged: (v) => setState(() => _hasHelmetOrVest = v ?? false),
+                    title: Text(
+                      isHi
+                          ? 'मैं सड़क सुरक्षा नियमों (हेलमेट / रिफ्लेक्टर) का पालन करूँगा।'
+                          : 'I will comply with road safety rules (helmet/reflectors).',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                  ),
+                ],
+              ),
+            ),
+
+            // Step 7: Agreement Review & Safety Pledge
+            Step(
+              title: Text(isHi ? '8. सेवा अनुबंध व नियम' : '8. Agreement & Pledge'),
+              isActive: _currentStep >= 7,
               content: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -250,59 +615,47 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: GBColors.primary.withValues(alpha: 0.2)),
                     ),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.verified_user_outlined, color: GBColors.primary, size: 28),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            isHi
-                                ? 'सरकारी डिजीलॉकर द्वारा सुरक्षित एवं तुरंत दस्तावेज़ सत्यापन'
-                                : 'Secure instant document verification via Government DigiLocker',
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-                          ),
+                        Text(
+                          isHi ? 'डिलीवरी साथी प्रतिज्ञा:' : 'Delivery Partner Code of Conduct:',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: GBColors.primary),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          isHi
+                              ? '• ग्राहक को सामान सौंपते समय 4-अंकीय ओटीपी पिन सत्यापित करना अनिवार्य है।\n• नकद (COD) ऑर्डर की राशि उसी दिन हब/सिस्टम में जमा करनी होगी।\n• पारदर्शी 5-स्तरीय दूरी पेआउट (₹10 - ₹28) प्रति डिलीवरी प्राप्त होगा।'
+                              : '• Always verify the 4-digit OTP from customer upon handover.\n• Collect and remit COD cash accurately on the same working day.\n• Transparent 5-tier distance payouts (₹10 - ₹28) per completed job.',
+                          style: const TextStyle(fontSize: 12, height: 1.4),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 12),
                   CheckboxListTile(
-                    value: _digiLockerConsented,
-                    activeColor: GBColors.primary,
                     contentPadding: EdgeInsets.zero,
+                    value: _agreedToCodRemittance,
+                    onChanged: (v) => setState(() => _agreedToCodRemittance = v ?? false),
                     title: Text(
                       isHi
-                          ? 'मैं अपने ड्राइविंग लाइसेंस एवं आधार सत्यापन हेतु सहमति प्रदान करता हूँ।'
-                          : 'I authorize verification of my driving licence and Aadhaar via DigiLocker.',
-                      style: const TextStyle(fontSize: 13),
+                          ? 'मैं ग्राहक से प्राप्त सीओडी नकद राशि की पूर्ण सुरक्षा और समय पर जमा करने की जिम्मेदारी लेता/लेती हूँ।'
+                          : 'I accept full responsibility for safe collection and accurate remittance of COD payments.',
+                      style: const TextStyle(fontSize: 12),
                     ),
-                    onChanged: (v) => setState(() => _digiLockerConsented = v ?? false),
+                    controlAffinity: ListTileControlAffinity.leading,
                   ),
-                ],
-              ),
-            ),
-
-            // Step 4: Payout Details
-            Step(
-              title: Text(isHi ? 'कमाई भुगतान खाता' : 'Earnings Payout Account'),
-              isActive: _currentStep >= 3,
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextFormField(
-                    controller: _upiCtrl,
-                    decoration: InputDecoration(
-                      labelText: isHi ? 'यूपीआई आईडी' : 'UPI ID',
-                      hintText: isHi ? 'उदा. आपकानाम@upi' : 'e.g. yourname@upi',
-                      border: const OutlineInputBorder(),
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: _agreedToTerms,
+                    onChanged: (v) => setState(() => _agreedToTerms = v ?? false),
+                    title: Text(
+                      isHi
+                          ? 'मैंने गाँव बाज़ार डिलीवरी साथी सेवा अनुबंध व नीतियों को स्वीकार किया है।'
+                          : 'I agree to the GaonBazaar Delivery Partner Terms of Service.',
+                      style: const TextStyle(fontSize: 12),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    isHi
-                        ? 'प्रति डिलीवरी मिलने वाला शुल्क सीधे आपके बैंक / यूपीआई खाते में बिना किसी देरी के भेजा जाता है।'
-                        : 'Your delivery fees are transferred directly to your bank account / UPI ID without delays.',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    controlAffinity: ListTileControlAffinity.leading,
                   ),
                 ],
               ),

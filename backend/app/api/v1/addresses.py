@@ -13,6 +13,17 @@ from app.core.config import settings
 
 router = APIRouter(prefix="/addresses", tags=["Addresses & Geolocation"])
 
+@router.get("/pilot-localities")
+async def list_pilot_localities():
+    """Returns the list of officially configured pilot localities in Minapur block."""
+    from app.services.geo_service import PILOT_LOCALITIES
+    return {
+        "localities": PILOT_LOCALITIES,
+        "block": "Minapur",
+        "district": "Muzaffarpur",
+        "max_radius_km": settings.MAX_DELIVERY_RADIUS_KM,
+    }
+
 @router.get("", response_model=List[AddressResponse])
 async def list_addresses(
     payload: dict = Depends(get_current_user_payload),

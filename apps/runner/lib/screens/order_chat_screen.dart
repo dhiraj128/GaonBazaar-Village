@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:design_system/design_system.dart';
-import 'package:localization/localization.dart';
 import 'package:shared_models/shared_models.dart';
 import 'package:api_client/api_client.dart';
 import 'package:url_launcher/url_launcher.dart';

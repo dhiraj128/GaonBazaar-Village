@@ -4,7 +4,8 @@ import 'package:localization/localization.dart';
 import '../state/vendor_state.dart';
 
 class ProductLibraryScreen extends StatefulWidget {
-  const ProductLibraryScreen({super.key});
+  final bool isTab;
+  const ProductLibraryScreen({super.key, this.isTab = false});
 
   @override
   State<ProductLibraryScreen> createState() => _ProductLibraryScreenState();
@@ -325,11 +326,14 @@ class _ProductLibraryScreenState extends State<ProductLibraryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: loc.isHindi ? 'पीछे जाएं' : 'Back',
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        automaticallyImplyLeading: !widget.isTab,
+        leading: widget.isTab
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: loc.isHindi ? 'पीछे जाएं' : 'Back',
+                onPressed: () => Navigator.of(context).pop(),
+              ),
         title: Text(
           loc.tr('menu_catalog'),
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),

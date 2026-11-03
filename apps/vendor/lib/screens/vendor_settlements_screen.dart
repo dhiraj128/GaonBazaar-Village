@@ -3,7 +3,8 @@ import 'package:design_system/design_system.dart';
 import '../state/vendor_state.dart';
 
 class VendorSettlementsScreen extends StatefulWidget {
-  const VendorSettlementsScreen({super.key});
+  final bool isTab;
+  const VendorSettlementsScreen({super.key, this.isTab = false});
 
   @override
   State<VendorSettlementsScreen> createState() => _VendorSettlementsScreenState();
@@ -33,11 +34,14 @@ class _VendorSettlementsScreenState extends State<VendorSettlementsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: isHi ? 'पीछे जाएं' : 'Back',
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        automaticallyImplyLeading: !widget.isTab,
+        leading: widget.isTab
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: isHi ? 'पीछे जाएं' : 'Back',
+                onPressed: () => Navigator.of(context).pop(),
+              ),
         title: Text(
           isHi ? 'कमाई व बैंक सेटलमेंट' : 'Earnings & Settlements',
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),

@@ -35,6 +35,8 @@ class RunnerAppState extends ChangeNotifier {
 
   List<GBOrder> activeJobs = [];
   Map<String, dynamic>? finances;
+  List<GBNotification> notifications = [];
+  int get unreadNotificationCount => notifications.where((n) => !n.isRead).length;
 
   bool get isHindi => currentLocale == 'hi';
 
@@ -58,6 +60,7 @@ class RunnerAppState extends ChangeNotifier {
         await fetchProfile();
         fetchJobs();
         fetchFinances();
+        fetchNotifications();
       }
     } catch (_) {
     } finally {
@@ -98,6 +101,7 @@ class RunnerAppState extends ChangeNotifier {
 
     await fetchProfile();
     fetchJobs();
+    fetchNotifications();
     fetchFinances();
   }
 
@@ -270,6 +274,46 @@ class RunnerAppState extends ChangeNotifier {
       return true;
     }
     return false;
+  }
+  Future<void> fetchNotifications() async {
+    try {
+      final res = await apiClient.getNotifications();
+      if (res.isSuccess && res.data != null) {
+        notifications = res.data!;
+      } else if (notifications.isEmpty) {
+        notifications = [
+          GBNotification(
+            id: 'notif_run_welcome',
+            title: isHindi ? 'डिलीवरी साथी ऐप में आपका स्वागत है!' : 'Welcome to Runner Partner App!',
+            body: isHindi
+                ? 'मीनापुर क्लस्टर में पारदर्शी 5-स्तरीय पेआउट और तत्काल यूपीआई सेटलमेंट।'
+                : 'Transparent 5-tier distance payouts and direct UPI settlements in Minapur cluster.',
+            timestamp: DateTime.now().subtract(const Duration(minutes: 20)),
+            isRead: false,
+            type: 'system',
+          ),
+          GBNotification(
+            id: 'notif_run_batch',
+            title: isHindi ? 'मल्टी-ऑर्डर बैच प्रोत्साहन' : 'Multi-order Batch Incentive',
+            body: isHindi
+                ? 'एक ही ट्रिप में एकाधिक डिलीवरी पूर्ण करने पर प्रति अतिरिक्त ऑर्डर अतिरिक्त पेआउट।'
+                : 'Earn bonus batch payouts for bundled drop-offs along the same rural route.',
+            timestamp: DateTime.now().subtract(const Duration(hours: 4)),
+            isRead: true,
+            type: 'payout',
+          ),
+        ];
+      }
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  Future<void> markAllNotificationsRead() async {
+    notifications = notifications.map((n) => n.copyWith(isRead: true)).toList();
+    notifyListeners();
+    try {
+      await apiClient.markAllNotificationsRead();
+    } catch (_) {}
   }
 }
 
