@@ -36,6 +36,8 @@ from app.core.security import (
     require_hub_manager_or_super_admin,
     create_access_token,
     decode_access_token,
+    revoke_user_sessions,
+    reinstate_user_sessions,
 )
 
 router = APIRouter(prefix="/admin", tags=["Super Admin Operations"])
@@ -879,6 +881,10 @@ async def toggle_user_suspension(
         raise HTTPException(status_code=404, detail="User not found")
 
     user.is_active = req.is_active
+    if req.is_active:
+        reinstate_user_sessions(user.id)
+    else:
+        revoke_user_sessions(user.id)
     action_name = "USER_ACTIVATED" if req.is_active else "USER_SUSPENDED"
 
     audit = AuditLog(

@@ -13,7 +13,7 @@ from app.models.base import User, Store, Runner, OtpChallenge
 from app.schemas.auth import (
     SendOTPRequest, SendOTPResponse, VerifyOTPRequest, TokenResponse, UserInfo, UpdateProfileRequest, UploadAvatarRequest
 )
-from app.core.security import create_access_token, get_current_user_payload
+from app.core.security import create_access_token, get_current_user_payload, revoke_token, security_bearer, HTTPAuthorizationCredentials
 from app.services.sms import send_sms_otp
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -461,4 +461,21 @@ async def verify_penny_drop(
         "match_score": 99.2,
         "message": f"₹1.00 Penny Drop credited. Name matched with bank records: {registered_name}"
     }
+
+@router.post("/logout")
+async def user_logout(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer),
+    payload: dict = Depends(get_current_user_payload)
+):
+    """
+    Authenticated logout endpoint.
+    Revokes the bearer JWT token preventing replay attacks or unauthorized session reuse.
+    """
+    if credentials and credentials.credentials:
+        revoke_token(credentials.credentials)
+    return {
+        "status": "SUCCESS",
+        "message": "सफलतापूर्वक लॉगआउट किया गया (Successfully logged out and session revoked)"
+    }
+
 

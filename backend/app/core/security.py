@@ -20,6 +20,24 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
+REVOKED_TOKENS: set = set()
+REVOKED_USER_IDS: set = set()
+
+def revoke_token(token: str) -> None:
+    REVOKED_TOKENS.add(token)
+
+def is_token_revoked(token: str) -> bool:
+    return token in REVOKED_TOKENS
+
+def revoke_user_sessions(user_id: str) -> None:
+    REVOKED_USER_IDS.add(user_id)
+
+def reinstate_user_sessions(user_id: str) -> None:
+    REVOKED_USER_IDS.discard(user_id)
+
+def is_user_suspended(user_id: str) -> bool:
+    return user_id in REVOKED_USER_IDS
+
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     if expires_delta:
@@ -42,11 +60,22 @@ async def get_current_user_payload(credentials: Optional[HTTPAuthorizationCreden
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication token required"
         )
+    if is_token_revoked(credentials.credentials):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें (Token has been revoked. Please log in again)"
+        )
     payload = decode_access_token(credentials.credentials)
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired authentication token"
+        )
+    user_id = payload.get("sub")
+    if user_id and is_user_suspended(user_id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="खाता निलंबित है (Account has been suspended by administration)"
         )
     return payload
 
