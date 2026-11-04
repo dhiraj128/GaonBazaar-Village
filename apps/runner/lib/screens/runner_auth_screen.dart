@@ -87,10 +87,11 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
       await state.fetchProfile();
       if (!mounted) return;
 
+      final upi = state.runnerProfile?['upi_id']?.toString().trim();
       final hasCompletedOnboarding = state.runnerProfile != null &&
-          state.runnerProfile?['upi_id'] != null &&
-          state.runnerProfile?['upi_id'].toString().trim().isNotEmpty &&
-          state.runnerProfile?['upi_id'] != 'NOT_CONFIGURED';
+          upi != null &&
+          upi.isNotEmpty &&
+          upi != 'NOT_CONFIGURED';
 
       if (!hasCompletedOnboarding) {
         Navigator.of(context).pushReplacement(
