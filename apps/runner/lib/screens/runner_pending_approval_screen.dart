@@ -84,7 +84,7 @@ class _RunnerPendingApprovalScreenState extends State<RunnerPendingApprovalScree
                 width: 90,
                 height: 90,
                 decoration: BoxDecoration(
-                  color: (isRejected ? Colors.red : Colors.amber).withOpacity(0.12),
+                  color: (isRejected ? Colors.red : Colors.amber).withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -96,7 +96,7 @@ class _RunnerPendingApprovalScreenState extends State<RunnerPendingApprovalScree
               const SizedBox(height: 20),
               Text(
                 isRejected
-                    ? (isHi ? 'आवेदन अस्वीकृत (Application Rejected)' : 'Application Rejected')
+                    ? (isHi ? 'आवेदन अस्वीकृत' : 'Application Rejected')
                     : (isHi ? 'आवेदन समीक्षाधीन है' : 'Application Under Review'),
                 style: GBTypography.displayLarge(context).copyWith(
                   color: isRejected ? Colors.red : Colors.amber.shade900,
@@ -110,8 +110,8 @@ class _RunnerPendingApprovalScreenState extends State<RunnerPendingApprovalScree
                         ? 'सुपर एडमिन द्वारा आपके आवेदन में सुधार की आवश्यकता पाई गई है: ${profile['rejection_reason']}'
                         : 'Super Admin found corrections needed: ${profile['rejection_reason']}')
                     : (isHi
-                        ? 'आपका 8-चरणीय डिलीवरी साथी पंजीकरण विवरण जमा हो चुका है। सुपर एडमिन द्वारा दस्तावेज़ सत्यापन के बाद आपकी आईडी सक्रिय कर दी जाएगी।'
-                        : 'Your 8-step delivery partner registration has been submitted. Once verified by Super Admin, you will be authorized to accept delivery missions.'),
+                        ? 'आपका डिलीवरी साथी पंजीकरण विवरण सफलतापूर्वक जमा हो चुका है। सुपर एडमिन द्वारा दस्तावेज़ सत्यापन के बाद आपकी आईडी सक्रिय कर दी जाएगी।'
+                        : 'Your delivery partner registration has been submitted. Once verified by Super Admin, you will be authorized to accept delivery missions.'),
                 style: GBTypography.bodyMedium(context),
                 textAlign: TextAlign.center,
               ),
@@ -139,8 +139,8 @@ class _RunnerPendingApprovalScreenState extends State<RunnerPendingApprovalScree
                       _infoRow(
                         isHi ? 'अनुमोदन स्थिति' : 'Approval Status',
                         isRejected
-                            ? (isHi ? 'अस्वीकृत (Rejected)' : 'Rejected')
-                            : (isHi ? 'समीक्षाधीन (Pending Review)' : 'Pending Review'),
+                            ? (isHi ? 'अस्वीकृत' : 'Rejected')
+                            : (isHi ? 'समीक्षाधीन' : 'Pending Review'),
                         color: isRejected ? Colors.red : Colors.amber.shade800,
                       ),
                     ],
@@ -149,7 +149,7 @@ class _RunnerPendingApprovalScreenState extends State<RunnerPendingApprovalScree
               const SizedBox(height: 32),
               if (isRejected)
                 GBPrimaryButton(
-                  label: isHi ? 'विवरण सुधारें (Edit & Resubmit)' : 'Edit & Resubmit',
+                  label: isHi ? 'विवरण सुधारें' : 'Edit & Resubmit',
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const RunnerOnboardingWizard()),
@@ -160,13 +160,13 @@ class _RunnerPendingApprovalScreenState extends State<RunnerPendingApprovalScree
                 GBPrimaryButton(
                   label: _isChecking
                       ? (isHi ? 'जांच जारी है...' : 'Checking...')
-                      : (isHi ? 'स्थिति पुनः जांचें (Check Status)' : 'Check Status'),
+                      : (isHi ? 'स्थिति पुनः जांचें' : 'Check Status'),
                   onPressed: _isChecking ? null : () => _checkStatus(state),
                 ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 icon: const Icon(Icons.logout, size: 18),
-                label: Text(isHi ? 'लॉग आउट करें (Sign Out)' : 'Sign Out'),
+                label: Text(isHi ? 'लॉग आउट करें' : 'Sign Out'),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

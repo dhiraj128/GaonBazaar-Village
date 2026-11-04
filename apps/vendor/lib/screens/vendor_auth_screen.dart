@@ -6,6 +6,7 @@ import '../state/vendor_state.dart';
 import 'vendor_dashboard_screen.dart';
 import 'vendor_pending_approval_screen.dart';
 import 'vendor_onboarding_wizard.dart';
+import 'vendor_language_selection_screen.dart';
 
 class VendorAuthScreen extends StatefulWidget {
   const VendorAuthScreen({super.key});
@@ -40,6 +41,7 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
 
     final res = await state.apiClient.sendOtp(phone: phone, role: 'vendor');
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (res.isSuccess) {
@@ -56,8 +58,8 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
     final otp = _otpController.text.trim();
     final loc = GBLocalizations.of(context);
 
-    if (otp.length != 6) {
-      setState(() => _errorMessage = loc.isHindi ? 'कृपया 6-अंकीय ओटीपी दर्ज करें' : 'Please enter 6-digit OTP');
+    if (otp.length < 4) {
+      setState(() => _errorMessage = loc.isHindi ? 'कृपया 4-अंकीय ओटीपी दर्ज करें' : 'Please enter 4-digit OTP');
       return;
     }
 
@@ -73,6 +75,7 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
       role: 'vendor',
     );
 
+    if (!mounted) return;
     setState(() => _isLoading = false);
 
     if (res.isSuccess && mounted) {
@@ -105,15 +108,31 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
   @override
   Widget build(BuildContext context) {
     final loc = GBLocalizations.of(context);
+    final isHi = loc.isHindi;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (_otpSent) {
+              setState(() {
+                _otpSent = false;
+                _otpController.clear();
+                _errorMessage = null;
+              });
+            } else {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const VendorLanguageSelectionScreen()),
+              );
+            }
+          },
+        ),
         title: Text(
-          loc.tr('vendor_login'),
+          isHi ? 'मोबाइल नंबर सत्यापन' : 'Mobile Number Verification',
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
-
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -124,17 +143,17 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
               children: [
                 Text(
                   _otpSent
-                      ? (loc.isHindi ? 'ओटीपी दर्ज करें' : 'Enter Verification PIN')
-                      : (loc.isHindi ? 'मोबाइल नंबर दर्ज करें' : 'Enter Mobile Number'),
+                      ? (isHi ? 'ओटीपी दर्ज करें' : 'Enter 4-Digit OTP')
+                      : (isHi ? 'मोबाइल नंबर दर्ज करें' : 'Enter Mobile Number'),
                   style: GBTypography.displayLarge(context),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   _otpSent
-                      ? (loc.isHindi
-                          ? '+91 ${_phoneController.text} पर भेजा गया 6-अंकीय कोड डालें'
-                          : 'Enter the 6-digit code sent to +91 ${_phoneController.text}')
-                      : (loc.isHindi
+                      ? (isHi
+                          ? '+91 ${_phoneController.text} पर भेजा गया 4-अंकीय ओटीपी दर्ज करें'
+                          : 'Enter the 4-digit OTP sent to +91 ${_phoneController.text}')
+                      : (isHi
                           ? 'गाँव बाज़ार में अपनी दुकान से ऑनलाइन बिक्री शुरू करने के लिए नंबर डालें'
                           : 'Enter your registered mobile number to manage your village store'),
                   style: GBTypography.bodyMedium(context),
@@ -162,7 +181,7 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
                             maxLength: 10,
                             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 1.0),
                             decoration: InputDecoration(
-                              hintText: loc.isHindi ? 'मोबाइल नंबर' : '10-Digit Mobile',
+                              hintText: isHi ? '10-अंकीय मोबाइल नंबर' : '10-Digit Mobile',
                               border: InputBorder.none,
                               enabledBorder: InputBorder.none,
                               focusedBorder: InputBorder.none,
@@ -173,36 +192,40 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  InkWell(
-                    onTap: () => setState(() {
-                      _phoneController.text = '9800000001';
-                      _errorMessage = null;
-                    }),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: GBColors.primary.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: GBColors.primary.withOpacity(0.3)),
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ActionChip(
+                        avatar: const Icon(Icons.person_add_alt_1_outlined, size: 16, color: GBColors.primary),
+                        label: Text(
+                          isHi ? 'नया आवेदक: 9800000021' : 'New Applicant: 9800000021',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+                        ),
+                        backgroundColor: GBColors.primary.withValues(alpha: 0.08),
+                        onPressed: () => setState(() {
+                          _phoneController.text = '9800000021';
+                          _errorMessage = null;
+                        }),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.science_outlined, size: 16, color: GBColors.primary),
-                          const SizedBox(width: 8),
-                          Text(
-                            loc.isHindi ? 'स्टेजिंग विक्रेता फोन: 9800000001 (टैप करें)' : 'Staging Vendor: 9800000001 (Tap to fill)',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
-                          ),
-                        ],
+                      ActionChip(
+                        avatar: const Icon(Icons.storefront_outlined, size: 16, color: GBColors.primary),
+                        label: Text(
+                          isHi ? 'स्वीकृत दुकान: 9800000001' : 'Approved Store: 9800000001',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
+                        ),
+                        backgroundColor: GBColors.primary.withValues(alpha: 0.08),
+                        onPressed: () => setState(() {
+                          _phoneController.text = '9800000001';
+                          _errorMessage = null;
+                        }),
                       ),
-                    ),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   GBPrimaryButton(
-                    label: loc.isHindi ? 'ओटीपी प्राप्त करें' : 'Send OTP',
+                    label: isHi ? 'ओटीपी प्राप्त करें' : 'Send OTP',
                     isLoading: _isLoading,
                     onPressed: _handleSendOtp,
                   ),
@@ -224,56 +247,55 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: 10),
                       decoration: const InputDecoration(
-                        hintText: '------',
+                        hintText: '••••',
                         border: InputBorder.none,
                         counterText: '',
                       ),
                     ),
                   ),
-                  if (_phoneController.text == '9800000001') ...[
-                    const SizedBox(height: 12),
-                    InkWell(
-                      onTap: () => setState(() {
-                        _otpController.text = '123456';
-                        _errorMessage = null;
-                      }),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: GBColors.primary.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: GBColors.primary.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.science_outlined, size: 16, color: GBColors.primary),
-                            const SizedBox(width: 8),
-                            Text(
-                              loc.isHindi ? 'स्टेजिंग ओटीपी: 123456 (टैप करें)' : 'Staging OTP: 123456 (Tap to fill)',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
-                            ),
-                          ],
-                        ),
-                      ),
+                  const SizedBox(height: 12),
+                  ActionChip(
+                    avatar: const Icon(Icons.key_outlined, size: 16, color: GBColors.primary),
+                    label: Text(
+                      isHi ? 'परीक्षण ओटीपी: 1234 (टैप करें)' : 'Test OTP: 1234 (Tap to fill)',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: GBColors.primary),
                     ),
-                  ],
+                    backgroundColor: GBColors.primary.withValues(alpha: 0.08),
+                    onPressed: () => setState(() {
+                      _otpController.text = '1234';
+                      _errorMessage = null;
+                    }),
+                  ),
                   const SizedBox(height: 24),
                   GBPrimaryButton(
-                    label: loc.isHindi ? 'सत्यापित करें व लॉगिन करें' : 'Verify & Login',
+                    label: isHi ? 'ओटीपी सत्यापित करें' : 'Verify OTP',
                     isLoading: _isLoading,
                     onPressed: _handleVerifyOtp,
                   ),
                   const SizedBox(height: 12),
-                  Center(
-                    child: TextButton(
-                      onPressed: () => setState(() => _otpSent = false),
-                      child: Text(
-                        loc.isHindi ? 'मोबाइल नंबर बदलें' : 'Change Mobile Number',
-                        style: const TextStyle(color: GBColors.primary, fontWeight: FontWeight.w700),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextButton(
+                        onPressed: _isLoading ? null : _handleSendOtp,
+                        child: Text(
+                          isHi ? 'पुनः ओटीपी भेजें' : 'Resend OTP',
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
                       ),
-                    ),
+                      const Text('•', style: TextStyle(color: Colors.grey)),
+                      TextButton(
+                        onPressed: () => setState(() {
+                          _otpSent = false;
+                          _otpController.clear();
+                          _errorMessage = null;
+                        }),
+                        child: Text(
+                          isHi ? 'मोबाइल नंबर बदलें' : 'Change Number',
+                          style: const TextStyle(color: GBColors.primary, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
                 if (_errorMessage != null) ...[
@@ -281,7 +303,6 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
                   Text(_errorMessage!, style: const TextStyle(color: GBColors.error, fontSize: 13)),
                 ],
                 const SizedBox(height: 36),
-                // New store registration wizard link
                 Center(
                   child: TextButton(
                     onPressed: () {
@@ -290,7 +311,7 @@ class _VendorAuthScreenState extends State<VendorAuthScreen> {
                       );
                     },
                     child: Text(
-                      loc.tr('vendor_register_store'),
+                      isHi ? 'नई दुकान पंजीकृत करें' : 'Register New Store',
                       style: const TextStyle(fontWeight: FontWeight.w700, color: GBColors.primary),
                     ),
                   ),

@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:design_system/design_system.dart';
 import 'package:image_picker/image_picker.dart';
 import '../state/runner_state.dart';
+import 'runner_auth_screen.dart';
 import 'runner_pending_approval_screen.dart';
 
 class RunnerOnboardingWizard extends StatefulWidget {
@@ -20,14 +21,13 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
 
   // ---------------------------------------------------------------------------
   // PDF Page 3: Personal Details
-  // Full Name, Father's Name, Emergency Contact Number, Vehicle Type (Bicycle vs. Motorcycle)
+  // Strictly: Full Name, Father's Name, Emergency Contact, Vehicle Type (Motorcycle vs Bicycle)
+  // NO forced vehicle registration number or DL inputs on this page!
   // ---------------------------------------------------------------------------
   final _fullNameCtrl = TextEditingController();
   final _fatherNameCtrl = TextEditingController();
   final _emergencyContactCtrl = TextEditingController();
-  final _vehicleNumberCtrl = TextEditingController();
-  final _drivingLicenceCtrl = TextEditingController();
-  String _vehicleType = 'Motorcycle'; // Bicycle vs. Motorcycle
+  String _vehicleType = 'Motorcycle'; // Motorcycle vs Bicycle ONLY
 
   // ---------------------------------------------------------------------------
   // PDF Page 4: Strict Identity KYC
@@ -40,8 +40,8 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
   bool _kycConsent = true;
 
   // ---------------------------------------------------------------------------
-  // PDF Page 5: Bank / Payout Setup (Mandatory per PDF Page 5)
-  // Account Holder Name, Bank Account Number, IFSC Code. (System performs a ₹1 Penny Drop verification).
+  // PDF Page 5: Bank / Payout Setup
+  // Account Holder Name, Bank Account Number, IFSC Code. (₹1 Penny Drop verification).
   // ---------------------------------------------------------------------------
   final _accountHolderCtrl = TextEditingController();
   final _accountNumberCtrl = TextEditingController();
@@ -62,8 +62,6 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
     _fullNameCtrl.dispose();
     _fatherNameCtrl.dispose();
     _emergencyContactCtrl.dispose();
-    _vehicleNumberCtrl.dispose();
-    _drivingLicenceCtrl.dispose();
     _accountHolderCtrl.dispose();
     _accountNumberCtrl.dispose();
     _ifscCtrl.dispose();
@@ -72,6 +70,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
 
   Future<void> _loadSavedDraft() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     final state = RunnerStateProvider.of(context);
 
     setState(() {
@@ -79,8 +78,6 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
       _fatherNameCtrl.text = prefs.getString('gb_r_pdf_father') ?? '';
       _emergencyContactCtrl.text = prefs.getString('gb_r_pdf_emergency') ?? '';
       _vehicleType = prefs.getString('gb_r_pdf_vehicle') ?? 'Motorcycle';
-      _vehicleNumberCtrl.text = prefs.getString('gb_r_pdf_veh_no') ?? '';
-      _drivingLicenceCtrl.text = prefs.getString('gb_r_pdf_dl_no') ?? '';
 
       _aadhaarFrontName = prefs.getString('gb_r_pdf_adh_front');
       _aadhaarBackName = prefs.getString('gb_r_pdf_adh_back');
@@ -111,8 +108,6 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
     await prefs.setString('gb_r_pdf_father', _fatherNameCtrl.text.trim());
     await prefs.setString('gb_r_pdf_emergency', _emergencyContactCtrl.text.trim());
     await prefs.setString('gb_r_pdf_vehicle', _vehicleType);
-    await prefs.setString('gb_r_pdf_veh_no', _vehicleNumberCtrl.text.trim());
-    await prefs.setString('gb_r_pdf_dl_no', _drivingLicenceCtrl.text.trim());
     if (_aadhaarFrontName != null) await prefs.setString('gb_r_pdf_adh_front', _aadhaarFrontName!);
     if (_aadhaarBackName != null) await prefs.setString('gb_r_pdf_adh_back', _aadhaarBackName!);
     if (_selfieName != null) await prefs.setString('gb_r_pdf_selfie', _selfieName!);
@@ -127,9 +122,9 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
     final prefs = await SharedPreferences.getInstance();
     final keys = [
       'gb_r_pdf_page', 'gb_r_pdf_name', 'gb_r_pdf_father', 'gb_r_pdf_emergency',
-      'gb_r_pdf_vehicle', 'gb_r_pdf_veh_no', 'gb_r_pdf_dl_no',
-      'gb_r_pdf_adh_front', 'gb_r_pdf_adh_back', 'gb_r_pdf_selfie', 'gb_r_pdf_liveness',
-      'gb_r_pdf_holder', 'gb_r_pdf_acct', 'gb_r_pdf_ifsc', 'gb_r_pdf_penny'
+      'gb_r_pdf_vehicle', 'gb_r_pdf_adh_front', 'gb_r_pdf_adh_back',
+      'gb_r_pdf_selfie', 'gb_r_pdf_liveness', 'gb_r_pdf_holder',
+      'gb_r_pdf_acct', 'gb_r_pdf_ifsc', 'gb_r_pdf_penny'
     ];
     for (final k in keys) {
       await prefs.remove(k);
@@ -162,10 +157,6 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
       final emergency = _emergencyContactCtrl.text.trim();
       if (!RegExp(r'^[6-9]\d{9}$').hasMatch(emergency)) {
         _showError(isHi ? 'कृपया 10 अंकों का वैध आपातकालीन संपर्क नंबर दर्ज करें' : 'Please enter a valid 10-digit emergency contact');
-        return;
-      }
-      if (_vehicleType == 'Motorcycle' && _vehicleNumberCtrl.text.trim().isEmpty) {
-        _showError(isHi ? 'कृपया मोटरसाइकिल का पंजीकरण नंबर दर्ज करें' : 'Please enter Motorcycle registration number');
         return;
       }
     }
@@ -224,6 +215,10 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const RunnerAuthScreen()),
+      );
     }
   }
 
@@ -246,7 +241,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
         });
         _persistDraft();
       }
-    } catch (e) {
+    } catch (_) {
       setState(() {
         final simulated = '${docType}_${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}.jpg';
         if (docType == 'aadhaar_front') _aadhaarFrontName = simulated;
@@ -282,7 +277,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
     if (res['success'] == true) {
       setState(() {
         _pennyDropVerified = true;
-        _pennyDropMessage = isHi ? '₹1 पेनी ड्रॉप सत्यापन सफल (खाता सक्रिय)' : '₹1 Penny Drop Verified Successfully';
+        _pennyDropMessage = isHi ? '₹1 पेनी ड्रॉप सत्यापन सफल' : '₹1 Penny Drop Verified Successfully';
       });
       _persistDraft();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -305,16 +300,16 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
     final payload = {
       'full_name': _fullNameCtrl.text.trim(),
       'vehicle_type': _vehicleType,
-      'vehicle_number': _vehicleType == 'Motorcycle' ? _vehicleNumberCtrl.text.trim() : 'BICYCLE',
-      'driving_licence_no': _vehicleType == 'Motorcycle' ? (_drivingLicenceCtrl.text.trim().isNotEmpty ? _drivingLicenceCtrl.text.trim() : 'PENDING_UPLOAD') : 'EXEMPT',
+      'vehicle_number': _vehicleType == 'Motorcycle' ? 'PENDING_REGISTRATION' : 'BICYCLE',
+      'driving_licence_no': _vehicleType == 'Motorcycle' ? 'PENDING_VERIFICATION' : 'EXEMPT',
       'father_name': _fatherNameCtrl.text.trim(),
       'emergency_contact': _emergencyContactCtrl.text.trim(),
       'account_holder_name': _accountHolderCtrl.text.trim(),
       'account_number': _accountNumberCtrl.text.trim(),
       'ifsc_code': _ifscCtrl.text.trim().toUpperCase(),
-      'aadhaar_front_url': _aadhaarFrontName,
-      'aadhaar_back_url': _aadhaarBackName,
-      'selfie_url': _selfieName,
+      'aadhaar_front_url': _aadhaarFrontName ?? 'test_aadhaar_front.jpg',
+      'aadhaar_back_url': _aadhaarBackName ?? 'test_aadhaar_back.jpg',
+      'selfie_url': _selfieName ?? 'test_runner_selfie.jpg',
       'upi_id': 'A/C:${_accountNumberCtrl.text.trim().length > 4 ? _accountNumberCtrl.text.trim().substring(_accountNumberCtrl.text.trim().length - 4) : "0000"}:${_ifscCtrl.text.trim()}',
     };
 
@@ -324,6 +319,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
 
     if (success) {
       await _clearDraft();
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const RunnerPendingApprovalScreen()),
       );
@@ -350,12 +346,10 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
     return Scaffold(
       appBar: AppBar(
         title: Text(stepTitles[_currentPage]),
-        leading: _currentPage > 0
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: _onBack,
-              )
-            : null,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _onBack,
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -435,21 +429,51 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
   // ---------------------------------------------------------------------------
   // PDF PAGE 3: PERSONAL DETAILS
   // Full Name, Father's Name, Emergency Contact Number, Vehicle Type (Bicycle vs. Motorcycle)
+  // Strictly NO vehicle registration or driving licence fields!
   // ---------------------------------------------------------------------------
   Widget _buildPage1PersonalDetails(bool isHi) {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        Text(
-          isHi ? 'डिलीवरी साथी व्यक्तिगत विवरण' : 'Personal Details',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          isHi
-              ? 'कृपया अपना पूरा नाम, पिता का नाम एवं वाहन प्रकार दर्ज करें।'
-              : 'Enter your full name, father\'s name, and delivery vehicle.',
-          style: const TextStyle(fontSize: 13, color: Colors.grey),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isHi ? 'डिलीवरी साथी व्यक्तिगत विवरण' : 'Personal Details',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isHi
+                        ? 'कृपया अपना पूरा नाम, पिता का नाम एवं वाहन प्रकार दर्ज करें।'
+                        : 'Enter your full name, father\'s name, and delivery vehicle.',
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            ActionChip(
+              avatar: const Icon(Icons.flash_on, size: 14, color: GBColors.primary),
+              label: Text(
+                isHi ? 'परीक्षण विवरण भरें' : 'Use Test Details',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: GBColors.primary),
+              ),
+              backgroundColor: GBColors.primary.withValues(alpha: 0.08),
+              onPressed: () {
+                setState(() {
+                  _fullNameCtrl.text = 'Santosh Kumar';
+                  _fatherNameCtrl.text = 'Rameshwar Prasad';
+                  _emergencyContactCtrl.text = '9800000099';
+                  _vehicleType = 'Motorcycle';
+                });
+                _persistDraft();
+              },
+            ),
+          ],
         ),
         const SizedBox(height: 20),
 
@@ -457,7 +481,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
           controller: _fullNameCtrl,
           decoration: InputDecoration(
             labelText: isHi ? 'डिलीवरी साथी का नाम *' : 'Full Name *',
-            hintText: isHi ? 'उदा: अमित कुमार' : 'e.g. Amit Kumar',
+            hintText: isHi ? 'उदा: संतोष कुमार' : 'e.g. Santosh Kumar',
             prefixIcon: const Icon(Icons.person_outline),
             border: const OutlineInputBorder(),
           ),
@@ -469,7 +493,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
           controller: _fatherNameCtrl,
           decoration: InputDecoration(
             labelText: isHi ? 'पिता का नाम *' : 'Father\'s Name *',
-            hintText: isHi ? 'उदा: सुरेश प्रसाद' : 'e.g. Suresh Prasad',
+            hintText: isHi ? 'उदा: रामेश्वर प्रसाद' : 'e.g. Rameshwar Prasad',
             prefixIcon: const Icon(Icons.family_restroom_outlined),
             border: const OutlineInputBorder(),
           ),
@@ -480,11 +504,13 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
         TextField(
           controller: _emergencyContactCtrl,
           keyboardType: TextInputType.phone,
+          maxLength: 10,
           decoration: InputDecoration(
             labelText: isHi ? 'आपातकालीन संपर्क नंबर (10 अंक) *' : 'Emergency Contact Number *',
             hintText: '98XXXXXXXX',
             prefixIcon: const Icon(Icons.contact_phone_outlined),
             border: const OutlineInputBorder(),
+            counterText: '',
           ),
           onChanged: (_) => _persistDraft(),
         ),
@@ -539,55 +565,58 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
-
-        if (_vehicleType == 'Motorcycle') ...[
-          TextField(
-            controller: _vehicleNumberCtrl,
-            textCapitalization: TextCapitalization.characters,
-            decoration: InputDecoration(
-              labelText: isHi ? 'वाहन पंजीकरण नंबर (गाड़ी नंबर) *' : 'Vehicle Registration Number *',
-              hintText: 'e.g. BR06AB1234',
-              prefixIcon: const Icon(Icons.badge_outlined),
-              border: const OutlineInputBorder(),
-            ),
-            onChanged: (_) => _persistDraft(),
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: _drivingLicenceCtrl,
-            textCapitalization: TextCapitalization.characters,
-            decoration: InputDecoration(
-              labelText: isHi ? 'ड्राइविंग लाइसेंस नंबर (वैकल्पिक)' : 'Driving Licence Number (Optional)',
-              hintText: 'e.g. DL062024009876',
-              prefixIcon: const Icon(Icons.card_membership_outlined),
-              border: const OutlineInputBorder(),
-            ),
-            onChanged: (_) => _persistDraft(),
-          ),
-        ],
       ],
     );
   }
 
   // ---------------------------------------------------------------------------
   // PDF PAGE 4: STRICT IDENTITY KYC
-  // Upload Aadhaar (Front/Back) + Liveness Selfie Check. (Backend verifies selfie matches Aadhaar photo).
+  // Upload Aadhaar (Front/Back) + Liveness Selfie Check.
   // ---------------------------------------------------------------------------
   Widget _buildPage2StrictKyc(bool isHi) {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        Text(
-          isHi ? 'सख्त पहचान सत्यापन (केवाईसी)' : 'Strict Identity KYC',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          isHi
-              ? 'आधार कार्ड के दोनों भाग और लाइव सेल्फ़ी अपलोड करें। बैकएंड चेहरे का मिलान सत्यापित करेगा।'
-              : 'Upload Aadhaar front/back and complete a live selfie. Backend verifies match.',
-          style: const TextStyle(fontSize: 13, color: Colors.grey),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isHi ? 'पहचान सत्यापन (केवाईसी)' : 'Strict Identity KYC',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isHi
+                        ? 'आधार कार्ड के दोनों भाग और लाइव सेल्फ़ी अपलोड करें।'
+                        : 'Upload Aadhaar front/back and complete a live selfie.',
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            ActionChip(
+              avatar: const Icon(Icons.flash_on, size: 14, color: GBColors.primary),
+              label: Text(
+                isHi ? 'परीक्षण केवाईसी भरें' : 'Use Test KYC',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: GBColors.primary),
+              ),
+              backgroundColor: GBColors.primary.withValues(alpha: 0.08),
+              onPressed: () {
+                setState(() {
+                  _aadhaarFrontName = 'test_aadhaar_front.jpg';
+                  _aadhaarBackName = 'test_aadhaar_back.jpg';
+                  _selfieName = 'test_runner_selfie.jpg';
+                  _livenessVerified = true;
+                  _kycConsent = true;
+                });
+                _persistDraft();
+              },
+            ),
+          ],
         ),
         const SizedBox(height: 20),
 
@@ -598,23 +627,56 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
           icon: Icons.badge_outlined,
           onTap: () => _pickDocument('aadhaar_front'),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
 
         // Aadhaar Back Upload
         _buildUploadCard(
           title: isHi ? 'आधार कार्ड — पिछला भाग *' : 'Aadhaar Card Back *',
           fileName: _aadhaarBackName,
-          icon: Icons.contact_page_outlined,
+          icon: Icons.badge_outlined,
           onTap: () => _pickDocument('aadhaar_back'),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
 
-        // Liveness Selfie Check
+        // Live Selfie Capture
         _buildUploadCard(
-          title: isHi ? 'लाइव सेल्फ़ी जांच (Liveness Check) *' : 'Liveness Selfie Check *',
+          title: isHi ? 'लाइव सेल्फ़ी कैमरा कैप्चर *' : 'Live Selfie Camera Capture *',
           fileName: _selfieName,
           icon: Icons.camera_alt_outlined,
           onTap: () => _pickDocument('selfie'),
+        ),
+        const SizedBox(height: 14),
+
+        // Truthful Verification Status Badge per Owner Directive
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: _livenessVerified ? Colors.blue.shade50 : Colors.amber.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: _livenessVerified ? Colors.blue : Colors.amber.shade400),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                _livenessVerified ? Icons.info_outline : Icons.pending_outlined,
+                color: _livenessVerified ? Colors.blue.shade700 : Colors.amber.shade800,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _livenessVerified
+                      ? (isHi ? 'सत्यापन स्थिति: TEST / PENDING VERIFICATION' : 'Status: TEST / PENDING VERIFICATION')
+                      : (isHi ? 'लाइवनेस सत्यापन लंबित' : 'Liveness Check Pending'),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: _livenessVerified ? Colors.blue.shade900 : Colors.amber.shade900,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
 
@@ -623,8 +685,8 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
           contentPadding: EdgeInsets.zero,
           title: Text(
             isHi
-                ? 'मैं प्रमाणित करता हूँ कि मेरे द्वारा दिए गए पहचान दस्तावेज़ वास्तविक हैं और गाँव बाज़ार को इनके सत्यापन की अनुमति देता हूँ।'
-                : 'I consent to biometric & UIDAI Aadhaar verification for delivery partner onboarding.',
+                ? 'मैं गाँव बाज़ार को मेरी पहचान व पते के सत्यापन हेतु आधार डेटा उपयोग करने की अनुमति देता हूँ।'
+                : 'I consent to GaonBazaar validating my identity via Aadhaar & photo verification.',
             style: const TextStyle(fontSize: 12),
           ),
           onChanged: (val) {
@@ -637,22 +699,52 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
 
   // ---------------------------------------------------------------------------
   // PDF PAGE 5: BANK / PAYOUT SETUP
-  // Account Holder Name, Bank Account Number, IFSC Code. (System performs a ₹1 Penny Drop verification).
+  // Account Holder Name, Bank Account Number, IFSC Code. (₹1 Penny Drop verification).
   // ---------------------------------------------------------------------------
   Widget _buildPage3BankPayout(bool isHi) {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        Text(
-          isHi ? 'बैंक पेआउट सेटअप' : 'Bank / Payout Setup',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          isHi
-              ? 'डिलीवरी ट्रिप की कमाई सीधे आपके बैंक खाते में जमा की जाएगी। कोई नकद भुगतान नहीं होता।'
-              : 'Trip earnings are digitally remitted to your bank account. No cash payouts.',
-          style: const TextStyle(fontSize: 13, color: Colors.grey),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isHi ? 'बैंक खाता एवं पेआउट विवरण' : 'Bank & Payout Setup',
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isHi
+                        ? 'दैनिक डिलीवरी भुगतान सीधे आपके बैंक खाते में जमा किया जाएगा।'
+                        : 'Daily delivery payouts will be directly credited to your account.',
+                    style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            ActionChip(
+              avatar: const Icon(Icons.flash_on, size: 14, color: GBColors.primary),
+              label: Text(
+                isHi ? 'परीक्षण बैंक विवरण भरें' : 'Use Test Bank',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: GBColors.primary),
+              ),
+              backgroundColor: GBColors.primary.withValues(alpha: 0.08),
+              onPressed: () {
+                setState(() {
+                  _accountHolderCtrl.text = _fullNameCtrl.text.isNotEmpty ? _fullNameCtrl.text : 'Santosh Kumar';
+                  _accountNumberCtrl.text = '123456789012';
+                  _ifscCtrl.text = 'SBIN0001234';
+                  _pennyDropVerified = true;
+                  _pennyDropMessage = isHi ? '₹1 पेनी ड्रॉप: TEST / PENDING VERIFICATION' : '₹1 Penny Drop: TEST / PENDING VERIFICATION';
+                });
+                _persistDraft();
+              },
+            ),
+          ],
         ),
         const SizedBox(height: 20),
 
@@ -660,6 +752,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
           controller: _accountHolderCtrl,
           decoration: InputDecoration(
             labelText: isHi ? 'खाताधारक का नाम *' : 'Account Holder Name *',
+            hintText: isHi ? 'उदा: संतोष कुमार' : 'e.g. Santosh Kumar',
             prefixIcon: const Icon(Icons.person_outline),
             border: const OutlineInputBorder(),
           ),
@@ -675,6 +768,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
             labelText: isHi ? 'बैंक खाता संख्या *' : 'Bank Account Number *',
+            hintText: 'e.g. 123456789012',
             prefixIcon: const Icon(Icons.account_balance_outlined),
             border: const OutlineInputBorder(),
           ),
@@ -688,11 +782,13 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
         TextField(
           controller: _ifscCtrl,
           textCapitalization: TextCapitalization.characters,
+          maxLength: 11,
           decoration: InputDecoration(
             labelText: isHi ? 'आईएफएससी कोड *' : 'IFSC Code *',
             hintText: 'e.g. SBIN0001234',
             prefixIcon: const Icon(Icons.numbers),
             border: const OutlineInputBorder(),
+            counterText: '',
           ),
           onChanged: (_) {
             setState(() => _pennyDropVerified = false);
@@ -701,7 +797,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
         ),
         const SizedBox(height: 20),
 
-        // Penny Drop Verification Action
+        // Penny Drop Verification Box
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -722,7 +818,7 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
                   Expanded(
                     child: Text(
                       _pennyDropVerified
-                          ? (isHi ? '₹1 पेनी ड्रॉप सत्यापन सफल' : '₹1 Penny Drop Verified')
+                          ? (_pennyDropMessage ?? (isHi ? '₹1 पेनी ड्रॉप सत्यापन सफल' : '₹1 Penny Drop Verified'))
                           : (isHi ? '₹1 पेनी ड्रॉप सत्यापन आवश्यक' : '₹1 Penny Drop Verification Required'),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
@@ -735,8 +831,8 @@ class _RunnerOnboardingWizardState extends State<RunnerOnboardingWizard> {
               const SizedBox(height: 6),
               Text(
                 isHi
-                    ? 'सिस्टम आपके खाते की सक्रियता जांचने के लिए ₹1 का सत्यापन प्रयास करेगा।'
-                    : 'System verifies active bank account validity via ₹1 test credit.',
+                    ? 'सिस्टम आपके बैंक खाते की पुष्टि के लिए ₹1 जमा परीक्षण करेगा।'
+                    : 'System tests active bank account status via ₹1 credit verification.',
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               const SizedBox(height: 10),

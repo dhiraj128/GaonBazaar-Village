@@ -57,7 +57,7 @@ class _VendorPendingApprovalScreenState extends State<VendorPendingApprovalScree
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          isHi ? 'दुकान स्थिति (Store Status)' : 'Store Verification Status',
+          isHi ? 'दुकान सत्यापन स्थिति' : 'Store Verification Status',
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         actions: [
@@ -84,7 +84,7 @@ class _VendorPendingApprovalScreenState extends State<VendorPendingApprovalScree
                 width: 90,
                 height: 90,
                 decoration: BoxDecoration(
-                  color: (isRejected ? Colors.red : Colors.amber).withOpacity(0.12),
+                  color: (isRejected ? Colors.red : Colors.amber).withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -96,7 +96,7 @@ class _VendorPendingApprovalScreenState extends State<VendorPendingApprovalScree
               const SizedBox(height: 20),
               Text(
                 isRejected
-                    ? (isHi ? 'आवेदन अस्वीकृत (Application Rejected)' : 'Application Rejected')
+                    ? (isHi ? 'आवेदन अस्वीकृत' : 'Application Rejected')
                     : (isHi ? 'आवेदन समीक्षाधीन है' : 'Application Under Review'),
                 style: GBTypography.displayLarge(context).copyWith(
                   color: isRejected ? Colors.red : Colors.amber.shade900,
@@ -110,8 +110,8 @@ class _VendorPendingApprovalScreenState extends State<VendorPendingApprovalScree
                         ? 'सुपर एडमिन द्वारा आपके आवेदन में सुधार की आवश्यकता पाई गई है। कृपया जानकारी ठीक कर पुनः जमा करें।'
                         : 'Super Admin found corrections needed in your application. Please review and resubmit.')
                     : (isHi
-                        ? 'आपकी दुकान का 8-चरणीय विवरण सफलतापूर्वक जमा हो चुका है। सुपर एडमिन द्वारा सत्यापन और भौतिक जांच के बाद आपकी दुकान सक्रिय कर दी जाएगी।'
-                        : 'Your 8-step store registration has been submitted. Once verified by Super Admin, your shop will go live with 0% commission.'),
+                        ? 'आपकी दुकान का विवरण सफलतापूर्वक जमा हो चुका है। सुपर एडमिन द्वारा सत्यापन के बाद आपकी दुकान 0% कमीशन पर सक्रिय कर दी जाएगी।'
+                        : 'Your store registration has been submitted. Once verified by Super Admin, your shop will go live with 0% commission.'),
                 style: GBTypography.bodyMedium(context),
                 textAlign: TextAlign.center,
               ),
@@ -140,8 +140,8 @@ class _VendorPendingApprovalScreenState extends State<VendorPendingApprovalScree
                       _infoRow(
                         isHi ? 'अनुमोदन स्थिति' : 'Approval Status',
                         isRejected
-                            ? (isHi ? 'अस्वीकृत (Rejected)' : 'Rejected')
-                            : (isHi ? 'समीक्षाधीन (Pending Review)' : 'Pending Review'),
+                            ? (isHi ? 'अस्वीकृत' : 'Rejected')
+                            : (isHi ? 'समीक्षाधीन' : 'Pending Review'),
                         color: isRejected ? Colors.red : Colors.amber.shade800,
                       ),
                     ],
@@ -150,7 +150,7 @@ class _VendorPendingApprovalScreenState extends State<VendorPendingApprovalScree
               const SizedBox(height: 32),
               if (isRejected)
                 GBPrimaryButton(
-                  label: isHi ? 'विवरण सुधारें (Edit & Resubmit)' : 'Edit & Resubmit',
+                  label: isHi ? 'विवरण सुधारें' : 'Edit & Resubmit',
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const VendorOnboardingWizard()),
@@ -161,13 +161,13 @@ class _VendorPendingApprovalScreenState extends State<VendorPendingApprovalScree
                 GBPrimaryButton(
                   label: _isChecking
                       ? (isHi ? 'जांच जारी है...' : 'Checking...')
-                      : (isHi ? 'स्थिति पुनः जांचें (Check Status)' : 'Check Status'),
+                      : (isHi ? 'स्थिति पुनः जांचें' : 'Check Status'),
                   onPressed: _isChecking ? null : () => _checkStatus(state),
                 ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 icon: const Icon(Icons.logout, size: 18),
-                label: Text(isHi ? 'लॉग आउट करें (Sign Out)' : 'Sign Out'),
+                label: Text(isHi ? 'लॉग आउट करें' : 'Sign Out'),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

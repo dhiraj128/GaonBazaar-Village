@@ -66,7 +66,7 @@ class _VendorLanguageSelectionScreenState extends State<VendorLanguageSelectionS
               ),
               const Spacer(),
               GBPrimaryButton(
-                label: selected == 'hi' ? 'आगे बढ़ें (Continue)' : 'Continue',
+                label: selected == 'hi' ? 'आगे बढ़ें' : 'Continue',
                 onPressed: () {
                   state.setLocale(selected);
                   Navigator.of(context).pushReplacement(
