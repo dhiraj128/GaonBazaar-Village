@@ -80,9 +80,9 @@ async def get_payment_gateway_diagnostic(
     elif authorization and authorization.startswith("Bearer "):
         token = authorization.split("Bearer ", 1)[1]
         try:
-            from app.core.security import decode_token
-            p = decode_token(token)
-            if p and p.get("role") == "admin":
+            from app.core.security import decode_access_token
+            p = decode_access_token(token)
+            if p and p.get("role") in ["admin", "super_admin", "hub_manager"]:
                 is_authorized = True
         except Exception:
             pass

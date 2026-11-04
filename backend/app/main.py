@@ -120,6 +120,15 @@ async def init_db_and_seed():
         except Exception as exc:
             logger.debug("Schema migration notice: %s", exc)
 
+    try:
+        async with async_engine.begin() as conn:
+            if async_engine.dialect.name == "sqlite":
+                await conn.execute(text("ALTER TABLE runners ADD COLUMN last_location_updated_at TIMESTAMP;"))
+            else:
+                await conn.execute(text("ALTER TABLE runners ADD COLUMN IF NOT EXISTS last_location_updated_at TIMESTAMP WITH TIME ZONE;"))
+    except Exception as exc:
+        logger.debug("Schema migration notice (runners.last_location_updated_at): %s", exc)
+
     # 4. Update verified product image URLs in existing database rows
     url_updates = [
         ("cat_mustard_oil", "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"),

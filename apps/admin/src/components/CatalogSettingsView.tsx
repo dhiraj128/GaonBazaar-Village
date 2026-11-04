@@ -52,7 +52,7 @@ export const CatalogSettingsView: React.FC<CatalogSettingsViewProps> = ({
   const [newItemUnit, setNewItemUnit] = useState('1 kg');
   const [newItemMrp, setNewItemMrp] = useState<number>(45);
   const [newItemImageUrl, setNewItemImageUrl] = useState(
-    'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80'
+    'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80'
   );
 
   // Pricing Engine Form State

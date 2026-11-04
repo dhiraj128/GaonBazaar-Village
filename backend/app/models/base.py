@@ -137,6 +137,7 @@ class Runner(Base):
     is_approved = Column(Boolean, default=False)
     current_latitude = Column(Float, nullable=True)
     current_longitude = Column(Float, nullable=True)
+    last_location_updated_at = Column(UTCDateTime, nullable=True)
     upi_id = Column(String(100), nullable=True)
     rejection_reason = Column(Text, nullable=True)
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))

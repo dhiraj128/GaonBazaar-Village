@@ -281,6 +281,33 @@ async def get_order_details(
     resp = await _format_order_response(order_id, db, current_user_id=user_id, role=role)
     return resp
 
+@router.get("/orders/{order_id}/delivery-otp")
+async def get_order_delivery_otp(
+    order_id: str,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Authenticated customer endpoint to securely reveal their 4-digit delivery verification code.
+    Strictly isolated: Runner and Vendor are denied access (HTTP 403).
+    """
+    user_id = payload.get("sub")
+    role = payload.get("role")
+    res = await db.execute(select(Order).where(Order.id == order_id))
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order.customer_id != user_id and role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Only the verified order customer can view this delivery verification code"
+        )
+    return {
+        "order_id": order.id,
+        "delivery_otp": order.delivery_otp,
+        "status": order.status
+    }
+
 @router.get("/orders/{order_id}/tracking")
 async def track_order_delivery(
     order_id: str,
@@ -297,7 +324,12 @@ async def track_order_delivery(
 
     res = await db.execute(
         select(Order)
-        .options(selectinload(Order.runner), selectinload(Order.store), selectinload(Order.delivery_address))
+        .options(
+            selectinload(Order.runner).selectinload(Runner.user),
+            selectinload(Order.store),
+            selectinload(Order.delivery_address),
+            selectinload(Order.timeline)
+        )
         .where(Order.id == order_id)
     )
     order = res.scalars().first()
@@ -310,18 +342,45 @@ async def track_order_delivery(
     runner = order.runner
     is_live = order.status in ["PICKED_UP", "OUT_FOR_DELIVERY"] and runner is not None
 
+    runner_phone = None
+    if runner and runner.user and runner.user.phone:
+        runner_phone = runner.user.phone
+    elif runner and hasattr(runner, "phone"):
+        runner_phone = getattr(runner, "phone", None)
+
+    location_timestamp = None
+    if is_live and runner and getattr(runner, "last_location_updated_at", None):
+        location_timestamp = runner.last_location_updated_at.isoformat()
+
+    timeline_items = [
+        {
+            "status": t.status,
+            "title": t.title,
+            "description": t.description,
+            "timestamp": t.timestamp.isoformat() if t.timestamp else None
+        }
+        for t in sorted(order.timeline, key=lambda x: x.timestamp or datetime.min)
+    ]
+
     return {
         "order_id": order.id,
         "status": order.status,
         "is_live_tracking_active": is_live,
         "runner_name": runner.full_name if runner else None,
-        "runner_phone": "9876543210" if runner else None,
+        "runner_phone": runner_phone,
+        "runner_vehicle": runner.vehicle_type if runner else None,
         "runner_latitude": runner.current_latitude if is_live else None,
         "runner_longitude": runner.current_longitude if is_live else None,
+        "last_location_updated_at": location_timestamp,
         "destination_latitude": order.delivery_address.latitude if order.delivery_address else None,
         "destination_longitude": order.delivery_address.longitude if order.delivery_address else None,
+        "destination_address": f"{order.delivery_address.village}, Near {order.delivery_address.landmark}" if (order.delivery_address and order.delivery_address.landmark) else (order.delivery_address.village if order.delivery_address else None),
+        "destination_village": order.delivery_address.village if order.delivery_address else None,
+        "destination_landmark": order.delivery_address.landmark if order.delivery_address else None,
+        "store_name": order.store.shop_name if order.store else None,
         "store_latitude": order.store.latitude if order.store else None,
         "store_longitude": order.store.longitude if order.store else None,
+        "timeline": timeline_items
     }
 
 @router.post("/orders/tickets")
@@ -724,6 +783,7 @@ async def update_runner_status(
     return {"message": f"Runner duty is now {'online' if runner.is_online else 'offline'}", "is_online": runner.is_online}
 
 @router.put("/runner/location")
+@router.post("/runner/location")
 async def update_runner_location(
     data: RunnerLocationUpdate,
     payload: dict = Depends(get_current_user_payload),
@@ -738,10 +798,17 @@ async def update_runner_location(
     runner = r_res.scalars().first()
     if not runner:
         raise HTTPException(status_code=404, detail="Runner profile not found")
+    now = datetime.now(timezone.utc)
     runner.current_latitude = data.latitude
     runner.current_longitude = data.longitude
+    runner.last_location_updated_at = now
     await db.commit()
-    return {"status": "ok", "latitude": runner.current_latitude, "longitude": runner.current_longitude}
+    return {
+        "status": "ok",
+        "latitude": runner.current_latitude,
+        "longitude": runner.current_longitude,
+        "updated_at": now.isoformat()
+    }
 
 @router.post("/vendor/orders/{order_id}/action")
 async def vendor_order_action(
