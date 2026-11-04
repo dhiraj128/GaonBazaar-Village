@@ -1,15 +1,17 @@
 import os
+import json
 import logging
 import asyncio
 import secrets
 from typing import Optional
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Header, HTTPException, status
+from fastapi import FastAPI, Header, HTTPException, status, WebSocket, WebSocketDisconnect, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.future import select
 from sqlalchemy import text
 
 from app.core.config import settings
+from app.core.ws import ws_manager
 from app.db.session import async_engine, AsyncSessionLocal
 from app.models.base import Base, User, Store, StoreProduct, GlobalCatalogItem, Runner, Address, OrderMessage, Notification
 from app.api.v1 import auth, addresses, stores, orders, ai, admin, support, payments, notifications
@@ -900,6 +902,29 @@ app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(support.router, prefix=settings.API_V1_STR)
 app.include_router(payments.router, prefix=settings.API_V1_STR)
 app.include_router(notifications.router, prefix=settings.API_V1_STR)
+
+@app.websocket("/ws/orders")
+@app.websocket("/ws/{client_role}")
+async def websocket_orders_endpoint(
+    websocket: WebSocket,
+    client_role: str = "all",
+    token: Optional[str] = Query(None)
+):
+    await ws_manager.connect(websocket, role=client_role, token=token)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            try:
+                msg = json.loads(data)
+                if msg.get("action") == "ping":
+                    await websocket.send_text(json.dumps({"event": "pong"}))
+            except Exception:
+                pass
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+    except Exception as exc:
+        logger.debug("WS connection ended: %s", exc)
+        ws_manager.disconnect(websocket)
 
 @app.get("/")
 async def root():

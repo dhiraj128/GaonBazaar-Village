@@ -28,6 +28,7 @@ from app.core.security import get_current_user_payload
 from app.services.geo_service import calculate_haversine_distance, is_within_service_radius
 from app.services.pricing_service import calculate_order_totals
 from app.core.config import settings
+from app.core.ws import ws_manager
 
 router = APIRouter(tags=["Orders & Checkout"])
 
@@ -213,6 +214,20 @@ async def create_order(
     
     await db.commit()
     await db.refresh(order)
+
+    try:
+        await ws_manager.emit_new_order({
+            "order_id": order.id,
+            "status": order.status,
+            "store_id": order.store_id,
+            "store_name": store.shop_name,
+            "total_amount": totals["total_amount"],
+            "distance_km": dist_km,
+            "items_count": len(order_items_to_create),
+            "placed_at": now.isoformat()
+        })
+    except Exception:
+        pass
     
     return await _format_order_response(order.id, db, current_user_id=customer_id, role="customer")
 
@@ -793,6 +808,24 @@ async def vendor_order_action(
         
     db.add(OrderTimeline(order_id=order.id, status=order.status, title=title, timestamp=now))
     await db.commit()
+
+    try:
+        await ws_manager.emit_order_update(order.id, order.status, {
+            "store_id": order.store_id,
+            "runner_id": order.runner_id
+        })
+        if order.status == "PACKED":
+            await ws_manager.emit_mission_assigned({
+                "order_id": order.id,
+                "store_id": order.store_id,
+                "total_amount": order.total_amount,
+                "delivery_fee": order.delivery_fee,
+                "distance_km": getattr(order, "distance_km", 1.8),
+                "runner_payout": getattr(order, "runner_payout", 25.0)
+            })
+    except Exception:
+        pass
+
     return {"message": f"Order status updated to {order.status}", "status": order.status}
 
 @router.post("/runner/jobs/{order_id}/action")
@@ -894,6 +927,15 @@ async def runner_job_action(
         
     db.add(OrderTimeline(order_id=order.id, status=order.status, title=title, timestamp=now))
     await db.commit()
+
+    try:
+        await ws_manager.emit_order_update(order.id, order.status, {
+            "runner_id": order.runner_id,
+            "delivered_at": order.delivered_at.isoformat() if order.delivered_at else None
+        })
+    except Exception:
+        pass
+
     return {"message": f"Order status updated to {order.status}", "status": order.status}
 
 async def _format_order_response(

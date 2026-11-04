@@ -188,23 +188,26 @@ async def test_payment_status_integrity_and_simulation():
         stores = (await client.get("/api/v1/stores/nearby?latitude=26.1950&longitude=85.3450")).json()
         store_1 = stores[0]
         prods = (await client.get(f"/api/v1/stores/{store_1['id']}/products")).json()
+        avail_prods = [p for p in prods if p.get("in_stock", True) and (p.get("stock_quantity") is None or p.get("stock_quantity", 0) >= 2)]
+        target_prod = avail_prods[0] if avail_prods else prods[0]
 
         # 1. Test online order -> payment_status MUST be PENDING, not prematurely PAID
         online_order = await client.post("/api/v1/orders", headers=c_headers, json={
             "store_id": store_1["id"],
             "delivery_address_id": addr_id,
             "payment_method": "ONLINE",
-            "items": [{"product_id": prods[0]["id"], "quantity": 1}]
+            "items": [{"product_id": target_prod["id"], "quantity": 1}]
         })
         assert online_order.status_code == 201
         assert online_order.json()["payment_status"] == "PENDING", f"Expected PENDING, got {online_order.json()['payment_status']}"
 
         # 2. Test COD order -> initially PENDING
+        target_cod_prod = avail_prods[1] if len(avail_prods) > 1 else target_prod
         cod_order = await client.post("/api/v1/orders", headers=c_headers, json={
             "store_id": store_1["id"],
             "delivery_address_id": addr_id,
             "payment_method": "COD",
-            "items": [{"product_id": prods[0]["id"], "quantity": 1}]
+            "items": [{"product_id": target_cod_prod["id"], "quantity": 1}]
         })
         assert cod_order.status_code == 201
         assert cod_order.json()["payment_status"] == "PENDING"
