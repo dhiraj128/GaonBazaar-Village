@@ -722,167 +722,167 @@
           <input type="text" id="inventory-search" oninput="filterInventory()" placeholder="Search items (Atta, Sugar, Oil, Milk)..." data-i18n-placeholder="search_inventory_placeholder" class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 shadow-xs">
         </div>
 
-        <!-- Products List with Uniform Layout & Verified Product Photos (ZERO EMOJIS) -->
+        <!-- Products List with Uniform Layout & Verified Product Photos (ZERO EMOJIS, FIXED 48px GEOMETRY) -->
         <div id="inventory-list" class="space-y-3">
           
-          <!-- Product Card 1: Aashirvaad Chakki Atta -->
-          <div class="product-item bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-3" data-id="prod_atta_01" data-title="Aashirvaad Shudh Chakki Atta 5kg" data-category="Grocery">
-            <div class="flex items-center space-x-3 min-w-0 flex-1">
-              <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80" alt="Aashirvaad Chakki Atta" class="w-13 h-13 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs">
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center space-x-1.5 flex-wrap">
+          <!-- Product Card 1: Aashirvaad Chakki Atta (Flour / Grain Photo) -->
+          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_atta_01" data-title="Aashirvaad Shudh Chakki Atta 5kg" data-category="Grocery">
+            <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80" alt="Aashirvaad Chakki Atta" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
+              <div class="min-w-0 flex-1 overflow-hidden">
+                <div class="flex items-center space-x-1 min-w-0">
                   <h4 class="text-xs font-bold text-slate-900 truncate">Aashirvaad Chakki Atta</h4>
-                  <span class="text-[10px] text-slate-500 font-medium">(5 kg)</span>
+                  <span class="text-[10px] text-slate-500 font-medium shrink-0">(5 kg)</span>
                 </div>
                 <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
                   <span class="text-xs font-extrabold text-slate-900">₹240.00</span>
-                  <span class="text-[11px] text-slate-400 line-through">₹260.00</span>
-                  <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">8% OFF</span>
+                  <span class="text-[10px] text-slate-400 line-through">₹260.00</span>
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">8% OFF</span>
                 </div>
-                <div class="flex items-center space-x-2 mt-1">
-                  <span class="text-[10px] text-slate-500 font-medium">Stock: <strong class="text-slate-700">45 units</strong></span>
+                <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
+                  <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">45 units</strong></span>
                   <span class="text-slate-300">•</span>
-                  <span class="stock-label text-[10px] font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
+                  <span class="stock-label font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
                 </div>
               </div>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
               <input type="checkbox" checked onchange="toggleProductStock(this, 'prod_atta_01', 'Aashirvaad Chakki Atta')" class="sr-only peer">
-              <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
             </label>
           </div>
 
-          <!-- Product Card 2: Amul Taaza Milk -->
-          <div class="product-item bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-3" data-id="prod_milk_01" data-title="Amul Taaza Homogenised Toned Milk 500ml" data-category="Dairy">
-            <div class="flex items-center space-x-3 min-w-0 flex-1">
-              <img src="https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80" alt="Amul Taaza Milk" class="w-13 h-13 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs">
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center space-x-1.5 flex-wrap">
+          <!-- Product Card 2: Amul Taaza Milk (Fresh Dairy Photo) -->
+          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_milk_01" data-title="Amul Taaza Homogenised Toned Milk 500ml" data-category="Dairy">
+            <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80" alt="Amul Taaza Milk" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
+              <div class="min-w-0 flex-1 overflow-hidden">
+                <div class="flex items-center space-x-1 min-w-0">
                   <h4 class="text-xs font-bold text-slate-900 truncate">Amul Taaza Milk</h4>
-                  <span class="text-[10px] text-slate-500 font-medium">(500 ml)</span>
+                  <span class="text-[10px] text-slate-500 font-medium shrink-0">(500 ml)</span>
                 </div>
                 <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
                   <span class="text-xs font-extrabold text-slate-900">₹28.00</span>
                   <span class="text-[10px] text-slate-400 font-semibold">MRP ₹28.00</span>
                 </div>
-                <div class="flex items-center space-x-2 mt-1">
-                  <span class="text-[10px] text-slate-500 font-medium">Stock: <strong class="text-slate-700">60 units</strong></span>
+                <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
+                  <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">60 units</strong></span>
                   <span class="text-slate-300">•</span>
-                  <span class="stock-label text-[10px] font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
+                  <span class="stock-label font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
                 </div>
               </div>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
               <input type="checkbox" checked onchange="toggleProductStock(this, 'prod_milk_01', 'Amul Taaza Milk')" class="sr-only peer">
-              <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
             </label>
           </div>
 
-          <!-- Product Card 3: Fortune Mustard Oil -->
-          <div class="product-item bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-3" data-id="prod_oil_01" data-title="Fortune Kachi Ghani Mustard Oil 1L" data-category="Grocery">
-            <div class="flex items-center space-x-3 min-w-0 flex-1">
-              <img src="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80" alt="Fortune Mustard Oil" class="w-13 h-13 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs">
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center space-x-1.5 flex-wrap">
+          <!-- Product Card 3: Fortune Mustard Oil (Cooking Oil Bottle Photo) -->
+          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_oil_01" data-title="Fortune Kachi Ghani Mustard Oil 1L" data-category="Grocery">
+            <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80" alt="Fortune Mustard Oil" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
+              <div class="min-w-0 flex-1 overflow-hidden">
+                <div class="flex items-center space-x-1 min-w-0">
                   <h4 class="text-xs font-bold text-slate-900 truncate">Fortune Mustard Oil</h4>
-                  <span class="text-[10px] text-slate-500 font-medium">(1 L)</span>
+                  <span class="text-[10px] text-slate-500 font-medium shrink-0">(1 L)</span>
                 </div>
                 <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
                   <span class="text-xs font-extrabold text-slate-900">₹145.00</span>
-                  <span class="text-[11px] text-slate-400 line-through">₹165.00</span>
-                  <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">12% OFF</span>
+                  <span class="text-[10px] text-slate-400 line-through">₹165.00</span>
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">12% OFF</span>
                 </div>
-                <div class="flex items-center space-x-2 mt-1">
-                  <span class="text-[10px] text-slate-500 font-medium">Stock: <strong class="text-slate-700">0 units</strong></span>
+                <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
+                  <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">0 units</strong></span>
                   <span class="text-slate-300">•</span>
-                  <span class="stock-label text-[10px] font-bold text-rose-500 block" data-i18n="out_of_stock_label">OUT OF STOCK</span>
+                  <span class="stock-label font-bold text-rose-500 block" data-i18n="out_of_stock_label">OUT OF STOCK</span>
                 </div>
               </div>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
               <input type="checkbox" onchange="toggleProductStock(this, 'prod_oil_01', 'Fortune Mustard Oil')" class="sr-only peer">
-              <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
             </label>
           </div>
 
-          <!-- Product Card 4: Tata Tea Gold -->
-          <div class="product-item bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-3" data-id="prod_tea_01" data-title="Tata Tea Gold Leaf 250g" data-category="Beverages">
-            <div class="flex items-center space-x-3 min-w-0 flex-1">
-              <img src="https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&q=80" alt="Tata Tea Gold" class="w-13 h-13 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs">
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center space-x-1.5 flex-wrap">
+          <!-- Product Card 4: Tata Tea Gold (Tea Leaves & Cup Photo) -->
+          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_tea_01" data-title="Tata Tea Gold Leaf 250g" data-category="Beverages">
+            <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&q=80" alt="Tata Tea Gold" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
+              <div class="min-w-0 flex-1 overflow-hidden">
+                <div class="flex items-center space-x-1 min-w-0">
                   <h4 class="text-xs font-bold text-slate-900 truncate">Tata Tea Gold</h4>
-                  <span class="text-[10px] text-slate-500 font-medium">(250 g)</span>
+                  <span class="text-[10px] text-slate-500 font-medium shrink-0">(250 g)</span>
                 </div>
                 <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
                   <span class="text-xs font-extrabold text-slate-900">₹110.00</span>
-                  <span class="text-[11px] text-slate-400 line-through">₹140.00</span>
-                  <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">21% OFF</span>
+                  <span class="text-[10px] text-slate-400 line-through">₹140.00</span>
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">21% OFF</span>
                 </div>
-                <div class="flex items-center space-x-2 mt-1">
-                  <span class="text-[10px] text-slate-500 font-medium">Stock: <strong class="text-slate-700">35 units</strong></span>
+                <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
+                  <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">35 units</strong></span>
                   <span class="text-slate-300">•</span>
-                  <span class="stock-label text-[10px] font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
+                  <span class="stock-label font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
                 </div>
               </div>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
               <input type="checkbox" checked onchange="toggleProductStock(this, 'prod_tea_01', 'Tata Tea Gold')" class="sr-only peer">
-              <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
             </label>
           </div>
 
-          <!-- Product Card 5: Madhur Pure Sugar -->
-          <div class="product-item bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-3" data-id="prod_sugar_01" data-title="Madhur Pure & Hygienic Sugar 1kg" data-category="Grocery">
-            <div class="flex items-center space-x-3 min-w-0 flex-1">
-              <img src="https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=400&q=80" alt="Madhur Sugar" class="w-13 h-13 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs">
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center space-x-1.5 flex-wrap">
+          <!-- Product Card 5: Madhur Pure Sugar (White Sugar Crystals Photo) -->
+          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_sugar_01" data-title="Madhur Pure & Hygienic Sugar 1kg" data-category="Grocery">
+            <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1581441363689-1f3c3c414635?w=400&q=80" alt="Madhur Sugar" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
+              <div class="min-w-0 flex-1 overflow-hidden">
+                <div class="flex items-center space-x-1 min-w-0">
                   <h4 class="text-xs font-bold text-slate-900 truncate">Madhur Pure Sugar</h4>
-                  <span class="text-[10px] text-slate-500 font-medium">(1 kg)</span>
+                  <span class="text-[10px] text-slate-500 font-medium shrink-0">(1 kg)</span>
                 </div>
                 <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
                   <span class="text-xs font-extrabold text-slate-900">₹45.00</span>
-                  <span class="text-[11px] text-slate-400 line-through">₹50.00</span>
-                  <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">10% OFF</span>
+                  <span class="text-[10px] text-slate-400 line-through">₹50.00</span>
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">10% OFF</span>
                 </div>
-                <div class="flex items-center space-x-2 mt-1">
-                  <span class="text-[10px] text-slate-500 font-medium">Stock: <strong class="text-slate-700">50 units</strong></span>
+                <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
+                  <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">50 units</strong></span>
                   <span class="text-slate-300">•</span>
-                  <span class="stock-label text-[10px] font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
+                  <span class="stock-label font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
                 </div>
               </div>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
               <input type="checkbox" checked onchange="toggleProductStock(this, 'prod_sugar_01', 'Madhur Pure Sugar')" class="sr-only peer">
-              <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
             </label>
           </div>
 
-          <!-- Product Card 6: Parle-G Glucose Biscuits -->
-          <div class="product-item bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-3" data-id="prod_biscuit_01" data-title="Parle-G Original Gluco Biscuits 250g" data-category="Snacks">
-            <div class="flex items-center space-x-3 min-w-0 flex-1">
-              <img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400&q=80" alt="Parle-G Biscuits" class="w-13 h-13 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs">
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center space-x-1.5 flex-wrap">
-                  <h4 class="text-xs font-bold text-slate-900 truncate">Parle-G Glucose Biscuits</h4>
-                  <span class="text-[10px] text-slate-500 font-medium">(250 g)</span>
+          <!-- Product Card 6: Desi Toor Dal (Yellow Lentils / Dal Photo - NOT FISH!) -->
+          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_dal_01" data-title="Desi Toor / Arhar Dal 1kg" data-category="Grocery">
+            <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400&q=80" alt="Desi Toor Dal" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
+              <div class="min-w-0 flex-1 overflow-hidden">
+                <div class="flex items-center space-x-1 min-w-0">
+                  <h4 class="text-xs font-bold text-slate-900 truncate">Desi Toor / Arhar Dal</h4>
+                  <span class="text-[10px] text-slate-500 font-medium shrink-0">(1 kg)</span>
                 </div>
                 <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
-                  <span class="text-xs font-extrabold text-slate-900">₹22.00</span>
-                  <span class="text-[11px] text-slate-400 line-through">₹25.00</span>
-                  <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">12% OFF</span>
+                  <span class="text-xs font-extrabold text-slate-900">₹140.00</span>
+                  <span class="text-[10px] text-slate-400 line-through">₹155.00</span>
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">10% OFF</span>
                 </div>
-                <div class="flex items-center space-x-2 mt-1">
-                  <span class="text-[10px] text-slate-500 font-medium">Stock: <strong class="text-slate-700">80 units</strong></span>
+                <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
+                  <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">40 units</strong></span>
                   <span class="text-slate-300">•</span>
-                  <span class="stock-label text-[10px] font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
+                  <span class="stock-label font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
                 </div>
               </div>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0">
-              <input type="checkbox" checked onchange="toggleProductStock(this, 'prod_biscuit_01', 'Parle-G Biscuits')" class="sr-only peer">
-              <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
+              <input type="checkbox" checked onchange="toggleProductStock(this, 'prod_dal_01', 'Desi Toor Dal')" class="sr-only peer">
+              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
             </label>
           </div>
 
@@ -1162,13 +1162,13 @@
           <div class="space-y-3">
             <!-- Active Image Preview & Custom URL -->
             <div class="flex items-start space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-inner">
-              <img id="add-item-preview-img" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80" alt="Product Thumbnail" class="w-16 h-16 shrink-0 rounded-xl object-cover border-2 border-emerald-600 shadow-sm">
+              <img id="add-item-preview-img" src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80" alt="Product Thumbnail" class="w-16 h-16 shrink-0 rounded-xl object-cover border-2 border-emerald-600 shadow-sm">
               <div class="flex-1 min-w-0 space-y-1">
                 <div class="flex items-center space-x-1.5">
                   <span id="add-item-img-tag" class="text-xs font-bold text-slate-900 block truncate">Aashirvaad Shudh Chakki Atta (5kg)</span>
                 </div>
                 <span class="text-[11px] text-emerald-700 font-semibold block" data-i18n="img_selected_badge">✓ Verified High-Resolution Photograph Assigned</span>
-                <input type="text" id="selected-product-img-url" oninput="updateManualImagePreview(this.value)" placeholder="Image URL (Unsplash or direct CDN link)" value="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80" class="w-full px-2.5 py-1 text-[11px] font-mono text-slate-600 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-emerald-500">
+                <input type="text" id="selected-product-img-url" oninput="updateManualImagePreview(this.value)" placeholder="Image URL (Unsplash or direct CDN link)" value="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80" class="w-full px-2.5 py-1 text-[11px] font-mono text-slate-600 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-emerald-500">
               </div>
             </div>
 
@@ -2836,7 +2836,7 @@
         unit: "kg",
         mrp: 260.0,
         suggested_price: 240.0,
-        image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80"
+        image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80"
       },
       {
         id: "cat_atta_02",
@@ -2847,7 +2847,7 @@
         unit: "kg",
         mrp: 495.0,
         suggested_price: 465.0,
-        image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80"
+        image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80"
       },
       {
         id: "cat_oil_01",
@@ -2957,7 +2957,7 @@
         unit: "kg",
         mrp: 28.0,
         suggested_price: 26.0,
-        image: "https://images.unsplash.com/photo-1626082896492-766af4eb6501?w=400&q=80"
+        image: "https://images.unsplash.com/photo-1518110903415-32e5b77c1d76?w=400&q=80"
       },
       {
         id: "cat_tea_01",
@@ -3045,7 +3045,7 @@
         unit: "kg",
         mrp: 145.0,
         suggested_price: 130.0,
-        image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80"
+        image: "https://images.unsplash.com/photo-1585421514738-01798e348b17?w=400&q=80"
       },
       {
         id: "cat_det_02",
@@ -3056,7 +3056,7 @@
         unit: "piece",
         mrp: 20.0,
         suggested_price: 18.0,
-        image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80"
+        image: "https://images.unsplash.com/photo-1585421514738-01798e348b17?w=400&q=80"
       },
       {
         id: "cat_soap_01",
@@ -3155,7 +3155,7 @@
         unit: "kg",
         mrp: 155.0,
         suggested_price: 140.0,
-        image: "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=400&q=80"
+        image: "https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400&q=80"
       },
       {
         id: "cat_dal_02",
@@ -3166,7 +3166,7 @@
         unit: "kg",
         mrp: 130.0,
         suggested_price: 118.0,
-        image: "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=400&q=80"
+        image: "https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=400&q=80"
       },
       {
         id: "cat_dal_03",
@@ -3200,7 +3200,7 @@
                 unit: backendItem.default_unit?.includes('kg') ? 'kg' : (backendItem.default_unit?.includes('L') ? 'litre' : 'piece'),
                 mrp: backendItem.suggested_mrp || 50.0,
                 suggested_price: backendItem.suggested_mrp || 45.0,
-                image: backendItem.image_url || "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80"
+                image: backendItem.image_url || "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80"
               });
             }
           });
@@ -3237,7 +3237,7 @@
       container.innerHTML = filtered.map(item => `
         <div onclick='selectCatalogItem(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="p-2 hover:bg-emerald-100/70 rounded-lg cursor-pointer flex items-center justify-between gap-2.5 transition active:scale-98">
           <div class="flex items-center space-x-2.5 min-w-0 flex-1">
-            <img src="${item.image}" alt="${item.name}" class="w-10 h-10 shrink-0 rounded-md object-cover border border-emerald-300">
+            <img src="${item.image}" alt="${item.name}" class="w-10 h-10 shrink-0 rounded-md object-cover border border-emerald-300" style="width: 40px; height: 40px; min-width: 40px; max-width: 40px; min-height: 40px; max-height: 40px; object-fit: cover;">
             <div class="min-w-0 flex-1">
               <h5 class="text-xs font-bold text-slate-900 truncate">${item.name}</h5>
               <div class="flex items-center space-x-1.5 text-[10px] text-slate-500">
@@ -3373,7 +3373,7 @@
       openModal('modal-add-product');
     }
 
-    // Save Product with Authenticated Backend Persistence & Strikethrough Pricing
+    // Save Product with Strict Transactional Backend Persistence & 48px Geometry
     async function saveNewProduct() {
       const name = document.getElementById('new-item-name').value.trim();
       const brand = document.getElementById('new-item-brand').value.trim();
@@ -3384,7 +3384,7 @@
       const price = parseFloat(document.getElementById('new-item-price').value) || 0;
       const stock = parseInt(document.getElementById('new-item-stock').value, 10) || 0;
       const inStock = document.getElementById('new-item-instock').checked;
-      const imgUrl = document.getElementById('selected-product-img-url').value.trim() || "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80";
+      const imgUrl = document.getElementById('selected-product-img-url').value.trim() || "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80";
       const globalId = document.getElementById('selected-global-catalog-id').value || null;
 
       if (!name) {
@@ -3395,19 +3395,21 @@
         toastError(currentLang === 'hi' ? "कृपया मान्य विक्रय मूल्य दर्ज करें" : "Please enter valid Selling Price (> ₹0)");
         return;
       }
+      if (mrp > 0 && price > mrp) {
+        toastError(currentLang === 'hi' ? "विक्रय मूल्य एमआरपी से अधिक नहीं हो सकता" : "Selling Price cannot exceed MRP");
+        return;
+      }
 
       const effectiveMrp = mrp > 0 ? mrp : price;
       const discountPct = (effectiveMrp > price) ? Math.max(0, Math.round(((effectiveMrp - price) / effectiveMrp) * 100)) : 0;
-      const uniqueId = "prod_" + Date.now();
 
       const btn = document.getElementById('save-product-submit-btn');
       if (btn) {
         btn.disabled = true;
-        btn.innerText = "Adding...";
+        btn.innerHTML = `<span class="inline-block animate-spin mr-1.5">⏳</span>Saving to Server...`;
       }
 
-      let backendProdId = uniqueId;
-
+      let savedProduct = null;
       try {
         const payload = {
           global_product_id: globalId,
@@ -3422,12 +3424,19 @@
           in_stock: inStock
         };
 
-        const res = await apiRequest('/api/v1/vendor/products', 'POST', payload);
-        if (res && res.id) {
-          backendProdId = res.id;
-        }
+        savedProduct = await apiRequest('/api/v1/vendor/products', 'POST', payload);
       } catch (err) {
-        console.warn("Backend product save notice:", err);
+        console.error("Backend product save error:", err);
+        // TRANSACTIONAL INTEGRITY: Never show successful save if the API fails
+        toastError(currentLang === 'hi'
+          ? ("सामान जोड़ने में विफल: " + (err.message || "सर्वर त्रुटि"))
+          : ("Failed to add product: " + (err.message || "Server error. Please retry.")));
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 mr-1.5"></i>Add to Live Store`;
+          lucide.createIcons();
+        }
+        return; // PRESERVES ENTERED DATA IN FORM
       } finally {
         if (btn) {
           btn.disabled = false;
@@ -3435,43 +3444,45 @@
         }
       }
 
-      // Prepend to Live UI Product Cards List
+      const backendProdId = (savedProduct && savedProduct.id) ? savedProduct.id : ("prod_" + Date.now());
+
+      // Prepend to Live UI Product Cards List with Exact 48px Geometry
       const list = document.getElementById('inventory-list');
       const newCard = document.createElement('div');
-      newCard.className = "product-item bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-3";
+      newCard.className = "product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden";
       newCard.setAttribute('data-id', backendProdId);
       newCard.setAttribute('data-title', name);
       newCard.setAttribute('data-category', cat);
       
       const discountMarkup = discountPct > 0 
-        ? `<span class="text-[11px] text-slate-400 line-through">₹${effectiveMrp.toFixed(2)}</span>
-           <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">${discountPct}% OFF</span>`
+        ? `<span class="text-[10px] text-slate-400 line-through">₹${effectiveMrp.toFixed(2)}</span>
+           <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">${discountPct}% OFF</span>`
         : `<span class="text-[10px] text-slate-400 font-semibold">MRP ₹${effectiveMrp.toFixed(2)}</span>`;
 
       newCard.innerHTML = `
-        <div class="flex items-center space-x-3 min-w-0 flex-1">
-          <img src="${imgUrl}" alt="${name}" class="w-13 h-13 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs">
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center space-x-1.5 flex-wrap">
+        <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
+          <img src="${imgUrl}" alt="${name}" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
+          <div class="min-w-0 flex-1 overflow-hidden">
+            <div class="flex items-center space-x-1 min-w-0">
               <h4 class="text-xs font-bold text-slate-900 truncate">${name}</h4>
-              ${variant ? `<span class="text-[10px] text-slate-500 font-medium">(${variant})</span>` : ''}
+              ${variant ? `<span class="text-[10px] text-slate-500 font-medium shrink-0">(${variant})</span>` : ''}
             </div>
             <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
               <span class="text-xs font-extrabold text-slate-900">₹${price.toFixed(2)}</span>
               ${discountMarkup}
             </div>
-            <div class="flex items-center space-x-2 mt-1">
-              <span class="text-[10px] text-slate-500 font-medium">Stock: <strong class="text-slate-700">${stock} units</strong></span>
+            <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
+              <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">${stock} units</strong></span>
               <span class="text-slate-300">•</span>
-              <span class="stock-label text-[10px] font-bold ${inStock ? 'text-emerald-600' : 'text-rose-500'} block">
+              <span class="stock-label font-bold ${inStock ? 'text-emerald-600' : 'text-rose-500'} block">
                 ${inStock ? (i18n[currentLang]?.in_stock_label || "IN STOCK") : (i18n[currentLang]?.out_of_stock_label || "OUT OF STOCK")}
               </span>
             </div>
           </div>
         </div>
-        <label class="relative inline-flex items-center cursor-pointer shrink-0">
-          <input type="checkbox" ${inStock ? 'checked' : ''} onchange="toggleProductStock(this, '${backendProdId}', '${name.replace(/'/g, "\'")}')" class="sr-only peer">
-          <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+        <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
+          <input type="checkbox" ${inStock ? 'checked' : ''} onchange="toggleProductStock(this, '${backendProdId}', '${name.replace(/'/g, "\\'")}')" class="sr-only peer">
+          <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
         </label>
       `;
 
@@ -3555,8 +3566,21 @@
       const savedLang = localStorage.getItem('gaonbazaar_vendor_lang') || 'en';
       setLanguage(savedLang);
 
-      navigateTo('onboarding-1', false);
-      history.replaceState({ screen: 'onboarding-1', view: 'onboarding' }, '', '#onboarding-1');
+      const hash = window.location.hash.replace('#', '');
+      if (hash.startsWith('dashboard-')) {
+        const tab = hash.replace('dashboard-', '');
+        openDashboard(tab || 'orders', false);
+      } else if (hash.startsWith('onboarding-')) {
+        navigateTo(hash, false);
+      } else {
+        const token = localStorage.getItem('gaonbazaar_vendor_token');
+        if (token) {
+          openDashboard('orders', false);
+        } else {
+          navigateTo('onboarding-1', false);
+          history.replaceState({ screen: 'onboarding-1', view: 'onboarding' }, '', '#onboarding-1');
+        }
+      }
 
       lucide.createIcons();
       loadGlobalCatalog();

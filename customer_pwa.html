@@ -510,7 +510,7 @@
                 <p class="text-[10px] text-emerald-600" data-i18n="otp_handover_sub">Share with runner ONLY after inspecting goods</p>
               </div>
               <span id="order-otp-badge" class="text-base font-black text-emerald-900 font-mono tracking-widest bg-white px-2.5 py-1 rounded-xl shadow-xs border border-emerald-200">
-                4829
+                ••••
               </span>
             </div>
 
@@ -1360,7 +1360,7 @@
         category: 'Grocery',
         unit: '5 kg',
         price: 215.00,
-        img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80',
+        img: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80',
         store: 'Sharma Kirana & General Store'
       },
       {
@@ -1420,7 +1420,7 @@
         category: 'Grocery',
         unit: '1 kg',
         price: 135.00,
-        img: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=400',
+        img: 'https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=500&q=80',
         store: 'Sharma Kirana & General Store'
       },
       {
@@ -1450,7 +1450,7 @@
         category: 'Grocery',
         unit: '1 kg Pack',
         price: 28.00,
-        img: 'https://images.unsplash.com/photo-1626082896492-766af4eb6501?w=400',
+        img: 'https://images.unsplash.com/photo-1518110903415-32e5b77c1d76?w=500&q=80',
         store: 'Sharma Kirana & General Store'
       },
       {
@@ -2269,11 +2269,16 @@
       // Reset active order placed timestamp for 180s cancellation timer
       localStorage.setItem('gb_order_placed_time', Date.now().toString());
       if (res && res.id) {
-        document.getElementById('active-order-id-display').innerText = 'Order #' + res.id.slice(-6);
+        localStorage.setItem('gb_active_order_id', res.id);
+        if (res.delivery_otp) {
+          localStorage.setItem('gb_active_order_otp', res.delivery_otp);
+        }
+        syncActiveOrderUI();
       }
 
       switchTab('orders');
       startOrderCancellationTimer();
+      syncActiveOrderUI();
       toastSuccess(currentLang === 'hi' ? "ऑर्डर सफलतापूर्वक दर्ज हो गया!" : "Order placed successfully! Delivery partner assigned.");
     }
 
@@ -2791,13 +2796,29 @@
       cancellationTimerInterval = setInterval(updateCountdown, 1000);
     }
 
+        function syncActiveOrderUI() {
+      const activeOrderId = localStorage.getItem('gb_active_order_id');
+      const orderIdDisplay = document.getElementById('active-order-id-display');
+      if (orderIdDisplay && activeOrderId) {
+        orderIdDisplay.innerText = 'Order #' + activeOrderId.slice(-6);
+      }
+      const activeOtp = localStorage.getItem('gb_active_order_otp');
+      const badge = document.getElementById('order-otp-badge');
+      if (badge) {
+        badge.innerText = activeOtp || '••••';
+      }
+    }
+
     function checkCancellationState() {
+      syncActiveOrderUI();
       startOrderCancellationTimer();
+      syncActiveOrderUI();
     }
 
     async function cancelActiveOrderBinary() {
       if (confirm(currentLang === 'hi' ? "क्या आप सच में इस ऑर्डर को रद्द करना चाहते हैं? आपका पूरा भुगतान तुरंत रिफंड कर दिया जाएगा।" : "Are you sure you want to cancel this order? You will receive a 100% full instant refund.")) {
-        await apiRequest('/api/v1/orders/GB-9821/cancel', 'POST', { reason: 'Customer requested 180s cancellation' });
+        const targetOrderId = localStorage.getItem('gb_active_order_id') || 'GB-9821';
+        await apiRequest('/api/v1/orders/' + targetOrderId + '/cancel', 'POST', { reason: 'Customer requested 180s cancellation' });
 
         const container = document.getElementById('cancel-order-container');
         if (container) container.remove();
@@ -3141,6 +3162,7 @@
       }
 
       startOrderCancellationTimer();
+      syncActiveOrderUI();
       renderProductCatalog();
       renderStoresList();
       renderCartItems();

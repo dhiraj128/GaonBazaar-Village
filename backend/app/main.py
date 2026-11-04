@@ -124,14 +124,15 @@ async def init_db_and_seed():
     url_updates = [
         ("cat_mustard_oil", "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"),
         ("cat_soy_oil", "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=500&q=80"),
-        ("cat_atta", "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"),
+        ("cat_atta", "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80"),
+        ("cat_salt", "https://images.unsplash.com/photo-1518110903415-32e5b77c1d76?w=500&q=80"),
         ("cat_led_bulb", "https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=500&q=80"),
         ("cat_tomato", "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80"),
-        ("cat_toor_dal", "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80"),
-        ("cat_moong_dal", "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80"),
-        ("cat_chana_dal", "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=500&q=80"),
+        ("cat_toor_dal", "https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=500&q=80"),
+        ("cat_moong_dal", "https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=500&q=80"),
+        ("cat_chana_dal", "https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=500&q=80"),
         ("cat_bath_soap", "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80"),
-        ("cat_detergent", "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&q=80"),
+        ("cat_detergent", "https://images.unsplash.com/photo-1585421514738-01798e348b17?w=500&q=80"),
     ]
     try:
         async with async_engine.begin() as conn:
@@ -148,13 +149,15 @@ async def init_db_and_seed():
                           AND (
                             image_url IS NULL 
                             OR image_url = '' 
-                            OR image_url LIKE '%photo-1574323347407-f5e1ad6d020b%' 
+                            OR image_url LIKE '%photo-1509440159596-0249088772ff%'
+                            OR image_url LIKE '%photo-1515543237350-b3eea1ec8082%'
+                            OR image_url LIKE '%photo-1626082896492-766af4eb6501%'
+                            OR image_url LIKE '%photo-1584308666744-24d5c474f2ae%'
                             OR image_url LIKE '%photo-1620916566398-39f1143ab7be%' 
                             OR image_url LIKE '%photo-1507668077129-56e32842fceb%'
                             OR image_url LIKE '%Dune_Aura%'
                             OR image_url LIKE '%upload.wikimedia.org%'
                             OR image_url LIKE '%photo-1546470427-227c7369a941%'
-                            OR image_url LIKE '%photo-1585994192701-f1a505c817ea%'
                             OR image_url LIKE '%photo-1607006314144-8849b2f67232%'
                           )
                     """),
@@ -176,7 +179,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 kg",
                     suggested_mrp=45.0,
-                    image_url="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+                    image_url="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80",
                     tags="atta,aata,wheat,flour,आटा"
                 ),
                 GlobalCatalogItem(
@@ -276,7 +279,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 kg",
                     suggested_mrp=28.0,
-                    image_url="https://images.unsplash.com/photo-1626082896492-766af4eb6501?w=400",
+                    image_url="https://images.unsplash.com/photo-1518110903415-32e5b77c1d76?w=500&q=80",
                     tags="salt,namak,नमक"
                 ),
                 GlobalCatalogItem(
@@ -306,7 +309,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 kg",
                     suggested_mrp=145.0,
-                    image_url="https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80",
+                    image_url="https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=500&q=80",
                     tags="dal,toor,arhar,दाल"
                 ),
                 GlobalCatalogItem(
@@ -316,7 +319,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 kg",
                     suggested_mrp=95.0,
-                    image_url="https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=400",
+                    image_url="https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=500&q=80",
                     tags="chana,dal,चना दाल"
                 ),
                 GlobalCatalogItem(
@@ -326,7 +329,7 @@ async def init_db_and_seed():
                     category="Grocery",
                     default_unit="1 kg",
                     suggested_mrp=120.0,
-                    image_url="https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500&q=80",
+                    image_url="https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=500&q=80",
                     tags="moong,dal,मूंग दाल"
                 ),
                 GlobalCatalogItem(
@@ -476,7 +479,7 @@ async def init_db_and_seed():
                     category="Household",
                     default_unit="1 kg",
                     suggested_mrp=75.0,
-                    image_url="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&q=80",
+                    image_url="https://images.unsplash.com/photo-1585421514738-01798e348b17?w=500&q=80",
                     tags="detergent,washing,powder,सर्फ"
                 ),
                 GlobalCatalogItem(
@@ -678,7 +681,7 @@ async def init_db_and_seed():
             
             # Products for Store 1 (General Store offering multiple daily-use categories)
             st1_products = [
-                StoreProduct(store_id="str_01", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=38.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"),
+                StoreProduct(store_id="str_01", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=38.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80"),
                 StoreProduct(store_id="str_01", global_product_id="cat_rice", category="Grocery", unit="1 kg", price=54.0, mrp=65.0, image_url="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400"),
                 StoreProduct(store_id="str_01", global_product_id="cat_mustard_oil", category="Grocery", unit="1 L", price=142.0, mrp=155.0, image_url="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"),
                 StoreProduct(store_id="str_01", global_product_id="cat_potato", category="Vegetables", unit="1 kg", price=24.0, mrp=30.0, image_url="https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400"),
@@ -698,7 +701,7 @@ async def init_db_and_seed():
                 StoreProduct(store_id="str_02", global_product_id="cat_milk", category="Dairy", unit="1 L", price=56.0, mrp=60.0, image_url="https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400"),
                 StoreProduct(store_id="str_02", global_product_id="cat_potato", category="Vegetables", unit="1 kg", price=25.0, mrp=30.0, image_url="https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400"),
                 StoreProduct(store_id="str_02", global_product_id="cat_tomato", category="Vegetables", unit="1 kg", price=28.0, mrp=35.0, image_url="https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80"),
-                StoreProduct(store_id="str_02", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=39.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"),
+                StoreProduct(store_id="str_02", global_product_id="cat_atta", category="Grocery", unit="1 kg", price=39.0, mrp=45.0, image_url="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80"),
             ]
             session.add_all(st2_products)
             
