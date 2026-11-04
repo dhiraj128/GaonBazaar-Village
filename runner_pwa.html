@@ -162,8 +162,8 @@
       <div id="screen-onboarding-2" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
         <div>
           <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
-            <span class="px-2 py-0.5 bg-blue-100 rounded">Step 2 of 7</span>
-            <span>Registration</span>
+            <span class="px-2 py-0.5 bg-blue-100 rounded" data-i18n="step_2_badge">Step 2 of 7</span>
+            <span data-i18n="registration_sub">Registration</span>
           </div>
           <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="mobile_reg_title">Enter Mobile Number</h2>
           <p class="text-sm text-slate-500 mb-6" data-i18n="mobile_reg_sub">We will send a 4-digit verification code to your phone</p>
@@ -172,7 +172,7 @@
             <label class="block text-xs font-semibold text-slate-700 mb-1.5" data-i18n="phone_number_label">Phone Number</label>
             <div class="flex rounded-xl border border-slate-300 overflow-hidden focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 bg-white shadow-xs">
               <span class="inline-flex items-center px-3.5 bg-slate-50 text-slate-600 text-sm font-semibold border-r border-slate-300">+91</span>
-              <input type="tel" id="runner-phone-input" maxlength="10" placeholder="9711002233" value="9711002233" class="w-full px-3.5 py-3 text-slate-900 font-medium placeholder-slate-400 focus:outline-none">
+              <input type="tel" id="runner-phone-input" maxlength="10" placeholder="9711002233" data-i18n-placeholder="phone_placeholder" value="9711002233" class="w-full px-3.5 py-3 text-slate-900 font-medium placeholder-slate-400 focus:outline-none">
             </div>
           </div>
 
@@ -208,8 +208,8 @@
       <div id="screen-onboarding-3" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
         <div>
           <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
-            <span class="px-2 py-0.5 bg-blue-100 rounded">Step 3 of 7</span>
-            <span>Rider Information</span>
+            <span class="px-2 py-0.5 bg-blue-100 rounded" data-i18n="step_3_badge">Step 3 of 7</span>
+            <span data-i18n="rider_info_sub">Rider Information</span>
           </div>
           <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="runner_details_title">Delivery Partner Details</h2>
           <p class="text-sm text-slate-500 mb-6" data-i18n="runner_details_sub">Enter your vehicle and emergency contacts</p>
@@ -217,7 +217,7 @@
           <div class="space-y-4">
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="full_name_label">Full Name (as per Driving License / Aadhaar)</label>
-              <input type="text" id="runner-fullname" value="Sonu Kumar Verma" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <input type="text" id="runner-fullname" value="Sonu Kumar Verma" placeholder="Sonu Kumar Verma" data-i18n-placeholder="fullname_placeholder" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
             </div>
 
             <div>
@@ -232,12 +232,12 @@
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="vehicle_number_label">Vehicle Registration Number</label>
-              <input type="text" id="runner-vehicleno" value="UP 32 BK 4821" placeholder="e.g. UP 32 AB 1234" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <input type="text" id="runner-vehicleno" value="UP 32 BK 4821" placeholder="e.g. UP 32 AB 1234" data-i18n-placeholder="vehicleno_placeholder" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="emergency_contact_label">Emergency Alternate Contact</label>
-              <input type="tel" id="runner-emergency" value="9811445566" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <input type="tel" id="runner-emergency" value="9811445566" placeholder="9811445566" data-i18n-placeholder="emergency_placeholder" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
             </div>
           </div>
         </div>
@@ -254,8 +254,8 @@
       <div id="screen-onboarding-4" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
         <div>
           <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
-            <span class="px-2 py-0.5 bg-blue-100 rounded">Step 4 of 7</span>
-            <span>Govt ID OCR</span>
+            <span class="px-2 py-0.5 bg-blue-100 rounded" data-i18n="step_4_badge">Step 4 of 7</span>
+            <span data-i18n="govt_id_sub">Govt ID OCR</span>
           </div>
           <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="ocr_title_runner">Scan Driving License or Aadhaar</h2>
           <p class="text-sm text-slate-500 mb-4" data-i18n="ocr_sub_runner">Driving License, Voter ID, or Aadhaar Card</p>
@@ -330,8 +330,8 @@
       <div id="screen-onboarding-5" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
         <div>
           <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
-            <span class="px-2 py-0.5 bg-blue-100 rounded">Step 5 of 7</span>
-            <span>Face Match & Liveness</span>
+            <span class="px-2 py-0.5 bg-blue-100 rounded" data-i18n="step_5_badge">Step 5 of 7</span>
+            <span data-i18n="face_match_sub">Face Match & Liveness</span>
           </div>
           <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="liveness_title">Live Face Verification</h2>
           <p class="text-sm text-slate-500 mb-4" data-i18n="liveness_sub">Position face inside oval frame and blink</p>
@@ -378,8 +378,8 @@
       <div id="screen-onboarding-6" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
         <div>
           <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
-            <span class="px-2 py-0.5 bg-blue-100 rounded">Step 6 of 7</span>
-            <span>Payout Settlement</span>
+            <span class="px-2 py-0.5 bg-blue-100 rounded" data-i18n="step_6_badge">Step 6 of 7</span>
+            <span data-i18n="payout_settlement_sub">Payout Settlement</span>
           </div>
           <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="payout_title">Bank / UPI Settlement</h2>
           <p class="text-sm text-slate-500 mb-5" data-i18n="runner_payout_sub">Direct per-delivery payouts credited daily to your account</p>
@@ -398,22 +398,22 @@
           <div id="form-bank-payout" class="space-y-4">
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="acc_num_label">Bank Account Number</label>
-              <input type="text" id="bank-acc-no" value="30200889912345" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <input type="text" id="bank-acc-no" value="30200889912345" placeholder="30200889912345" data-i18n-placeholder="bankacc_placeholder" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="ifsc_label">IFSC Code</label>
-              <input type="text" id="bank-ifsc" value="SBIN0004567" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <input type="text" id="bank-ifsc" value="SBIN0004567" placeholder="SBIN0004567" data-i18n-placeholder="ifsc_placeholder" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="beneficiary_name_label">Beneficiary Account Holder Name</label>
-              <input type="text" id="bank-name" value="SONU KUMAR VERMA" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <input type="text" id="bank-name" value="SONU KUMAR VERMA" placeholder="SONU KUMAR VERMA" data-i18n-placeholder="beneficiary_placeholder" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
             </div>
           </div>
 
           <div id="form-upi-payout" class="space-y-4 hidden">
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="upi_id_label">Virtual Payment Address (UPI ID)</label>
-              <input type="text" id="upi-vpa" placeholder="9711002233@upi" value="sonukumar@paytm" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <input type="text" id="upi-vpa" placeholder="9711002233@upi" value="sonukumar@paytm" data-i18n-placeholder="upivpa_placeholder" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
               <span class="text-[11px] text-slate-500 mt-1 block">Supported: GPay, PhonePe, Paytm, BHIM</span>
             </div>
           </div>
@@ -624,13 +624,13 @@
             <p class="text-slate-500">Shop #4, Main Village Market • +91 9876543210</p>
             <div class="pt-2 flex space-x-2">
               <!-- Google Maps Link -->
-              <a href="https://maps.google.com/?q=26.8467,80.9462" target="_blank" class="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
+              <a href="https://www.google.com/maps/dir/?api=1&destination=26.8467,80.9462" target="_blank" class="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
                 <i data-lucide="navigation-2" class="w-3.5 h-3.5"></i>
                 <span data-i18n="nav_to_vendor">Navigate to Vendor</span>
               </a>
               <a href="tel:9876543210" class="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-bold flex items-center justify-center space-x-1">
                 <i data-lucide="phone" class="w-3.5 h-3.5"></i>
-                <span>Call</span>
+                <span data-i18n="call_btn">Call</span>
               </a>
             </div>
           </div>
@@ -665,30 +665,31 @@
             <p class="text-slate-500">House 42, Near Primary School, Gopalpur Village</p>
             <div class="pt-2 flex space-x-2">
               <!-- Google Maps Link -->
-              <a href="https://maps.google.com/?q=26.8500,80.9500" target="_blank" class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
+              <a href="https://www.google.com/maps/dir/?api=1&destination=26.8589,80.9575" target="_blank" class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
                 <i data-lucide="navigation-2" class="w-3.5 h-3.5"></i>
                 <span data-i18n="nav_to_customer">Navigate to Customer</span>
               </a>
               <a href="tel:9811224488" class="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-bold flex items-center justify-center space-x-1">
                 <i data-lucide="phone" class="w-3.5 h-3.5"></i>
-                <span>Call</span>
+                <span data-i18n="call_btn">Call</span>
               </a>
             </div>
           </div>
 
           <!-- Customer 4-Digit Delivery OTP Input Box -->
-          <div class="p-3.5 bg-blue-50/80 rounded-xl border border-blue-200 space-y-2">
+          <div class="p-3.5 bg-blue-50/80 rounded-xl border border-blue-200 space-y-2.5">
             <div class="flex items-center space-x-1.5 text-xs font-bold text-blue-900">
               <i data-lucide="shield-check" class="w-4 h-4 text-blue-600"></i>
               <span data-i18n="enter_cust_otp">Verify Customer's 4-Digit Delivery OTP</span>
             </div>
-            <div class="flex space-x-2">
-              <input type="text" id="cust-delivery-otp" maxlength="4" placeholder="7412" class="flex-1 px-3 py-2 text-center font-mono font-bold text-lg tracking-widest border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400">
-              <button onclick="verifyCustomerDeliveryAndFinish('GB-8921')" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm active:scale-95 transition" data-i18n="complete_run_btn">
-                Deliver
+            <div class="flex flex-col sm:flex-row gap-2.5 w-full">
+              <input type="text" id="cust-delivery-otp" maxlength="4" placeholder="7412" data-i18n-placeholder="otp_placeholder_7412" class="w-full sm:flex-1 min-w-0 px-3 py-2.5 text-center font-mono font-bold text-lg tracking-widest border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+              <button onclick="verifyCustomerDeliveryAndFinish('GB-8921')" class="w-full sm:w-auto shrink-0 py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm active:scale-95 transition flex items-center justify-center space-x-1.5" data-i18n="complete_run_btn">
+                <i data-lucide="check-check" class="w-4 h-4"></i>
+                <span data-i18n="complete_run_btn">Deliver</span>
               </button>
             </div>
-            <span class="text-[10px] text-blue-600 block">Ask the customer for the delivery OTP (Demo: 7412)</span>
+            <span class="text-[10px] text-blue-600 block" data-i18n="demo_otp_note">Ask the customer for the delivery OTP (Demo: 7412)</span>
           </div>
         </div>
 
@@ -985,12 +986,12 @@
 
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">Enter Security OTP (Default: 7788)</label>
-            <input type="text" id="payout-security-otp" maxlength="4" placeholder="7788" class="w-full px-3 py-2 text-center text-lg font-mono font-bold tracking-widest rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600">
+            <input type="text" id="payout-security-otp" maxlength="4" placeholder="7788" data-i18n-placeholder="security_otp_placeholder" class="w-full px-3 py-2 text-center text-lg font-mono font-bold tracking-widest rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600">
           </div>
 
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">New Bank Account / UPI ID</label>
-            <input type="text" id="new-payout-target" placeholder="e.g. State Bank of India A/C or rider@upi" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600">
+            <input type="text" id="new-payout-target" placeholder="e.g. State Bank of India A/C or rider@upi" data-i18n-placeholder="new_payout_placeholder" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600">
           </div>
         </div>
 
@@ -1030,7 +1031,7 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">Describe Problem</label>
-            <textarea id="ticket-desc" rows="3" placeholder="Please provide details of mission or breakdown..." class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600"></textarea>
+            <textarea id="ticket-desc" rows="3" placeholder="Please provide details of mission or breakdown..." data-i18n-placeholder="ticket_desc_placeholder" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600"></textarea>
           </div>
         </div>
 
@@ -1228,7 +1229,39 @@
         submit_ticket_btn: "Submit Ticket to Operations",
         supervisor_title: "Hub Fleet Supervisor",
         logout_confirm_title: "End Shift & Log Out?",
-        logout_confirm_sub_runner: "Make sure all COD collections have been deposited at the hub before ending shift."
+        logout_confirm_sub_runner: "Make sure all COD collections have been deposited at the hub before ending shift.",
+        call_btn: "Call",
+        badge_in_progress: "IN PROGRESS",
+        badge_waiting_pickup: "WAITING PICKUP",
+        collect_cash_badge: "COLLECT CASH: ₹340",
+        demo_otp_note: "Ask the customer for the delivery OTP (Demo: 7412)",
+        step_1_badge: "Step 1 of 7",
+        step_2_badge: "Step 2 of 7",
+        step_3_badge: "Step 3 of 7",
+        step_4_badge: "Step 4 of 7",
+        step_5_badge: "Step 5 of 7",
+        step_6_badge: "Step 6 of 7",
+        step_7_badge: "Step 7 of 7",
+        registration_sub: "Registration",
+        rider_info_sub: "Rider Information",
+        govt_id_sub: "Govt ID OCR",
+        face_match_sub: "Face Match & Liveness",
+        payout_settlement_sub: "Payout Settlement",
+        under_review_badge: "Verification in Progress",
+        phone_placeholder: "9711002233",
+        fullname_placeholder: "e.g. Sonu Kumar Verma",
+        vehicleno_placeholder: "e.g. UP 32 BK 4821",
+        emergency_placeholder: "e.g. 9811445566",
+        bankacc_placeholder: "e.g. 30200889912345",
+        ifsc_placeholder: "e.g. SBIN0004567",
+        beneficiary_placeholder: "e.g. Sonu Kumar Verma",
+        upivpa_placeholder: "e.g. rider@upi",
+        otp_placeholder_7412: "7412",
+        security_otp_placeholder: "7788",
+        new_payout_placeholder: "e.g. SBI A/C or rider@upi",
+        ticket_desc_placeholder: "Please provide details of mission or breakdown...",
+        modal_close: "Close",
+        cancel_btn: "Cancel",
       },
       hi: {
         select_language_title: "अपनी भाषा चुनें",
@@ -1323,7 +1356,39 @@
         submit_ticket_btn: "ऑपरेशंस को सबमिट करें",
         supervisor_title: "हब फ्लीट सुपरवाइजर",
         logout_confirm_title: "शिफ्ट समाप्त व लॉग आउट करें?",
-        logout_confirm_sub_runner: "सुनिश्चित करें कि आपने सारा एकत्रित कैश हब में जमा करा दिया है।"
+        logout_confirm_sub_runner: "सुनिश्चित करें कि आपने सारा एकत्रित कैश हब में जमा करा दिया है।",
+        call_btn: "कॉल करें",
+        badge_in_progress: "प्रगति में",
+        badge_waiting_pickup: "पिकअप की प्रतीक्षा",
+        collect_cash_badge: "नकद प्राप्त करें: ₹340",
+        demo_otp_note: "ग्राहक से 4-अंकीय डिलीवरी OTP पूछें (डेमो: 7412)",
+        step_1_badge: "चरण 1 का 7",
+        step_2_badge: "चरण 2 का 7",
+        step_3_badge: "चरण 3 का 7",
+        step_4_badge: "चरण 4 का 7",
+        step_5_badge: "चरण 5 का 7",
+        step_6_badge: "चरण 6 का 7",
+        step_7_badge: "चरण 7 का 7",
+        registration_sub: "पंजीकरण",
+        rider_info_sub: "चालक विवरण",
+        govt_id_sub: "पहचान पत्र OCR",
+        face_match_sub: "चेहरा मिलान व सक्रियता",
+        payout_settlement_sub: "भुगतान निपटान",
+        under_review_badge: "सत्यापन प्रगति में",
+        phone_placeholder: "9711002233",
+        fullname_placeholder: "उदा. सोनू कुमार वर्मा",
+        vehicleno_placeholder: "उदा. यूपी 32 बीके 4821",
+        emergency_placeholder: "उदा. 9811445566",
+        bankacc_placeholder: "उदा. 30200889912345",
+        ifsc_placeholder: "उदा. SBIN0004567",
+        beneficiary_placeholder: "उदा. सोनू कुमार वर्मा",
+        upivpa_placeholder: "उदा. rider@upi",
+        otp_placeholder_7412: "7412",
+        security_otp_placeholder: "7788",
+        new_payout_placeholder: "उदा. बैंक खाता या rider@upi",
+        ticket_desc_placeholder: "कृपया समस्या या ब्रेकडाउन का विवरण दें...",
+        modal_close: "बंद करें",
+        cancel_btn: "रद्द करें",
       }
     };
 
@@ -1345,6 +1410,7 @@
         }
       }
 
+      // Update text using data-i18n attributes
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (i18n[lang] && i18n[lang][key]) {
@@ -1352,11 +1418,24 @@
         }
       });
 
+      // Update placeholders using data-i18n-placeholder
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (i18n[lang] && i18n[lang][key]) {
+          el.setAttribute('placeholder', i18n[lang][key]);
+        }
+      });
+
+      // Update header indicator
       const langLabel = document.getElementById('current-lang-label');
-      if (langLabel) langLabel.innerText = lang === 'en' ? 'हिन्दी' : 'English';
+      if (langLabel) {
+        langLabel.innerText = lang === 'en' ? 'हिन्दी' : 'English';
+      }
       
       const accLang = document.getElementById('account-lang-name');
-      if (accLang) accLang.innerText = lang === 'en' ? 'English (बदलें)' : 'हिन्दी (Switch)';
+      if (accLang) {
+        accLang.innerText = lang === 'en' ? 'English (बदलें)' : 'हिन्दी (Switch)';
+      }
     }
 
     function toggleAppLanguage() {
