@@ -1,28 +1,2512 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <base href="$FLUTTER_BASE_HREF">
-
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="GaonBazaar Village Customer Web App">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GaonBazaar Customer | Village Hyperlocal Shopping</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="customer">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-  <title>GaonBazaar - Village Quick Commerce</title>
-  <link rel="manifest" href="manifest.json">
+  <!-- Toastify Notifications -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
-  <!-- Google Maps JavaScript API for Flutter Web -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyGaonBazaarVillageMapsKeyMinapurMuzaffarpur"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .custom-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .mic-pulse {
+      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
 </head>
-<body>
-  <script src="flutter_bootstrap.js" async></script>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
+
+  <!-- App Wrapper (Mobile Viewport Max 440px) -->
+  <div class="max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col relative shadow-2xl border-x border-slate-200">
+
+    <!-- ===================================================================== -->
+    <!-- ONBOARDING FLOW -->
+    <!-- ===================================================================== -->
+
+    <!-- PAGE 1: LANGUAGE SELECTION -->
+    <div id="page-language" class="app-page min-h-screen flex flex-col justify-between p-6 bg-gradient-to-b from-emerald-50/60 to-white">
+      <div class="pt-10 flex flex-col items-center text-center">
+        <!-- Logo -->
+        <div class="w-20 h-20 bg-emerald-600 rounded-3xl flex items-center justify-center shadow-lg shadow-emerald-600/20 mb-6">
+          <i data-lucide="shopping-bag" class="w-10 h-10 text-white"></i>
+        </div>
+        <div class="inline-flex items-center space-x-1.5 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold mb-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+          <span>GaonBazaar • गांवबाजार</span>
+        </div>
+        <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight" data-i18n="welcome_title">Hyperlocal Rural Shopping</h1>
+        <p class="text-xs text-slate-500 mt-2 max-w-xs" data-i18n="welcome_sub">Fresh groceries, dairy, and farm essentials delivered directly to your village doorstep in 30 minutes.</p>
+      </div>
+
+      <!-- Language Buttons -->
+      <div class="space-y-4 my-8">
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400 text-center" data-i18n="choose_lang">Choose Your Language / भाषा चुनें</p>
+        
+        <button onclick="selectLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between transition-all duration-200">
+          <div class="flex items-center space-x-3.5">
+            <span class="text-2xl">🇬🇧</span>
+            <div class="text-left">
+              <p class="text-sm font-bold text-slate-900">English</p>
+              <p class="text-xs text-slate-500">Continue in English</p>
+            </div>
+          </div>
+          <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold check-icon">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          </div>
+        </button>
+
+        <button onclick="selectLanguage('hi')" id="lang-btn-hi" class="w-full p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 flex items-center justify-between transition-all duration-200">
+          <div class="flex items-center space-x-3.5">
+            <span class="text-2xl">🇮🇳</span>
+            <div class="text-left">
+              <p class="text-sm font-bold text-slate-900">हिंदी</p>
+              <p class="text-xs text-slate-500">हिंदी में खरीदारी करें</p>
+            </div>
+          </div>
+          <div class="w-6 h-6 rounded-full bg-transparent text-transparent flex items-center justify-center text-xs font-bold check-icon">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          </div>
+        </button>
+      </div>
+
+      <!-- Action Button -->
+      <div class="pb-6">
+        <button onclick="proceedFromLanguage()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/25 flex items-center justify-center space-x-2 transition active:scale-98">
+          <span data-i18n="continue_btn">Continue</span>
+          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- PAGE 2: MOBILE LOGIN -->
+    <div id="page-login" class="app-page hidden min-h-screen flex flex-col justify-between p-6 bg-white">
+      <div>
+        <!-- Top Back Navigation -->
+        <div class="pt-4 flex items-center justify-between mb-8">
+          <button onclick="historyBack()" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95" aria-label="Back">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+          </button>
+          <div class="text-xs font-bold text-slate-400" data-i18n="step_1_of_2">Step 1 of 2</div>
+        </div>
+
+        <div class="space-y-2 mb-8">
+          <h2 class="text-2xl font-extrabold text-slate-900" data-i18n="login_title">Mobile Verification</h2>
+          <p class="text-xs text-slate-500" data-i18n="login_sub">Enter your 10-digit phone number. We will send you an OTP for instant verification.</p>
+        </div>
+
+        <!-- Phone Input Block -->
+        <div id="phone-input-section" class="space-y-4">
+          <label class="block text-xs font-bold text-slate-700" data-i18n="phone_label">Mobile Number</label>
+          <div class="flex items-center space-x-2">
+            <div class="px-3.5 py-3.5 bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 flex items-center space-x-1">
+              <span>🇮🇳</span>
+              <span>+91</span>
+            </div>
+            <input type="tel" id="cust-phone-input" maxlength="10" placeholder="98765 43210" class="flex-1 px-4 py-3.5 bg-white border border-slate-300 focus:border-emerald-600 focus:outline-none rounded-xl text-sm font-semibold tracking-wider text-slate-900">
+          </div>
+
+          <button onclick="sendCustomerOTP()" id="send-otp-btn" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition active:scale-98 flex items-center justify-center space-x-2">
+            <span data-i18n="send_otp_btn">Send OTP</span>
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- OTP Boxes Block (Replaced dynamically) -->
+        <div id="otp-input-section" class="hidden space-y-5 mt-6">
+          <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between">
+            <div class="text-xs text-emerald-900">
+              <p class="font-bold" data-i18n="otp_sent_to">OTP sent to your number</p>
+              <p class="text-[11px] text-emerald-700" id="otp-phone-display">+91 98765 43210</p>
+            </div>
+            <span class="text-[10px] bg-emerald-200 text-emerald-800 font-extrabold px-2 py-0.5 rounded">DEMO: 1234</span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-2" data-i18n="enter_4_digit_otp">Enter 4-Digit OTP</label>
+            <div class="grid grid-cols-4 gap-3">
+              <input type="tel" maxlength="1" id="otp-1" class="otp-box w-full h-14 text-center text-xl font-bold bg-slate-50 border-2 border-slate-300 focus:border-emerald-600 focus:bg-white rounded-xl focus:outline-none" oninput="handleOtpInput(this, 'otp-2')">
+              <input type="tel" maxlength="1" id="otp-2" class="otp-box w-full h-14 text-center text-xl font-bold bg-slate-50 border-2 border-slate-300 focus:border-emerald-600 focus:bg-white rounded-xl focus:outline-none" oninput="handleOtpInput(this, 'otp-3')">
+              <input type="tel" maxlength="1" id="otp-3" class="otp-box w-full h-14 text-center text-xl font-bold bg-slate-50 border-2 border-slate-300 focus:border-emerald-600 focus:bg-white rounded-xl focus:outline-none" oninput="handleOtpInput(this, 'otp-4')">
+              <input type="tel" maxlength="1" id="otp-4" class="otp-box w-full h-14 text-center text-xl font-bold bg-slate-50 border-2 border-slate-300 focus:border-emerald-600 focus:bg-white rounded-xl focus:outline-none" oninput="handleOtpInput(this, null)">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-500" data-i18n="resend_in">Resend OTP in 28s</span>
+            <button onclick="resendCustomerOTP()" class="text-emerald-700 font-bold hover:underline" data-i18n="resend_btn">Resend OTP</button>
+          </div>
+
+          <button onclick="verifyCustomerOTP()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/25 transition active:scale-98 flex items-center justify-center space-x-2">
+            <span data-i18n="verify_btn">Verify & Start Shopping</span>
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="pt-8 text-center text-[11px] text-slate-400">
+        <p data-i18n="terms_notice">By continuing, you agree to GaonBazaar's Terms of Service & Rural Privacy Guidelines.</p>
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MAIN DASHBOARD (5 BOTTOM TABS) -->
+    <!-- ===================================================================== -->
+    <div id="dashboard-container" class="hidden flex-1 flex flex-col pb-20">
+
+      <!-- TAB 1: HOME -->
+      <section id="view-home" class="tab-view flex-1 flex flex-col">
+        <!-- Sticky Header (NO back button on root Home tab, notification bell removed) -->
+        <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-2xs">
+          <!-- Deliver to Location -->
+          <div onclick="openModal('modal-location')" class="flex items-center space-x-2 cursor-pointer max-w-[240px]">
+            <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+              <i data-lucide="map-pin" class="w-4 h-4"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center space-x-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400" data-i18n="deliver_to_label">Deliver to</span>
+                <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400"></i>
+              </div>
+              <p id="header-location-text" class="text-xs font-bold text-slate-900 truncate">Chaturshi, Minapur</p>
+            </div>
+          </div>
+
+          <!-- Language Toggle Pill -->
+          <button onclick="toggleQuickLanguage()" class="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-300 flex items-center space-x-1.5 transition active:scale-95">
+            <span class="text-xs">🌐</span>
+            <span id="lang-pill-text">EN | HI</span>
+          </button>
+        </header>
+
+        <div class="p-4 space-y-5">
+          <!-- Global Search Bar with Microphone Icon -->
+          <div class="relative flex items-center">
+            <i data-lucide="search" class="absolute left-3.5 w-4 h-4 text-slate-400"></i>
+            <input type="text" id="home-search-input" onkeyup="handleHomeSearch(this.value)" placeholder="Search for atta, oil, tea, sabzi..." data-i18n-placeholder="search_placeholder" class="w-full pl-10 pr-11 py-3 bg-white border border-slate-200 focus:border-emerald-600 focus:outline-none rounded-xl text-xs text-slate-900 shadow-2xs">
+            <button onclick="activateVoiceSearch()" class="absolute right-2.5 w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-95" title="Voice Search">
+              <i data-lucide="mic" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <!-- Hero Promo Banner -->
+          <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-800 text-white shadow-md flex items-center justify-between relative overflow-hidden">
+            <div class="space-y-1 z-10">
+              <span class="text-[10px] font-extrabold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full" data-i18n="banner_tag">VILLAGE EXPRESS</span>
+              <h3 class="text-base font-extrabold leading-tight" data-i18n="banner_title">Pure & Fresh Grocery</h3>
+              <p class="text-[11px] text-emerald-100" data-i18n="banner_sub">Delivered in 30 mins • Free delivery on orders over ₹300</p>
+            </div>
+            <div class="w-16 h-16 shrink-0 bg-white/10 rounded-2xl flex items-center justify-center text-3xl z-10">
+              🌾
+            </div>
+            <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full blur-xl pointer-events-none"></div>
+          </div>
+
+          <!-- Horizontal Scrollable Categories -->
+          <div class="space-y-2">
+            <div class="flex justify-between items-center">
+              <h3 class="text-xs font-bold text-slate-900 tracking-wide uppercase" data-i18n="categories_title">Categories</h3>
+              <span class="text-[11px] font-semibold text-emerald-700 cursor-pointer" onclick="filterCategory('All')" data-i18n="view_all">View All</span>
+            </div>
+            <div class="flex space-x-2 overflow-x-auto pb-1 custom-scrollbar">
+              <button onclick="filterCategory('All')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white whitespace-nowrap shadow-2xs transition active:scale-95" data-cat="All" data-i18n="cat_all">All</button>
+              <button onclick="filterCategory('Grocery')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95" data-cat="Grocery" data-i18n="cat_grocery">Grocery</button>
+              <button onclick="filterCategory('General Store')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95" data-cat="General Store" data-i18n="cat_general">General Store</button>
+              <button onclick="filterCategory('Vegetables')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95" data-cat="Vegetables" data-i18n="cat_veggies">Vegetables</button>
+              <button onclick="filterCategory('Dairy & Milk')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95" data-cat="Dairy & Milk" data-i18n="cat_dairy">Dairy & Milk</button>
+            </div>
+          </div>
+
+          <!-- Featured Stores (Horizontal Scrolling) -->
+          <div class="space-y-2">
+            <h3 class="text-xs font-bold text-slate-900 tracking-wide uppercase" data-i18n="featured_stores_title">Featured Stores</h3>
+            <div class="flex space-x-3 overflow-x-auto pb-1 custom-scrollbar">
+              
+              <!-- Store 1 -->
+              <div class="w-56 shrink-0 bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs space-y-2 cursor-pointer hover:border-emerald-400 transition" onclick="toastSuccess('Viewing Sharma Kirana products')">
+                <div class="h-24 w-full rounded-xl overflow-hidden relative">
+                  <img src="https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=400&q=80" alt="Sharma Kirana" class="w-full h-full object-cover">
+                  <span class="absolute top-2 left-2 bg-emerald-600/90 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded" data-i18n="badge_open">🟢 OPEN</span>
+                  <span class="absolute top-2 right-2 bg-slate-900/80 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center space-x-0.5">
+                    <span>⭐ 4.8</span>
+                  </span>
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-900 truncate">Sharma Kirana & General Store</h4>
+                  <p class="text-[10px] text-slate-500">Gopalpur Chowk • 0.8 km</p>
+                </div>
+              </div>
+
+              <!-- Store 2 -->
+              <div class="w-56 shrink-0 bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs space-y-2 cursor-pointer hover:border-emerald-400 transition" onclick="toastSuccess('Viewing Kisan Krishi Kendra')">
+                <div class="h-24 w-full rounded-xl overflow-hidden relative">
+                  <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80" alt="Kisan Krishi Kendra" class="w-full h-full object-cover">
+                  <span class="absolute top-2 left-2 bg-emerald-600/90 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded" data-i18n="badge_open">🟢 OPEN</span>
+                  <span class="absolute top-2 right-2 bg-slate-900/80 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center space-x-0.5">
+                    <span>⭐ 4.9</span>
+                  </span>
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-900 truncate">Kisan Krishi Kendra</h4>
+                  <p class="text-[10px] text-slate-500">Main Mandi Road • 1.4 km</p>
+                </div>
+              </div>
+
+              <!-- Store 3 -->
+              <div class="w-56 shrink-0 bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs space-y-2 cursor-pointer hover:border-emerald-400 transition" onclick="toastSuccess('Viewing Verma Dairy')">
+                <div class="h-24 w-full rounded-xl overflow-hidden relative">
+                  <img src="https://images.unsplash.com/photo-1527153857715-3908f2ae5e81?w=400&q=80" alt="Verma Dairy" class="w-full h-full object-cover">
+                  <span class="absolute top-2 left-2 bg-emerald-600/90 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded" data-i18n="badge_open">🟢 OPEN</span>
+                  <span class="absolute top-2 right-2 bg-slate-900/80 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center space-x-0.5">
+                    <span>⭐ 4.7</span>
+                  </span>
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-900 truncate">Verma Fresh Dairy & Sweets</h4>
+                  <p class="text-[10px] text-slate-500">Panchayat Bhavan • 2.1 km</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Village Essentials (Products Vertical List) -->
+          <div class="space-y-3">
+            <div class="flex justify-between items-center">
+              <h3 class="text-xs font-bold text-slate-900 tracking-wide uppercase" data-i18n="village_essentials_title">Village Essentials</h3>
+              <span id="product-count-label" class="text-[11px] text-slate-500">8 Items</span>
+            </div>
+
+            <div id="product-list" class="space-y-3">
+              <!-- Rendered via JS renderProductCatalog() -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: AI ASSISTANT (VOICE-POWERED) -->
+      <section id="view-ai" class="tab-view hidden flex-1 flex flex-col bg-slate-50">
+        <!-- Header with Visible Back Navigation -->
+        <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center space-x-3 shadow-2xs">
+          <button onclick="historyBack()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95" aria-label="Back">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          </button>
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <h2 class="text-sm font-bold text-slate-900" data-i18n="ai_assistant_title">GaonBazaar AI Assistant</h2>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            </div>
+            <p class="text-[10px] text-slate-500" data-i18n="ai_assistant_sub">Voice & Hindi Smart Cart Assistant</p>
+          </div>
+        </header>
+
+        <!-- Chat Conversation Area -->
+        <div id="ai-chat-messages" class="flex-1 p-4 space-y-3.5 overflow-y-auto">
+          <!-- Welcome Message -->
+          <div class="flex items-start space-x-2.5 max-w-[85%]">
+            <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0 shadow-xs">
+              🤖
+            </div>
+            <div class="bg-white p-3.5 rounded-2xl rounded-tl-xs border border-slate-200 shadow-2xs space-y-1 text-xs text-slate-800">
+              <p class="font-bold text-emerald-800" data-i18n="ai_bot_name">GaonBazaar Sahayak</p>
+              <p data-i18n="ai_welcome_msg">Namaste! 🙏 You can speak or write anything like "Add 2kg sugar" or "1 किलो चीनी और चायपत्ती डाल दो". I will automatically add items directly to your cart!</p>
+            </div>
+          </div>
+
+          <!-- Quick Suggestion Chips -->
+          <div class="space-y-1.5 pt-2">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" data-i18n="try_saying">Try Saying / बोलकर देखें:</p>
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="sendAiPrompt('Add 1kg Sugar')" class="px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold transition active:scale-95">1kg Sugar (1 किलो चीनी)</button>
+              <button onclick="sendAiPrompt('Add 1L Mustard Oil')" class="px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold transition active:scale-95">1L Mustard Oil (सरसों तेल)</button>
+              <button onclick="sendAiPrompt('Add Taaza Cow Milk')" class="px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold transition active:scale-95">Taaza Cow Milk (गाय का दूध)</button>
+              <button onclick="sendAiPrompt('Add 5kg Aashirvaad Atta')" class="px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold transition active:scale-95">Aashirvaad Atta 5kg (आटा)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Voice & Text Input Section at Bottom -->
+        <div class="p-3 bg-white border-t border-slate-200 space-y-3">
+          <!-- Voice Listening Status Banner (Toggled when mic clicked) -->
+          <div id="ai-voice-status" class="hidden p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl text-center space-y-1">
+            <p class="text-xs font-bold text-emerald-800 flex items-center justify-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-ping"></span>
+              <span data-i18n="ai_listening">Listening to your voice... Speak now!</span>
+            </p>
+            <p class="text-[10px] text-emerald-600" data-i18n="ai_listening_hint">Say "1 kilo cheeni" or "Sarson tel do litaar"</p>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <!-- Text Input -->
+            <input type="text" id="ai-text-input" onkeydown="if(event.key==='Enter') submitAiText()" placeholder="Type item e.g. 1kg sugar chahiye..." data-i18n-placeholder="ai_input_placeholder" class="flex-1 px-4 py-3 bg-slate-100 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl text-xs text-slate-900">
+            
+            <!-- Send Button -->
+            <button onclick="submitAiText()" class="w-11 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center transition active:scale-95 shrink-0" title="Send Query">
+              <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Massive Centrally Located Pulsing Microphone Button -->
+          <div class="flex flex-col items-center justify-center pt-1">
+            <div class="relative flex items-center justify-center">
+              <div class="absolute w-20 h-20 rounded-full bg-emerald-400 opacity-30 mic-pulse pointer-events-none"></div>
+              <button onclick="toggleVoiceAssistant()" id="main-mic-btn" class="w-16 h-16 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/30 flex items-center justify-center transition active:scale-90 z-10" title="Tap to Speak">
+                <i data-lucide="mic" class="w-8 h-8"></i>
+              </button>
+            </div>
+            <p class="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-wider" data-i18n="tap_mic_to_speak">Tap Microphone & Speak</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: CART & CHECKOUT -->
+      <section id="view-cart" class="tab-view hidden flex-1 flex flex-col bg-slate-50">
+        <!-- Header with Back Button -->
+        <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center space-x-3 shadow-2xs">
+          <button onclick="historyBack()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95" aria-label="Back">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          </button>
+          <div>
+            <h2 class="text-sm font-bold text-slate-900" data-i18n="cart_title">Shopping Cart & Checkout</h2>
+            <p id="cart-item-summary-subtitle" class="text-[10px] text-slate-500">2 Items in Cart</p>
+          </div>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- Item List -->
+          <div class="space-y-2">
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wide" data-i18n="cart_items_title">Your Basket</h3>
+            <div id="cart-items-container" class="space-y-2.5">
+              <!-- Dynamically rendered cart items -->
+            </div>
+          </div>
+
+          <!-- Location Pinning Section -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <i data-lucide="map-pin" class="w-4 h-4"></i>
+                </div>
+                <h4 class="text-xs font-bold text-slate-900" data-i18n="delivery_address_title">Delivery Location & Village Landmark</h4>
+              </div>
+              <button onclick="detectCustomerGPS()" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 hover:bg-emerald-100 flex items-center space-x-1">
+                <i data-lucide="crosshair" class="w-3 h-3"></i>
+                <span data-i18n="use_gps">Use GPS</span>
+              </button>
+            </div>
+
+            <!-- Mini Map Preview -->
+            <div class="h-24 w-full rounded-xl bg-slate-100 border border-slate-200 overflow-hidden relative flex items-center justify-center">
+              <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=500&q=80" alt="Village Map" class="w-full h-full object-cover opacity-60">
+              <div class="absolute inset-0 bg-emerald-950/20 backdrop-blur-[0.5px] flex items-center justify-center">
+                <div class="px-2.5 py-1 bg-white/90 rounded-full shadow-md text-[10px] font-bold text-emerald-800 flex items-center space-x-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-600 animate-ping"></span>
+                  <span id="pin-coords-text">Lat: 26.8500, Lng: 80.9500</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-2 text-xs">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1" data-i18n="village_name_label">Village / Locality Name</label>
+                <input type="text" id="checkout-village-input" value="Chaturshi, Minapur" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-lg text-xs">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1" data-i18n="landmark_label">Nearby Landmark (School, Mandir, Well)</label>
+                <input type="text" id="checkout-landmark-input" value="Near Primary School, House 42" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-lg text-xs">
+              </div>
+            </div>
+          </div>
+
+          <!-- Bill Summary -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2 text-xs">
+            <h4 class="font-bold text-slate-900 uppercase tracking-wide text-[11px]" data-i18n="bill_summary_title">Bill Summary</h4>
+            <div class="flex justify-between text-slate-600">
+              <span data-i18n="bill_item_total">Item Total</span>
+              <span id="bill-item-total">₹0.00</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span data-i18n="bill_delivery_fee">Delivery Fee (Rural Hyperlocal)</span>
+              <span id="bill-delivery-fee">₹15.00</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span data-i18n="bill_packaging_fee">Eco Packaging & Handling</span>
+              <span id="bill-pkg-fee">₹5.00</span>
+            </div>
+            <div class="flex justify-between text-emerald-700 font-semibold">
+              <span data-i18n="bill_discount">Gramin Subsidy Discount</span>
+              <span>-₹10.00</span>
+            </div>
+            <div class="border-t border-slate-200 pt-2 flex justify-between text-sm font-extrabold text-slate-900">
+              <span data-i18n="bill_grand_total">Grand Total</span>
+              <span id="bill-grand-total">₹0.00</span>
+            </div>
+          </div>
+
+          <!-- Payment Options -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+            <h4 class="font-bold text-slate-900 uppercase tracking-wide text-[11px]" data-i18n="payment_mode_title">Payment Method</h4>
+            
+            <!-- Warning when COD is disabled due to strikes -->
+            <div id="cod-disabled-warning" class="hidden p-2.5 bg-rose-50 border border-rose-300 rounded-xl text-rose-800 text-[11px] font-semibold flex items-center space-x-2">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600 shrink-0"></i>
+              <span data-i18n="cod_disabled_msg">Cash On Delivery is disabled due to repeated cancellations. Please pay online.</span>
+            </div>
+
+            <div class="space-y-2">
+              <!-- Online UPI Option -->
+              <label class="flex items-center justify-between p-3 rounded-xl border-2 border-emerald-600 bg-emerald-50/40 cursor-pointer">
+                <div class="flex items-center space-x-2.5">
+                  <input type="radio" name="payment_mode" value="UPI" checked class="text-emerald-600 focus:ring-emerald-500">
+                  <div class="text-xs">
+                    <p class="font-bold text-slate-900" data-i18n="pay_online_upi">Online Payment (UPI / QR Code)</p>
+                    <p class="text-[10px] text-slate-500" data-i18n="pay_online_sub">PhonePe, Google Pay, Paytm, BHIM</p>
+                  </div>
+                </div>
+                <span class="text-xs">📱</span>
+              </label>
+
+              <!-- COD Option -->
+              <label id="cod-option-label" class="flex items-center justify-between p-3 rounded-xl border border-slate-300 bg-white cursor-pointer hover:bg-slate-50">
+                <div class="flex items-center space-x-2.5">
+                  <input type="radio" name="payment_mode" value="COD" id="cod-radio-input" class="text-emerald-600 focus:ring-emerald-500">
+                  <div class="text-xs">
+                    <p class="font-bold text-slate-900" data-i18n="pay_cod">Cash on Delivery (COD)</p>
+                    <p class="text-[10px] text-slate-500" data-i18n="pay_cod_sub">Pay exact cash to runner at doorstep</p>
+                  </div>
+                </div>
+                <span class="text-xs">💵</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Place Order Button -->
+          <div class="pt-2 pb-6">
+            <button onclick="placeCustomerOrder()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 transition active:scale-98 flex items-center justify-center space-x-2">
+              <span data-i18n="place_order_btn">Place Order</span>
+              <span id="place-order-total-badge" class="px-2 py-0.5 bg-emerald-800 rounded-md text-xs">₹0.00</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: ORDERS (LIVE TRACKING & PAST ORDERS) -->
+      <section id="view-orders" class="tab-view hidden flex-1 flex flex-col bg-slate-50">
+        <!-- Header with Back Button -->
+        <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center space-x-3 shadow-2xs">
+          <button onclick="historyBack()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95" aria-label="Back">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          </button>
+          <div>
+            <h2 class="text-sm font-bold text-slate-900" data-i18n="orders_title">Your Orders & Tracking</h2>
+            <p class="text-[10px] text-slate-500" data-i18n="orders_sub">Live updates and past order history</p>
+          </div>
+        </header>
+
+        <div class="p-4 space-y-5">
+          <!-- Active Order Card -->
+          <div id="active-order-card" class="bg-white p-4 rounded-2xl border-2 border-emerald-500 shadow-md space-y-4">
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200" data-i18n="active_run_badge">ACTIVE ORDER</span>
+                <h3 class="text-sm font-bold text-slate-900 mt-1">Order #GB-8921</h3>
+                <p class="text-[11px] text-slate-500">Sharma Kirana & General Store • 4 Items</p>
+              </div>
+              <div class="text-right">
+                <span class="text-sm font-extrabold text-slate-900">₹245.00</span>
+                <span class="text-[10px] block text-slate-400 font-semibold" data-i18n="paid_online">PAID ONLINE</span>
+              </div>
+            </div>
+
+            <!-- 3-Stage Progress Bar -->
+            <div class="space-y-1.5 pt-1">
+              <div class="flex justify-between text-[11px] font-bold">
+                <span class="text-emerald-700" data-i18n="stage_placed">1. Placed</span>
+                <span id="stage-prep-label" class="text-emerald-700" data-i18n="stage_preparing">2. Preparing</span>
+                <span id="stage-out-label" class="text-slate-400" data-i18n="stage_out_delivery">3. Out for Delivery</span>
+              </div>
+              <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden flex">
+                <div id="order-prog-bar-1" class="h-full bg-emerald-600 transition-all duration-500" style="width: 50%;"></div>
+                <div id="order-prog-bar-2" class="h-full bg-emerald-500 transition-all duration-500" style="width: 25%;"></div>
+                <div id="order-prog-bar-3" class="h-full bg-slate-200 transition-all duration-500" style="width: 25%;"></div>
+              </div>
+              <p id="active-order-status-msg" class="text-[11px] text-emerald-800 font-semibold" data-i18n="vendor_packing_msg">Shopkeeper is packing your items right now.</p>
+            </div>
+
+            <!-- Delivery OTP Highlight Banner -->
+            <div class="p-3 bg-gradient-to-r from-emerald-500 to-emerald-700 rounded-xl text-white flex items-center justify-between shadow-sm">
+              <div class="space-y-0.5">
+                <p class="text-[10px] uppercase tracking-wider font-extrabold text-emerald-100" data-i18n="tell_otp_label">Delivery OTP to tell Runner:</p>
+                <p class="text-[11px] text-emerald-100" data-i18n="otp_security_note">Verify items before sharing OTP</p>
+              </div>
+              <div class="px-3.5 py-1.5 bg-white text-emerald-900 font-extrabold text-xl tracking-widest rounded-lg shadow-inner">
+                7 4 1 2
+              </div>
+            </div>
+
+            <!-- Embedded Live Map Tracking -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-bold text-slate-800 flex items-center space-x-1">
+                  <i data-lucide="navigation" class="w-3.5 h-3.5 text-emerald-600"></i>
+                  <span data-i18n="runner_tracking_title">Runner Live Movement</span>
+                </span>
+                <span id="runner-eta-badge" class="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200" data-i18n="runner_eta">8 Mins Away</span>
+              </div>
+              
+              <div class="h-40 w-full rounded-xl bg-slate-100 border border-slate-200 overflow-hidden relative">
+                <!-- Map Graphic Simulator -->
+                <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600&q=80" alt="Map View" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-slate-900/30 flex flex-col justify-between p-3 pointer-events-none">
+                  <div class="flex justify-between items-start">
+                    <span class="px-2 py-1 bg-white/90 text-slate-900 text-[10px] font-bold rounded shadow">Sharma Kirana (Shop)</span>
+                    <span class="px-2 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded shadow">Chaturshi (Your House)</span>
+                  </div>
+
+                  <!-- Animated Runner Icon on Map -->
+                  <div class="self-center flex items-center space-x-2 px-3 py-1 bg-white rounded-full shadow-lg border border-slate-200 animate-bounce pointer-events-auto cursor-pointer" onclick="openChatWithRunner()">
+                    <span class="text-sm">🛵</span>
+                    <span class="text-[11px] font-bold text-slate-900">Ramesh Kumar (Runner)</span>
+                  </div>
+
+                  <div class="text-right">
+                    <span class="px-2 py-0.5 bg-slate-900/80 text-white text-[9px] rounded">GPS Active</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons: Chat with Runner & Cancel Order -->
+            <div class="pt-1 grid grid-cols-2 gap-2 text-xs">
+              <button onclick="openChatWithRunner()" class="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
+                <i data-lucide="message-square" class="w-4 h-4"></i>
+                <span data-i18n="chat_runner_btn">Chat with Runner</span>
+              </button>
+              
+              <button onclick="cancelActiveOrder()" class="py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold rounded-xl flex items-center justify-center space-x-1.5 transition active:scale-95">
+                <i data-lucide="x-circle" class="w-4 h-4"></i>
+                <span data-i18n="cancel_order_btn">Cancel Order</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Past Orders Section -->
+          <div class="space-y-3 pt-2">
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wide" data-i18n="past_orders_title">Past Orders</h3>
+
+            <!-- Past Order Item 1 -->
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-900">Order #GB-7612</h4>
+                  <p class="text-[10px] text-slate-500">Sharma Kirana Store • Yesterday, 4:20 PM</p>
+                </div>
+                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200" data-i18n="status_delivered">DELIVERED</span>
+              </div>
+              <p class="text-xs text-slate-700">Aashirvaad Atta (5kg), Pure Mustard Oil (1L), Parle-G (Pack of 4)</p>
+              <div class="flex items-center justify-between border-t border-slate-100 pt-2 text-xs">
+                <span class="font-bold text-slate-900">Total: ₹395.00</span>
+                <div class="flex space-x-1.5">
+                  <button onclick="openReceiptModal('GB-7612', 'Sharma Kirana Store', 395.00)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-[11px] transition" data-i18n="view_receipt_btn">View Receipt</button>
+                  <button onclick="reorderItems('GB-7612')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-[11px] transition" data-i18n="reorder_btn">Reorder</button>
+                  <button onclick="openIssueModal('GB-7612')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-lg text-[11px] transition" data-i18n="report_issue_btn">Report Issue</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Past Order Item 2 -->
+            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-900">Order #GB-7108</h4>
+                  <p class="text-[10px] text-slate-500">Verma Fresh Dairy • 01 Nov 2026</p>
+                </div>
+                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200" data-i18n="status_delivered">DELIVERED</span>
+              </div>
+              <p class="text-xs text-slate-700">Taaza Cow Milk (2L), Fresh Paneer (250g)</p>
+              <div class="flex items-center justify-between border-t border-slate-100 pt-2 text-xs">
+                <span class="font-bold text-slate-900">Total: ₹190.00</span>
+                <div class="flex space-x-1.5">
+                  <button onclick="openReceiptModal('GB-7108', 'Verma Fresh Dairy', 190.00)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-[11px] transition" data-i18n="view_receipt_btn">View Receipt</button>
+                  <button onclick="reorderItems('GB-7108')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-[11px] transition" data-i18n="reorder_btn">Reorder</button>
+                  <button onclick="openIssueModal('GB-7108')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-lg text-[11px] transition" data-i18n="report_issue_btn">Report Issue</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: ACCOUNT -->
+      <section id="view-account" class="tab-view hidden flex-1 flex flex-col bg-slate-50">
+        <!-- Header with Back Button -->
+        <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center space-x-3 shadow-2xs">
+          <button onclick="historyBack()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95" aria-label="Back">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          </button>
+          <div>
+            <h2 class="text-sm font-bold text-slate-900" data-i18n="account_title">Customer Account</h2>
+            <p class="text-[10px] text-slate-500" data-i18n="account_sub">Profile, Addresses & Preferences</p>
+          </div>
+        </header>
+
+        <div class="p-4 space-y-4">
+          <!-- Profile Card -->
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs flex items-center space-x-3.5">
+            <div class="relative">
+              <img id="user-avatar-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80" alt="Profile" class="w-14 h-14 rounded-full object-cover border-2 border-emerald-500 shadow-xs">
+              <button onclick="openModal('modal-edit-profile')" class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">
+                <i data-lucide="edit-2" class="w-3 h-3"></i>
+              </button>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 id="user-display-name" class="text-sm font-bold text-slate-900 truncate">Raju Patel</h3>
+              <p id="user-display-phone" class="text-xs text-slate-500">+91 98765 43210</p>
+              <span class="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-800 text-[10px] font-bold rounded mt-1 border border-emerald-200" data-i18n="verified_customer">Verified Customer</span>
+            </div>
+          </div>
+
+          <!-- Saved Addresses Group -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+            <div class="flex justify-between items-center">
+              <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wide text-[11px]" data-i18n="saved_addresses_title">Saved Village Addresses</h4>
+              <button onclick="openModal('modal-location')" class="text-[11px] font-bold text-emerald-700 hover:underline" data-i18n="edit_btn">Edit</button>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
+              <div class="flex items-center space-x-1.5 font-bold text-slate-900">
+                <i data-lucide="home" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span data-i18n="home_address_label">Home (Chaturshi)</span>
+              </div>
+              <p class="text-[11px] text-slate-500">House 42, Near Primary School, Chaturshi Village, Minapur Block</p>
+            </div>
+          </div>
+
+          <!-- Preferences: Language Toggle -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wide text-[11px]" data-i18n="language_pref_title">App Language</h4>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <button onclick="setAppLanguage('en')" id="account-lang-en" class="py-2.5 px-3 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-900 font-bold flex items-center justify-center space-x-1.5 transition">
+                <span>🇬🇧</span>
+                <span>English</span>
+              </button>
+              <button onclick="setAppLanguage('hi')" id="account-lang-hi" class="py-2.5 px-3 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold flex items-center justify-center space-x-1.5 transition">
+                <span>🇮🇳</span>
+                <span>हिंदी</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Support & Legal Group -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs divide-y divide-slate-100 text-xs">
+            <button onclick="openModal('modal-faq')" class="w-full p-3.5 flex items-center justify-between text-slate-700 hover:bg-slate-50 transition">
+              <div class="flex items-center space-x-2.5">
+                <i data-lucide="help-circle" class="w-4 h-4 text-emerald-600"></i>
+                <span class="font-semibold" data-i18n="menu_faq">Frequently Asked Questions (FAQ)</span>
+              </div>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+            </button>
+            <button onclick="openModal('modal-raise-ticket')" class="w-full p-3.5 flex items-center justify-between text-slate-700 hover:bg-slate-50 transition">
+              <div class="flex items-center space-x-2.5">
+                <i data-lucide="life-buoy" class="w-4 h-4 text-emerald-600"></i>
+                <span class="font-semibold" data-i18n="menu_raise_ticket">Help & Raise Support Ticket</span>
+              </div>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+            </button>
+            <a href="tel:18001234567" class="w-full p-3.5 flex items-center justify-between text-slate-700 hover:bg-slate-50 transition">
+              <div class="flex items-center space-x-2.5">
+                <i data-lucide="phone-call" class="w-4 h-4 text-emerald-600"></i>
+                <span class="font-semibold" data-i18n="menu_contact_hub">Contact Hub Manager (Toll Free)</span>
+              </div>
+              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1800-123-4567</span>
+            </a>
+            <button onclick="openModal('modal-terms')" class="w-full p-3.5 flex items-center justify-between text-slate-700 hover:bg-slate-50 transition">
+              <div class="flex items-center space-x-2.5">
+                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                <span class="font-semibold" data-i18n="menu_terms">Terms, Conditions & Rural Privacy</span>
+              </div>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+            </button>
+          </div>
+
+          <!-- Log Out Button -->
+          <div class="pt-2 pb-6">
+            <button onclick="confirmCustomerLogout()" class="w-full py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold rounded-2xl flex items-center justify-center space-x-2 transition active:scale-98">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+              <span data-i18n="logout_btn">Log Out</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- FIXED BOTTOM NAVIGATION BAR (5 TABS) -->
+      <!-- ===================================================================== -->
+      <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 px-2 py-1.5 flex justify-around items-center shadow-lg">
+        
+        <!-- Tab 1: Home -->
+        <button onclick="switchTab('home')" id="nav-btn-home" class="flex-1 py-1 flex flex-col items-center justify-center text-emerald-700 font-bold transition active:scale-95">
+          <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+          <span class="text-[10px] mt-0.5" data-i18n="nav_home">Home</span>
+        </button>
+
+        <!-- Tab 2: AI Assistant (Center Spotlight) -->
+        <button onclick="switchTab('ai')" id="nav-btn-ai" class="flex-1 py-1 flex flex-col items-center justify-center text-slate-400 font-medium hover:text-emerald-600 transition active:scale-95 relative">
+          <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shadow-xs -mt-2 border border-emerald-200">
+            <i data-lucide="bot" class="w-4 h-4"></i>
+          </div>
+          <span class="text-[10px] mt-0.5" data-i18n="nav_ai">AI Assistant</span>
+        </button>
+
+        <!-- Tab 3: Cart with Badge -->
+        <button onclick="switchTab('cart')" id="nav-btn-cart" class="flex-1 py-1 flex flex-col items-center justify-center text-slate-400 font-medium hover:text-emerald-600 transition active:scale-95 relative">
+          <div class="relative">
+            <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+            <span id="nav-cart-badge" class="absolute -top-1.5 -right-2 px-1.5 py-0.2 bg-emerald-600 text-white text-[9px] font-extrabold rounded-full">2</span>
+          </div>
+          <span class="text-[10px] mt-0.5" data-i18n="nav_cart">Cart</span>
+        </button>
+
+        <!-- Tab 4: Orders -->
+        <button onclick="switchTab('orders')" id="nav-btn-orders" class="flex-1 py-1 flex flex-col items-center justify-center text-slate-400 font-medium hover:text-emerald-600 transition active:scale-95">
+          <i data-lucide="package-check" class="w-5 h-5"></i>
+          <span class="text-[10px] mt-0.5" data-i18n="nav_orders">Orders</span>
+        </button>
+
+        <!-- Tab 5: Account -->
+        <button onclick="switchTab('account')" id="nav-btn-account" class="flex-1 py-1 flex flex-col items-center justify-center text-slate-400 font-medium hover:text-emerald-600 transition active:scale-95">
+          <i data-lucide="user" class="w-5 h-5"></i>
+          <span class="text-[10px] mt-0.5" data-i18n="nav_account">Account</span>
+        </button>
+
+      </nav>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- MODALS & OVERLAYS -->
+    <!-- ===================================================================== -->
+
+    <!-- IN-APP CHAT WITH RUNNER MODAL (WITH LIVE LOCATION SHARING) -->
+    <div id="modal-runner-chat" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex flex-col justify-end">
+      <div class="max-w-md mx-auto w-full h-[90vh] bg-white rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+        <!-- Chat Header with Visible Back/Close Arrow -->
+        <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between shadow-2xs">
+          <div class="flex items-center space-x-2.5">
+            <button onclick="closeModal('modal-runner-chat')" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95" aria-label="Back">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </button>
+            <div class="relative">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80" alt="Runner" class="w-9 h-9 rounded-full object-cover border border-emerald-500">
+              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white"></span>
+            </div>
+            <div>
+              <h3 class="text-xs font-bold text-slate-900">Ramesh Kumar</h3>
+              <p class="text-[10px] text-emerald-700 font-semibold" data-i18n="chat_runner_status">Delivery Partner (Order #GB-8921)</p>
+            </div>
+          </div>
+          <a href="tel:+919876543210" class="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-95" title="Call Runner">
+            <i data-lucide="phone" class="w-4 h-4"></i>
+          </a>
+        </div>
+
+        <!-- Chat Messages Container -->
+        <div id="chat-messages-container" class="flex-1 p-4 space-y-3 overflow-y-auto bg-slate-50">
+          <!-- Runner incoming message -->
+          <div class="flex items-start space-x-2 max-w-[85%]">
+            <div class="bg-white p-3 rounded-2xl rounded-tl-xs border border-slate-200 shadow-2xs text-xs space-y-1">
+              <p class="text-slate-800" data-i18n="chat_msg_runner_1">Namaste! I have picked up your groceries from Sharma Kirana. I am riding towards Chaturshi village now.</p>
+              <span class="text-[9px] text-slate-400 block text-right">11:42 AM</span>
+            </div>
+          </div>
+
+          <!-- Customer outgoing message -->
+          <div class="flex items-end justify-end space-x-2">
+            <div class="bg-emerald-600 text-white p-3 rounded-2xl rounded-tr-xs shadow-xs text-xs space-y-1 max-w-[85%]">
+              <p data-i18n="chat_msg_cust_1">Please come via the Primary School road, the gate is open.</p>
+              <span class="text-[9px] text-emerald-200 block text-right">11:43 AM</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Area with Live Location Attachment Button -->
+        <div class="p-3 bg-white border-t border-slate-200 flex items-center space-x-2">
+          <!-- Share Live Location Pin Button -->
+          <button onclick="shareCustomerLiveLocation()" class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-95 shrink-0" title="Share Live GPS Location" data-i18n-title="share_location_title">
+            <i data-lucide="map-pin" class="w-5 h-5"></i>
+          </button>
+
+          <!-- Text Input -->
+          <input type="text" id="chat-input-text" onkeydown="if(event.key==='Enter') sendCustomerChatMessage()" placeholder="Type a message to runner..." data-i18n-placeholder="chat_input_placeholder" class="flex-1 px-3.5 py-2.5 bg-slate-100 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl text-xs text-slate-900">
+
+          <!-- Send Button -->
+          <button onclick="sendCustomerChatMessage()" class="w-10 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center transition active:scale-95 shrink-0">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STRIKE 2 WARNING MODAL (COD DISABLED) -->
+    <div id="modal-strike-2" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4 text-center border-2 border-amber-500 animate-in zoom-in-95 duration-150">
+        <div class="w-14 h-14 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto text-2xl">
+          ⚠️
+        </div>
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full" data-i18n="strike_2_tag">STRIKE 2 • POLICY WARNING</span>
+          <h3 class="text-base font-extrabold text-slate-900 mt-2" data-i18n="strike_2_title">Order Cancelled • COD Disabled</h3>
+          <p class="text-xs text-slate-600 mt-1" data-i18n="strike_2_desc">Due to multiple cancellations, Cash On Delivery (COD) has been disabled for your account. You will need to use Online Payment (UPI) for future village orders.</p>
+        </div>
+        <button onclick="acknowledgeStrike2Modal()" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md transition" data-i18n="i_understand">I Understand & Acknowledge</button>
+      </div>
+    </div>
+
+    <!-- STRIKE 3 PENALTY MODAL (FEE DEDUCTION) -->
+    <div id="modal-strike-3" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4 text-center border-2 border-rose-600 animate-in zoom-in-95 duration-150">
+        <div class="w-14 h-14 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center mx-auto text-2xl">
+          ⛔
+        </div>
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-rose-800 bg-rose-100 px-2.5 py-0.5 rounded-full" data-i18n="strike_3_tag">STRIKE 3 • PENALTY APPLIED</span>
+          <h3 class="text-base font-extrabold text-slate-900 mt-2" data-i18n="strike_3_title">Cancellation Fee Deducted</h3>
+          <p class="text-xs text-slate-600 mt-1" data-i18n="strike_3_desc">Order cancelled. Delivery and Platform fees (₹20.00) have been deducted from your refund due to repeated cancellations. Remaining balance has been credited to your source UPI account.</p>
+        </div>
+        <button onclick="acknowledgeStrike3Modal()" class="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs shadow-md transition" data-i18n="confirm_btn">Understood</button>
+      </div>
+    </div>
+
+    <!-- REPORT ISSUE / RETURN TICKET MODAL -->
+    <div id="modal-issue-ticket" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4 text-left border border-slate-200 animate-in zoom-in-95 duration-150">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-issue-ticket')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            </button>
+            <h3 class="text-xs font-bold text-slate-900" data-i18n="report_issue_title">Report Order Issue</h3>
+          </div>
+          <span id="ticket-order-badge" class="text-[10px] font-bold text-slate-400">Order #GB-7612</span>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="issue_type_label">Issue Type</label>
+            <select id="issue-ticket-type" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:border-emerald-600 focus:outline-none text-xs">
+              <option value="Missing Item" data-i18n="opt_missing_item">Missing Item in Delivery</option>
+              <option value="Damaged Product" data-i18n="opt_damaged_product">Damaged / Broken Product</option>
+              <option value="Wrong Item Delivered" data-i18n="opt_wrong_item">Wrong Item Delivered</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="issue_photo_label">Upload Product Photo</label>
+            <div onclick="simulatePhotoUpload()" class="border-2 border-dashed border-slate-300 hover:border-emerald-600 rounded-xl p-3 text-center cursor-pointer transition">
+              <div id="issue-photo-preview" class="space-y-1">
+                <i data-lucide="camera" class="w-6 h-6 text-slate-400 mx-auto"></i>
+                <p class="text-[10px] text-slate-500" data-i18n="tap_photo_upload">Tap to snap or upload parcel picture</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="issue_desc_label">Description</label>
+            <textarea id="issue-ticket-desc" rows="2" placeholder="Tell us what went wrong..." data-i18n-placeholder="issue_desc_placeholder" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:border-emerald-600 focus:outline-none text-xs"></textarea>
+          </div>
+
+          <button onclick="submitIssueTicket()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition active:scale-95" data-i18n="submit_ticket_btn">Submit Return / Refund Request</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW RECEIPT MODAL -->
+    <div id="modal-receipt" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4 text-left border border-slate-200">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-receipt')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            </button>
+            <h3 class="text-xs font-bold text-slate-900" data-i18n="receipt_title">Official Bill Receipt</h3>
+          </div>
+          <span id="receipt-id-badge" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">#GB-7612</span>
+        </div>
+
+        <div class="space-y-2 text-xs">
+          <p id="receipt-store-text" class="font-bold text-slate-900">Sharma Kirana Store</p>
+          <div class="divide-y divide-slate-100 text-slate-600 text-[11px]">
+            <div class="py-1.5 flex justify-between">
+              <span>Aashirvaad Atta (5kg)</span>
+              <span>₹215.00</span>
+            </div>
+            <div class="py-1.5 flex justify-between">
+              <span>Pure Mustard Oil (1L)</span>
+              <span>₹145.00</span>
+            </div>
+            <div class="py-1.5 flex justify-between">
+              <span>Parle-G Biscuit (Pack of 4)</span>
+              <span>₹35.00</span>
+            </div>
+            <div class="py-1.5 flex justify-between text-slate-500">
+              <span data-i18n="bill_delivery_fee">Delivery Fee</span>
+              <span>₹15.00</span>
+            </div>
+            <div class="py-1.5 flex justify-between text-emerald-700 font-semibold">
+              <span data-i18n="bill_discount">Gramin Subsidy Discount</span>
+              <span>-₹15.00</span>
+            </div>
+          </div>
+
+          <div class="border-t-2 border-slate-900 pt-2 flex justify-between text-sm font-extrabold text-slate-900">
+            <span data-i18n="bill_grand_total">Grand Total Paid</span>
+            <span id="receipt-total-text">₹395.00</span>
+          </div>
+        </div>
+
+        <button onclick="closeModal('modal-receipt')" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition" data-i18n="close_btn">Close Receipt</button>
+      </div>
+    </div>
+
+    <!-- LOCATION SELECTION MODAL -->
+    <div id="modal-location" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4 text-left border border-slate-200">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-location')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            </button>
+            <h3 class="text-xs font-bold text-slate-900" data-i18n="change_location_title">Change Delivery Village</h3>
+          </div>
+        </div>
+
+        <div class="space-y-2 text-xs">
+          <button onclick="setDeliveryLocation('Chaturshi, Minapur', 'Near Primary School')" class="w-full p-3 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-left space-y-0.5">
+            <p class="font-bold text-slate-900">Chaturshi Village (Primary School)</p>
+            <p class="text-[10px] text-slate-500">Minapur Block, Muzaffarpur • Standard 30m Delivery</p>
+          </button>
+          <button onclick="setDeliveryLocation('Gopalpur, Mandi Road', 'Panchayat Bhavan')" class="w-full p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-left space-y-0.5">
+            <p class="font-bold text-slate-900">Gopalpur (Mandi Road)</p>
+            <p class="text-[10px] text-slate-500">Near Panchayat Bhavan • Standard 30m Delivery</p>
+          </button>
+          <button onclick="setDeliveryLocation('Rampur Diara', 'Ram Janki Mandir')" class="w-full p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-left space-y-0.5">
+            <p class="font-bold text-slate-900">Rampur Diara</p>
+            <p class="text-[10px] text-slate-500">Near Ram Janki Mandir • 35m Express</p>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE EDIT MODAL -->
+    <div id="modal-edit-profile" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4 text-left border border-slate-200">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-edit-profile')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            </button>
+            <h3 class="text-xs font-bold text-slate-900" data-i18n="edit_profile_title">Edit Profile Info</h3>
+          </div>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="profile_name_label">Your Full Name</label>
+            <input type="text" id="edit-name-input" value="Raju Patel" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs">
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="profile_phone_label">Mobile Number</label>
+            <input type="text" id="edit-phone-input" value="+91 98765 43210" disabled class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-xs text-slate-500">
+          </div>
+          <button onclick="saveProfileChanges()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition" data-i18n="save_changes_btn">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ MODAL -->
+    <div id="modal-faq" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4 text-left border border-slate-200 max-h-[80vh] flex flex-col">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-faq')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            </button>
+            <h3 class="text-xs font-bold text-slate-900" data-i18n="faq_title">Frequently Asked Questions</h3>
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto space-y-3 text-xs text-slate-700 pr-1">
+          <div class="p-3 bg-slate-50 rounded-xl space-y-1">
+            <p class="font-bold text-slate-900" data-i18n="faq_q1">Q: How fast does delivery arrive?</p>
+            <p class="text-[11px] text-slate-600" data-i18n="faq_a1">A: Within 30 to 45 minutes directly to your village residence.</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl space-y-1">
+            <p class="font-bold text-slate-900" data-i18n="faq_q2">Q: Can I pay with Cash?</p>
+            <p class="text-[11px] text-slate-600" data-i18n="faq_a2">A: Yes, Cash on Delivery (COD) is available as long as you have good order completion standing.</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl space-y-1">
+            <p class="font-bold text-slate-900" data-i18n="faq_q3">Q: What is the 4-digit Delivery OTP?</p>
+            <p class="text-[11px] text-slate-600" data-i18n="faq_a3">A: A secure code shown in your Orders tab that you tell the runner only after inspecting your items.</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-faq')" class="w-full py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs" data-i18n="close_btn">Close</button>
+      </div>
+    </div>
+
+    <!-- TERMS MODAL -->
+    <div id="modal-terms" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-3 text-left border border-slate-200">
+        <div class="flex items-center space-x-2 pb-2 border-b border-slate-100">
+          <button onclick="closeModal('modal-terms')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+          </button>
+          <h3 class="text-xs font-bold text-slate-900" data-i18n="terms_title">Terms & Rural Guidelines</h3>
+        </div>
+        <p class="text-xs text-slate-600 leading-relaxed" data-i18n="terms_body">
+          GaonBazaar guarantees village quality essentials. Repeated immediate cancellations trigger strikes: Strike 1 gives full refund; Strike 2 disables Cash on Delivery; Strike 3 deducts delivery & handling fees from refund.
+        </p>
+        <button onclick="closeModal('modal-terms')" class="w-full py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs" data-i18n="close_btn">Close</button>
+      </div>
+    </div>
+
+    <!-- RAISE SUPPORT TICKET MODAL -->
+    <div id="modal-raise-ticket" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-3 text-left border border-slate-200">
+        <div class="flex items-center space-x-2 pb-2 border-b border-slate-100">
+          <button onclick="closeModal('modal-raise-ticket')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+          </button>
+          <h3 class="text-xs font-bold text-slate-900" data-i18n="support_ticket_title">Raise Support Ticket</h3>
+        </div>
+        <div class="space-y-2 text-xs">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="ticket_category_label">Category</label>
+            <select id="support-ticket-cat" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs">
+              <option value="Delivery Delay" data-i18n="opt_ticket_delay">Delivery Delay in Village</option>
+              <option value="Payment Issue" data-i18n="opt_ticket_payment">UPI / Refund Issue</option>
+              <option value="Item Quality" data-i18n="opt_ticket_quality">Item Quality Concern</option>
+              <option value="Other" data-i18n="opt_ticket_other">Other Query</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="ticket_details_label">Details</label>
+            <textarea id="support-ticket-text" rows="3" placeholder="Explain your concern..." data-i18n-placeholder="ticket_desc_placeholder" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs"></textarea>
+          </div>
+          <button onclick="submitSupportTicket()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition" data-i18n="submit_btn">Submit Ticket</button>
+        </div>
+      </div>
+    </div>
+
+  </div> <!-- End App Wrapper -->
+
+  <!-- ===================================================================== -->
+  <!-- APPLICATION LOGIC & STATE MACHINE -->
+  <!-- ===================================================================== -->
+  <script>
+    // ---------------------------------------------------------------------------
+    // SOUND SYNTHESIZER (WEB AUDIO API)
+    // ---------------------------------------------------------------------------
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq = 600, duration = 0.08, type = 'sine') {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playSuccessChime() {
+      playBeep(523.25, 0.08, 'sine');
+      setTimeout(() => playBeep(659.25, 0.1, 'sine'), 80);
+      setTimeout(() => playBeep(783.99, 0.16, 'sine'), 160);
+    }
+
+    function playCancelPing() {
+      playBeep(440, 0.1, 'sawtooth');
+      setTimeout(() => playBeep(330, 0.15, 'sawtooth'), 100);
+    }
+
+    // ---------------------------------------------------------------------------
+    // TOAST NOTIFICATIONS
+    // ---------------------------------------------------------------------------
+    function toastSuccess(msg) {
+      playSuccessChime();
+      Toastify({
+        text: msg,
+        duration: 3200,
+        gravity: "top",
+        position: "center",
+        style: {
+          background: "#16a34a",
+          borderRadius: "12px",
+          fontSize: "12px",
+          fontWeight: "600",
+          boxShadow: "0 4px 12px rgba(22, 163, 74, 0.3)"
+        }
+      }).showToast();
+    }
+
+    function toastError(msg) {
+      playBeep(300, 0.2, 'sawtooth');
+      Toastify({
+        text: msg,
+        duration: 3500,
+        gravity: "top",
+        position: "center",
+        style: {
+          background: "#e11d48",
+          borderRadius: "12px",
+          fontSize: "12px",
+          fontWeight: "600",
+          boxShadow: "0 4px 12px rgba(225, 29, 72, 0.3)"
+        }
+      }).showToast();
+    }
+
+    function toastWarning(msg) {
+      playBeep(400, 0.15, 'triangle');
+      Toastify({
+        text: msg,
+        duration: 3800,
+        gravity: "top",
+        position: "center",
+        style: {
+          background: "#d97706",
+          borderRadius: "12px",
+          fontSize: "12px",
+          fontWeight: "600",
+          boxShadow: "0 4px 12px rgba(217, 119, 6, 0.3)"
+        }
+      }).showToast();
+    }
+
+    // ---------------------------------------------------------------------------
+    // STRICT COLLOQUIAL HINDI & ENGLISH DICTIONARIES (ZERO MIXING)
+    // ---------------------------------------------------------------------------
+    const i18n = {
+      en: {
+        welcome_title: "Hyperlocal Rural Shopping",
+        welcome_sub: "Fresh groceries, dairy, and farm essentials delivered directly to your village doorstep in 30 minutes.",
+        choose_lang: "Choose Your Language / भाषा चुनें",
+        continue_btn: "Continue",
+        step_1_of_2: "Step 1 of 2",
+        login_title: "Mobile Verification",
+        login_sub: "Enter your 10-digit phone number. We will send you an OTP for instant verification.",
+        phone_label: "Mobile Number",
+        send_otp_btn: "Send OTP",
+        otp_sent_to: "OTP sent to your number",
+        enter_4_digit_otp: "Enter 4-Digit OTP",
+        resend_in: "Resend OTP in 28s",
+        resend_btn: "Resend OTP",
+        verify_btn: "Verify & Start Shopping",
+        terms_notice: "By continuing, you agree to GaonBazaar's Terms of Service & Rural Privacy Guidelines.",
+        deliver_to_label: "Deliver to",
+        search_placeholder: "Search for atta, oil, tea, sabzi...",
+        banner_tag: "VILLAGE EXPRESS",
+        banner_title: "Pure & Fresh Grocery",
+        banner_sub: "Delivered in 30 mins • Free delivery on orders over ₹300",
+        categories_title: "Categories",
+        view_all: "View All",
+        cat_all: "All",
+        cat_grocery: "Grocery",
+        cat_general: "General Store",
+        cat_veggies: "Vegetables",
+        cat_dairy: "Dairy & Milk",
+        featured_stores_title: "Featured Stores",
+        badge_open: "🟢 OPEN",
+        village_essentials_title: "Village Essentials",
+        add_btn: "ADD +",
+        ai_assistant_title: "GaonBazaar AI Assistant",
+        ai_assistant_sub: "Voice & Hindi Smart Cart Assistant",
+        ai_bot_name: "GaonBazaar Sahayak",
+        ai_welcome_msg: "Namaste! 🙏 You can speak or write anything like 'Add 2kg sugar' or '1 किलो चीनी और चायपत्ती डाल दो'. I will automatically add items directly to your cart!",
+        try_saying: "Try Saying / बोलकर देखें:",
+        ai_listening: "Listening to your voice... Speak now!",
+        ai_listening_hint: "Say '1 kilo cheeni' or 'Mustard oil 1 litre'",
+        ai_input_placeholder: "Type item e.g. 1kg sugar chahiye...",
+        tap_mic_to_speak: "Tap Microphone & Speak",
+        cart_title: "Shopping Cart & Checkout",
+        cart_items_title: "Your Basket",
+        delivery_address_title: "Delivery Location & Village Landmark",
+        use_gps: "Use GPS",
+        village_name_label: "Village / Locality Name",
+        landmark_label: "Nearby Landmark (School, Mandir, Well)",
+        bill_summary_title: "Bill Summary",
+        bill_item_total: "Item Total",
+        bill_delivery_fee: "Delivery Fee (Rural Hyperlocal)",
+        bill_packaging_fee: "Eco Packaging & Handling",
+        bill_discount: "Gramin Subsidy Discount",
+        bill_grand_total: "Grand Total",
+        payment_mode_title: "Payment Method",
+        pay_online_upi: "Online Payment (UPI / QR Code)",
+        pay_online_sub: "PhonePe, Google Pay, Paytm, BHIM",
+        pay_cod: "Cash on Delivery (COD)",
+        pay_cod_sub: "Pay exact cash to runner at doorstep",
+        cod_disabled_msg: "Cash On Delivery is disabled due to repeated cancellations. Please pay online.",
+        place_order_btn: "Place Order",
+        orders_title: "Your Orders & Tracking",
+        orders_sub: "Live updates and past order history",
+        active_run_badge: "ACTIVE ORDER",
+        paid_online: "PAID ONLINE",
+        stage_placed: "1. Placed",
+        stage_preparing: "2. Preparing",
+        stage_out_delivery: "3. Out for Delivery",
+        vendor_packing_msg: "Shopkeeper is packing your items right now.",
+        tell_otp_label: "Delivery OTP to tell Runner:",
+        otp_security_note: "Verify items before sharing OTP",
+        runner_tracking_title: "Runner Live Movement",
+        runner_eta: "8 Mins Away",
+        chat_runner_btn: "Chat with Runner",
+        cancel_order_btn: "Cancel Order",
+        past_orders_title: "Past Orders",
+        status_delivered: "DELIVERED",
+        view_receipt_btn: "View Receipt",
+        reorder_btn: "Reorder",
+        report_issue_btn: "Report Issue",
+        account_title: "Customer Account",
+        account_sub: "Profile, Addresses & Preferences",
+        verified_customer: "Verified Customer",
+        saved_addresses_title: "Saved Village Addresses",
+        edit_btn: "Edit",
+        home_address_label: "Home (Chaturshi)",
+        language_pref_title: "App Language",
+        menu_faq: "Frequently Asked Questions (FAQ)",
+        menu_raise_ticket: "Help & Raise Support Ticket",
+        menu_contact_hub: "Contact Hub Manager (Toll Free)",
+        menu_terms: "Terms, Conditions & Rural Privacy",
+        logout_btn: "Log Out",
+        nav_home: "Home",
+        nav_ai: "AI Assistant",
+        nav_cart: "Cart",
+        nav_orders: "Orders",
+        nav_account: "Account",
+        chat_runner_status: "Delivery Partner (Order #GB-8921)",
+        chat_msg_runner_1: "Namaste! I have picked up your groceries from Sharma Kirana. I am riding towards Chaturshi village now.",
+        chat_msg_cust_1: "Please come via the Primary School road, the gate is open.",
+        share_location_title: "Share Live GPS Location",
+        chat_input_placeholder: "Type a message to runner...",
+        strike_2_tag: "STRIKE 2 • POLICY WARNING",
+        strike_2_title: "Order Cancelled • COD Disabled",
+        strike_2_desc: "Due to multiple cancellations, Cash On Delivery (COD) has been disabled for your account. You will need to use Online Payment (UPI) for future village orders.",
+        i_understand: "I Understand & Acknowledge",
+        strike_3_tag: "STRIKE 3 • PENALTY APPLIED",
+        strike_3_title: "Cancellation Fee Deducted",
+        strike_3_desc: "Order cancelled. Delivery and Platform fees (₹20.00) have been deducted from your refund due to repeated cancellations. Remaining balance has been credited to your source UPI account.",
+        confirm_btn: "Understood",
+        report_issue_title: "Report Order Issue",
+        issue_type_label: "Issue Type",
+        opt_missing_item: "Missing Item in Delivery",
+        opt_damaged_product: "Damaged / Broken Product",
+        opt_wrong_item: "Wrong Item Delivered",
+        issue_photo_label: "Upload Product Photo",
+        tap_photo_upload: "Tap to snap or upload parcel picture",
+        issue_desc_label: "Description",
+        issue_desc_placeholder: "Tell us what went wrong...",
+        submit_ticket_btn: "Submit Return / Refund Request",
+        receipt_title: "Official Bill Receipt",
+        close_btn: "Close",
+        change_location_title: "Change Delivery Village",
+        edit_profile_title: "Edit Profile Info",
+        profile_name_label: "Your Full Name",
+        profile_phone_label: "Mobile Number",
+        save_changes_btn: "Save Changes",
+        faq_title: "Frequently Asked Questions",
+        faq_q1: "Q: How fast does delivery arrive?",
+        faq_a1: "A: Within 30 to 45 minutes directly to your village residence.",
+        faq_q2: "Q: Can I pay with Cash?",
+        faq_a2: "A: Yes, Cash on Delivery (COD) is available as long as you have good order completion standing.",
+        faq_q3: "Q: What is the 4-digit Delivery OTP?",
+        faq_a3: "A: A secure code shown in your Orders tab that you tell the runner only after inspecting your items.",
+        terms_title: "Terms & Rural Guidelines",
+        terms_body: "GaonBazaar guarantees village quality essentials. Repeated immediate cancellations trigger strikes: Strike 1 gives full refund; Strike 2 disables Cash on Delivery; Strike 3 deducts delivery & handling fees from refund.",
+        support_ticket_title: "Raise Support Ticket",
+        ticket_category_label: "Category",
+        opt_ticket_delay: "Delivery Delay in Village",
+        opt_ticket_payment: "UPI / Refund Issue",
+        opt_ticket_quality: "Item Quality Concern",
+        opt_ticket_other: "Other Query",
+        ticket_details_label: "Details",
+        ticket_desc_placeholder: "Explain your concern...",
+        submit_btn: "Submit Ticket",
+        empty_cart_msg: "Your cart is empty. Tap below to browse fresh essentials!",
+        browse_essentials_btn: "Browse Village Essentials",
+        order_placed_toast: "Order placed successfully! Shopkeeper is packing.",
+        order_cancelled_strike1: "Order cancelled. Full refund initiated within 2 mins.",
+        live_loc_shared: "📍 Live Spot Shared (Click to view on Google Maps)"
+      },
+      hi: {
+        welcome_title: "ग्रामीण हाइपरलोकल खरीदारी",
+        welcome_sub: "ताजा किराना, डेयरी और घरेलू जरूरत का सामान सीधे आपके गांव के घर तक 30 मिनट में।",
+        choose_lang: "अपनी भाषा चुनें / Choose Your Language",
+        continue_btn: "आगे बढ़ें",
+        step_1_of_2: "चरण 1 / 2",
+        login_title: "मोबाइल नंबर सत्यापन",
+        login_sub: "अपना 10 अंकों का फोन नंबर दर्ज करें। हम तुरंत सत्यापन हेतु OTP भेजेंगे।",
+        phone_label: "मोबाइल नंबर",
+        send_otp_btn: "OTP भेजें",
+        otp_sent_to: "आपके नंबर पर OTP भेजा गया",
+        enter_4_digit_otp: "4-अंकीय OTP दर्ज करें",
+        resend_in: "28 सेकंड में पुनः भेजें",
+        resend_btn: "पुनः OTP भेजें",
+        verify_btn: "सत्यापित करें और खरीदारी शुरू करें",
+        terms_notice: "आगे बढ़कर, आप गांवबाजार की सेवा शर्तों और ग्रामीण गोपनीयता नियमों से सहमत होते हैं।",
+        deliver_to_label: "डिलीवरी स्थान",
+        search_placeholder: "आटा, तेल, चाय, ताजी सब्जी खोजें...",
+        banner_tag: "ग्रामीण एक्सप्रेस",
+        banner_title: "शुद्ध व ताजा किराना सामान",
+        banner_sub: "30 मिनट में गांव में डिलीवरी • ₹300 से अधिक पर फ्री डिलीवरी",
+        categories_title: "श्रेणियां",
+        view_all: "सभी देखें",
+        cat_all: "सभी",
+        cat_grocery: "किराना",
+        cat_general: "जनरल स्टोर",
+        cat_veggies: "ताजा सब्जियां",
+        cat_dairy: "दूध व डेयरी",
+        featured_stores_title: "प्रसिद्ध दुकानें",
+        badge_open: "🟢 खुला है",
+        village_essentials_title: "ग्रामीण आवश्यक सामग्री",
+        add_btn: "जोड़ें +",
+        ai_assistant_title: "गांवबाजार AI सहायक",
+        ai_assistant_sub: "बोलकर और हिंदी में स्मार्ट कार्ट सहायक",
+        ai_bot_name: "गांवबाजार सहायक",
+        ai_welcome_msg: "नमस्ते! 🙏 आप कुछ भी बोल या लिख सकते हैं जैसे '2 किलो चीनी डाल दो' या 'सरसों का तेल चाहिए'। मैं सीधे आपकी कार्ट में सामान जोड़ दूंगा!",
+        try_saying: "बोलकर देखें / Try Saying:",
+        ai_listening: "आपकी आवाज सुन रहा हूँ... बोलिए!",
+        ai_listening_hint: "बोलें '1 किलो चीनी' या 'सरसों तेल 1 लीटर'",
+        ai_input_placeholder: "सामान लिखें जैसे 1 किलो चीनी चाहिए...",
+        tap_mic_to_speak: "माइक दबाएं और बोलें",
+        cart_title: "शॉपिंग कार्ट व चेकआउट",
+        cart_items_title: "आपकी टोकरी",
+        delivery_address_title: "डिलीवरी का पता व नजदीकी पहचान",
+        use_gps: "GPS उपयोग करें",
+        village_name_label: "गांव / मोहल्ले का नाम",
+        landmark_label: "नजदीकी पहचान (स्कूल, मंदिर, कुआं)",
+        bill_summary_title: "बिल विवरण",
+        bill_item_total: "सामान का कुल मूल्य",
+        bill_delivery_fee: "डिलीवरी शुल्क (ग्रामीण हाइपरलोकल)",
+        bill_packaging_fee: "सुरक्षित पैकेजिंग शुल्क",
+        bill_discount: "ग्रामीण विशेष छूट",
+        bill_grand_total: "कुल देय राशि",
+        payment_mode_title: "भुगतान का तरीका",
+        pay_online_upi: "ऑनलाइन भुगतान (UPI / QR कोड)",
+        pay_online_sub: "फोनपे, गूगल पे, पेटीएम, भीम यूपीआई",
+        pay_cod: "कैश ऑन डिलीवरी (नकद भुगतान)",
+        pay_cod_sub: "डिलीवरी मिलने पर रनर को नकद दें",
+        cod_disabled_msg: "बार-बार ऑर्डर रद्द करने के कारण कैश ऑन डिलीवरी बंद है। कृपया ऑनलाइन भुगतान करें।",
+        place_order_btn: "ऑर्डर करें",
+        orders_title: "आपके ऑर्डर व ट्रैकिंग",
+        orders_sub: "लाइव अपडेट और पुराना इतिहास",
+        active_run_badge: "सक्रिय ऑर्डर",
+        paid_online: "ऑनलाइन भुगतान प्राप्त",
+        stage_placed: "1. ऑर्डर दिया गया",
+        stage_preparing: "2. तैयार हो रहा है",
+        stage_out_delivery: "3. डिलीवरी हेतु निकला",
+        vendor_packing_msg: "दुकानदार आपका सामान अभी पैक कर रहा है।",
+        tell_otp_label: "रनर को बताने हेतु डिलीवरी OTP:",
+        otp_security_note: "सामान जांचने के बाद ही रनर को OTP बताएं",
+        runner_tracking_title: "रनर का लाइव आगमन",
+        runner_eta: "8 मिनट में आगमन",
+        chat_runner_btn: "रनर से चैट करें",
+        cancel_order_btn: "ऑर्डर रद्द करें",
+        past_orders_title: "पुराने ऑर्डर",
+        status_delivered: "सफलतापूर्वक मिला",
+        view_receipt_btn: "रसीद देखें",
+        reorder_btn: "पुनः ऑर्डर करें",
+        report_issue_btn: "समस्या दर्ज करें",
+        account_title: "ग्राहक खाता",
+        account_sub: "प्रोफाइल, पते और सेटिंग्स",
+        verified_customer: "सत्यापित ग्राहक",
+        saved_addresses_title: "सहेजे गए ग्रामीण पते",
+        edit_btn: "बदलें",
+        home_address_label: "घर (चतुरशी)",
+        language_pref_title: "ऐप की भाषा",
+        menu_faq: "अक्सर पूछे जाने वाले सवाल (FAQ)",
+        menu_raise_ticket: "सहायता व सपोर्ट टिकट दर्ज करें",
+        menu_contact_hub: "हब प्रबंधक से संपर्क (टोल-फ्री)",
+        menu_terms: "शर्तें, नियम और ग्रामीण गोपनीयता",
+        logout_btn: "लॉग आउट करें",
+        nav_home: "होम",
+        nav_ai: "AI सहायक",
+        nav_cart: "कार्ट",
+        nav_orders: "ऑर्डर",
+        nav_account: "खाता",
+        chat_runner_status: "डिलीवरी साथी (ऑर्डर #GB-8921)",
+        chat_msg_runner_1: "नमस्ते! मैंने शर्मा किराना से आपका सामान ले लिया है। मैं चतुरशी गांव की ओर बाइक से आ रहा हूँ।",
+        chat_msg_cust_1: "कृपया प्राथमिक विद्यालय वाले रास्ते से आएं, मेन गेट खुला है।",
+        share_location_title: "लाइव GPS लोकेशन भेजें",
+        chat_input_placeholder: "रनर को संदेश लिखें...",
+        strike_2_tag: "चेतावनी 2 • नीति सूचना",
+        strike_2_title: "ऑर्डर रद्द • COD बंद",
+        strike_2_desc: "बार-बार ऑर्डर रद्द करने के कारण आपके खाते के लिए कैश ऑन डिलीवरी (COD) बंद कर दी गई है। भविष्य के ऑर्डर के लिए आपको ऑनलाइन भुगतान (UPI) का उपयोग करना होगा।",
+        i_understand: "मुझे समझ आ गया",
+        strike_3_tag: "चेतावनी 3 • दंड लागू",
+        strike_3_title: "रद्द शुल्क काट लिया गया",
+        strike_3_desc: "ऑर्डर रद्द किया गया। बार-बार रद्द करने के कारण रिफंड से ₹20.00 डिलीवरी व प्लेटफॉर्म शुल्क काट लिया गया है। शेष राशि आपके यूपीआई खाते में वापस भेज दी गई है।",
+        confirm_btn: "ठीक है",
+        report_issue_title: "ऑर्डर की समस्या दर्ज करें",
+        issue_type_label: "समस्या का प्रकार",
+        opt_missing_item: "डिलीवरी में सामान छूटा हुआ",
+        opt_damaged_product: "टूटा या खराब सामान",
+        opt_wrong_item: "गलत सामान मिला",
+        issue_photo_label: "सामान की फोटो अपलोड करें",
+        tap_photo_upload: "पैकेट की फोटो खींचने हेतु यहां दबाएं",
+        issue_desc_label: "विवरण",
+        issue_desc_placeholder: "बताएं क्या समस्या हुई...",
+        submit_ticket_btn: "वापसी / रिफंड अनुरोध भेजें",
+        receipt_title: "आधिकारिक बिल रसीद",
+        close_btn: "बंद करें",
+        change_location_title: "डिलीवरी का गांव बदलें",
+        edit_profile_title: "प्रोफाइल विवरण बदलें",
+        profile_name_label: "आपका पूरा नाम",
+        profile_phone_label: "मोबाइल नंबर",
+        save_changes_btn: "सहेजें",
+        faq_title: "अक्सर पूछे जाने वाले सवाल",
+        faq_q1: "प्र: डिलीवरी कितनी देर में पहुंचती है?",
+        faq_a1: "उ: 30 से 45 मिनट के भीतर सीधे आपके गांव के पते पर।",
+        faq_q2: "प्र: क्या मैं नकद (Cash) में भुगतान कर सकता हूँ?",
+        faq_a2: "उ: हाँ, कैश ऑन डिलीवरी (COD) उपलब्ध है।",
+        faq_q3: "प्र: 4-अंकीय डिलीवरी OTP क्या है?",
+        faq_a3: "उ: यह आपके ऑर्डर टैब में दिखने वाला सुरक्षित कोड है जो सामान जांचने के बाद ही रनर को बताना होता है।",
+        terms_title: "शर्तें व ग्रामीण नियम",
+        terms_body: "गांवबाजार गुणवत्तापूर्ण सामान की गारंटी देता है। बार-बार तुरंत ऑर्डर रद्द करने पर: स्ट्राइक 1 पर पूरा रिफंड; स्ट्राइक 2 पर COD बंद; स्ट्राइक 3 पर रिफंड से डिलीवरी शुल्क काट लिया जाता है।",
+        support_ticket_title: "सहायता टिकट दर्ज करें",
+        ticket_category_label: "श्रेणी",
+        opt_ticket_delay: "गांव में डिलीवरी में देरी",
+        opt_ticket_payment: "ऑनलाइन भुगतान / रिफंड समस्या",
+        opt_ticket_quality: "सामान की गुणवत्ता में कमी",
+        opt_ticket_other: "अन्य सवाल",
+        ticket_details_label: "विवरण",
+        ticket_desc_placeholder: "अपनी समस्या स्पष्ट रूप से लिखें...",
+        submit_btn: "टिकट भेजें",
+        empty_cart_msg: "आपकी टोकरी खाली है। ताजा सामान देखने के लिए नीचे दबाएं!",
+        browse_essentials_btn: "सामान देखें",
+        order_placed_toast: "ऑर्डर सफलतापूर्वक दिया गया! दुकानदार पैक कर रहा है।",
+        order_cancelled_strike1: "ऑर्डर रद्द किया गया। 2 मिनट में पूरा रिफंड शुरू कर दिया गया है।",
+        live_loc_shared: "📍 लाइव स्थान भेजा गया (Google Maps पर देखने के लिए दबाएं)"
+      }
+    };
+
+    let currentLang = localStorage.getItem('gb_customer_lang') || 'en';
+
+    function setAppLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('gb_customer_lang', lang);
+      
+      // Update data-i18n elements
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[lang] && i18n[lang][key]) {
+          el.innerText = i18n[lang][key];
+        }
+      });
+
+      // Update placeholders
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (i18n[lang] && i18n[lang][key]) {
+          el.setAttribute('placeholder', i18n[lang][key]);
+        }
+      });
+
+      // Update select option tags
+      document.querySelectorAll('option[data-i18n]').forEach(opt => {
+        const key = opt.getAttribute('data-i18n');
+        if (i18n[lang] && i18n[lang][key]) {
+          opt.innerText = i18n[lang][key];
+        }
+      });
+
+      // Update Header pill
+      const pill = document.getElementById('lang-pill-text');
+      if (pill) pill.innerText = lang === 'hi' ? 'HI | हिंदी' : 'EN | English';
+
+      // Update Account buttons
+      const accEn = document.getElementById('account-lang-en');
+      const accHi = document.getElementById('account-lang-hi');
+      if (accEn && accHi) {
+        if (lang === 'en') {
+          accEn.className = "py-2.5 px-3 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-900 font-bold flex items-center justify-center space-x-1.5 transition";
+          accHi.className = "py-2.5 px-3 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold flex items-center justify-center space-x-1.5 transition";
+        } else {
+          accHi.className = "py-2.5 px-3 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-900 font-bold flex items-center justify-center space-x-1.5 transition";
+          accEn.className = "py-2.5 px-3 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold flex items-center justify-center space-x-1.5 transition";
+        }
+      }
+
+      renderProductCatalog();
+      renderCartItems();
+    }
+
+    function toggleQuickLanguage() {
+      playBeep(700, 0.05);
+      setAppLanguage(currentLang === 'en' ? 'hi' : 'en');
+      toastSuccess(currentLang === 'hi' ? "भाषा बदलकर हिंदी कर दी गई!" : "Language switched to English!");
+    }
+
+    function selectLanguage(lang) {
+      currentLang = lang;
+      playBeep(650, 0.06);
+      const btnEn = document.getElementById('lang-btn-en');
+      const btnHi = document.getElementById('lang-btn-hi');
+      if (lang === 'en') {
+        btnEn.className = "w-full p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between transition-all duration-200";
+        btnHi.className = "w-full p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 flex items-center justify-between transition-all duration-200";
+        btnEn.querySelector('.check-icon').className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold check-icon";
+        btnHi.querySelector('.check-icon').className = "w-6 h-6 rounded-full bg-transparent text-transparent flex items-center justify-center text-xs font-bold check-icon";
+      } else {
+        btnHi.className = "w-full p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between transition-all duration-200";
+        btnEn.className = "w-full p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 flex items-center justify-between transition-all duration-200";
+        btnHi.querySelector('.check-icon').className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold check-icon";
+        btnEn.querySelector('.check-icon').className = "w-6 h-6 rounded-full bg-transparent text-transparent flex items-center justify-center text-xs font-bold check-icon";
+      }
+      setAppLanguage(lang);
+    }
+
+    function proceedFromLanguage() {
+      playSuccessChime();
+      pushView('page-login');
+      document.getElementById('page-language').classList.add('hidden');
+      document.getElementById('page-login').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    // ---------------------------------------------------------------------------
+    // NAVIGATION & HISTORY API (PUSHSTATE / POPSTATE)
+    // ---------------------------------------------------------------------------
+    function pushView(viewId) {
+      window.history.pushState({ view: viewId }, "", "#" + viewId);
+    }
+
+    function historyBack() {
+      playBeep(450, 0.05);
+      window.history.back();
+    }
+
+    window.addEventListener('popstate', (e) => {
+      if (e.state && e.state.view) {
+        handleViewTransition(e.state.view);
+      } else {
+        // Return to Home view if inside dashboard
+        if (!document.getElementById('dashboard-container').classList.contains('hidden')) {
+          switchTab('home', false);
+        } else {
+          document.getElementById('page-login').classList.add('hidden');
+          document.getElementById('page-language').classList.remove('hidden');
+        }
+      }
+    });
+
+    function handleViewTransition(view) {
+      if (view === 'page-language') {
+        document.getElementById('page-login').classList.add('hidden');
+        document.getElementById('dashboard-container').classList.add('hidden');
+        document.getElementById('page-language').classList.remove('hidden');
+      } else if (view === 'page-login') {
+        document.getElementById('page-language').classList.add('hidden');
+        document.getElementById('dashboard-container').classList.add('hidden');
+        document.getElementById('page-login').classList.remove('hidden');
+      } else if (view.startsWith('tab-')) {
+        const tabName = view.replace('tab-', '');
+        switchTab(tabName, false);
+      }
+      lucide.createIcons();
+    }
+
+    // ---------------------------------------------------------------------------
+    // LOGIN & OTP VERIFICATION
+    // ---------------------------------------------------------------------------
+    function sendCustomerOTP() {
+      const phone = document.getElementById('cust-phone-input').value.trim();
+      if (phone.length < 10) {
+        toastError(currentLang === 'hi' ? "कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें" : "Please enter a valid 10-digit mobile number");
+        return;
+      }
+      playSuccessChime();
+      document.getElementById('otp-phone-display').innerText = "+91 " + phone;
+      document.getElementById('phone-input-section').classList.add('hidden');
+      document.getElementById('otp-input-section').classList.remove('hidden');
+      document.getElementById('otp-1').focus();
+      toastSuccess(currentLang === 'hi' ? "डेमो OTP भेजा गया: 1234" : "Demo OTP Sent: 1234");
+    }
+
+    function handleOtpInput(current, nextId) {
+      if (current.value.length === 1 && nextId) {
+        document.getElementById(nextId).focus();
+      }
+    }
+
+    function resendCustomerOTP() {
+      playBeep(600, 0.08);
+      toastSuccess(currentLang === 'hi' ? "OTP पुनः भेजा गया: 1234" : "OTP Resent: 1234");
+    }
+
+    function verifyCustomerOTP() {
+      const o1 = document.getElementById('otp-1').value;
+      const o2 = document.getElementById('otp-2').value;
+      const o3 = document.getElementById('otp-3').value;
+      const o4 = document.getElementById('otp-4').value;
+      const code = o1 + o2 + o3 + o4;
+
+      if (code.length < 4) {
+        toastError(currentLang === 'hi' ? "कृपया 4-अंकीय OTP भरें" : "Please enter full 4-digit OTP");
+        return;
+      }
+
+      playSuccessChime();
+      localStorage.setItem('gb_customer_authenticated', 'true');
+      document.getElementById('page-login').classList.add('hidden');
+      document.getElementById('dashboard-container').classList.remove('hidden');
+      switchTab('home');
+      toastSuccess(currentLang === 'hi' ? "सत्यापन सफल! गांवबाजार में आपका स्वागत है।" : "Login verified! Welcome to GaonBazaar.");
+    }
+
+    // ---------------------------------------------------------------------------
+    // TAB NAVIGATION (5 BOTTOM TABS)
+    // ---------------------------------------------------------------------------
+    function switchTab(tabName, pushToHistory = true) {
+      playBeep(550, 0.04);
+      if (pushToHistory) {
+        pushView('tab-' + tabName);
+      }
+
+      // Hide all tabs
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.add('hidden'));
+
+      // Show selected tab
+      const target = document.getElementById('view-' + tabName);
+      if (target) target.classList.remove('hidden');
+
+      // Update bottom nav styles
+      const tabs = ['home', 'ai', 'cart', 'orders', 'account'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('nav-btn-' + t);
+        if (btn) {
+          if (t === tabName) {
+            btn.className = "flex-1 py-1 flex flex-col items-center justify-center text-emerald-700 font-bold transition active:scale-95";
+          } else {
+            btn.className = "flex-1 py-1 flex flex-col items-center justify-center text-slate-400 font-medium hover:text-emerald-600 transition active:scale-95";
+          }
+        }
+      });
+
+      // Rerender icons
+      lucide.createIcons();
+
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    // ---------------------------------------------------------------------------
+    // PRODUCT CATALOG DATA & RENDERING (VILLAGE ESSENTIALS)
+    // ---------------------------------------------------------------------------
+    const productsCatalog = [
+      {
+        id: 'p1',
+        nameEn: 'Aashirvaad Shudh Chakki Atta',
+        nameHi: 'आशीर्वाद शुद्ध चक्की गेहूं आटा',
+        category: 'Grocery',
+        unit: '5 kg',
+        price: 215.00,
+        img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80',
+        store: 'Sharma Kirana Store'
+      },
+      {
+        id: 'p2',
+        nameEn: 'Kachchi Ghani Mustard Oil',
+        nameHi: 'कच्ची घानी शुद्ध सरसों तेल',
+        category: 'Grocery',
+        unit: '1 Litre Bottle',
+        price: 145.00,
+        img: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80',
+        store: 'Sharma Kirana Store'
+      },
+      {
+        id: 'p3',
+        nameEn: 'Fresh Pure Cow Milk (Taaza)',
+        nameHi: 'ताजा शुद्ध गाय का दूध',
+        category: 'Dairy & Milk',
+        unit: '1 Litre Pouch',
+        price: 56.00,
+        img: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80',
+        store: 'Verma Fresh Dairy'
+      },
+      {
+        id: 'p4',
+        nameEn: 'Refined Pure White Sugar (Cheeni)',
+        nameHi: 'शुद्ध सफेद दानेदार चीनी',
+        category: 'Grocery',
+        unit: '1 kg Pack',
+        price: 45.00,
+        img: 'https://images.unsplash.com/photo-1622484216834-314227f4c540?w=400&q=80',
+        store: 'Sharma Kirana Store'
+      },
+      {
+        id: 'p5',
+        nameEn: 'Red Desi Fresh Tomatoes',
+        nameHi: 'देसी लाल ताजे टमाटर',
+        category: 'Vegetables',
+        unit: '1 kg',
+        price: 32.00,
+        img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&q=80',
+        store: 'Kisan Krishi Kendra'
+      },
+      {
+        id: 'p6',
+        nameEn: 'Fresh Farm Potatoes (Aloo)',
+        nameHi: 'खेत के ताजे नए आलू',
+        category: 'Vegetables',
+        unit: '2 kg',
+        price: 48.00,
+        img: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&q=80',
+        store: 'Kisan Krishi Kendra'
+      },
+      {
+        id: 'p7',
+        nameEn: 'Red Label Tea (Chai Patti)',
+        nameHi: 'रेड लेबल कड़क चायपत्ती',
+        category: 'Grocery',
+        unit: '250 g',
+        price: 110.00,
+        img: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&q=80',
+        store: 'Sharma Kirana Store'
+      },
+      {
+        id: 'p8',
+        nameEn: 'Dettol Original Bath Soap',
+        nameHi: 'डेटॉल ओरिजिनल साबुन (4 का पैक)',
+        category: 'General Store',
+        unit: 'Pack of 4 (300g)',
+        price: 125.00,
+        img: 'https://images.unsplash.com/photo-1607006314605-ff554c27b036?w=400&q=80',
+        store: 'Sharma Kirana Store'
+      }
+    ];
+
+    // Cart items state: { [id]: { product, qty } }
+    let cart = {
+      'p1': { product: productsCatalog[0], qty: 1 },
+      'p4': { product: productsCatalog[3], qty: 1 }
+    };
+
+    let activeCategory = 'All';
+
+    function renderProductCatalog() {
+      const container = document.getElementById('product-list');
+      if (!container) return;
+
+      const filtered = activeCategory === 'All' 
+        ? productsCatalog 
+        : productsCatalog.filter(p => p.category === activeCategory);
+
+      document.getElementById('product-count-label').innerText = filtered.length + " Items";
+
+      container.innerHTML = filtered.map(p => {
+        const title = currentLang === 'hi' ? p.nameHi : p.nameEn;
+        const inCart = cart[p.id];
+        const btnMarkup = inCart 
+          ? `<div class="flex items-center space-x-2 bg-emerald-50 rounded-lg p-1 border border-emerald-300">
+               <button onclick="decrementCartItem('${p.id}')" class="w-6 h-6 rounded bg-emerald-600 text-white font-bold flex items-center justify-center text-xs active:scale-95">-</button>
+               <span class="text-xs font-bold text-slate-900 px-1">${inCart.qty}</span>
+               <button onclick="incrementCartItem('${p.id}')" class="w-6 h-6 rounded bg-emerald-600 text-white font-bold flex items-center justify-center text-xs active:scale-95">+</button>
+             </div>`
+          : `<button onclick="addToCart('${p.id}')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-2xs flex items-center space-x-1 transition active:scale-95">
+               <span>${i18n[currentLang].add_btn}</span>
+             </button>`;
+
+        return `
+          <div class="product-card bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between gap-3">
+            <div class="flex items-center space-x-3 min-w-0 flex-1">
+              <img src="${p.img}" alt="${title}" class="w-14 h-14 object-cover rounded-xl border border-slate-200 shrink-0">
+              <div class="min-w-0 flex-1">
+                <h4 class="text-xs font-bold text-slate-900 truncate">${title}</h4>
+                <p class="text-[10px] text-slate-500">${p.unit} • ${p.store}</p>
+                <p class="text-xs font-extrabold text-emerald-800 mt-0.5">₹${p.price.toFixed(2)}</p>
+              </div>
+            </div>
+            <div class="shrink-0">
+              ${btnMarkup}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    function filterCategory(cat) {
+      playBeep(600, 0.04);
+      activeCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        if (btn.getAttribute('data-cat') === cat) {
+          btn.className = "cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white whitespace-nowrap shadow-2xs transition active:scale-95";
+        } else {
+          btn.className = "cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95";
+        }
+      });
+      renderProductCatalog();
+    }
+
+    function handleHomeSearch(val) {
+      val = val.toLowerCase().trim();
+      document.querySelectorAll('.product-card').forEach(card => {
+        const text = card.innerText.toLowerCase();
+        if (!val || text.includes(val)) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    }
+
+    function activateVoiceSearch() {
+      switchTab('ai');
+      toggleVoiceAssistant();
+    }
+
+    // ---------------------------------------------------------------------------
+    // CART OPERATIONS & BILL BREAKDOWN
+    // ---------------------------------------------------------------------------
+    function addToCart(productId) {
+      playBeep(700, 0.05);
+      const prod = productsCatalog.find(p => p.id === productId);
+      if (!prod) return;
+
+      if (!cart[productId]) {
+        cart[productId] = { product: prod, qty: 1 };
+      } else {
+        cart[productId].qty++;
+      }
+
+      toastSuccess((currentLang === 'hi' ? prod.nameHi : prod.nameEn) + (currentLang === 'hi' ? " कार्ट में जोड़ा गया!" : " added to basket!"));
+      updateCartState();
+    }
+
+    function incrementCartItem(productId) {
+      playBeep(720, 0.04);
+      if (cart[productId]) {
+        cart[productId].qty++;
+        updateCartState();
+      }
+    }
+
+    function decrementCartItem(productId) {
+      playBeep(500, 0.04);
+      if (cart[productId]) {
+        cart[productId].qty--;
+        if (cart[productId].qty <= 0) {
+          delete cart[productId];
+        }
+        updateCartState();
+      }
+    }
+
+    function updateCartState() {
+      let count = 0;
+      let total = 0;
+      Object.values(cart).forEach(item => {
+        count += item.qty;
+        total += item.product.price * item.qty;
+      });
+
+      // Update badge
+      const badge = document.getElementById('nav-cart-badge');
+      if (badge) badge.innerText = count;
+
+      // Update summary subtitle in Cart Tab
+      const sub = document.getElementById('cart-item-summary-subtitle');
+      if (sub) sub.innerText = count + " " + (currentLang === 'hi' ? "सामान कार्ट में" : "Items in Cart");
+
+      renderProductCatalog();
+      renderCartItems();
+    }
+
+    function renderCartItems() {
+      const container = document.getElementById('cart-items-container');
+      if (!container) return;
+
+      const items = Object.values(cart);
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="p-6 bg-white rounded-2xl border border-slate-200 text-center space-y-3">
+            <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-xl">
+              🛒
+            </div>
+            <p class="text-xs text-slate-500 font-semibold" data-i18n="empty_cart_msg">${i18n[currentLang].empty_cart_msg}</p>
+            <button onclick="switchTab('home')" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-xs" data-i18n="browse_essentials_btn">${i18n[currentLang].browse_essentials_btn}</button>
+          </div>
+        `;
+        document.getElementById('bill-item-total').innerText = "₹0.00";
+        document.getElementById('bill-grand-total').innerText = "₹0.00";
+        document.getElementById('place-order-total-badge').innerText = "₹0.00";
+        return;
+      }
+
+      let subtotal = 0;
+      container.innerHTML = items.map(it => {
+        const p = it.product;
+        const title = currentLang === 'hi' ? p.nameHi : p.nameEn;
+        const lineTotal = p.price * it.qty;
+        subtotal += lineTotal;
+
+        return `
+          <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between gap-3">
+            <div class="flex items-center space-x-3 min-w-0 flex-1">
+              <img src="${p.img}" alt="${title}" class="w-12 h-12 object-cover rounded-xl border border-slate-200 shrink-0">
+              <div class="min-w-0 flex-1">
+                <h4 class="text-xs font-bold text-slate-900 truncate">${title}</h4>
+                <p class="text-[10px] text-slate-500">₹${p.price.toFixed(2)} x ${it.qty}</p>
+                <p class="text-xs font-extrabold text-emerald-800">₹${lineTotal.toFixed(2)}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2 bg-emerald-50 rounded-lg p-1 border border-emerald-300 shrink-0">
+              <button onclick="decrementCartItem('${p.id}')" class="w-6 h-6 rounded bg-emerald-600 text-white font-bold flex items-center justify-center text-xs active:scale-95">-</button>
+              <span class="text-xs font-bold text-slate-900 px-1">${it.qty}</span>
+              <button onclick="incrementCartItem('${p.id}')" class="w-6 h-6 rounded bg-emerald-600 text-white font-bold flex items-center justify-center text-xs active:scale-95">+</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const delivery = subtotal > 300 ? 0.00 : 15.00;
+      const packaging = 5.00;
+      const discount = 10.00;
+      const grandTotal = Math.max(0, subtotal + delivery + packaging - discount);
+
+      document.getElementById('bill-item-total').innerText = "₹" + subtotal.toFixed(2);
+      document.getElementById('bill-delivery-fee').innerText = delivery === 0 ? "FREE" : "₹" + delivery.toFixed(2);
+      document.getElementById('bill-pkg-fee').innerText = "₹" + packaging.toFixed(2);
+      document.getElementById('bill-grand-total').innerText = "₹" + grandTotal.toFixed(2);
+      document.getElementById('place-order-total-badge').innerText = "₹" + grandTotal.toFixed(2);
+    }
+
+    function detectCustomerGPS() {
+      playBeep(650, 0.05);
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude.toFixed(4);
+            const lng = pos.coords.longitude.toFixed(4);
+            document.getElementById('pin-coords-text').innerText = `Lat: ${lat}, Lng: ${lng}`;
+            toastSuccess(currentLang === 'hi' ? `GPS से स्थान लिया गया: ${lat}, ${lng}` : `GPS Captured: ${lat}, ${lng}`);
+          },
+          (err) => {
+            document.getElementById('pin-coords-text').innerText = "Lat: 26.8500, Lng: 80.9500";
+            toastSuccess(currentLang === 'hi' ? "ग्रामीण डिफॉल्ट लोकेशन (26.8500, 80.9500) सेट की गई" : "Village Default (26.8500, 80.9500) Set");
+          }
+        );
+      } else {
+        toastSuccess("GPS Pin Set: 26.8500, 80.9500");
+      }
+    }
+
+    function setDeliveryLocation(loc, landmark) {
+      document.getElementById('header-location-text').innerText = loc;
+      document.getElementById('checkout-village-input').value = loc;
+      document.getElementById('checkout-landmark-input').value = landmark;
+      closeModal('modal-location');
+      toastSuccess(currentLang === 'hi' ? "डिलीवरी स्थान चुना गया: " + loc : "Delivery village set to: " + loc);
+    }
+
+    // ---------------------------------------------------------------------------
+    // AI VOICE ASSISTANT TAB (CHATGPT/WHATSAPP STYLE WITH MIC BUTTON)
+    // ---------------------------------------------------------------------------
+    let isVoiceListening = false;
+
+    function toggleVoiceAssistant() {
+      isVoiceListening = !isVoiceListening;
+      const banner = document.getElementById('ai-voice-status');
+      const micBtn = document.getElementById('main-mic-btn');
+
+      if (isVoiceListening) {
+        playBeep(880, 0.1, 'sine');
+        banner.classList.remove('hidden');
+        micBtn.classList.add('bg-rose-600', 'hover:bg-rose-700');
+        micBtn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+
+        // Simulate voice recognition in rural context
+        setTimeout(() => {
+          if (isVoiceListening) {
+            isVoiceListening = false;
+            banner.classList.add('hidden');
+            micBtn.classList.remove('bg-rose-600', 'hover:bg-rose-700');
+            micBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+            
+            const prompt = currentLang === 'hi' ? "1 किलो चीनी और 1 लीटर सरसों तेल चाहिए" : "Add 1kg Sugar and 1L Mustard Oil";
+            processAiQuery(prompt);
+          }
+        }, 3200);
+      } else {
+        playBeep(440, 0.08, 'sine');
+        banner.classList.add('hidden');
+        micBtn.classList.remove('bg-rose-600', 'hover:bg-rose-700');
+        micBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+      }
+    }
+
+    function submitAiText() {
+      const input = document.getElementById('ai-text-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      processAiQuery(text);
+    }
+
+    function sendAiPrompt(promptText) {
+      processAiQuery(promptText);
+    }
+
+    function processAiQuery(userText) {
+      playBeep(600, 0.05);
+      const container = document.getElementById('ai-chat-messages');
+
+      // 1. Add User Chat Bubble
+      const userBubble = document.createElement('div');
+      userBubble.className = "flex items-end justify-end space-x-2";
+      userBubble.innerHTML = `
+        <div class="bg-emerald-600 text-white p-3 rounded-2xl rounded-tr-xs shadow-xs text-xs space-y-1 max-w-[85%]">
+          <p>${userText}</p>
+          <span class="text-[9px] text-emerald-200 block text-right">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      `;
+      container.appendChild(userBubble);
+      container.scrollTop = container.scrollHeight;
+
+      // 2. Parse & Add Item to Cart
+      let addedItemName = "";
+      const lower = userText.toLowerCase();
+
+      if (lower.includes('sugar') || lower.includes('चीनी') || lower.includes('cheeni')) {
+        addToCart('p4');
+        addedItemName = currentLang === 'hi' ? "1 किलो शुद्ध चीनी (₹45.00)" : "1kg Refined Sugar (₹45.00)";
+      } else if (lower.includes('oil') || lower.includes('तेल') || lower.includes('tel')) {
+        addToCart('p2');
+        addedItemName = currentLang === 'hi' ? "1 लीटर सरसों तेल (₹145.00)" : "1L Mustard Oil (₹145.00)";
+      } else if (lower.includes('milk') || lower.includes('दूध') || lower.includes('doodh')) {
+        addToCart('p3');
+        addedItemName = currentLang === 'hi' ? "1 लीटर ताजा गाय का दूध (₹56.00)" : "1L Taaza Cow Milk (₹56.00)";
+      } else if (lower.includes('atta') || lower.includes('आटा') || lower.includes('wheat')) {
+        addToCart('p1');
+        addedItemName = currentLang === 'hi' ? "5 किलो आशीर्वाद आटा (₹215.00)" : "5kg Aashirvaad Atta (₹215.00)";
+      } else {
+        // Fallback default
+        addToCart('p4');
+        addedItemName = currentLang === 'hi' ? "1 किलो चीनी (₹45.00)" : "1kg Sugar (₹45.00)";
+      }
+
+      // 3. AI Bot Response
+      setTimeout(() => {
+        playSuccessChime();
+        const botBubble = document.createElement('div');
+        botBubble.className = "flex items-start space-x-2.5 max-w-[85%]";
+        const responseText = currentLang === 'hi'
+          ? `शानदार! मैंने आपकी टोकरी में ${addedItemName} जोड़ दिया है। 🎉 क्या आपको और कुछ मंगवाना है?`
+          : `Great! Added ${addedItemName} directly to your cart! 🎉 Would you like to add anything else?`;
+
+        botBubble.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0 shadow-xs">
+            🤖
+          </div>
+          <div class="bg-white p-3.5 rounded-2xl rounded-tl-xs border border-slate-200 shadow-2xs space-y-1.5 text-xs text-slate-800">
+            <p class="font-bold text-emerald-800">${i18n[currentLang].ai_bot_name}</p>
+            <p>${responseText}</p>
+            <button onclick="switchTab('cart')" class="mt-1 px-3 py-1 bg-emerald-600 text-white rounded-lg text-[11px] font-bold shadow-2xs flex items-center space-x-1">
+              <span>View Cart & Checkout</span>
+              <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(botBubble);
+        container.scrollTop = container.scrollHeight;
+        lucide.createIcons();
+      }, 700);
+    }
+
+    // ---------------------------------------------------------------------------
+    // PLACE ORDER & UNIFIED BACKEND INTEGRATION (WEBSOCKETS)
+    // ---------------------------------------------------------------------------
+    let wsConnection = null;
+
+    function initUnifiedCustomerWebSocket() {
+      try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/customer`;
+        wsConnection = new WebSocket(wsUrl);
+
+        wsConnection.onopen = () => {
+          console.log("[Customer WS] Connected to unified real-time socket");
+        };
+
+        wsConnection.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            handleUnifiedSocketMessage(data);
+          } catch (e) {}
+        };
+      } catch (e) {
+        console.log("[Customer WS] Running in standalone frontend state mode");
+      }
+    }
+
+    function handleUnifiedSocketMessage(msg) {
+      if (msg.event === 'order_accepted') {
+        document.getElementById('stage-prep-label').className = "text-emerald-700 font-bold";
+        document.getElementById('active-order-status-msg').innerText = currentLang === 'hi'
+          ? "दुकानदार ने ऑर्डर स्वीकार किया और पैक कर रहा है।"
+          : "Vendor accepted your order and is packing.";
+        toastSuccess("Vendor accepted order #GB-8921!");
+      } else if (msg.event === 'runner_assigned' || msg.event === 'out_for_delivery') {
+        document.getElementById('stage-out-label').className = "text-emerald-700 font-bold";
+        document.getElementById('runner-eta-badge').innerText = "4 Mins Away";
+        toastSuccess("Runner Ramesh Kumar is on the way to your village!");
+      }
+    }
+
+    function placeCustomerOrder() {
+      if (Object.keys(cart).length === 0) {
+        toastError(currentLang === 'hi' ? "आपकी कार्ट खाली है! कृपया सामान जोड़ें।" : "Your cart is empty! Please add items.");
+        return;
+      }
+
+      playSuccessChime();
+      const village = document.getElementById('checkout-village-input').value;
+      const landmark = document.getElementById('checkout-landmark-input').value;
+
+      // Broadcast order over WebSocket if connected
+      if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+        wsConnection.send(JSON.stringify({
+          action: 'new_order',
+          order_id: 'GB-8921',
+          customer_name: 'Raju Patel',
+          village: village,
+          landmark: landmark,
+          items: cart
+        }));
+      }
+
+      toastSuccess(i18n[currentLang].order_placed_toast);
+      
+      // Clear Cart & Transition to Orders Live Tracking Tab
+      cart = {};
+      updateCartState();
+      switchTab('orders');
+    }
+
+    // ---------------------------------------------------------------------------
+    // CANCELLATION & 3-STRIKE PENALTY UI LOGIC
+    // ---------------------------------------------------------------------------
+    let cancellationStrikes = parseInt(localStorage.getItem('gb_cancellation_strikes') || '0', 10);
+
+    function checkCancellationState() {
+      if (cancellationStrikes >= 2) {
+        // Disallow COD option
+        const codOption = document.getElementById('cod-option-label');
+        const codWarning = document.getElementById('cod-disabled-warning');
+        const codRadio = document.getElementById('cod-radio-input');
+        if (codOption) {
+          codOption.classList.add('opacity-40', 'pointer-events-none');
+        }
+        if (codWarning) {
+          codWarning.classList.remove('hidden');
+        }
+        if (codRadio && codRadio.checked) {
+          document.querySelector('input[name="payment_mode"][value="UPI"]').checked = true;
+        }
+      }
+    }
+
+    function cancelActiveOrder() {
+      playCancelPing();
+      cancellationStrikes++;
+      localStorage.setItem('gb_cancellation_strikes', cancellationStrikes.toString());
+
+      if (cancellationStrikes === 1) {
+        // Strike 1: Full Refund initiated within 2 mins
+        toastSuccess(i18n[currentLang].order_cancelled_strike1);
+        hideActiveOrderCard("Cancelled • Full Refund Initiated");
+      } else if (cancellationStrikes === 2) {
+        // Strike 2: Warning Modal & COD disabled
+        openModal('modal-strike-2');
+        checkCancellationState();
+        hideActiveOrderCard("Cancelled • COD Disabled (Strike 2)");
+      } else {
+        // Strike 3: Penalty Modal (Delivery & Platform Fee Deducted)
+        openModal('modal-strike-3');
+        checkCancellationState();
+        hideActiveOrderCard("Cancelled • Fee Deducted (Strike 3)");
+      }
+    }
+
+    function hideActiveOrderCard(statusText) {
+      const activeCard = document.getElementById('active-order-card');
+      if (activeCard) {
+        activeCard.innerHTML = `
+          <div class="p-5 bg-rose-50 border border-rose-200 rounded-2xl text-center space-y-2">
+            <span class="text-2xl">❌</span>
+            <h4 class="text-xs font-bold text-rose-900">${statusText}</h4>
+            <p class="text-[11px] text-rose-700">Order #GB-8921 has been marked as cancelled. Any applicable refund has been processed.</p>
+            <button onclick="window.location.reload()" class="mt-2 px-3 py-1.5 bg-white border border-rose-300 text-rose-800 rounded-lg text-xs font-bold">Refresh View</button>
+          </div>
+        `;
+      }
+    }
+
+    function acknowledgeStrike2Modal() {
+      playBeep(600, 0.05);
+      closeModal('modal-strike-2');
+      toastWarning("Cash on Delivery (COD) is now disabled for your account.");
+    }
+
+    function acknowledgeStrike3Modal() {
+      playBeep(600, 0.05);
+      closeModal('modal-strike-3');
+      toastError("₹20 Penalty fee deducted. Continued cancellations may lead to account hold.");
+    }
+
+    // ---------------------------------------------------------------------------
+    // IN-APP CHAT WITH RUNNER & LIVE LOCATION SHARING
+    // ---------------------------------------------------------------------------
+    function openChatWithRunner() {
+      playBeep(650, 0.05);
+      openModal('modal-runner-chat');
+    }
+
+    function sendCustomerChatMessage() {
+      const input = document.getElementById('chat-input-text');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      playBeep(700, 0.05);
+
+      const container = document.getElementById('chat-messages-container');
+      const bubble = document.createElement('div');
+      bubble.className = "flex items-end justify-end space-x-2";
+      bubble.innerHTML = `
+        <div class="bg-emerald-600 text-white p-3 rounded-2xl rounded-tr-xs shadow-xs text-xs space-y-1 max-w-[85%]">
+          <p>${text}</p>
+          <span class="text-[9px] text-emerald-200 block text-right">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      `;
+      container.appendChild(bubble);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function shareCustomerLiveLocation() {
+      playSuccessChime();
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude.toFixed(4);
+            const lng = pos.coords.longitude.toFixed(4);
+            renderLocationChatBubble(lat, lng);
+          },
+          (err) => {
+            // Default village spot
+            renderLocationChatBubble("26.8500", "80.9500");
+          }
+        );
+      } else {
+        renderLocationChatBubble("26.8500", "80.9500");
+      }
+    }
+
+    function renderLocationChatBubble(lat, lng) {
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+      const container = document.getElementById('chat-messages-container');
+      const bubble = document.createElement('div');
+      bubble.className = "flex items-end justify-end space-x-2";
+      bubble.innerHTML = `
+        <div class="bg-emerald-700 text-white p-3 rounded-2xl rounded-tr-xs shadow-md text-xs space-y-2 max-w-[85%]">
+          <div class="flex items-center space-x-1.5 font-bold text-emerald-100">
+            <i data-lucide="map-pin" class="w-4 h-4 text-emerald-300"></i>
+            <span>${i18n[currentLang].live_loc_shared}</span>
+          </div>
+          <p class="text-[10px] text-emerald-200">Coords: ${lat}, ${lng} (Chaturshi Village)</p>
+          <a href="${mapsUrl}" target="_blank" class="block w-full text-center py-2 px-3 bg-white text-emerald-900 rounded-lg font-bold text-[11px] shadow-sm hover:bg-emerald-50 active:scale-95 transition">
+            Open in Google Maps
+          </a>
+          <span class="text-[9px] text-emerald-300 block text-right">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      `;
+      container.appendChild(bubble);
+      container.scrollTop = container.scrollHeight;
+      lucide.createIcons();
+      toastSuccess(currentLang === 'hi' ? "लाइव लोकेशन रनर को भेज दी गई!" : "Live Location sent to delivery partner!");
+    }
+
+    // ---------------------------------------------------------------------------
+    // ISSUE TICKET & RECEIPT ACTIONS
+    // ---------------------------------------------------------------------------
+    function openIssueModal(orderId) {
+      playBeep(600, 0.05);
+      document.getElementById('ticket-order-badge').innerText = "Order #" + orderId;
+      openModal('modal-issue-ticket');
+    }
+
+    function simulatePhotoUpload() {
+      playBeep(650, 0.04);
+      const preview = document.getElementById('issue-photo-preview');
+      preview.innerHTML = `
+        <div class="flex items-center justify-center space-x-2 text-emerald-700">
+          <i data-lucide="check-circle" class="w-4 h-4"></i>
+          <span class="text-xs font-bold">parcel_damage_photo.jpg (Uploaded)</span>
+        </div>
+      `;
+      lucide.createIcons();
+      toastSuccess(currentLang === 'hi' ? "फोटो सफलतापूर्वक जोड़ी गई" : "Photo attached successfully");
+    }
+
+    function submitIssueTicket() {
+      const type = document.getElementById('issue-ticket-type').value;
+      const desc = document.getElementById('issue-ticket-desc').value.trim();
+      playSuccessChime();
+      closeModal('modal-issue-ticket');
+      toastSuccess(currentLang === 'hi' ? "शिकायत दर्ज कर ली गई है। हब टीम 1 घंटे में संपर्क करेगी।" : "Issue ticket submitted! Rural support team will contact you within 1 hour.");
+    }
+
+    function openReceiptModal(orderId, store, total) {
+      playBeep(600, 0.05);
+      document.getElementById('receipt-id-badge').innerText = "#" + orderId;
+      document.getElementById('receipt-store-text').innerText = store;
+      document.getElementById('receipt-total-text').innerText = "₹" + total.toFixed(2);
+      openModal('modal-receipt');
+    }
+
+    function reorderItems(orderId) {
+      playSuccessChime();
+      addToCart('p1');
+      addToCart('p2');
+      switchTab('cart');
+      toastSuccess(currentLang === 'hi' ? "सामान फिर से आपकी टोकरी में डाल दिया गया है!" : "Previous items re-added to your basket!");
+    }
+
+    function saveProfileChanges() {
+      const name = document.getElementById('edit-name-input').value.trim();
+      if (!name) return;
+      document.getElementById('user-display-name').innerText = name;
+      closeModal('modal-edit-profile');
+      toastSuccess(currentLang === 'hi' ? "नाम सफलतापूर्वक अपडेट किया गया" : "Profile name updated successfully");
+    }
+
+    function submitSupportTicket() {
+      const text = document.getElementById('support-ticket-text').value.trim();
+      if (!text) {
+        toastError("Please enter ticket details");
+        return;
+      }
+      playSuccessChime();
+      closeModal('modal-raise-ticket');
+      toastSuccess(currentLang === 'hi' ? "सपोर्ट टिकट #TK-9812 दर्ज किया गया" : "Support ticket #TK-9812 created successfully");
+    }
+
+    function confirmCustomerLogout() {
+      playBeep(450, 0.08);
+      if (confirm(currentLang === 'hi' ? "क्या आप सच में गांवबाजार से लॉग आउट करना चाहते हैं?" : "Are you sure you want to log out of GaonBazaar?")) {
+        localStorage.removeItem('gb_customer_authenticated');
+        window.location.reload();
+      }
+    }
+
+    // ---------------------------------------------------------------------------
+    // MODAL HELPERS
+    // ---------------------------------------------------------------------------
+    function openModal(id) {
+      playBeep(650, 0.04);
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.classList.remove('hidden');
+        lucide.createIcons();
+      }
+    }
+
+    function closeModal(id) {
+      playBeep(450, 0.04);
+      const modal = document.getElementById(id);
+      if (modal) modal.classList.add('hidden');
+    }
+
+    // ---------------------------------------------------------------------------
+    // APPLICATION INITIALIZATION
+    // ---------------------------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      // Set initial language
+      setAppLanguage(currentLang);
+
+      // Check authentication state
+      const isAuth = localStorage.getItem('gb_customer_authenticated');
+      if (isAuth === 'true') {
+        document.getElementById('page-language').classList.add('hidden');
+        document.getElementById('page-login').classList.add('hidden');
+        document.getElementById('dashboard-container').classList.remove('hidden');
+        switchTab('home', false);
+      } else {
+        document.getElementById('page-language').classList.remove('hidden');
+      }
+
+      checkCancellationState();
+      renderProductCatalog();
+      renderCartItems();
+      initUnifiedCustomerWebSocket();
+      lucide.createIcons();
+    });
+  </script>
 </body>
 </html>
