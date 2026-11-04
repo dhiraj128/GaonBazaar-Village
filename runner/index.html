@@ -1381,7 +1381,7 @@
         badge_in_progress: "IN PROGRESS",
         badge_waiting_pickup: "WAITING PICKUP",
         collect_cash_badge: "COLLECT CASH: ₹340",
-        demo_otp_note: "Ask the customer for the delivery OTP (Demo: 7412)",
+        demo_otp_note: "Ask the customer for their 4-digit delivery OTP",
         step_1_badge: "Step 1 of 7",
         step_2_badge: "Step 2 of 7",
         step_3_badge: "Step 3 of 7",
@@ -1403,7 +1403,7 @@
         ifsc_placeholder: "e.g. SBIN0004567",
         beneficiary_placeholder: "e.g. Sonu Kumar Verma",
         upivpa_placeholder: "e.g. rider@upi",
-        otp_placeholder_7412: "7412",
+        otp_placeholder_masked: "••••",
         security_otp_placeholder: "7788",
         new_payout_placeholder: "e.g. SBI A/C or rider@upi",
         ticket_desc_placeholder: "Please provide details of mission or breakdown...",
@@ -1545,7 +1545,7 @@
         badge_in_progress: "प्रगति में",
         badge_waiting_pickup: "पिकअप की प्रतीक्षा",
         collect_cash_badge: "नकद प्राप्त करें: ₹340",
-        demo_otp_note: "ग्राहक से 4-अंकीय डिलीवरी OTP पूछें (डेमो: 7412)",
+        demo_otp_note: "ग्राहक से उनका 4-अंकीय डिलीवरी OTP पूछें",
         step_1_badge: "चरण 1 का 7",
         step_2_badge: "चरण 2 का 7",
         step_3_badge: "चरण 3 का 7",
@@ -1567,7 +1567,7 @@
         ifsc_placeholder: "उदा. SBIN0004567",
         beneficiary_placeholder: "उदा. सोनू कुमार वर्मा",
         upivpa_placeholder: "उदा. rider@upi",
-        otp_placeholder_7412: "7412",
+        otp_placeholder_masked: "••••",
         security_otp_placeholder: "7788",
         new_payout_placeholder: "उदा. बैंक खाता या rider@upi",
         ticket_desc_placeholder: "कृपया समस्या या ब्रेकडाउन का विवरण दें...",
@@ -2407,7 +2407,7 @@
       cod_amount: 340.0,
       earning: 55.0,
       pickup_otp: "5821",
-      delivery_otp: "7412"
+      delivery_otp: ""
     };
     state.customerSharedLocation = null;
     state.orderMessages = [];
@@ -2644,17 +2644,14 @@
       }
 
       try {
-        const res = await apiRequest('/api/v1/orders/runner/jobs/' + orderId + '/action', 'POST', {
+        await apiRequest('/api/v1/orders/runner/jobs/' + orderId + '/action', 'POST', {
           action: 'DELIVER',
           delivery_otp: otp,
           cash_collected: true
         });
       } catch (e) {
-        // If testing locally or OTP mismatch
-        if (otp !== (mission.delivery_otp || '7412') && otp !== '1234') {
-          toastError(e.message || "Invalid Delivery OTP! Ask customer for their 4-digit code");
-          return;
-        }
+        toastError(e.message || "Invalid Delivery OTP! Ask customer for their 4-digit code");
+        return;
       }
 
       const step2 = document.getElementById('run-step-2');
@@ -2666,35 +2663,6 @@
             <p class="text-xs text-emerald-700">Order #${orderId} delivered to ${mission.customer_name || 'Customer'}. ₹${(mission.earning || 55).toFixed(2)} credited to today's earnings!</p>
             <div class="p-2 bg-emerald-100 rounded text-[11px] font-bold text-emerald-800">
               Cash on Delivery Collected: ₹${(mission.cod_amount || 340).toFixed(2)}
-            </div>
-            <button onclick="switchDashboardTab('ledger')" class="mt-2 py-2 px-4 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg shadow-xs">
-              View Earnings in Ledger
-            </button>
-          </div>
-        `;
-      }
-
-      toastSuccess("Mission Delivered! ₹55 earned, ₹340 COD collected.");
-      lucide.createIcons();
-    }
-
-      try {
-        await apiRequest('/api/v1/orders/runner/jobs/' + orderId + '/action', 'POST', {
-          action: 'DELIVER',
-          delivery_otp: otp,
-          cash_collected: true
-        });
-      } catch (e) {}
-
-      const step2 = document.getElementById('run-step-2');
-      if (step2) {
-        step2.innerHTML = `
-          <div class="p-4 bg-emerald-50 border border-emerald-300 rounded-xl text-center space-y-2">
-            <i data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600 mx-auto"></i>
-            <h4 class="text-sm font-extrabold text-emerald-900">Delivery Completed Successfully!</h4>
-            <p class="text-xs text-emerald-700">Order #${orderId} delivered. ₹55.00 credited to today's earnings!</p>
-            <div class="p-2 bg-emerald-100 rounded text-[11px] font-bold text-emerald-800">
-              Cash on Delivery Collected: ₹340.00
             </div>
             <button onclick="switchDashboardTab('ledger')" class="mt-2 py-2 px-4 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg shadow-xs">
               View Earnings in Ledger
@@ -2786,8 +2754,20 @@
       const savedLang = localStorage.getItem('gaonbazaar_runner_lang') || 'en';
       setLanguage(savedLang);
 
-      navigateTo('onboarding-1', false);
-      history.replaceState({ screen: 'onboarding-1', view: 'onboarding' }, '', '#onboarding-1');
+      const hash = (window.location.hash || '').replace('#', '');
+      const token = getAuthToken();
+
+      if (hash.startsWith('dashboard-')) {
+        const tab = hash.replace('dashboard-', '');
+        openDashboard(tab || 'missions', false);
+      } else if (hash.startsWith('onboarding-')) {
+        navigateTo(hash, false);
+      } else if (token) {
+        openDashboard('missions', false);
+      } else {
+        navigateTo('onboarding-1', false);
+        history.replaceState({ screen: 'onboarding-1', view: 'onboarding' }, '', '#onboarding-1');
+      }
 
       lucide.createIcons();
     });
