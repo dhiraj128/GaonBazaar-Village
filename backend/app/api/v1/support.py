@@ -84,6 +84,7 @@ class SupportChatResponse(BaseModel):
     reply: str
     intent: str
     order_id: Optional[str] = None
+    ticket_id: Optional[str] = None
     suggested_actions: List[str] = []
 
 @router.post("/tickets", response_model=TicketResponse, status_code=status.HTTP_201_CREATED)
@@ -469,6 +470,32 @@ async def ai_support_chat(
             reply=reply,
             intent="POLICY_QUERY",
             suggested_actions=["रिफ़ंड स्थिति देखें", "सहायता टिकट बनाएं"] if is_hi else ["Refund Status", "Create Ticket"]
+        )
+
+    # 4. Human Support Escalation / Customer Care Callback
+    elif any(k in q for k in ['callback', 'call back', 'call', 'care', 'human', 'agent', 'speak', 'talk', 'customer care', 'कस्टमर केयर', 'बात करनी है', 'कॉल करो', 'कॉल बैक']):
+        ticket = SupportTicket(
+            user_id=user_id,
+            order_id=latest_order.id if latest_order else None,
+            category='CUSTOMER_CARE_CALLBACK',
+            subject='Customer Care Callback Request',
+            message=req.query,
+            status='OPEN'
+        )
+        db.add(ticket)
+        await db.commit()
+        await db.refresh(ticket)
+        reply = (
+            f'आपकी कॉलबैक रिक्वेस्ट दर्ज कर ली गई है (टिकट #{ticket.id[-6:]})। जब कोई एजेंट उपलब्ध होगा, हमारी सपोर्ट टीम आपसे संपर्क करेगी।'
+            if is_hi else
+            f'Your callback request has been submitted (Ticket #{ticket.id[-6:]}). Our support team will contact you when an agent is available.'
+        )
+        return SupportChatResponse(
+            reply=reply,
+            intent='CALLBACK_REQUESTED',
+            ticket_id=ticket.id,
+            order_id=latest_order.id if latest_order else None,
+            suggested_actions=['मेरी टिकटें देखें', 'ऑर्डर ट्रैक करें'] if is_hi else ['My Support Tickets', 'Track Order']
         )
 
     # Default general guidance

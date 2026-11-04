@@ -155,3 +155,28 @@ async def test_order_scoped_chat_and_location_sharing():
         })
         assert runner_reply.status_code == 201
         assert runner_reply.json()["sender_role"] == "runner"
+
+
+@pytest.mark.asyncio
+async def test_ai_support_human_callback_escalation():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        ts = int(time.time() * 100) % 100000000
+        phone = f"95{ts:08d}"
+        headers = await issue_and_verify_test_token(client, phone, "customer")
+
+        # Ask for customer care callback
+        chat_res = await client.post("/api/v1/support/ai-chat", headers=headers, json={
+            "query": "I want to speak to customer care. Please callback.",
+            "language": "en"
+        })
+        assert chat_res.status_code == 200
+        data = chat_res.json()
+        assert data["intent"] == "CALLBACK_REQUESTED"
+        assert data["ticket_id"] is not None
+        assert "callback request has been submitted" in data["reply"]
+
+        # Verify genuine ticket in DB
+        tickets_res = await client.get("/api/v1/support/tickets", headers=headers)
+        assert tickets_res.status_code == 200
+        tickets = tickets_res.json()
+        assert any(t["id"] == data["ticket_id"] and t["category"] == "CUSTOMER_CARE_CALLBACK" for t in tickets)
