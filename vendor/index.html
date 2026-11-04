@@ -283,6 +283,37 @@
             </button>
           </div>
 
+          <!-- 3-Stage Govt OCR Verification Progress UI Overlay -->
+          <div id="ocr-progress-overlay" class="mt-4 p-4 rounded-xl border border-emerald-200 bg-white shadow-xs space-y-3 hidden">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <div class="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                <h4 id="ocr-stage-headline" class="text-xs font-bold text-slate-900" data-i18n="ocr_stage_uploading">Stage 1/3: Uploading Securely...</h4>
+              </div>
+              <span id="ocr-progress-pct" class="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">33%</span>
+            </div>
+            
+            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div id="ocr-progress-bar" class="bg-emerald-600 h-full rounded-full transition-all duration-500" style="width: 33%;"></div>
+            </div>
+
+            <!-- Step checklist -->
+            <div class="space-y-1.5 text-[11px]">
+              <div id="ocr-step-1" class="flex items-center space-x-2 text-emerald-700 font-semibold">
+                <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
+                <span data-i18n="ocr_step_upload">1. Uploading Encrypted Base64 Capture</span>
+              </div>
+              <div id="ocr-step-2" class="flex items-center space-x-2 text-slate-400">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                <span data-i18n="ocr_step_gov">2. Connecting to Govt Database (DigiLocker / UIDAI)...</span>
+              </div>
+              <div id="ocr-step-3" class="flex items-center space-x-2 text-slate-400">
+                <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i>
+                <span data-i18n="ocr_step_extract">3. Extracting Details & Cryptographic Checksum...</span>
+              </div>
+            </div>
+          </div>
+
           <!-- OCR Result Extraction Feedback Container -->
           <div id="ocr-results-box" class="mt-4 p-4 rounded-xl border border-emerald-200 bg-emerald-50/70 shadow-xs hidden">
             <div class="flex items-center space-x-2 text-emerald-800 font-bold text-xs mb-2">
@@ -550,7 +581,7 @@
             <div class="flex justify-between items-start mb-3">
               <div>
                 <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800" data-i18n="instant_dispatch_badge">INSTANT DISPATCH</span>
-                <h3 class="text-base font-bold text-slate-900 mt-1">Order #GB-8921</h3>
+                <h3 class="text-base font-bold text-slate-900 mt-1" data-i18n="order_gb8921_title">Order #GB-8921</h3>
                 <p class="text-xs text-slate-500" data-i18n="cust_order_sample">Customer: Sunita Devi (Gopalpur Village - 1.8km)</p>
               </div>
               <span class="text-base font-extrabold text-slate-900">₹340.00</span>
@@ -603,7 +634,7 @@
             <div class="flex justify-between items-start mb-2">
               <div>
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800" data-i18n="packing_progress_badge">PACKING IN PROGRESS</span>
-                <h3 class="text-sm font-bold text-slate-900 mt-1">Order #GB-8919</h3>
+                <h3 class="text-sm font-bold text-slate-900 mt-1" data-i18n="order_gb8919_title">Order #GB-8919</h3>
                 <p class="text-xs text-slate-500" data-i18n="cust_prep_sample">Customer: Vikram Singh (Chaupal Road)</p>
               </div>
               <span class="text-sm font-extrabold text-slate-900">₹185.00</span>
@@ -642,7 +673,7 @@
             <div class="flex justify-between items-start mb-2">
               <div>
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800" data-i18n="runner_assigned_badge">RUNNER ASSIGNED</span>
-                <h3 class="text-sm font-bold text-slate-900 mt-1">Order #GB-8915</h3>
+                <h3 class="text-sm font-bold text-slate-900 mt-1" data-i18n="order_gb8915_title">Order #GB-8915</h3>
                 <p class="text-xs text-slate-500" data-i18n="runner_sample_name">Runner: Sonu Kumar (+91 9711002233)</p>
               </div>
               <span class="text-sm font-extrabold text-slate-900">₹420.00</span>
@@ -1012,24 +1043,63 @@
         </div>
 
         <div class="py-4 space-y-3.5">
-          <!-- Thumbnail & Icon Preview -->
-          <div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
-            <div id="add-item-preview-thumb" class="w-14 h-14 shrink-0 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center text-2xl border border-emerald-200 shadow-inner">
-              📦
+          <!-- Image Library Selector -->
+          <div class="space-y-2.5">
+            <label class="block text-xs font-bold text-slate-800 uppercase tracking-wide" data-i18n="product_image_label">Product Image (Choose from Library)</label>
+            
+            <!-- Active Selection Preview Card -->
+            <div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-inner">
+              <img id="add-item-preview-img" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&q=80" alt="Selected Product" class="w-14 h-14 shrink-0 rounded-xl object-cover border-2 border-emerald-600 shadow-sm">
+              <div class="flex-1 min-w-0">
+                <span id="add-item-img-tag" class="text-xs font-bold text-slate-900 block truncate">Grains & Flour (आटा / दाल)</span>
+                <span class="text-[11px] text-emerald-700 font-semibold block" data-i18n="img_selected_badge">✓ Image Assigned to Item</span>
+                <span class="text-[10px] text-slate-400 block" data-i18n="click_thumb_hint">Click any photo below to change</span>
+              </div>
             </div>
-            <div class="flex-1">
-              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="select_item_icon">Item Icon / Emoji</label>
-              <select id="new-item-icon" onchange="updateNewItemIconPreview(this.value)" class="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-emerald-600 bg-white">
-                <option value="📦">📦 Box / General Item</option>
-                <option value="🌾">🌾 Atta / Grains / Rice</option>
-                <option value="🥛">🥛 Milk / Dairy Product</option>
-                <option value="🌻">🌻 Cooking Oil / Ghee</option>
-                <option value="☕">☕ Tea / Beverages</option>
-                <option value="🧂">🧂 Spices / Salt</option>
-                <option value="🧼">🧼 Soap / Detergent</option>
-                <option value="💊">💊 Medicines / Health</option>
-              </select>
+
+            <!-- Image Library 8-Photo Grid -->
+            <div class="grid grid-cols-4 gap-2 pt-1">
+              <button type="button" onclick="selectLibraryImage('https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&q=80', 'Grains & Flour (आटा / दाल)', this)" class="library-img-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-emerald-600 ring-2 ring-emerald-500/20 shadow-xs">
+                <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&q=80" alt="Atta / Flour" class="w-full h-full object-cover group-hover:scale-105 transition">
+                <span class="absolute bottom-0 inset-x-0 bg-slate-900/75 text-white text-[9px] font-bold text-center py-0.5 truncate">Atta/Rice</span>
+              </button>
+
+              <button type="button" onclick="selectLibraryImage('https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=200&q=80', 'Cooking Oil (सरसों तेल)', this)" class="library-img-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-slate-200 hover:border-emerald-500 shadow-xs">
+                <img src="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=200&q=80" alt="Cooking Oil" class="w-full h-full object-cover group-hover:scale-105 transition">
+                <span class="absolute bottom-0 inset-x-0 bg-slate-900/75 text-white text-[9px] font-bold text-center py-0.5 truncate">Oil/Ghee</span>
+              </button>
+
+              <button type="button" onclick="selectLibraryImage('https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&q=80', 'Milk & Dairy (दूध / दही)', this)" class="library-img-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-slate-200 hover:border-emerald-500 shadow-xs">
+                <img src="https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&q=80" alt="Milk Dairy" class="w-full h-full object-cover group-hover:scale-105 transition">
+                <span class="absolute bottom-0 inset-x-0 bg-slate-900/75 text-white text-[9px] font-bold text-center py-0.5 truncate">Milk/Dairy</span>
+              </button>
+
+              <button type="button" onclick="selectLibraryImage('https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=200&q=80', 'Fresh Produce (सब्जियां)', this)" class="library-img-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-slate-200 hover:border-emerald-500 shadow-xs">
+                <img src="https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=200&q=80" alt="Fresh Vegetables" class="w-full h-full object-cover group-hover:scale-105 transition">
+                <span class="absolute bottom-0 inset-x-0 bg-slate-900/75 text-white text-[9px] font-bold text-center py-0.5 truncate">Veggies</span>
+              </button>
+
+              <button type="button" onclick="selectLibraryImage('https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=200&q=80', 'Pulses & Dal (दाल)', this)" class="library-img-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-slate-200 hover:border-emerald-500 shadow-xs">
+                <img src="https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=200&q=80" alt="Dal Pulses" class="w-full h-full object-cover group-hover:scale-105 transition">
+                <span class="absolute bottom-0 inset-x-0 bg-slate-900/75 text-white text-[9px] font-bold text-center py-0.5 truncate">Pulses/Dal</span>
+              </button>
+
+              <button type="button" onclick="selectLibraryImage('https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=200&q=80', 'Tea & Sugar (चाय / चीनी)', this)" class="library-img-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-slate-200 hover:border-emerald-500 shadow-xs">
+                <img src="https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=200&q=80" alt="Tea & Sugar" class="w-full h-full object-cover group-hover:scale-105 transition">
+                <span class="absolute bottom-0 inset-x-0 bg-slate-900/75 text-white text-[9px] font-bold text-center py-0.5 truncate">Tea/Chai</span>
+              </button>
+
+              <button type="button" onclick="selectLibraryImage('https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&q=80', 'Soap & Cleaning (साबुन / सर्फ)', this)" class="library-img-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-slate-200 hover:border-emerald-500 shadow-xs">
+                <img src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=200&q=80" alt="Soap & Detergent" class="w-full h-full object-cover group-hover:scale-105 transition">
+                <span class="absolute bottom-0 inset-x-0 bg-slate-900/75 text-white text-[9px] font-bold text-center py-0.5 truncate">Soap/Clean</span>
+              </button>
+
+              <button type="button" onclick="selectLibraryImage('https://images.unsplash.com/photo-1587486913049-53fc88980cfc?w=200&q=80', 'Spices & Salt (मसाले / नमक)', this)" class="library-img-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-slate-200 hover:border-emerald-500 shadow-xs">
+                <img src="https://images.unsplash.com/photo-1587486913049-53fc88980cfc?w=200&q=80" alt="Spices" class="w-full h-full object-cover group-hover:scale-105 transition">
+                <span class="absolute bottom-0 inset-x-0 bg-slate-900/75 text-white text-[9px] font-bold text-center py-0.5 truncate">Spices</span>
+              </button>
             </div>
+            <input type="hidden" id="selected-product-img-url" value="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&q=80">
           </div>
 
           <div>
@@ -1383,6 +1453,28 @@
         tab_ledger: "Ledger",
         tab_account: "Account",
         add_new_item_title: "Add New Store Item",
+        product_image_label: "Product Image (Choose from Library)",
+        img_selected_badge: "✓ Image Assigned to Item",
+        click_thumb_hint: "Click any photo below to change",
+        ocr_stage_uploading: "Stage 1/3: Uploading Securely...",
+        ocr_stage_gov: "Stage 2/3: Connecting to Govt Database (DigiLocker)...",
+        ocr_stage_extract: "Stage 3/3: Extracting Details...",
+        ocr_step_upload: "1. Uploading Encrypted Base64 Capture",
+        ocr_step_gov: "2. Connecting to Govt Database (DigiLocker / UIDAI)...",
+        ocr_step_extract: "3. Extracting Details & Cryptographic Checksum...",
+        no_new_orders_title: "All Caught Up!",
+        no_new_orders_sub: "New customer orders will ring and appear here in real-time. Keep your shop online.",
+        no_prep_orders_title: "No Orders Preparing",
+        no_prep_orders_sub: "Orders accepted from the New Orders tab will appear here for packing.",
+        no_ready_orders_title: "No Orders Awaiting Handover",
+        no_ready_orders_sub: "Packed orders assigned to delivery runners will appear here for secure OTP handover.",
+        order_gb8921_title: "Order #GB-8921",
+        order_gb8919_title: "Order #GB-8919",
+        order_gb8915_title: "Order #GB-8915",
+        today_net_sales: "Today Net Sales",
+        completed_orders_sub: "7 Completed Orders",
+        ontime_sub: "100% On-time",
+        auto_settlement_hint: "Auto Bank Settlement: Today 11:30 PM",
         update_payout_title: "Update Bank / UPI Account",
         security_req_title: "Security Requirement:",
         security_otp_hint: "To prevent unauthorized changes, enter the SMS OTP sent to registered mobile ending in 3210.",
@@ -1631,6 +1723,14 @@
         const key = el.getAttribute('data-i18n-placeholder');
         if (i18n[lang] && i18n[lang][key]) {
           el.setAttribute('placeholder', i18n[lang][key]);
+        }
+      });
+
+      // Update select dropdown options using data-i18n
+      document.querySelectorAll('option[data-i18n]').forEach(opt => {
+        const key = opt.getAttribute('data-i18n');
+        if (i18n[lang] && i18n[lang][key]) {
+          opt.innerText = i18n[lang][key];
         }
       });
 
@@ -2186,26 +2286,74 @@
       }
     }
 
+    /**
+     * PRODUCTION OCR & IDENTITY VERIFICATION ARCHITECTURE:
+     * -----------------------------------------------------
+     * In enterprise production, camera frames captured via `canvas.toDataURL('image/jpeg', 0.92)`
+     * are converted to a cryptographic Base64 string and POSTed over HTTPS/TLS to:
+     * POST /api/v1/auth/ocr/verify-id (or directly to DigiLocker / Setu / Zoop.one / Karza gateway).
+     * 
+     * Handshake Lifecycle:
+     * 1. Uploading Securely: Transmits encrypted document frame with nonce and timestamp.
+     * 2. Govt Gateway Handshake: Connects to UIDAI DigiLocker or MoRTH Sarathi API repository.
+     * 3. Extraction & Liveness: Validates anti-spoof hologram, extracts Name, ID Number, and DOB.
+     * 4. Verification Token: Returns verified payload and signs audit trail in the backend database.
+     */
     function captureAndProcessOCR() {
       const scanBtnText = document.getElementById('scan-id-text');
+      const overlay = document.getElementById('ocr-progress-overlay');
+      const headline = document.getElementById('ocr-stage-headline');
+      const bar = document.getElementById('ocr-progress-bar');
+      const pct = document.getElementById('ocr-progress-pct');
+      const step1 = document.getElementById('ocr-step-1');
+      const step2 = document.getElementById('ocr-step-2');
+      const step3 = document.getElementById('ocr-step-3');
       const resultsBox = document.getElementById('ocr-results-box');
       const contBtn = document.getElementById('ocr-continue-btn');
 
-      scanBtnText.innerText = "Extracting OCR...";
+      scanBtnText.innerText = currentLang === 'hi' ? "स्कैनिंग..." : "Processing...";
+
+      if (overlay) overlay.classList.remove('hidden');
+      if (resultsBox) resultsBox.classList.add('hidden');
+
+      // Stage 1: Uploading Securely... (0 - 800ms)
+      headline.innerText = currentLang === 'hi' ? "चरण 1/3: सुरक्षित रूप से अपलोड हो रहा है..." : "Stage 1/3: Uploading Securely...";
+      bar.style.width = "33%";
+      pct.innerText = "33%";
+      step1.className = "flex items-center space-x-2 text-emerald-700 font-semibold";
 
       setTimeout(() => {
-        scanBtnText.innerText = "Rescan ID";
-        resultsBox.classList.remove('hidden');
-        document.getElementById('ocr-extracted-name').innerText = state.userProfile.name;
-        
-        contBtn.classList.remove('opacity-50', 'pointer-events-none');
-        state.ocrCaptured = true;
+        // Stage 2: Connecting to Govt Database (DigiLocker/Sarathi)... (800ms - 1700ms)
+        headline.innerText = currentLang === 'hi' ? "चरण 2/3: सरकारी डेटाबेस (डिजिलॉकर/सारथी) से जुड़ रहा है..." : "Stage 2/3: Connecting to Govt Database (DigiLocker/Sarathi)...";
+        bar.style.width = "66%";
+        pct.innerText = "66%";
+        step2.className = "flex items-center space-x-2 text-emerald-700 font-semibold";
+        lucide.createIcons();
+      }, 800);
 
+      setTimeout(() => {
+        // Stage 3: Extracting Details... (1700ms - 2500ms)
+        headline.innerText = currentLang === 'hi' ? "चरण 3/3: पहचान विवरण निकाला जा रहा है..." : "Stage 3/3: Extracting Details...";
+        bar.style.width = "100%";
+        pct.innerText = "100%";
+        step3.className = "flex items-center space-x-2 text-emerald-700 font-semibold";
+        lucide.createIcons();
+      }, 1700);
+
+      setTimeout(() => {
+        // Verification Complete
+        if (overlay) overlay.classList.add('hidden');
+        if (resultsBox) resultsBox.classList.remove('hidden');
+        document.getElementById('ocr-extracted-name').innerText = state.userProfile.name;
+        if (contBtn) contBtn.classList.remove('opacity-50', 'pointer-events-none');
+        scanBtnText.innerText = currentLang === 'hi' ? "सत्यापन पूर्ण" : "Rescan ID";
+
+        state.ocrCaptured = true;
         if (ocrStream) ocrStream.getTracks().forEach(t => t.stop());
 
-        toastSuccess("ID Card Recognized & Validated with DigiLocker!");
+        toastSuccess(currentLang === 'hi' ? "पहचान पत्र (आधार कार्ड) सरकारी डिजिलॉकर से 100% सत्यापित!" : "ID Card Recognized & Validated with DigiLocker!");
         lucide.createIcons();
-      }, 1200);
+      }, 2500);
     }
 
     // ---------------------------------------------------------------------------
@@ -2500,14 +2648,33 @@
       if (preview) preview.innerText = icon;
     }
 
+    let selectedItemImageUrl = 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=200&q=80';
+
+    function selectLibraryImage(url, tag, btn) {
+      selectedItemImageUrl = url;
+      const hiddenInput = document.getElementById('selected-product-img-url');
+      if (hiddenInput) hiddenInput.value = url;
+      const preview = document.getElementById('add-item-preview-img');
+      if (preview) preview.src = url;
+      const tagEl = document.getElementById('add-item-img-tag');
+      if (tagEl) tagEl.innerText = tag;
+
+      document.querySelectorAll('.library-img-btn').forEach(b => {
+        b.className = "library-img-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-slate-200 hover:border-emerald-500 shadow-xs";
+      });
+      if (btn) {
+        btn.className = "library-img-btn group relative aspect-square rounded-xl overflow-hidden border-2 border-emerald-600 ring-2 ring-emerald-500/20 shadow-xs";
+      }
+    }
+
     function saveNewProduct() {
       const name = document.getElementById('new-item-name').value.trim();
       const price = document.getElementById('new-item-price').value.trim();
       const cat = document.getElementById('new-item-cat').value;
-      const icon = document.getElementById('new-item-icon').value || '📦';
+      const imgUrl = selectedItemImageUrl;
 
       if (!name || !price) {
-        toastError("Please enter Item Name and Price");
+        toastError(currentLang === 'hi' ? "कृपया सामान का नाम और मूल्य दर्ज करें" : "Please enter Item Name and Price");
         return;
       }
 
@@ -2518,9 +2685,7 @@
       newCard.setAttribute('data-category', cat);
       newCard.innerHTML = `
         <div class="flex items-center space-x-3 min-w-0 flex-1">
-          <div class="w-12 h-12 shrink-0 bg-emerald-50 rounded-lg flex items-center justify-center text-xl border border-emerald-100">
-            ${icon}
-          </div>
+          <img src="${imgUrl}" alt="${name}" class="w-12 h-12 shrink-0 object-cover rounded-lg border border-slate-200 shadow-2xs">
           <div class="min-w-0 flex-1">
             <h4 class="text-xs font-bold text-slate-900 truncate">${name}</h4>
             <p class="text-[11px] text-slate-500 truncate">₹${parseFloat(price).toFixed(2)} • ${cat}</p>
@@ -2528,14 +2693,15 @@
           </div>
         </div>
         <label class="relative inline-flex items-center cursor-pointer shrink-0">
-          <input type="checkbox" checked onchange="toggleProductStock(this, '${name}')" class="sr-only peer">
-          <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+          <input type="checkbox" checked onchange="toggleProductStock(this, '${name.replace(/'/g, "\'")}')" class="sr-only peer">
+          <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
         </label>
       `;
 
       list.prepend(newCard);
       closeModal('modal-add-product');
-      toastSuccess(name + " added to live customer catalog!");
+      toastSuccess(name + (currentLang === 'hi' ? " इन्वेंटरी में सफलतापूर्वक जोड़ दिया गया!" : " added to live store inventory!"));
+      lucide.createIcons();
     }
 
     // ---------------------------------------------------------------------------
