@@ -1,46 +1,2063 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
-
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GaonBazaar Runner | Hyperlocal Delivery Partner</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            },
+            runner: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="runner">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-  <title>runner</title>
-  <link rel="manifest" href="manifest.json">
+  <!-- Toastify CSS & JS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @keyframes mission-radar {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .radar-pulse {
+      animation: mission-radar 2s infinite ease-in-out;
+    }
+    @keyframes alert-pulse {
+      0%, 100% { border-color: rgba(37, 99, 235, 0.4); box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+      50% { border-color: rgba(37, 99, 235, 1); box-shadow: 0 0 15px 3px rgba(37, 99, 235, 0.3); }
+    }
+    .pulse-mission {
+      animation: alert-pulse 1.8s infinite;
+    }
+  </style>
 </head>
-<body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
+<body class="bg-slate-900 flex justify-center min-h-screen text-slate-800 antialiased">
 
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
-  <script src="flutter_bootstrap.js" async></script>
+  <!-- Mobile Container Shell -->
+  <div id="app-shell" class="w-full max-w-md bg-slate-50 min-h-screen flex flex-col shadow-2xl relative border-x border-slate-200 overflow-x-hidden">
+
+    <!-- ========================================================================= -->
+    <!-- TOP NAVIGATION BAR -->
+    <!-- ========================================================================= -->
+    <header id="top-nav" class="sticky top-0 z-40 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-xs">
+      <div class="flex items-center space-x-2">
+        <button id="nav-back-btn" onclick="handleHistoryBack()" class="hidden p-1.5 rounded-full hover:bg-slate-100 text-slate-600 transition active:scale-95" aria-label="Go Back">
+          <i data-lucide="arrow-left" class="w-5 h-5"></i>
+        </button>
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+            R
+          </div>
+          <div>
+            <h1 id="nav-title" class="text-base font-bold text-slate-900 leading-tight">GaonBazaar</h1>
+            <p id="nav-subtitle" class="text-[11px] font-semibold text-blue-600 tracking-wide">RUNNER PARTNER</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Language Switcher Pill -->
+      <div class="flex items-center space-x-2">
+        <button onclick="toggleAppLanguage()" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 flex items-center space-x-1 active:scale-95 transition">
+          <i data-lucide="globe" class="w-3.5 h-3.5 text-slate-500"></i>
+          <span id="current-lang-label">हिन्दी</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ========================================================================= -->
+    <!-- MAIN CONTENT VIEWPORT -->
+    <!-- ========================================================================= -->
+    <main id="main-viewport" class="flex-1 flex flex-col relative pb-20 overflow-y-auto">
+
+      <!-- ======================================================================= -->
+      <!-- ONBOARDING FLOW (PHASE 1: 7 STRICT SCREENS) -->
+      <!-- ======================================================================= -->
+      
+      <!-- PAGE 1: LANGUAGE SELECTION -->
+      <div id="screen-onboarding-1" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
+        <div class="pt-6 text-center">
+          <div class="w-20 h-20 bg-blue-100 text-blue-700 rounded-3xl mx-auto flex items-center justify-center shadow-inner mb-5">
+            <i data-lucide="bike" class="w-10 h-10"></i>
+          </div>
+          <h2 class="text-2xl font-extrabold text-slate-900 mb-2" data-i18n="select_language_title">Choose Your Language</h2>
+          <p class="text-sm text-slate-500 mb-8" data-i18n="select_language_sub">अपनी पसंदीदा भाषा चुनें / Select preferred language to continue</p>
+          
+          <div class="space-y-4 max-w-xs mx-auto">
+            <button onclick="setLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-xl border-2 border-blue-600 bg-blue-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
+              <div class="flex items-center space-x-3">
+                <span class="text-xl">🇬🇧</span>
+                <span class="text-base font-bold">English</span>
+              </div>
+              <i data-lucide="check-circle-2" class="w-5 h-5 text-blue-600"></i>
+            </button>
+
+            <button onclick="setLanguage('hi')" id="lang-btn-hi" class="w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
+              <div class="flex items-center space-x-3">
+                <span class="text-xl">🇮🇳</span>
+                <span class="text-base font-bold">हिन्दी (Hindi)</span>
+              </div>
+              <i data-lucide="circle" class="w-5 h-5 text-slate-300"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-6">
+          <button onclick="navigateTo('onboarding-2')" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+            <span data-i18n="continue_btn">Continue</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 2: MOBILE REGISTRATION & OTP -->
+      <div id="screen-onboarding-2" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
+        <div>
+          <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
+            <span class="px-2 py-0.5 bg-blue-100 rounded">Step 2 of 7</span>
+            <span>Registration</span>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="mobile_reg_title">Enter Mobile Number</h2>
+          <p class="text-sm text-slate-500 mb-6" data-i18n="mobile_reg_sub">We will send a 4-digit verification code to your phone</p>
+
+          <div class="mb-5">
+            <label class="block text-xs font-semibold text-slate-700 mb-1.5" data-i18n="phone_number_label">Phone Number</label>
+            <div class="flex rounded-xl border border-slate-300 overflow-hidden focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 bg-white shadow-xs">
+              <span class="inline-flex items-center px-3.5 bg-slate-50 text-slate-600 text-sm font-semibold border-r border-slate-300">+91</span>
+              <input type="tel" id="runner-phone-input" maxlength="10" placeholder="9711002233" value="9711002233" class="w-full px-3.5 py-3 text-slate-900 font-medium placeholder-slate-400 focus:outline-none">
+            </div>
+          </div>
+
+          <button id="send-otp-btn" onclick="sendMobileOTP()" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-semibold shadow-sm transition active:scale-98 flex items-center justify-center space-x-2 mb-6">
+            <span id="send-otp-text" data-i18n="send_otp_btn">Send OTP</span>
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+
+          <div id="otp-container" class="space-y-3">
+            <label class="block text-xs font-semibold text-slate-700" data-i18n="enter_otp_label">Enter 4-Digit OTP</label>
+            <div class="flex justify-between space-x-3">
+              <input type="text" maxlength="1" id="otp-1" oninput="handleOtpInput(1, event)" class="w-14 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs" value="1">
+              <input type="text" maxlength="1" id="otp-2" oninput="handleOtpInput(2, event)" class="w-14 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs" value="2">
+              <input type="text" maxlength="1" id="otp-3" oninput="handleOtpInput(3, event)" class="w-14 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs" value="3">
+              <input type="text" maxlength="1" id="otp-4" oninput="handleOtpInput(4, event)" class="w-14 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs" value="4">
+            </div>
+            <div class="flex justify-between items-center text-xs text-slate-500 pt-1">
+              <span>Testing OTP: <strong class="text-blue-700">1234</strong></span>
+              <button onclick="sendMobileOTP()" class="text-blue-600 font-semibold hover:underline" data-i18n="resend_otp">Resend OTP</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-6">
+          <button id="verify-otp-btn" onclick="verifyMobileOTP()" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+            <span id="verify-btn-text" data-i18n="verify_proceed">Verify & Proceed</span>
+            <i data-lucide="check" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 3: BASIC DETAILS -->
+      <div id="screen-onboarding-3" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
+        <div>
+          <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
+            <span class="px-2 py-0.5 bg-blue-100 rounded">Step 3 of 7</span>
+            <span>Rider Information</span>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="runner_details_title">Delivery Partner Details</h2>
+          <p class="text-sm text-slate-500 mb-6" data-i18n="runner_details_sub">Enter your vehicle and emergency contacts</p>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="full_name_label">Full Name (as per Driving License / Aadhaar)</label>
+              <input type="text" id="runner-fullname" value="Sonu Kumar Verma" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="vehicle_type_label">Vehicle Type</label>
+              <select id="runner-vehicletype" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+                <option value="Motorcycle (Petrol Bike)">Motorcycle / Hero Splendor (Petrol Bike)</option>
+                <option value="Electric Scooter (EV)">Electric Scooter / EV 2-Wheeler</option>
+                <option value="Bicycle (Standard Cycle)">Bicycle (साइकिल)</option>
+                <option value="Auto / 3-Wheeler">Auto / E-Rickshaw</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="vehicle_number_label">Vehicle Registration Number</label>
+              <input type="text" id="runner-vehicleno" value="UP 32 BK 4821" placeholder="e.g. UP 32 AB 1234" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="emergency_contact_label">Emergency Alternate Contact</label>
+              <input type="tel" id="runner-emergency" value="9811445566" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-6">
+          <button onclick="saveRunnerDetailsAndProceed()" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+            <span data-i18n="continue_btn">Continue</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 4: DIGITAL OCR VERIFICATION UI -->
+      <div id="screen-onboarding-4" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
+        <div>
+          <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
+            <span class="px-2 py-0.5 bg-blue-100 rounded">Step 4 of 7</span>
+            <span>Govt ID OCR</span>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="ocr_title_runner">Scan Driving License or Aadhaar</h2>
+          <p class="text-sm text-slate-500 mb-4" data-i18n="ocr_sub_runner">Driving License, Voter ID, or Aadhaar Card</p>
+
+          <!-- Camera Stream Frame with Rectangular Cutout Overlay -->
+          <div class="relative w-full aspect-[4/3] bg-black rounded-2xl overflow-hidden shadow-lg border border-slate-700 flex items-center justify-center">
+            <video id="ocr-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
+            <canvas id="ocr-canvas" class="hidden"></canvas>
+            
+            <div class="absolute inset-0 border-2 border-blue-400/80 rounded-xl m-4 pointer-events-none flex flex-col items-center justify-between p-3 bg-black/20">
+              <span class="bg-black/60 text-blue-300 text-[11px] font-semibold px-2 py-0.5 rounded-full" data-i18n="ocr_place_frame">Place your ID card inside the frame</span>
+              <div class="w-full flex justify-between text-blue-400 text-xs px-2">
+                <span>[ FRONT PHOTO & DL NUMBER ]</span>
+                <i data-lucide="scan-line" class="w-4 h-4 animate-pulse"></i>
+              </div>
+            </div>
+
+            <!-- Fallback snapshot container -->
+            <div id="ocr-fallback" class="absolute inset-0 bg-slate-800 flex flex-col items-center justify-center p-4 text-center hidden">
+              <i data-lucide="credit-card" class="w-12 h-12 text-slate-400 mb-2"></i>
+              <p class="text-xs text-slate-300">Camera simulation preview ready.</p>
+              <p class="text-[11px] text-blue-400 font-semibold mt-1">Ready for high-resolution OCR scan</p>
+            </div>
+          </div>
+
+          <div class="mt-4 flex space-x-2">
+            <button onclick="startOCRCamera()" class="flex-1 py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold rounded-lg flex items-center justify-center space-x-1">
+              <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+              <span>Activate Camera</span>
+            </button>
+            <button id="scan-id-btn" onclick="captureAndProcessOCR()" class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-1 shadow-sm active:scale-95">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span id="scan-id-text" data-i18n="scan_id_btn">Capture & Scan ID</span>
+            </button>
+          </div>
+
+          <div id="ocr-results-box" class="mt-4 p-4 rounded-xl border border-blue-200 bg-blue-50/70 shadow-xs hidden">
+            <div class="flex items-center space-x-2 text-blue-800 font-bold text-xs mb-2">
+              <i data-lucide="badge-check" class="w-4 h-4 text-blue-600"></i>
+              <span data-i18n="ocr_extracted_success">Details Extracted Automatically</span>
+            </div>
+            <div class="space-y-1.5 text-xs">
+              <div class="flex justify-between">
+                <span class="text-slate-500">Document Type:</span>
+                <span class="font-semibold text-slate-800">Motor Driving License (Sarathi)</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500">Rider Name:</span>
+                <span id="ocr-extracted-name" class="font-bold text-slate-900">Sonu Kumar Verma</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500">DL Number:</span>
+                <span id="ocr-extracted-id" class="font-mono font-bold text-slate-900">UP32-2021-0089421</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500">Verification Status:</span>
+                <span class="text-blue-700 font-bold bg-blue-100 px-1.5 py-0.5 rounded text-[10px]">SARATHI VERIFIED (100% MATCH)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-6">
+          <button id="ocr-continue-btn" onclick="navigateTo('onboarding-5')" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2 opacity-50 pointer-events-none">
+            <span data-i18n="confirm_continue">Confirm & Proceed</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 5: LIVENESS CHECK (OVAL CAMERA CUTOUT) -->
+      <div id="screen-onboarding-5" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
+        <div>
+          <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
+            <span class="px-2 py-0.5 bg-blue-100 rounded">Step 5 of 7</span>
+            <span>Face Match & Liveness</span>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="liveness_title">Live Face Verification</h2>
+          <p class="text-sm text-slate-500 mb-4" data-i18n="liveness_sub">Position face inside oval frame and blink</p>
+
+          <div class="relative w-full aspect-[3/4] max-w-[280px] mx-auto bg-black rounded-3xl overflow-hidden shadow-xl border border-slate-700 flex items-center justify-center">
+            <video id="liveness-video" autoplay playsinline muted class="w-full h-full object-cover transform -scale-x-100"></video>
+            <canvas id="liveness-canvas" class="hidden"></canvas>
+
+            <div class="absolute inset-0 flex flex-col items-center justify-between p-4 pointer-events-none">
+              <span id="liveness-instruction" class="bg-black/70 text-blue-400 text-xs font-semibold px-3 py-1 rounded-full shadow" data-i18n="blink_instruction">
+                👁️ Blink your eyes to verify
+              </span>
+              <div class="w-48 h-64 border-4 border-dashed border-blue-400 rounded-[50%] shadow-[0_0_20px_rgba(59,130,246,0.3)] animate-pulse"></div>
+              <span class="text-[11px] text-white/80 font-medium">Keep face well-lit</span>
+            </div>
+
+            <div id="liveness-fallback" class="absolute inset-0 bg-slate-800 flex flex-col items-center justify-center p-4 text-center hidden">
+              <img id="liveness-preview-img" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80" alt="Rider Selfie" class="w-36 h-48 object-cover rounded-[50%] border-4 border-blue-500 shadow-md mb-2">
+              <span class="text-xs text-blue-400 font-bold">Liveness Verified 99.6%</span>
+            </div>
+          </div>
+
+          <div class="mt-4 flex space-x-2">
+            <button onclick="startLivenessCamera()" class="flex-1 py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold rounded-lg flex items-center justify-center space-x-1">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Open Selfie Cam</span>
+            </button>
+            <button id="capture-selfie-btn" onclick="captureLivenessSelfie()" class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-1 shadow-sm active:scale-95">
+              <i data-lucide="camera" class="w-3.5 h-3.5"></i>
+              <span data-i18n="capture_selfie_btn">Blink & Capture</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-6">
+          <button id="liveness-continue-btn" onclick="navigateTo('onboarding-6')" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2 opacity-50 pointer-events-none">
+            <span data-i18n="continue_btn">Continue</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 6: BANK PAYOUT SETUP (WITH ₹1 PENNY DROP) -->
+      <div id="screen-onboarding-6" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
+        <div>
+          <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
+            <span class="px-2 py-0.5 bg-blue-100 rounded">Step 6 of 7</span>
+            <span>Payout Settlement</span>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="payout_title">Bank / UPI Settlement</h2>
+          <p class="text-sm text-slate-500 mb-5" data-i18n="runner_payout_sub">Direct per-delivery payouts credited daily to your account</p>
+
+          <div class="flex p-1 bg-slate-200 rounded-xl mb-5">
+            <button id="payout-tab-bank" onclick="switchPayoutMode('bank')" class="flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5">
+              <i data-lucide="landmark" class="w-4 h-4 text-blue-600"></i>
+              <span data-i18n="bank_tab">Bank Account</span>
+            </button>
+            <button id="payout-tab-upi" onclick="switchPayoutMode('upi')" class="flex-1 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5">
+              <i data-lucide="smartphone" class="w-4 h-4"></i>
+              <span data-i18n="upi_tab">UPI ID / VPA</span>
+            </button>
+          </div>
+
+          <div id="form-bank-payout" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="acc_num_label">Bank Account Number</label>
+              <input type="text" id="bank-acc-no" value="30200889912345" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="ifsc_label">IFSC Code</label>
+              <input type="text" id="bank-ifsc" value="SBIN0004567" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="beneficiary_name_label">Beneficiary Account Holder Name</label>
+              <input type="text" id="bank-name" value="SONU KUMAR VERMA" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+            </div>
+          </div>
+
+          <div id="form-upi-payout" class="space-y-4 hidden">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="upi_id_label">Virtual Payment Address (UPI ID)</label>
+              <input type="text" id="upi-vpa" placeholder="9711002233@upi" value="sonukumar@paytm" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <span class="text-[11px] text-slate-500 mt-1 block">Supported: GPay, PhonePe, Paytm, BHIM</span>
+            </div>
+          </div>
+
+          <div class="mt-5 p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center space-x-2">
+                <span class="text-base">💳</span>
+                <span class="text-xs font-bold text-slate-800" data-i18n="penny_drop_title">Instant ₹1 Penny Drop Verification</span>
+              </div>
+              <span id="penny-badge" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-800">PENDING</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mb-3" data-i18n="penny_drop_sub">We will deposit ₹1 to verify active beneficiary ownership name match.</p>
+            <button id="penny-drop-btn" onclick="executePennyDrop()" class="w-full py-2.5 px-4 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-bold shadow-xs active:scale-98 transition flex items-center justify-center space-x-2">
+              <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+              <span id="penny-btn-text" data-i18n="verify_penny_btn">Run ₹1 Penny Verification</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-6">
+          <button id="payout-continue-btn" onclick="navigateTo('onboarding-7')" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2 opacity-50 pointer-events-none">
+            <span data-i18n="save_complete_btn">Save & Complete Application</span>
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- PAGE 7: UNDER REVIEW (LOCKED SCREEN) -->
+      <div id="screen-onboarding-7" class="app-screen flex-1 p-6 flex flex-col justify-between text-center hidden">
+        <div class="pt-10 flex flex-col items-center">
+          <div class="w-24 h-24 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-6 shadow-inner relative">
+            <i data-lucide="hourglass" class="w-12 h-12 animate-pulse"></i>
+            <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+              <i data-lucide="lock" class="w-4 h-4"></i>
+            </div>
+          </div>
+
+          <h2 class="text-2xl font-extrabold text-slate-900 mb-2" data-i18n="under_review_title">Application Under Review</h2>
+          <p class="text-sm text-slate-600 max-w-xs mb-6" data-i18n="under_review_sub_runner">
+            Your DL driving record, face liveness snapshot, and ₹1 penny drop bank verification have been submitted securely to GaonBazaar Operations.
+          </p>
+
+          <div class="w-full bg-white p-4 rounded-xl border border-slate-200 text-left space-y-2.5 shadow-xs mb-6">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-500 font-medium">Application ID:</span>
+              <span class="font-mono font-bold text-slate-800">GB-RUN-39102</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-500 font-medium">Estimated Review:</span>
+              <span class="font-semibold text-blue-700">~ 2 to 4 Hours</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-500 font-medium">Police Clearance:</span>
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800">SELF-ATTESTED</span>
+            </div>
+          </div>
+
+          <!-- DEMO / TEST BYPASS NOTICE -->
+          <div class="p-3 bg-blue-50 rounded-lg border border-blue-200 text-xs text-blue-800 text-center w-full">
+            <span class="font-bold">Developer / Reviewer Mode:</span>
+            <p class="text-[11px] text-blue-700 mt-0.5">Click below to simulate instant Super Admin approval and test the live Runner dashboard.</p>
+          </div>
+        </div>
+
+        <div class="pt-6 space-y-2">
+          <button onclick="simulateAdminApprovalAndOpenDashboard()" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+            <i data-lucide="unlock" class="w-4 h-4"></i>
+            <span data-i18n="enter_dashboard_demo">Approve & Open Runner Hub</span>
+          </button>
+        </div>
+      </div>
+
+
+      <!-- ======================================================================= -->
+      <!-- RUNNER MAIN DASHBOARD (PHASE 2: EXACT 4 TABS) -->
+      <!-- ======================================================================= -->
+      
+      <!-- TAB 1: MISSIONS (HOME) -->
+      <div id="tab-missions" class="dashboard-tab flex-1 flex flex-col hidden">
+        
+        <!-- Massive Duty ON / OFF Toggle Hero Card -->
+        <div class="p-4 bg-white border-b border-slate-200 shadow-xs">
+          <div id="duty-hero-card" class="p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex items-center justify-between shadow-md transition duration-300">
+            <div class="flex items-center space-x-3">
+              <div id="duty-radar-circle" class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center radar-pulse">
+                <i data-lucide="navigation" class="w-6 h-6 text-white"></i>
+              </div>
+              <div>
+                <h3 id="duty-status-text" class="text-lg font-extrabold tracking-wide" data-i18n="duty_on">ON DUTY</h3>
+                <p id="duty-status-sub" class="text-xs text-blue-100" data-i18n="receiving_missions">Receiving nearby delivery missions</p>
+              </div>
+            </div>
+
+            <!-- Massive Custom Switch -->
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="runner-duty-toggle" checked onchange="handleDutyToggle(this)" class="sr-only peer">
+              <div class="w-14 h-7 bg-blue-900/60 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-400"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Incoming Missions Feed -->
+        <div id="missions-feed" class="p-4 space-y-4">
+          
+          <!-- Sound alert banner -->
+          <div id="runner-alert-banner" class="bg-amber-500 text-white p-3 rounded-xl flex items-center justify-between shadow-md">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="bell-ring" class="w-5 h-5 animate-bounce"></i>
+              <span class="text-xs font-bold" data-i18n="new_mission_alert">New Delivery Mission Ringing!</span>
+            </div>
+            <button onclick="silenceAlertSound()" class="text-xs bg-amber-700 hover:bg-amber-800 px-2 py-1 rounded font-semibold active:scale-95" data-i18n="mute_btn">Mute</button>
+          </div>
+
+          <!-- Pulsing Mission Card -->
+          <div id="mission-card-201" class="bg-white rounded-2xl border-2 border-blue-500 p-4 shadow-md pulse-mission transition">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 text-blue-800">HOT MISSION • 2.8 KM TOTAL</span>
+                <h3 class="text-base font-bold text-slate-900 mt-1">Mission #GB-8921</h3>
+                <span class="text-xs text-slate-500 font-medium">Grocery Delivery • 4 Items (6.2 kg)</span>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-extrabold text-emerald-600">₹55.00</span>
+                <span class="block text-[10px] font-bold text-slate-400">₹45 Run + ₹10 Tip</span>
+              </div>
+            </div>
+
+            <!-- Route Legs Details -->
+            <div class="border-t border-b border-slate-100 py-3 my-2 space-y-2.5 text-xs">
+              <!-- Pickup Leg -->
+              <div class="flex items-start space-x-2.5">
+                <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                  <i data-lucide="store" class="w-3.5 h-3.5"></i>
+                </div>
+                <div class="flex-1">
+                  <div class="flex justify-between items-center">
+                    <span class="font-bold text-slate-800">Sharma Kirana Store</span>
+                    <span class="text-emerald-700 font-semibold text-[11px]">1.1 km away</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500">Shop #4, Main Village Market, Gopalpur</p>
+                </div>
+              </div>
+
+              <!-- Dropoff Leg -->
+              <div class="flex items-start space-x-2.5">
+                <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 mt-0.5">
+                  <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                </div>
+                <div class="flex-1">
+                  <div class="flex justify-between items-center">
+                    <span class="font-bold text-slate-800">Sunita Devi (Customer)</span>
+                    <span class="text-blue-700 font-semibold text-[11px]">1.7 km from shop</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500">House 42, Near Primary School, Gopalpur</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Accept / Reject Actions -->
+            <div class="flex space-x-3 pt-1">
+              <button onclick="rejectMission('GB-8921')" class="flex-1 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs border border-rose-200 transition active:scale-95" data-i18n="pass_mission_btn">
+                Pass
+              </button>
+              <button onclick="acceptMission('GB-8921')" class="flex-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center space-x-1.5" data-i18n="accept_mission_btn">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                <span>Accept Run (₹55)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Offline / Idle Banner when no mission -->
+          <div id="idle-status-box" class="p-6 bg-white rounded-2xl border border-slate-200 text-center space-y-2 hidden shadow-xs">
+            <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
+              <i data-lucide="compass" class="w-6 h-6 animate-spin"></i>
+            </div>
+            <h4 class="text-sm font-bold text-slate-800">Searching for Next Mission...</h4>
+            <p class="text-xs text-slate-500">Stay within the Gopalpur 8km hub radius for fastest assignments.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- TAB 2: ACTIVE RUN (STEPPER WORKFLOW) -->
+      <div id="tab-activerun" class="dashboard-tab flex-1 p-4 space-y-4 hidden">
+        <div>
+          <div class="flex justify-between items-center">
+            <h2 class="text-lg font-bold text-slate-900" data-i18n="active_run_title">Active Delivery Mission</h2>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">ORDER #GB-8921</span>
+          </div>
+          <p class="text-xs text-slate-500" data-i18n="active_run_sub">Complete steps in sequence with Google Maps</p>
+        </div>
+
+        <!-- STEP 1: NAVIGATE TO VENDOR -->
+        <div id="run-step-1" class="bg-white p-4 rounded-2xl border-2 border-emerald-500 shadow-xs space-y-3">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-extrabold flex items-center justify-center">1</span>
+              <h3 class="text-sm font-bold text-slate-900" data-i18n="step_1_title">Pickup at Vendor Shop</h3>
+            </div>
+            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">IN PROGRESS</span>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
+            <h4 class="font-bold text-slate-900">Sharma Kirana & General Store</h4>
+            <p class="text-slate-500">Shop #4, Main Village Market • +91 9876543210</p>
+            <div class="pt-2 flex space-x-2">
+              <!-- Google Maps Link -->
+              <a href="https://maps.google.com/?q=26.8467,80.9462" target="_blank" class="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
+                <i data-lucide="navigation-2" class="w-3.5 h-3.5"></i>
+                <span data-i18n="nav_to_vendor">Navigate to Vendor</span>
+              </a>
+              <a href="tel:9876543210" class="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-bold flex items-center justify-center space-x-1">
+                <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                <span>Call</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Pickup OTP for Vendor -->
+          <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex justify-between items-center">
+            <div>
+              <span class="text-[11px] font-medium text-emerald-900 block" data-i18n="pickup_otp_label">Share Pickup OTP with Vendor:</span>
+              <span class="text-xl font-mono font-extrabold text-emerald-800 tracking-wider">5821</span>
+            </div>
+            <button onclick="confirmVendorPickup()" class="py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-xs active:scale-95 transition" data-i18n="confirm_pickup_btn">
+              Order Picked Up
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2: NAVIGATE TO CUSTOMER & DELIVERY OTP -->
+        <div id="run-step-2" class="bg-white p-4 rounded-2xl border border-slate-200 opacity-60 pointer-events-none shadow-xs space-y-3 transition">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-extrabold flex items-center justify-center">2</span>
+              <h3 class="text-sm font-bold text-slate-900" data-i18n="step_2_title">Deliver to Customer</h3>
+            </div>
+            <span id="step-2-status-badge" class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">WAITING PICKUP</span>
+          </div>
+
+          <div class="p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
+            <div class="flex justify-between">
+              <h4 class="font-bold text-slate-900">Sunita Devi</h4>
+              <span class="px-2 py-0.5 text-[10px] font-extrabold rounded bg-amber-100 text-amber-900">COLLECT CASH: ₹340</span>
+            </div>
+            <p class="text-slate-500">House 42, Near Primary School, Gopalpur Village</p>
+            <div class="pt-2 flex space-x-2">
+              <!-- Google Maps Link -->
+              <a href="https://maps.google.com/?q=26.8500,80.9500" target="_blank" class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
+                <i data-lucide="navigation-2" class="w-3.5 h-3.5"></i>
+                <span data-i18n="nav_to_customer">Navigate to Customer</span>
+              </a>
+              <a href="tel:9811224488" class="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-bold flex items-center justify-center space-x-1">
+                <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                <span>Call</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Customer 4-Digit Delivery OTP Input Box -->
+          <div class="p-3.5 bg-blue-50/80 rounded-xl border border-blue-200 space-y-2">
+            <div class="flex items-center space-x-1.5 text-xs font-bold text-blue-900">
+              <i data-lucide="shield-check" class="w-4 h-4 text-blue-600"></i>
+              <span data-i18n="enter_cust_otp">Verify Customer's 4-Digit Delivery OTP</span>
+            </div>
+            <div class="flex space-x-2">
+              <input type="text" id="cust-delivery-otp" maxlength="4" placeholder="7412" class="flex-1 px-3 py-2 text-center font-mono font-bold text-lg tracking-widest border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+              <button onclick="verifyCustomerDeliveryAndFinish('GB-8921')" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm active:scale-95 transition" data-i18n="complete_run_btn">
+                Deliver
+              </button>
+            </div>
+            <span class="text-[10px] text-blue-600 block">Ask the customer for the delivery OTP (Demo: 7412)</span>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- TAB 3: LEDGER (EARNINGS & COD DEPOSITS) -->
+      <div id="tab-ledger" class="dashboard-tab flex-1 p-4 space-y-4 hidden">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900" data-i18n="ledger_title">Runner Earnings & COD Ledger</h2>
+          <p class="text-xs text-slate-500" data-i18n="runner_ledger_sub">Track completed missions, payouts and cash collections</p>
+        </div>
+
+        <!-- 3 Financial Cards -->
+        <div class="grid grid-cols-3 gap-2.5">
+          <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
+            <span class="text-[10px] font-semibold text-slate-500 uppercase block" data-i18n="today_earnings">Earnings</span>
+            <span class="text-base font-extrabold text-blue-600 mt-0.5 block">₹560</span>
+            <span class="text-[9px] text-emerald-600 font-bold">11 Deliveries</span>
+          </div>
+
+          <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 shadow-xs text-center">
+            <span class="text-[10px] font-semibold text-amber-700 uppercase block" data-i18n="cod_cash_hand">COD in Hand</span>
+            <span class="text-base font-extrabold text-amber-800 mt-0.5 block">₹1,280</span>
+            <span class="text-[9px] text-amber-700 font-bold">Deposit at Hub</span>
+          </div>
+
+          <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
+            <span class="text-[10px] font-semibold text-slate-500 uppercase block" data-i18n="distance_traveled">Distance</span>
+            <span class="text-base font-extrabold text-slate-900 mt-0.5 block">24.8 km</span>
+            <span class="text-[9px] text-slate-500 font-medium">GPS Tracked</span>
+          </div>
+        </div>
+
+        <!-- COD Deposit Hub Action Card -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+          <div>
+            <h4 class="text-xs font-bold text-slate-900" data-i18n="cod_deposit_title">Hub COD Deposit: ₹1,280.00</h4>
+            <p class="text-[11px] text-slate-500">Collectively deposit to Hub Cashier by 9:00 PM</p>
+          </div>
+          <button onclick="openCodDepositModal()" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg shadow-xs active:scale-95 transition" data-i18n="deposit_cash_btn">
+            Deposit
+          </button>
+        </div>
+
+        <!-- Recent Runs History -->
+        <div>
+          <h3 class="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide" data-i18n="completed_missions">Completed Runs</h3>
+          <div class="space-y-2">
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center text-xs">
+              <div>
+                <span class="font-bold text-slate-900">Run #GB-8914 (2.3 km)</span>
+                <span class="block text-[10px] text-slate-500">Today, 11:40 AM • Prepaid Order</span>
+              </div>
+              <div class="text-right">
+                <span class="font-extrabold text-blue-600">+₹50.00</span>
+                <span class="block text-[10px] font-bold text-emerald-700">COMPLETED</span>
+              </div>
+            </div>
+
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center text-xs">
+              <div>
+                <span class="font-bold text-slate-900">Run #GB-8908 (3.1 km)</span>
+                <span class="block text-[10px] text-slate-500">Today, 10:15 AM • COD (₹450 Collected)</span>
+              </div>
+              <div class="text-right">
+                <span class="font-extrabold text-blue-600">+₹65.00</span>
+                <span class="block text-[10px] font-bold text-emerald-700">COMPLETED</span>
+              </div>
+            </div>
+
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center text-xs">
+              <div>
+                <span class="font-bold text-slate-900">Weekly Runner Fuel Bonus</span>
+                <span class="block text-[10px] text-slate-500">Yesterday, 10:00 PM • Performance Incentive</span>
+              </div>
+              <div class="text-right">
+                <span class="font-extrabold text-emerald-600">+₹200.00</span>
+                <span class="block text-[10px] font-bold text-blue-600">BONUS</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- TAB 4: ACCOUNT (EXACT 5 GROUPS AS PER SPECIFICATION) -->
+      <div id="tab-account" class="dashboard-tab flex-1 p-4 space-y-4 hidden">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900" data-i18n="account_tab_title">Account & Settings</h2>
+          <p class="text-xs text-slate-500" data-i18n="runner_account_sub">Manage profile, vehicle info, payouts and safety</p>
+        </div>
+
+        <!-- GROUP 1: HEADER / USER INFO -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center space-x-3.5">
+          <div class="relative">
+            <img id="account-avatar-img" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" alt="Rider Face" class="w-14 h-14 rounded-full object-cover border-2 border-blue-500 shadow-sm">
+            <span class="absolute bottom-0 right-0 w-4 h-4 bg-blue-600 text-white rounded-full flex items-center justify-center border border-white">
+              <i data-lucide="check" class="w-2.5 h-2.5"></i>
+            </span>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center space-x-1.5">
+              <h3 id="account-display-name" class="text-sm font-bold text-slate-900">Sonu Kumar Verma</h3>
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 flex items-center space-x-1">
+                <i data-lucide="shield-check" class="w-3 h-3 text-emerald-600"></i>
+                <span data-i18n="verified_badge">Verified</span>
+              </span>
+            </div>
+            <p id="account-display-vehicle" class="text-xs text-slate-600 mt-0.5">Hero Splendor (UP 32 BK 4821)</p>
+            <p id="account-display-phone" class="text-xs text-slate-500 font-mono mt-0.5">+91 9711002233</p>
+          </div>
+        </div>
+
+        <!-- GROUP 2: PAYOUT SETTINGS -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-800 uppercase tracking-wide" data-i18n="payout_settings_header">Payout Settings</span>
+            <span class="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">Penny Drop Active</span>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center text-xs">
+            <div class="flex items-center space-x-2.5">
+              <i data-lucide="landmark" class="w-5 h-5 text-slate-600"></i>
+              <div>
+                <span id="account-masked-bank" class="font-mono font-bold text-slate-800">SBI Bank ending in ****2345</span>
+                <span class="block text-[10px] text-slate-500">IFSC: SBIN0004567 • SONU KUMAR VERMA</span>
+              </div>
+            </div>
+            <button onclick="openUpdatePayoutModal()" class="py-1 px-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 text-[11px] font-semibold rounded active:scale-95 transition" data-i18n="update_payout_btn">
+              Update
+            </button>
+          </div>
+        </div>
+
+        <!-- GROUP 3: APP PREFERENCES -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+          <span class="text-xs font-bold text-slate-800 uppercase tracking-wide" data-i18n="preferences_header">App Preferences</span>
+          
+          <div class="flex justify-between items-center text-xs py-1">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="languages" class="w-4 h-4 text-slate-500"></i>
+              <span class="font-medium text-slate-800" data-i18n="app_lang">Application Language</span>
+            </div>
+            <button onclick="toggleAppLanguage()" class="py-1 px-2.5 rounded-lg bg-blue-50 border border-blue-300 text-blue-800 font-bold text-xs active:scale-95 transition">
+              <span id="account-lang-name">English / हिन्दी</span>
+            </button>
+          </div>
+
+          <div class="flex justify-between items-center text-xs py-1 border-t border-slate-100 pt-2">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="bell" class="w-4 h-4 text-slate-500"></i>
+              <div>
+                <span class="font-medium text-slate-800" data-i18n="mission_alerts">Mission Ringtone Alert</span>
+                <span class="block text-[10px] text-slate-400">Ring loud chime for incoming delivery calls</span>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="pref-sound-toggle" checked onchange="toggleSoundPreference(this)" class="sr-only peer">
+              <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- GROUP 4: HELP & SUPPORT -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
+          <span class="text-xs font-bold text-slate-800 uppercase tracking-wide" data-i18n="support_header">Help & Operations</span>
+          
+          <button onclick="openRaiseTicketModal()" class="w-full py-2.5 px-3 rounded-lg hover:bg-slate-50 text-left text-xs font-semibold text-slate-800 flex justify-between items-center transition border border-transparent hover:border-slate-200">
+            <div class="flex items-center space-x-2.5">
+              <i data-lucide="life-buoy" class="w-4 h-4 text-slate-600"></i>
+              <span data-i18n="raise_ticket">Raise Support Ticket</span>
+            </div>
+            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+          </button>
+
+          <button onclick="openContactAdminModal()" class="w-full py-2.5 px-3 rounded-lg hover:bg-slate-50 text-left text-xs font-semibold text-slate-800 flex justify-between items-center transition border border-transparent hover:border-slate-200">
+            <div class="flex items-center space-x-2.5">
+              <i data-lucide="phone-call" class="w-4 h-4 text-blue-600"></i>
+              <span data-i18n="contact_supervisor">Call Fleet Supervisor</span>
+            </div>
+            <span class="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Toll Free</span>
+          </button>
+        </div>
+
+        <!-- GROUP 5: LEGAL & ACTIONS -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
+          <button onclick="openTermsModal()" class="w-full py-2 px-3 rounded-lg text-left text-xs font-medium text-slate-600 hover:text-slate-900 flex justify-between items-center">
+            <span data-i18n="safety_policy">Road Safety, Helmet & Payout Policy</span>
+            <i data-lucide="external-link" class="w-3.5 h-3.5 text-slate-400"></i>
+          </button>
+
+          <button onclick="openLogoutModal()" class="w-full py-2.5 px-3 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center justify-center space-x-2 active:scale-98 transition">
+            <i data-lucide="log-out" class="w-4 h-4 text-rose-600"></i>
+            <span data-i18n="logout_btn_runner">End Shift & Log Out</span>
+          </button>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- ========================================================================= -->
+    <!-- BOTTOM TAB NAVIGATION (4 TABS AS PER SPECIFICATION) -->
+    <!-- ========================================================================= -->
+    <nav id="bottom-tabs" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 px-2 py-1.5 flex justify-around items-center z-40 shadow-lg hidden">
+      <!-- Tab 1: Missions (Home) -->
+      <button onclick="switchDashboardTab('missions')" id="tab-btn-missions" class="tab-button flex-1 py-1.5 flex flex-col items-center justify-center text-blue-600 font-bold transition">
+        <i data-lucide="compass" class="w-5 h-5 mb-0.5"></i>
+        <span class="text-[10px]" data-i18n="tab_missions">Missions</span>
+      </button>
+
+      <!-- Tab 2: Active Run -->
+      <button onclick="switchDashboardTab('activerun')" id="tab-btn-activerun" class="tab-button flex-1 py-1.5 flex flex-col items-center justify-center text-slate-500 font-medium hover:text-slate-800 transition">
+        <i data-lucide="navigation" class="w-5 h-5 mb-0.5"></i>
+        <span class="text-[10px]" data-i18n="tab_activerun">Active Run</span>
+      </button>
+
+      <!-- Tab 3: Ledger -->
+      <button onclick="switchDashboardTab('ledger')" id="tab-btn-ledger" class="tab-button flex-1 py-1.5 flex flex-col items-center justify-center text-slate-500 font-medium hover:text-slate-800 transition">
+        <i data-lucide="receipt" class="w-5 h-5 mb-0.5"></i>
+        <span class="text-[10px]" data-i18n="tab_ledger">Ledger</span>
+      </button>
+
+      <!-- Tab 4: Account -->
+      <button onclick="switchDashboardTab('account')" id="tab-btn-account" class="tab-button flex-1 py-1.5 flex flex-col items-center justify-center text-slate-500 font-medium hover:text-slate-800 transition">
+        <i data-lucide="user" class="w-5 h-5 mb-0.5"></i>
+        <span class="text-[10px]" data-i18n="tab_account">Account</span>
+      </button>
+    </nav>
+
+
+    <!-- ========================================================================= -->
+    <!-- MODALS (SUB-PAGES & OVERLAYS WITH HISTORY POPSTATE & VISIBLE BACK ARROWS) -->
+    <!-- ========================================================================= -->
+    
+    <!-- MODAL 1: COD CASH DEPOSIT -->
+    <div id="modal-cod-deposit" class="app-modal fixed inset-0 bg-black/60 z-50 flex items-end justify-center hidden">
+      <div class="w-full max-w-md bg-white rounded-t-2xl p-5 shadow-2xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-cod-deposit')" class="p-1.5 rounded-full hover:bg-slate-100 text-slate-600">
+              <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-base font-bold text-slate-900" data-i18n="cod_modal_title">Deposit Cash-in-Hand</h3>
+          </div>
+          <button onclick="closeModal('modal-cod-deposit')" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="py-4 space-y-4">
+          <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1">
+            <div class="flex justify-between font-bold">
+              <span>Total Cash Collected:</span>
+              <span class="text-sm text-amber-800">₹1,280.00</span>
+            </div>
+            <p class="text-[11px] text-amber-700">Present this QR code to the Gopalpur Hub Cashier or pay online to clear your balance.</p>
+          </div>
+
+          <div class="text-center p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+            <div class="w-32 h-32 bg-white rounded-lg mx-auto flex items-center justify-center border border-slate-200 shadow-inner">
+              <i data-lucide="qr-code" class="w-24 h-24 text-slate-800"></i>
+            </div>
+            <span class="text-[11px] font-mono text-slate-600 block mt-2">HUB-CASH-DEP-GB8492</span>
+          </div>
+
+          <button onclick="confirmCashDeposit()" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md active:scale-95 transition" data-i18n="mark_cash_deposited">
+            Confirm Cash Deposited at Hub
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 2: UPDATE PAYOUT WITH SMS OTP -->
+    <div id="modal-update-payout" class="app-modal fixed inset-0 bg-black/60 z-50 flex items-end justify-center hidden">
+      <div class="w-full max-w-md bg-white rounded-t-2xl p-5 shadow-2xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-update-payout')" class="p-1.5 rounded-full hover:bg-slate-100 text-slate-600">
+              <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-base font-bold text-slate-900" data-i18n="update_payout_title">Update Bank / UPI Account</h3>
+          </div>
+          <button onclick="closeModal('modal-update-payout')" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="py-4 space-y-4">
+          <div class="p-3 bg-blue-50 rounded-lg border border-blue-200 text-xs text-blue-900">
+            <span class="font-bold">Security Requirement:</span>
+            <p class="text-[11px] mt-0.5">Enter the SMS OTP sent to registered rider mobile ending in <strong>2233</strong>.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Enter Security OTP (Default: 7788)</label>
+            <input type="text" id="payout-security-otp" maxlength="4" placeholder="7788" class="w-full px-3 py-2 text-center text-lg font-mono font-bold tracking-widest rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">New Bank Account / UPI ID</label>
+            <input type="text" id="new-payout-target" placeholder="e.g. State Bank of India A/C or rider@upi" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600">
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <button onclick="verifyAndSaveNewPayout()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md active:scale-95 transition" data-i18n="confirm_update">
+            Verify OTP & Update Payout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 3: RAISE SUPPORT TICKET -->
+    <div id="modal-raise-ticket" class="app-modal fixed inset-0 bg-black/60 z-50 flex items-end justify-center hidden">
+      <div class="w-full max-w-md bg-white rounded-t-2xl p-5 shadow-2xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-raise-ticket')" class="p-1.5 rounded-full hover:bg-slate-100 text-slate-600">
+              <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-base font-bold text-slate-900" data-i18n="raise_ticket_title">Raise Support Ticket</h3>
+          </div>
+          <button onclick="closeModal('modal-raise-ticket')" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="py-4 space-y-3.5">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Issue Category</label>
+            <select id="ticket-category" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600">
+              <option value="Customer Not Reachable / Wrong Address">Customer Not Reachable / Wrong Address</option>
+              <option value="Vendor Packed Wrong Items">Vendor Packed Wrong Items</option>
+              <option value="Vehicle Breakdown on Road">Vehicle Breakdown on Road</option>
+              <option value="COD Cash Mismatch">COD Cash Mismatch</option>
+              <option value="App GPS / Telemetry Issue">App GPS / Telemetry Issue</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Describe Problem</label>
+            <textarea id="ticket-desc" rows="3" placeholder="Please provide details of mission or breakdown..." class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600"></textarea>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <button onclick="submitSupportTicket()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md active:scale-95 transition" data-i18n="submit_ticket_btn">
+            Submit Ticket to Operations
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 4: CONTACT FLEET SUPERVISOR -->
+    <div id="modal-contact-admin" class="app-modal fixed inset-0 bg-black/60 z-50 flex items-end justify-center hidden">
+      <div class="w-full max-w-md bg-white rounded-t-2xl p-5 shadow-2xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-contact-admin')" class="p-1.5 rounded-full hover:bg-slate-100 text-slate-600">
+              <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-base font-bold text-slate-900" data-i18n="supervisor_title">Hub Fleet Supervisor</h3>
+          </div>
+          <button onclick="closeModal('modal-contact-admin')" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="py-4 space-y-4">
+          <div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
+              FS
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-slate-900">Rajesh Tiwari (Fleet Lead)</h4>
+              <p class="text-[11px] text-slate-500">Live 7am - 11pm • Emergency Roadside & COD Help</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <a href="tel:18002007766" onclick="toastInfo('Calling Fleet Desk 1800-200-7766...')" class="py-3 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition">
+              <i data-lucide="phone" class="w-4 h-4"></i>
+              <span>Call Fleet Desk</span>
+            </a>
+            <a href="https://wa.me/919711002233" target="_blank" onclick="toastInfo('Opening WhatsApp Fleet Support...')" class="py-3 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition">
+              <i data-lucide="message-square" class="w-4 h-4"></i>
+              <span>WhatsApp Chat</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 5: TERMS & ROAD SAFETY -->
+    <div id="modal-terms" class="app-modal fixed inset-0 bg-black/60 z-50 flex items-end justify-center hidden">
+      <div class="w-full max-w-md bg-white rounded-t-2xl p-5 shadow-2xl max-h-[80vh] overflow-y-auto">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-terms')" class="p-1.5 rounded-full hover:bg-slate-100 text-slate-600">
+              <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <h3 class="text-base font-bold text-slate-900">Runner Code of Conduct</h3>
+          </div>
+          <button onclick="closeModal('modal-terms')" class="text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div class="py-4 text-xs text-slate-600 space-y-3 leading-relaxed">
+          <p><strong>1. Mandatory Helmet & Safety:</strong> Wearing an approved helmet is strictly mandatory on all motorized bike deliveries.</p>
+          <p><strong>2. 100% COD Deposit:</strong> All cash on delivery collected must be deposited at the village hub by the end of each duty shift.</p>
+          <p><strong>3. OTP Delivery Handover:</strong> Never hand over orders without entering the customer's 4-digit secret delivery OTP.</p>
+        </div>
+        <button onclick="closeModal('modal-terms')" class="w-full py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl mt-2">Close</button>
+      </div>
+    </div>
+
+    <!-- MODAL 6: LOGOUT CONFIRMATION -->
+    <div id="modal-logout" class="app-modal fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+      <div class="w-full max-w-xs bg-white rounded-2xl p-5 shadow-2xl text-center space-y-3">
+        <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 mx-auto flex items-center justify-center">
+          <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-900" data-i18n="logout_confirm_title">End Shift & Log Out?</h3>
+        <p class="text-xs text-slate-500" data-i18n="logout_confirm_sub_runner">Make sure all COD collections have been deposited at the hub before ending shift.</p>
+        <div class="flex space-x-2 pt-2">
+          <button onclick="closeModal('modal-logout')" class="flex-1 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+            Cancel
+          </button>
+          <button onclick="executeLogout()" class="flex-1 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs">
+            End Shift
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT: LOGIC, ROUTER, WEB AUDIO SYNTH, LOCALIZATION -->
+  <!-- ========================================================================= -->
+  <script>
+    // ---------------------------------------------------------------------------
+    // LOCALIZATION DICTIONARY
+    // ---------------------------------------------------------------------------
+    const i18n = {
+      en: {
+        select_language_title: "Choose Your Language",
+        select_language_sub: "Select your preferred language to continue",
+        continue_btn: "Continue",
+        mobile_reg_title: "Enter Mobile Number",
+        mobile_reg_sub: "We will send a 4-digit verification code to your phone",
+        phone_number_label: "Phone Number",
+        send_otp_btn: "Send OTP",
+        enter_otp_label: "Enter 4-Digit OTP",
+        resend_otp: "Resend OTP",
+        verify_proceed: "Verify & Proceed",
+        runner_details_title: "Delivery Partner Details",
+        runner_details_sub: "Enter your vehicle and emergency contacts",
+        full_name_label: "Full Name (as per Driving License / Aadhaar)",
+        vehicle_type_label: "Vehicle Type",
+        vehicle_number_label: "Vehicle Registration Number",
+        emergency_contact_label: "Emergency Alternate Contact",
+        ocr_title_runner: "Scan Driving License or Aadhaar",
+        ocr_sub_runner: "Driving License, Voter ID, or Aadhaar Card",
+        ocr_place_frame: "Place your ID card inside the frame",
+        scan_id_btn: "Capture & Scan ID",
+        ocr_extracted_success: "Details Extracted Automatically",
+        confirm_continue: "Confirm & Proceed",
+        liveness_title: "Live Face Verification",
+        liveness_sub: "Position face inside oval frame and blink",
+        blink_instruction: "👁️ Blink your eyes to verify",
+        capture_selfie_btn: "Blink & Capture",
+        payout_title: "Bank / UPI Settlement",
+        runner_payout_sub: "Direct per-delivery payouts credited daily to your account",
+        bank_tab: "Bank Account",
+        upi_tab: "UPI ID / VPA",
+        acc_num_label: "Bank Account Number",
+        ifsc_label: "IFSC Code",
+        beneficiary_name_label: "Beneficiary Account Holder Name",
+        upi_id_label: "Virtual Payment Address (UPI ID)",
+        penny_drop_title: "Instant ₹1 Penny Drop Verification",
+        penny_drop_sub: "We will deposit ₹1 to verify active beneficiary ownership name match.",
+        verify_penny_btn: "Run ₹1 Penny Verification",
+        save_complete_btn: "Save & Complete Application",
+        under_review_title: "Application Under Review",
+        under_review_sub_runner: "Your DL driving record, face liveness snapshot, and ₹1 penny drop bank verification have been submitted securely to GaonBazaar Operations.",
+        enter_dashboard_demo: "Approve & Open Runner Hub",
+        duty_on: "ON DUTY",
+        duty_off: "OFF DUTY",
+        receiving_missions: "Receiving nearby delivery missions",
+        duty_off_sub: "Toggle ON to receive delivery runs",
+        new_mission_alert: "New Delivery Mission Ringing!",
+        mute_btn: "Mute",
+        pass_mission_btn: "Pass",
+        accept_mission_btn: "Accept Run",
+        active_run_title: "Active Delivery Mission",
+        active_run_sub: "Complete steps in sequence with Google Maps",
+        step_1_title: "Pickup at Vendor Shop",
+        nav_to_vendor: "Navigate to Vendor",
+        pickup_otp_label: "Share Pickup OTP with Vendor:",
+        confirm_pickup_btn: "Order Picked Up",
+        step_2_title: "Deliver to Customer",
+        nav_to_customer: "Navigate to Customer",
+        enter_cust_otp: "Verify Customer's 4-Digit Delivery OTP",
+        complete_run_btn: "Deliver",
+        ledger_title: "Runner Earnings & COD Ledger",
+        runner_ledger_sub: "Track completed missions, payouts and cash collections",
+        today_earnings: "Earnings",
+        cod_cash_hand: "COD in Hand",
+        distance_traveled: "Distance",
+        cod_deposit_title: "Hub COD Deposit: ₹1,280.00",
+        deposit_cash_btn: "Deposit",
+        completed_missions: "Completed Runs",
+        account_tab_title: "Account & Settings",
+        runner_account_sub: "Manage profile, vehicle info, payouts and safety",
+        verified_badge: "Verified",
+        payout_settings_header: "Payout Settings",
+        update_payout_btn: "Update",
+        preferences_header: "App Preferences",
+        app_lang: "Application Language",
+        mission_alerts: "Mission Ringtone Alert",
+        support_header: "Help & Operations",
+        raise_ticket: "Raise Support Ticket",
+        contact_supervisor: "Call Fleet Supervisor",
+        safety_policy: "Road Safety, Helmet & Payout Policy",
+        logout_btn_runner: "End Shift & Log Out",
+        tab_missions: "Missions",
+        tab_activerun: "Active Run",
+        tab_ledger: "Ledger",
+        tab_account: "Account",
+        cod_modal_title: "Deposit Cash-in-Hand",
+        mark_cash_deposited: "Confirm Cash Deposited at Hub",
+        update_payout_title: "Update Bank / UPI Account",
+        confirm_update: "Verify OTP & Update Payout",
+        raise_ticket_title: "Raise Support Ticket",
+        submit_ticket_btn: "Submit Ticket to Operations",
+        supervisor_title: "Hub Fleet Supervisor",
+        logout_confirm_title: "End Shift & Log Out?",
+        logout_confirm_sub_runner: "Make sure all COD collections have been deposited at the hub before ending shift."
+      },
+      hi: {
+        select_language_title: "अपनी भाषा चुनें",
+        select_language_sub: "आगे बढ़ने के लिए अपनी पसंदीदा भाषा चुनें",
+        continue_btn: "आगे बढ़ें",
+        mobile_reg_title: "मोबाइल नंबर दर्ज करें",
+        mobile_reg_sub: "हम आपके फ़ोन पर 4-अंकों का सत्यापन कोड भेजेंगे",
+        phone_number_label: "फ़ोन नंबर",
+        send_otp_btn: "OTP भेजें",
+        enter_otp_label: "4 अंकों का OTP दर्ज करें",
+        resend_otp: "OTP पुनः भेजें",
+        verify_proceed: "सत्यापित करें और आगे बढ़ें",
+        runner_details_title: "डिलीवरी पार्टनर विवरण",
+        runner_details_sub: "अपने वाहन और आपातकालीन संपर्क दर्ज करें",
+        full_name_label: "पूरा नाम (ड्राइविंग लाइसेंस / आधार अनुसार)",
+        vehicle_type_label: "वाहन का प्रकार",
+        vehicle_number_label: "वाहन पंजीकरण संख्या",
+        emergency_contact_label: "आपातकालीन संपर्क नंबर",
+        ocr_title_runner: "ड्राइविंग लाइसेंस या आधार स्कैन करें",
+        ocr_sub_runner: "ड्राइविंग लाइसेंस, वोटर आईडी, या आधार कार्ड",
+        ocr_place_frame: "अपना आईडी कार्ड फ्रेम के अंदर रखें",
+        scan_id_btn: "आईडी कैप्चर व स्कैन करें",
+        ocr_extracted_success: "विवरण स्वचालित रूप से निकाला गया",
+        confirm_continue: "पुष्टि करें और आगे बढ़ें",
+        liveness_title: "लाइव चेहरा सत्यापन",
+        liveness_sub: "चेहरे को फ्रेम में रखें और पलकें झपकाएं",
+        blink_instruction: "👁️ सत्यापन के लिए पलकें झपकाएं",
+        capture_selfie_btn: "पलक झपकाएं और फोटो लें",
+        payout_title: "बैंक / UPI भुगतान सेटअप",
+        runner_payout_sub: "प्रति डिलीवरी की कमाई सीधे बैंक में प्राप्त करें",
+        bank_tab: "बैंक खाता",
+        upi_tab: "UPI आईडी",
+        acc_num_label: "बैंक खाता संख्या",
+        ifsc_label: "IFSC कोड",
+        beneficiary_name_label: "खाताधारक का नाम",
+        upi_id_label: "UPI आईडी (VPA)",
+        penny_drop_title: "तत्काल ₹1 पेनी ड्रॉप सत्यापन",
+        penny_drop_sub: "सक्रिय बैंक खाते के सत्यापन हेतु ₹1 तुरंत जमा किया जाएगा।",
+        verify_penny_btn: "₹1 सत्यापन चलाएं",
+        save_complete_btn: "सुरक्षित करें और पूर्ण करें",
+        under_review_title: "आवेदन समीक्षाधीन है",
+        under_review_sub_runner: "आपका ड्राइविंग रिकॉर्ड एवं बैंक सत्यापन गांवबाज़ार ऑपरेशंस टीम के पास सफलतापूर्वक जमा हो गए हैं।",
+        enter_dashboard_demo: "स्वीकृत करें व रनर हब खोलें",
+        duty_on: "ड्यूटी चालू (ON)",
+        duty_off: "ड्यूटी बंद (OFF)",
+        receiving_missions: "नजदीकी डिलीवरी ऑर्डर प्राप्त हो रहे हैं",
+        duty_off_sub: "ऑर्डर प्राप्त करने के लिए ड्यूटी चालू करें",
+        new_mission_alert: "नया डिलीवरी मिशन घंटी बज रही है!",
+        mute_btn: "शांत करें",
+        pass_mission_btn: "छोड़ें",
+        accept_mission_btn: "मिशन स्वीकार करें",
+        active_run_title: "सक्रिय डिलीवरी मिशन",
+        active_run_sub: "गूगल मैप्स के साथ क्रमशः चरण पूरा करें",
+        step_1_title: "दुकान से सामान उठाएं",
+        nav_to_vendor: "दुकान का रास्ता (Google Maps)",
+        pickup_otp_label: "दुकानदार को यह पिकअप OTP बताएं:",
+        confirm_pickup_btn: "सामान प्राप्त कर लिया",
+        step_2_title: "ग्राहक को डिलीवरी दें",
+        nav_to_customer: "ग्राहक का रास्ता (Google Maps)",
+        enter_cust_otp: "ग्राहक का 4-अंकीय डिलीवरी OTP दर्ज करें",
+        complete_run_btn: "डिलीवरी पूर्ण करें",
+        ledger_title: "रनर कमाई एवं COD लेजर",
+        runner_ledger_sub: "पूरी की गई डिलीवरी, कमाई और कैश कलेक्शन का ब्यौरा",
+        today_earnings: "आज की कमाई",
+        cod_cash_hand: "हाथ में नकद (COD)",
+        distance_traveled: "दूरी",
+        cod_deposit_title: "हब में कैश जमा: ₹1,280.00",
+        deposit_cash_btn: "जमा करें",
+        completed_missions: "पूरी की गई डिलीवरी",
+        account_tab_title: "खाता और सेटिंग्स",
+        runner_account_sub: "प्रोफ़ाइल, वाहन जानकारी, भुगतान और सुरक्षा",
+        verified_badge: "सत्यापित",
+        payout_settings_header: "भुगतान सेटिंग्स",
+        update_payout_btn: "बदलें",
+        preferences_header: "ऐप प्राथमिकताएं",
+        app_lang: "ऐप की भाषा",
+        mission_alerts: "मिशन रिंगटोन अलर्ट",
+        support_header: "मदद और सहायता",
+        raise_ticket: "शिकायत दर्ज करें",
+        contact_supervisor: "फ्लीट सुपरवाइजर को कॉल करें",
+        safety_policy: "सड़क सुरक्षा, हेलमेट एवं भुगतान नीति",
+        logout_btn_runner: "शिफ्ट समाप्त करें व लॉग आउट करें",
+        tab_missions: "मिशन",
+        tab_activerun: "सक्रिय रन",
+        tab_ledger: "लेजर",
+        tab_account: "खाता",
+        cod_modal_title: "हाथ में नकद कैश जमा करें",
+        mark_cash_deposited: "हब में कैश जमा की पुष्टि करें",
+        update_payout_title: "बैंक / UPI खाता अपडेट करें",
+        confirm_update: "OTP सत्यापित करें और बदलें",
+        raise_ticket_title: "सपोर्ट टिकट बनाएं",
+        submit_ticket_btn: "ऑपरेशंस को सबमिट करें",
+        supervisor_title: "हब फ्लीट सुपरवाइजर",
+        logout_confirm_title: "शिफ्ट समाप्त व लॉग आउट करें?",
+        logout_confirm_sub_runner: "सुनिश्चित करें कि आपने सारा एकत्रित कैश हब में जमा करा दिया है।"
+      }
+    };
+
+    let currentLang = 'en';
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('gaonbazaar_runner_lang', lang);
+
+      const btnEn = document.getElementById('lang-btn-en');
+      const btnHi = document.getElementById('lang-btn-hi');
+      if (btnEn && btnHi) {
+        if (lang === 'en') {
+          btnEn.className = "w-full p-4 rounded-xl border-2 border-blue-600 bg-blue-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
+          btnHi.className = "w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
+        } else {
+          btnHi.className = "w-full p-4 rounded-xl border-2 border-blue-600 bg-blue-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
+          btnEn.className = "w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
+        }
+      }
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[lang] && i18n[lang][key]) {
+          el.innerText = i18n[lang][key];
+        }
+      });
+
+      const langLabel = document.getElementById('current-lang-label');
+      if (langLabel) langLabel.innerText = lang === 'en' ? 'हिन्दी' : 'English';
+      
+      const accLang = document.getElementById('account-lang-name');
+      if (accLang) accLang.innerText = lang === 'en' ? 'English (बदलें)' : 'हिन्दी (Switch)';
+    }
+
+    function toggleAppLanguage() {
+      const nextLang = currentLang === 'en' ? 'hi' : 'en';
+      setLanguage(nextLang);
+      toastInfo(nextLang === 'hi' ? 'भाषा हिन्दी में बदली गई' : 'Language switched to English');
+    }
+
+    // ---------------------------------------------------------------------------
+    // WEB AUDIO API SOUND SYNTHESIZER (Ringing Siren for Missions)
+    // ---------------------------------------------------------------------------
+    let audioCtx = null;
+    let ringInterval = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playTone(freq, duration, type = 'sine') {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.warn("Audio synth warning:", e);
+      }
+    }
+
+    function startMissionAlertRingtone() {
+      if (ringInterval || !soundEnabled) return;
+      ringInterval = setInterval(() => {
+        playTone(987.77, 0.22, 'triangle'); // B5
+        setTimeout(() => playTone(1318.51, 0.35, 'sine'), 160); // E6
+      }, 1500);
+    }
+
+    function stopMissionAlertRingtone() {
+      if (ringInterval) {
+        clearInterval(ringInterval);
+        ringInterval = null;
+      }
+    }
+
+    function silenceAlertSound() {
+      stopMissionAlertRingtone();
+      const banner = document.getElementById('runner-alert-banner');
+      if (banner) banner.classList.add('hidden');
+      toastInfo("Mission ringtone muted for this session");
+    }
+
+    function toggleSoundPreference(checkbox) {
+      soundEnabled = checkbox.checked;
+      if (!soundEnabled) {
+        stopMissionAlertRingtone();
+        toastInfo("Sound notifications muted");
+      } else {
+        toastSuccess("Sound notifications enabled");
+      }
+    }
+
+    // ---------------------------------------------------------------------------
+    // TOAST NOTIFICATIONS (NO CLUNKY NATIVE ALERTS)
+    // ---------------------------------------------------------------------------
+    function toastSuccess(msg) {
+      Toastify({
+        text: msg,
+        duration: 3200,
+        gravity: "top",
+        position: "center",
+        style: {
+          background: "linear-gradient(to right, #2563eb, #1d4ed8)",
+          borderRadius: "12px",
+          fontWeight: "600",
+          fontSize: "13px",
+          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+        }
+      }).showToast();
+    }
+
+    function toastError(msg) {
+      Toastify({
+        text: msg,
+        duration: 3500,
+        gravity: "top",
+        position: "center",
+        style: {
+          background: "linear-gradient(to right, #e11d48, #be123c)",
+          borderRadius: "12px",
+          fontWeight: "600",
+          fontSize: "13px",
+          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+        }
+      }).showToast();
+    }
+
+    function toastInfo(msg) {
+      Toastify({
+        text: msg,
+        duration: 2500,
+        gravity: "top",
+        position: "center",
+        style: {
+          background: "linear-gradient(to right, #334155, #1e293b)",
+          borderRadius: "12px",
+          fontWeight: "500",
+          fontSize: "13px",
+          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+        }
+      }).showToast();
+    }
+
+    // ---------------------------------------------------------------------------
+    // STATE & ROUTER ARCHITECTURE (HTML5 HISTORY API)
+    // ---------------------------------------------------------------------------
+    const state = {
+      currentScreen: 'onboarding-1',
+      activeTab: 'missions',
+      isDutyOn: true,
+      payoutMode: 'bank',
+      pennyDropVerified: false,
+      ocrCaptured: false,
+      livenessCaptured: false,
+      activeRunState: 'pickup', // 'pickup' | 'delivery' | 'completed'
+      userProfile: {
+        phone: '9711002233',
+        name: 'Sonu Kumar Verma',
+        vehicleType: 'Motorcycle (Petrol Bike)',
+        vehicleNo: 'UP 32 BK 4821',
+        emergency: '9811445566',
+        dlNumber: 'UP32-2021-0089421',
+        payoutMethod: 'SBI Bank ending in ****2345'
+      }
+    };
+
+    function navigateTo(screenId, pushHistory = true) {
+      document.querySelectorAll('.app-screen').forEach(s => s.classList.add('hidden'));
+      document.querySelectorAll('.dashboard-tab').forEach(t => t.classList.add('hidden'));
+
+      const target = document.getElementById('screen-' + screenId);
+      const bottomNav = document.getElementById('bottom-tabs');
+      const backBtn = document.getElementById('nav-back-btn');
+
+      if (target) {
+        target.classList.remove('hidden');
+        state.currentScreen = screenId;
+        if (bottomNav) bottomNav.classList.add('hidden');
+        
+        if (backBtn) {
+          if (screenId !== 'onboarding-1' && screenId !== 'onboarding-7') {
+            backBtn.classList.remove('hidden');
+          } else {
+            backBtn.classList.add('hidden');
+          }
+        }
+      }
+
+      if (pushHistory) {
+        history.pushState({ screen: screenId, view: 'onboarding' }, '', '#' + screenId);
+      }
+
+      window.scrollTo(0, 0);
+      lucide.createIcons();
+    }
+
+    function openDashboard(initialTab = 'missions', pushHistory = true) {
+      document.querySelectorAll('.app-screen').forEach(s => s.classList.add('hidden'));
+      
+      const bottomNav = document.getElementById('bottom-tabs');
+      if (bottomNav) bottomNav.classList.remove('hidden');
+
+      const backBtn = document.getElementById('nav-back-btn');
+      if (backBtn) backBtn.classList.add('hidden');
+
+      switchDashboardTab(initialTab, false);
+
+      state.currentScreen = 'dashboard';
+      if (pushHistory) {
+        history.pushState({ screen: 'dashboard', tab: initialTab, view: 'dashboard' }, '', '#dashboard-' + initialTab);
+      }
+
+      if (state.isDutyOn && initialTab === 'missions') {
+        startMissionAlertRingtone();
+      }
+
+      window.scrollTo(0, 0);
+      lucide.createIcons();
+    }
+
+    function switchDashboardTab(tabName, pushHistory = true) {
+      state.activeTab = tabName;
+      document.querySelectorAll('.dashboard-tab').forEach(t => t.classList.add('hidden'));
+      
+      const targetTab = document.getElementById('tab-' + tabName);
+      if (targetTab) {
+        targetTab.classList.remove('hidden');
+      }
+
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('text-blue-600', 'font-bold');
+        btn.classList.add('text-slate-500', 'font-medium');
+      });
+      const activeBtn = document.getElementById('tab-btn-' + tabName);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-slate-500', 'font-medium');
+        activeBtn.classList.add('text-blue-600', 'font-bold');
+      }
+
+      if (pushHistory) {
+        history.pushState({ screen: 'dashboard', tab: tabName, view: 'dashboard' }, '', '#dashboard-' + tabName);
+      }
+
+      window.scrollTo(0, 0);
+      lucide.createIcons();
+    }
+
+    window.addEventListener('popstate', (e) => {
+      const openModal = document.querySelector('.app-modal:not(.hidden)');
+      if (openModal) {
+        openModal.classList.add('hidden');
+        return;
+      }
+
+      if (e.state) {
+        if (e.state.view === 'dashboard') {
+          openDashboard(e.state.tab || 'missions', false);
+        } else if (e.state.view === 'onboarding') {
+          navigateTo(e.state.screen, false);
+        }
+      } else {
+        navigateTo('onboarding-1', false);
+      }
+    });
+
+    function handleHistoryBack() {
+      const openModal = document.querySelector('.app-modal:not(.hidden)');
+      if (openModal) {
+        openModal.classList.add('hidden');
+        return;
+      }
+
+      if (state.currentScreen === 'onboarding-2') navigateTo('onboarding-1');
+      else if (state.currentScreen === 'onboarding-3') navigateTo('onboarding-2');
+      else if (state.currentScreen === 'onboarding-4') navigateTo('onboarding-3');
+      else if (state.currentScreen === 'onboarding-5') navigateTo('onboarding-4');
+      else if (state.currentScreen === 'onboarding-6') navigateTo('onboarding-5');
+      else if (window.history.length > 1) window.history.back();
+    }
+
+    // ---------------------------------------------------------------------------
+    // MODAL HELPERS
+    // ---------------------------------------------------------------------------
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('hidden');
+        history.pushState({ modalOpen: modalId }, '', '#' + modalId);
+        lucide.createIcons();
+      }
+    }
+
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.add('hidden');
+        if (history.state && history.state.modalOpen === modalId) {
+          history.back();
+        }
+      }
+    }
+
+    // ---------------------------------------------------------------------------
+    // PAGE 2: MOBILE & OTP LOGIC
+    // ---------------------------------------------------------------------------
+    function sendMobileOTP() {
+      const phoneInput = document.getElementById('runner-phone-input');
+      const phone = phoneInput ? phoneInput.value.trim() : '';
+      if (phone.length !== 10) {
+        toastError("Please enter a valid 10-digit mobile number");
+        return;
+      }
+      state.userProfile.phone = phone;
+      const sendBtn = document.getElementById('send-otp-text');
+      if (sendBtn) sendBtn.innerText = "Resend (45s)";
+      toastSuccess("OTP sent successfully to +91 " + phone + ". (Demo code: 1234)");
+      
+      const otp1 = document.getElementById('otp-1');
+      if (otp1) otp1.focus();
+    }
+
+    function handleOtpInput(index, event) {
+      const val = event.target.value;
+      if (val.length === 1 && index < 4) {
+        const nextInput = document.getElementById('otp-' + (index + 1));
+        if (nextInput) nextInput.focus();
+      }
+    }
+
+    function verifyMobileOTP() {
+      const o1 = document.getElementById('otp-1').value;
+      const o2 = document.getElementById('otp-2').value;
+      const o3 = document.getElementById('otp-3').value;
+      const o4 = document.getElementById('otp-4').value;
+      const entered = o1 + o2 + o3 + o4;
+
+      const btn = document.getElementById('verify-otp-btn');
+      const btnText = document.getElementById('verify-btn-text');
+
+      if (entered.length !== 4) {
+        toastError("Please enter complete 4-digit OTP");
+        return;
+      }
+
+      btnText.innerText = "Verifying...";
+      btn.classList.add('opacity-75');
+
+      setTimeout(() => {
+        btnText.innerText = "Verified!";
+        btn.classList.remove('opacity-75');
+        toastSuccess("Mobile verified! Welcome Runner Partner.");
+        navigateTo('onboarding-3');
+      }, 700);
+    }
+
+    // ---------------------------------------------------------------------------
+    // PAGE 3: BASIC DETAILS LOGIC
+    // ---------------------------------------------------------------------------
+    function saveRunnerDetailsAndProceed() {
+      const name = document.getElementById('runner-fullname').value.trim();
+      const vType = document.getElementById('runner-vehicletype').value;
+      const vNo = document.getElementById('runner-vehicleno').value.trim();
+      const emerg = document.getElementById('runner-emergency').value.trim();
+
+      if (!name || !vNo) {
+        toastError("Please enter Full Name and Vehicle Number");
+        return;
+      }
+
+      state.userProfile.name = name;
+      state.userProfile.vehicleType = vType;
+      state.userProfile.vehicleNo = vNo;
+      state.userProfile.emergency = emerg;
+
+      document.getElementById('account-display-name').innerText = name;
+      document.getElementById('account-display-vehicle').innerText = `${vType.split(' ')[0]} (${vNo})`;
+      document.getElementById('bank-name').value = name.toUpperCase();
+
+      toastSuccess("Rider profile recorded");
+      navigateTo('onboarding-4');
+    }
+
+    // ---------------------------------------------------------------------------
+    // PAGE 4: DIGITAL OCR CAMERA & EXTRACTION LOGIC
+    // ---------------------------------------------------------------------------
+    let ocrStream = null;
+
+    async function startOCRCamera() {
+      const video = document.getElementById('ocr-video');
+      const fallback = document.getElementById('ocr-fallback');
+      try {
+        ocrStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: false
+        });
+        if (video) {
+          video.srcObject = ocrStream;
+          fallback.classList.add('hidden');
+        }
+      } catch (err) {
+        console.warn("Camera preview fallback enabled:", err);
+        if (fallback) fallback.classList.remove('hidden');
+      }
+    }
+
+    function captureAndProcessOCR() {
+      const scanBtnText = document.getElementById('scan-id-text');
+      const resultsBox = document.getElementById('ocr-results-box');
+      const contBtn = document.getElementById('ocr-continue-btn');
+
+      scanBtnText.innerText = "Extracting OCR...";
+
+      setTimeout(() => {
+        scanBtnText.innerText = "Rescan ID";
+        resultsBox.classList.remove('hidden');
+        document.getElementById('ocr-extracted-name').innerText = state.userProfile.name;
+        
+        contBtn.classList.remove('opacity-50', 'pointer-events-none');
+        state.ocrCaptured = true;
+
+        if (ocrStream) ocrStream.getTracks().forEach(t => t.stop());
+
+        toastSuccess("Driving License Verified with Sarathi Portal!");
+        lucide.createIcons();
+      }, 1200);
+    }
+
+    // ---------------------------------------------------------------------------
+    // PAGE 5: LIVENESS CHECK (OVAL CAMERA CUTOUT & BLINK)
+    // ---------------------------------------------------------------------------
+    let livenessStream = null;
+
+    async function startLivenessCamera() {
+      const video = document.getElementById('liveness-video');
+      const fallback = document.getElementById('liveness-fallback');
+      try {
+        livenessStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+          audio: false
+        });
+        if (video) {
+          video.srcObject = livenessStream;
+          fallback.classList.add('hidden');
+        }
+      } catch (err) {
+        console.warn("Selfie camera fallback enabled:", err);
+        if (fallback) fallback.classList.remove('hidden');
+      }
+    }
+
+    function captureLivenessSelfie() {
+      const instr = document.getElementById('liveness-instruction');
+      const contBtn = document.getElementById('liveness-continue-btn');
+      const fallback = document.getElementById('liveness-fallback');
+
+      instr.innerText = "Analyzing Face & Eye Blink...";
+
+      setTimeout(() => {
+        instr.innerText = "✅ Liveness Verified: 99.6%";
+        instr.classList.replace('text-blue-400', 'text-white');
+        instr.classList.add('bg-blue-600');
+
+        if (fallback) fallback.classList.remove('hidden');
+        contBtn.classList.remove('opacity-50', 'pointer-events-none');
+        state.livenessCaptured = true;
+
+        if (livenessStream) livenessStream.getTracks().forEach(t => t.stop());
+
+        toastSuccess("Face Liveness Check Passed!");
+      }, 1300);
+    }
+
+    // ---------------------------------------------------------------------------
+    // PAGE 6: BANK PAYOUT & ₹1 PENNY DROP
+    // ---------------------------------------------------------------------------
+    function switchPayoutMode(mode) {
+      state.payoutMode = mode;
+      const bankBtn = document.getElementById('payout-tab-bank');
+      const upiBtn = document.getElementById('payout-tab-upi');
+      const bankForm = document.getElementById('form-bank-payout');
+      const upiForm = document.getElementById('form-upi-payout');
+
+      if (mode === 'bank') {
+        bankBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5";
+        upiBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5";
+        bankForm.classList.remove('hidden');
+        upiForm.classList.add('hidden');
+      } else {
+        upiBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5";
+        bankBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5";
+        upiForm.classList.remove('hidden');
+        bankForm.classList.add('hidden');
+      }
+      lucide.createIcons();
+    }
+
+    function executePennyDrop() {
+      const btnText = document.getElementById('penny-btn-text');
+      const badge = document.getElementById('penny-badge');
+      const contBtn = document.getElementById('payout-continue-btn');
+
+      btnText.innerText = "Depositing ₹1 & Verifying Beneficiary...";
+
+      setTimeout(() => {
+        btnText.innerText = "₹1 Penny Deposited & Verified";
+        badge.innerText = "VERIFIED (100% MATCH)";
+        badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800";
+        
+        contBtn.classList.remove('opacity-50', 'pointer-events-none');
+        state.pennyDropVerified = true;
+
+        toastSuccess("₹1 Credited Successfully! Beneficiary: " + state.userProfile.name);
+      }, 1400);
+    }
+
+    // ---------------------------------------------------------------------------
+    // PAGE 7: UNDER REVIEW & DEMO APPROVAL
+    // ---------------------------------------------------------------------------
+    function simulateAdminApprovalAndOpenDashboard() {
+      toastSuccess("Super Admin Approval Granted! Opening Live Runner Hub...");
+      setTimeout(() => {
+        openDashboard('missions');
+      }, 600);
+    }
+
+    // ---------------------------------------------------------------------------
+    // TAB 1: MISSIONS ACTIONS & DUTY TOGGLE
+    // ---------------------------------------------------------------------------
+    function handleDutyToggle(checkbox) {
+      state.isDutyOn = checkbox.checked;
+      const statusText = document.getElementById('duty-status-text');
+      const statusSub = document.getElementById('duty-status-sub');
+      const radar = document.getElementById('duty-radar-circle');
+      const heroCard = document.getElementById('duty-hero-card');
+      const missionCard = document.getElementById('mission-card-201');
+      const idleBox = document.getElementById('idle-status-box');
+
+      if (state.isDutyOn) {
+        statusText.innerText = i18n[currentLang].duty_on;
+        statusSub.innerText = i18n[currentLang].receiving_missions;
+        heroCard.className = "p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex items-center justify-between shadow-md transition duration-300";
+        radar.className = "w-12 h-12 rounded-full bg-white/20 flex items-center justify-center radar-pulse";
+        if (missionCard) missionCard.classList.remove('hidden');
+        if (idleBox) idleBox.classList.add('hidden');
+        toastSuccess("Duty is now ON. Ready for missions!");
+        startMissionAlertRingtone();
+      } else {
+        statusText.innerText = i18n[currentLang].duty_off;
+        statusSub.innerText = i18n[currentLang].duty_off_sub;
+        heroCard.className = "p-4 rounded-2xl bg-gradient-to-r from-slate-700 to-slate-800 text-white flex items-center justify-between shadow-md transition duration-300";
+        radar.className = "w-12 h-12 rounded-full bg-white/10 flex items-center justify-center";
+        if (missionCard) missionCard.classList.add('hidden');
+        if (idleBox) idleBox.classList.remove('hidden');
+        stopMissionAlertRingtone();
+        toastInfo("Duty is now OFF.");
+      }
+    }
+
+    function acceptMission(missionId) {
+      stopMissionAlertRingtone();
+      const banner = document.getElementById('runner-alert-banner');
+      if (banner) banner.classList.add('hidden');
+
+      toastSuccess("Mission " + missionId + " Accepted! Navigating to Active Run...");
+      setTimeout(() => {
+        switchDashboardTab('activerun');
+      }, 700);
+    }
+
+    function rejectMission(missionId) {
+      stopMissionAlertRingtone();
+      const card = document.getElementById('mission-card-201');
+      if (card) {
+        card.innerHTML = `
+          <div class="p-4 bg-slate-100 rounded-xl text-center text-xs text-slate-500">
+            <span>Mission #${missionId} passed. Looking for next run...</span>
+          </div>
+        `;
+      }
+      toastInfo("Mission skipped. You remain online.");
+    }
+
+    // ---------------------------------------------------------------------------
+    // TAB 2: ACTIVE RUN STEPPER ACTIONS
+    // ---------------------------------------------------------------------------
+    function confirmVendorPickup() {
+      state.activeRunState = 'delivery';
+      
+      const step1 = document.getElementById('run-step-1');
+      const step2 = document.getElementById('run-step-2');
+      const badge2 = document.getElementById('step-2-status-badge');
+
+      step1.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3 opacity-75";
+      step1.querySelector('span.bg-emerald-50').innerText = "PICKED UP";
+      step1.querySelector('span.bg-emerald-50').className = "text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded";
+
+      step2.className = "bg-white p-4 rounded-2xl border-2 border-blue-500 shadow-md space-y-3";
+      badge2.innerText = "IN PROGRESS";
+      badge2.className = "text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200";
+
+      toastSuccess("Pickup confirmed! Now delivering to Sunita Devi.");
+      lucide.createIcons();
+    }
+
+    function verifyCustomerDeliveryAndFinish(orderId) {
+      const input = document.getElementById('cust-delivery-otp');
+      const otp = input ? input.value.trim() : '';
+
+      if (otp !== '7412') {
+        toastError("Invalid Delivery OTP! Ask customer for their 4-digit code (Demo: 7412)");
+        return;
+      }
+
+      const step2 = document.getElementById('run-step-2');
+      if (step2) {
+        step2.innerHTML = `
+          <div class="p-4 bg-emerald-50 border border-emerald-300 rounded-xl text-center space-y-2">
+            <i data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600 mx-auto"></i>
+            <h4 class="text-sm font-extrabold text-emerald-900">Delivery Completed Successfully!</h4>
+            <p class="text-xs text-emerald-700">Order #${orderId} delivered. ₹55.00 credited to today's earnings!</p>
+            <div class="p-2 bg-emerald-100 rounded text-[11px] font-bold text-emerald-800">
+              Cash on Delivery Collected: ₹340.00
+            </div>
+            <button onclick="switchDashboardTab('ledger')" class="mt-2 py-2 px-4 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg shadow-xs">
+              View Earnings in Ledger
+            </button>
+          </div>
+        `;
+      }
+
+      toastSuccess("Mission Delivered! ₹55 earned, ₹340 COD collected.");
+      lucide.createIcons();
+    }
+
+    // ---------------------------------------------------------------------------
+    // TAB 3: LEDGER ACTIONS
+    // ---------------------------------------------------------------------------
+    function openCodDepositModal() {
+      openModal('modal-cod-deposit');
+    }
+
+    function confirmCashDeposit() {
+      closeModal('modal-cod-deposit');
+      toastSuccess("₹1,280.00 cash deposit confirmed by Gopalpur Hub cashier!");
+    }
+
+    // ---------------------------------------------------------------------------
+    // TAB 4: ACCOUNT MODALS & ACTIONS
+    // ---------------------------------------------------------------------------
+    function openUpdatePayoutModal() {
+      openModal('modal-update-payout');
+    }
+
+    function verifyAndSaveNewPayout() {
+      const otp = document.getElementById('payout-security-otp').value.trim();
+      const target = document.getElementById('new-payout-target').value.trim();
+
+      if (otp !== '7788') {
+        toastError("Invalid Security OTP! (Default: 7788)");
+        return;
+      }
+      if (!target) {
+        toastError("Please enter new Bank details or UPI ID");
+        return;
+      }
+
+      document.getElementById('account-masked-bank').innerText = target;
+      closeModal('modal-update-payout');
+      toastSuccess("Payout method updated and verified via ₹1 penny drop!");
+    }
+
+    function openRaiseTicketModal() {
+      openModal('modal-raise-ticket');
+    }
+
+    function submitSupportTicket() {
+      const desc = document.getElementById('ticket-desc').value.trim();
+      if (!desc) {
+        toastError("Please describe your problem or breakdown query");
+        return;
+      }
+      closeModal('modal-raise-ticket');
+      toastSuccess("Ticket #RUN-5521 created! Supervisor will call you within 10 mins.");
+    }
+
+    function openContactAdminModal() {
+      openModal('modal-contact-admin');
+    }
+
+    function openTermsModal() {
+      openModal('modal-terms');
+    }
+
+    function openLogoutModal() {
+      openModal('modal-logout');
+    }
+
+    function executeLogout() {
+      stopMissionAlertRingtone();
+      closeModal('modal-logout');
+      toastInfo("Duty shift ended safely.");
+      setTimeout(() => {
+        navigateTo('onboarding-1');
+      }, 500);
+    }
+
+    // ---------------------------------------------------------------------------
+    // INITIALIZATION
+    // ---------------------------------------------------------------------------
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedLang = localStorage.getItem('gaonbazaar_runner_lang') || 'en';
+      setLanguage(savedLang);
+
+      navigateTo('onboarding-1', false);
+      history.replaceState({ screen: 'onboarding-1', view: 'onboarding' }, '', '#onboarding-1');
+
+      lucide.createIcons();
+    });
+  </script>
 </body>
 </html>
