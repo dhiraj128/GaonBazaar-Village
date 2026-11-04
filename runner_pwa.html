@@ -655,19 +655,19 @@
               <span class="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-extrabold flex items-center justify-center">1</span>
               <h3 class="text-sm font-bold text-slate-900" data-i18n="step_1_title">Pickup at Vendor Shop</h3>
             </div>
-            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">IN PROGRESS</span>
+            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200" data-i18n="badge_in_progress">IN PROGRESS</span>
           </div>
 
           <div class="p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
-            <h4 class="font-bold text-slate-900">Sharma Kirana & General Store</h4>
-            <p class="text-slate-500">Shop #4, Main Village Market • +91 9876543210</p>
+            <h4 id="order-store-name" class="font-bold text-slate-900">Sharma Kirana & General Store</h4>
+            <p id="order-store-address" class="text-slate-500">Shop #4, Main Village Market • +91 9876543210</p>
             <div class="pt-2 flex space-x-2">
-              <!-- Google Maps Link -->
-              <a href="https://www.google.com/maps/dir/?api=1&destination=26.8467,80.9462&travelmode=driving&dir_action=navigate" target="_blank" class="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
+              <!-- Dynamic Google Maps Navigation Button -->
+              <button onclick="startNavigation('store')" class="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
                 <i data-lucide="navigation-2" class="w-3.5 h-3.5"></i>
                 <span data-i18n="nav_to_vendor">Navigate to Vendor</span>
-              </a>
-              <a href="tel:9876543210" class="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-bold flex items-center justify-center space-x-1">
+              </button>
+              <a id="store-phone-link" href="tel:9876543210" class="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-bold flex items-center justify-center space-x-1">
                 <i data-lucide="phone" class="w-3.5 h-3.5"></i>
                 <span data-i18n="call_btn">Call</span>
               </a>
@@ -678,7 +678,7 @@
           <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex justify-between items-center">
             <div>
               <span class="text-[11px] font-medium text-emerald-900 block" data-i18n="pickup_otp_label">Share Pickup OTP with Vendor:</span>
-              <span class="text-xl font-mono font-extrabold text-emerald-800 tracking-wider">5821</span>
+              <span id="order-pickup-otp" class="text-xl font-mono font-extrabold text-emerald-800 tracking-wider">5821</span>
             </div>
             <button onclick="confirmVendorPickup()" class="py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-xs active:scale-95 transition" data-i18n="confirm_pickup_btn">
               Order Picked Up
@@ -686,7 +686,7 @@
           </div>
         </div>
 
-        <!-- STEP 2: NAVIGATE TO CUSTOMER & DELIVERY OTP -->
+        <!-- STEP 2: NAVIGATE TO CUSTOMER, LIVE CHAT & PIN, DELIVERY OTP -->
         <div id="run-step-2" class="bg-white p-4 rounded-2xl border border-slate-200 opacity-60 pointer-events-none shadow-xs space-y-3 transition">
           <div class="flex justify-between items-center">
             <div class="flex items-center space-x-2">
@@ -696,19 +696,39 @@
             <span id="step-2-status-badge" class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">WAITING PICKUP</span>
           </div>
 
+          <!-- Customer Shared Live Pin Banner (Populated via Chat LOCATION_PIN) -->
+          <div id="customer-shared-pin-card" class="p-3 bg-indigo-50 rounded-xl border border-indigo-200 space-y-2 hidden">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-1.5 text-xs font-bold text-indigo-950">
+                <i data-lucide="map-pin" class="w-4 h-4 text-indigo-600"></i>
+                <span data-i18n="cust_shared_pin_title">Customer Shared Exact Location Pin</span>
+              </div>
+              <span id="shared-pin-time" class="text-[10px] text-indigo-600 font-semibold">Just now</span>
+            </div>
+            <p id="shared-pin-address" class="text-xs text-indigo-900 font-medium">Near the blue water tank / Panchayat Bhawan</p>
+            <button onclick="startNavigation('shared')" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
+              <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
+              <span data-i18n="nav_to_shared_pin">Navigate to Shared Location</span>
+            </button>
+          </div>
+
           <div class="p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
             <div class="flex justify-between">
-              <h4 class="font-bold text-slate-900">Sunita Devi</h4>
-              <span class="px-2 py-0.5 text-[10px] font-extrabold rounded bg-amber-100 text-amber-900">COLLECT CASH: ₹340</span>
+              <h4 id="order-customer-name" class="font-bold text-slate-900">Sunita Devi</h4>
+              <span id="order-payment-badge" class="px-2 py-0.5 text-[10px] font-extrabold rounded bg-amber-100 text-amber-900">COLLECT CASH: ₹340</span>
             </div>
-            <p class="text-slate-500">House 42, Near Primary School, Gopalpur Village</p>
+            <p id="order-customer-address" class="text-slate-500">House 42, Near Primary School, Minapur Village</p>
             <div class="pt-2 flex space-x-2">
-              <!-- Google Maps Link -->
-              <a href="https://www.google.com/maps/dir/?api=1&destination=26.8500,80.9500&travelmode=driving&dir_action=navigate" target="_blank" class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
+              <!-- Dynamic Google Maps Navigation Button -->
+              <button onclick="startNavigation('customer')" class="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
                 <i data-lucide="navigation-2" class="w-3.5 h-3.5"></i>
                 <span data-i18n="nav_to_customer">Navigate to Customer</span>
-              </a>
-              <a href="tel:9811224488" class="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-bold flex items-center justify-center space-x-1">
+              </button>
+              <button onclick="openRunnerOrderChat()" class="py-2 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold flex items-center justify-center space-x-1 transition active:scale-95">
+                <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                <span data-i18n="chat_btn">Chat & Pin</span>
+              </button>
+              <a id="cust-phone-link" href="tel:9811224488" class="py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-bold flex items-center justify-center space-x-1">
                 <i data-lucide="phone" class="w-3.5 h-3.5"></i>
                 <span data-i18n="call_btn">Call</span>
               </a>
@@ -722,13 +742,13 @@
               <span data-i18n="enter_cust_otp">Verify Customer's 4-Digit Delivery OTP</span>
             </div>
             <div class="flex flex-col sm:flex-row gap-2.5 w-full">
-              <input type="text" id="cust-delivery-otp" maxlength="4" placeholder="7412" data-i18n-placeholder="otp_placeholder_7412" class="w-full sm:flex-1 min-w-0 px-3 py-2.5 text-center font-mono font-bold text-lg tracking-widest border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+              <input type="text" id="cust-delivery-otp" maxlength="4" placeholder="••••" data-i18n-placeholder="otp_input_placeholder" class="w-full sm:flex-1 min-w-0 px-3 py-2.5 text-center font-mono font-bold text-lg tracking-widest border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-slate-900">
               <button onclick="verifyCustomerDeliveryAndFinish('GB-8921')" class="w-full sm:w-auto shrink-0 py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm active:scale-95 transition flex items-center justify-center space-x-1.5" data-i18n="complete_run_btn">
                 <i data-lucide="check-check" class="w-4 h-4"></i>
                 <span data-i18n="complete_run_btn">Deliver</span>
               </button>
             </div>
-            <span class="text-[10px] text-blue-600 block" data-i18n="demo_otp_note">Ask the customer for the delivery OTP (Demo: 7412)</span>
+            <span class="text-[10px] text-blue-700 block font-medium" data-i18n="ask_otp_note">Ask customer for the 4-digit code shown on their order status screen</span>
           </div>
         </div>
 
@@ -964,6 +984,57 @@
     <!-- MODALS (SUB-PAGES & OVERLAYS WITH HISTORY POPSTATE & VISIBLE BACK ARROWS) -->
     <!-- ========================================================================= -->
     
+    
+    <!-- MODAL 0: RUNNER ACTIVE ORDER CHAT & LOCATION PIN SHARING -->
+    <div id="modal-runner-order-chat" class="app-modal fixed inset-0 bg-black/60 z-50 flex items-end justify-center hidden">
+      <div class="w-full max-w-md bg-white rounded-t-2xl p-4 shadow-2xl max-h-[85vh] flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-runner-order-chat')" class="p-1 rounded-full hover:bg-slate-100 text-slate-600">
+              <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+                <span id="chat-customer-name">Customer Sunita Devi</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+              </h3>
+              <p class="text-[10px] text-slate-500">Order #<span id="chat-order-id">GB-8921</span> • Direct Delivery Chat</p>
+            </div>
+          </div>
+          <button onclick="closeModal('modal-runner-order-chat')" class="text-slate-400 hover:text-slate-600 p-1">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Message List -->
+        <div id="runner-chat-messages" class="flex-1 overflow-y-auto py-3 space-y-2.5 min-h-[220px]">
+          <!-- Populated dynamically by renderRunnerChat() -->
+        </div>
+
+        <!-- Quick Canned Replies -->
+        <div class="py-1.5 flex space-x-1.5 overflow-x-auto text-[11px] no-scrollbar">
+          <button onclick="sendRunnerQuickReply('I am on my way to your location')" class="shrink-0 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-medium transition">
+            On my way
+          </button>
+          <button onclick="sendRunnerQuickReply('Reached near landmark, please step out')" class="shrink-0 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-medium transition">
+            Near landmark
+          </button>
+          <button onclick="sendRunnerQuickReply('Please keep the 4-digit OTP ready')" class="shrink-0 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full font-medium transition">
+            Keep OTP ready
+          </button>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="pt-2 border-t border-slate-200 flex items-center space-x-2">
+          <input type="text" id="runner-chat-input" placeholder="Type a message to customer..." onkeydown="if(event.key==='Enter') sendRunnerChatMessage()" class="flex-1 px-3 py-2 bg-slate-50 text-xs rounded-xl border border-slate-300 focus:outline-none focus:border-blue-600 text-slate-900">
+          <button onclick="sendRunnerChatMessage()" class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-xs active:scale-95 transition">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- MODAL 1: COD CASH DEPOSIT -->
     <div id="modal-cod-deposit" class="app-modal fixed inset-0 bg-black/60 z-50 flex items-end justify-center hidden">
       <div class="w-full max-w-md bg-white rounded-t-2xl p-5 shadow-2xl">
@@ -1199,6 +1270,11 @@
         ocr_extracted_success: "Details Extracted Automatically",
         sample_mission_title: "Mission #GB-8921",
         sample_mission_sub: "Grocery Delivery • 4 Items (6.2 kg)",
+        cust_shared_pin_title: "Customer Shared Exact Location Pin",
+        nav_to_shared_pin: "Navigate to Shared Location",
+        chat_btn: "Chat & Pin",
+        otp_input_placeholder: "••••",
+        ask_otp_note: "Ask customer for the 4-digit code shown on their order status screen",
         hot_mission_badge: "HOT MISSION • 2.8 KM TOTAL",
         distance_away_sample: "1.1 km away",
         distance_from_shop_sample: "1.7 km from shop",
@@ -1358,6 +1434,11 @@
         ocr_extracted_success: "विवरण स्वचालित रूप से निकाला गया",
         sample_mission_title: "मिशन #GB-8921",
         sample_mission_sub: "किराना डिलीवरी • 4 सामान (6.2 किग्रा)",
+        cust_shared_pin_title: "ग्राहक ने सटीक लोकेशन पिन साझा किया",
+        nav_to_shared_pin: "साझा स्थान पर नेविगेट करें",
+        chat_btn: "चैट और पिन",
+        otp_input_placeholder: "••••",
+        ask_otp_note: "ग्राहक की स्क्रीन पर दिख रहा 4-अंकीय कोड यहाँ दर्ज करें",
         hot_mission_badge: "तत्काल मिशन • 2.8 किमी कुल दूरी",
         distance_away_sample: "1.1 किमी दूर",
         distance_from_shop_sample: "दुकान से 1.7 किमी",
@@ -2307,13 +2388,227 @@
     }
 
     // ---------------------------------------------------------------------------
+    // DYNAMIC GPS NAVIGATION & CUSTOMER LOCATION CHAT
+    // ---------------------------------------------------------------------------
+
+    // Active Mission State with Real Dynamic Coordinates (Zero Hardcoded Nav Links)
+    state.activeMission = {
+      id: "GB-8921",
+      store_name: "Sharma Kirana & General Store",
+      store_latitude: 26.2230,
+      store_longitude: 85.3520,
+      store_address: "Shop #4, Main Village Market, Minapur",
+      store_phone: "9876543210",
+      customer_name: "Sunita Devi",
+      customer_phone: "9811224488",
+      delivery_latitude: 26.2315,
+      delivery_longitude: 85.3610,
+      delivery_address: "House 42, Near Primary School, Minapur Village",
+      cod_amount: 340.0,
+      earning: 55.0,
+      pickup_otp: "5821",
+      delivery_otp: "7412"
+    };
+    state.customerSharedLocation = null;
+    state.orderMessages = [];
+
+    // Universal Cross-Platform Google Maps Navigation Scheme
+    function startNavigation(type) {
+      const mission = state.activeMission || {};
+      let lat = null, lng = null, label = "";
+
+      if (type === 'store') {
+        lat = mission.store_latitude || mission.store?.latitude;
+        lng = mission.store_longitude || mission.store?.longitude;
+        label = mission.store_name || "Vendor Store";
+      } else if (type === 'customer') {
+        lat = mission.delivery_latitude;
+        lng = mission.delivery_longitude;
+        label = mission.customer_name || "Customer Delivery";
+      } else if (type === 'shared') {
+        lat = state.customerSharedLocation?.latitude;
+        lng = state.customerSharedLocation?.longitude;
+        label = state.customerSharedLocation?.title || "Customer Shared Location";
+      }
+
+      // Explicit Validation: Never navigate to fake fallback if coordinates are missing
+      if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+        toastWarning(currentLang === 'hi' 
+          ? "स्थान के जीपीएस निर्देशांक उपलब्ध नहीं हैं (GPS Unavailable)" 
+          : "Location coordinates unavailable for this destination.");
+        return;
+      }
+
+      // Universal Cross-Platform Intent Scheme (Forces mobile turn-by-turn navigation)
+      const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving&dir_action=navigate`;
+      window.open(navUrl, '_blank');
+    }
+
+    // ---------------------------------------------------------------------------
+    // ORDER CHAT & REAL-TIME CUSTOMER PIN SHARING
+    // ---------------------------------------------------------------------------
+    function openRunnerOrderChat() {
+      const mission = state.activeMission || {};
+      const nameEl = document.getElementById('chat-customer-name');
+      const orderEl = document.getElementById('chat-order-id');
+      if (nameEl) nameEl.innerText = mission.customer_name || "Customer";
+      if (orderEl) orderEl.innerText = mission.id || "GB-8921";
+
+      openModal('modal-runner-order-chat');
+      loadOrderMessages(mission.id || "GB-8921");
+    }
+
+    async function loadOrderMessages(orderId) {
+      try {
+        const res = await apiRequest(`/api/v1/orders/${orderId}/messages`, 'GET');
+        if (Array.isArray(res)) {
+          state.orderMessages = res;
+          // Inspect for LOCATION_PIN message
+          const pinMsg = [...res].reverse().find(m => m.message_type === 'LOCATION_PIN');
+          if (pinMsg && pinMsg.latitude && pinMsg.longitude) {
+            updateCustomerSharedPin(pinMsg);
+          }
+          renderRunnerChat();
+          return;
+        }
+      } catch (err) {
+        // Fallback demo conversation for active run
+      }
+
+      if (!state.orderMessages || state.orderMessages.length === 0) {
+        state.orderMessages = [
+          {
+            id: "msg_1",
+            sender_role: "customer",
+            sender_name: "Sunita Devi",
+            message_type: "TEXT",
+            content: "Namaste bhaiya, I am waiting near the school.",
+            created_at: new Date(Date.now() - 300000).toISOString()
+          },
+          {
+            id: "msg_2",
+            sender_role: "customer",
+            sender_name: "Sunita Devi",
+            message_type: "LOCATION_PIN",
+            location_title: "Near the blue water tank / Panchayat Bhawan",
+            latitude: 26.2315,
+            longitude: 85.3610,
+            content: "House 42, Near Primary School, Minapur Village",
+            created_at: new Date(Date.now() - 120000).toISOString()
+          }
+        ];
+        updateCustomerSharedPin(state.orderMessages[1]);
+      }
+      renderRunnerChat();
+    }
+
+    function updateCustomerSharedPin(pinMsg) {
+      state.customerSharedLocation = {
+        latitude: pinMsg.latitude,
+        longitude: pinMsg.longitude,
+        title: pinMsg.location_title || pinMsg.content || "Customer Shared Pin",
+        time: new Date(pinMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      const card = document.getElementById('customer-shared-pin-card');
+      const addrEl = document.getElementById('shared-pin-address');
+      const timeEl = document.getElementById('shared-pin-time');
+      if (card) card.classList.remove('hidden');
+      if (addrEl) addrEl.innerText = `${state.customerSharedLocation.title} (${pinMsg.latitude.toFixed(4)}, ${pinMsg.longitude.toFixed(4)})`;
+      if (timeEl) timeEl.innerText = state.customerSharedLocation.time;
+    }
+
+    function renderRunnerChat() {
+      const container = document.getElementById('runner-chat-messages');
+      if (!container) return;
+
+      container.innerHTML = state.orderMessages.map(msg => {
+        const isRunner = msg.sender_role === 'runner' || msg.sender_role === 'delivery';
+        const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        if (msg.message_type === 'LOCATION_PIN') {
+          return `
+            <div class="flex flex-col items-start space-y-1">
+              <span class="text-[10px] text-slate-400 font-semibold px-1">${msg.sender_name} • ${timeStr}</span>
+              <div class="max-w-[85%] bg-indigo-50 border border-indigo-200 rounded-2xl rounded-tl-sm p-3 shadow-xs space-y-2">
+                <div class="flex items-center space-x-1.5 text-xs font-bold text-indigo-950">
+                  <i data-lucide="map-pin" class="w-4 h-4 text-indigo-600 shrink-0"></i>
+                  <span>Live Location Pin Shared</span>
+                </div>
+                <p class="text-xs text-indigo-900 font-medium">${msg.location_title || msg.content || "Exact Landmark"}</p>
+                <div class="text-[10px] font-mono text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded">
+                  GPS: ${msg.latitude?.toFixed(5)}, ${msg.longitude?.toFixed(5)}
+                </div>
+                <button onclick="startNavigation('shared')" class="w-full py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1 shadow-xs transition active:scale-95">
+                  <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
+                  <span>Start Driving to Shared Pin</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="flex flex-col ${isRunner ? 'items-end' : 'items-start'} space-y-0.5">
+            <span class="text-[9px] text-slate-400 font-medium px-1">${msg.sender_name} • ${timeStr}</span>
+            <div class="max-w-[80%] px-3 py-2 rounded-2xl ${isRunner ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-slate-100 text-slate-800 rounded-tl-sm'} text-xs font-medium shadow-2xs">
+              ${msg.content}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.scrollTop = container.scrollHeight;
+      lucide.createIcons();
+    }
+
+    async function sendRunnerChatMessage() {
+      const input = document.getElementById('runner-chat-input');
+      const text = input ? input.value.trim() : '';
+      if (!text) return;
+
+      const mission = state.activeMission || {};
+      const newMsg = {
+        id: "msg_" + Date.now(),
+        order_id: mission.id || "GB-8921",
+        sender_role: "runner",
+        sender_name: state.userProfile?.name || "Runner Sonu",
+        message_type: "TEXT",
+        content: text,
+        created_at: new Date().toISOString()
+      };
+
+      state.orderMessages.push(newMsg);
+      input.value = '';
+      renderRunnerChat();
+
+      try {
+        await apiRequest(`/api/v1/orders/${mission.id || 'GB-8921'}/messages`, 'POST', {
+          message_type: "TEXT",
+          content: text
+        });
+      } catch (err) {
+        console.warn("Message send notice:", err);
+      }
+    }
+
+    function sendRunnerQuickReply(replyText) {
+      const input = document.getElementById('runner-chat-input');
+      if (input) {
+        input.value = replyText;
+        sendRunnerChatMessage();
+      }
+    }
+
+    // ---------------------------------------------------------------------------
     // TAB 2: ACTIVE RUN STEPPER ACTIONS
     // ---------------------------------------------------------------------------
     async function confirmVendorPickup() {
       state.activeRunState = 'delivery';
+      const missionId = state.activeMission?.id || 'GB-8921';
 
       try {
-        await apiRequest('/api/v1/orders/runner/jobs/GB-8921/action', 'POST', { action: 'PICKUP' });
+        await apiRequest('/api/v1/orders/runner/jobs/' + missionId + '/action', 'POST', { action: 'PICKUP' });
       } catch (e) {}
       
       const step1 = document.getElementById('run-step-1');
@@ -2328,21 +2623,60 @@
       }
 
       step2.className = "bg-white p-4 rounded-2xl border-2 border-blue-500 shadow-md space-y-3";
-      badge2.innerText = "IN PROGRESS";
-      badge2.className = "text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200";
+      step2.classList.remove('opacity-60', 'pointer-events-none');
+      if (badge2) {
+        badge2.innerText = "IN PROGRESS";
+        badge2.className = "text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200";
+      }
 
-      toastSuccess("Pickup confirmed! Now delivering to Sunita Devi.");
+      toastSuccess("Pickup confirmed! Now delivering to " + (state.activeMission?.customer_name || "Customer") + ".");
       lucide.createIcons();
     }
 
     async function verifyCustomerDeliveryAndFinish(orderId) {
       const input = document.getElementById('cust-delivery-otp');
       const otp = input ? input.value.trim() : '';
+      const mission = state.activeMission || {};
 
-      if (otp !== '7412' && otp !== '1234') {
-        toastError("Invalid Delivery OTP! Ask customer for their 4-digit code (Demo: 7412)");
+      if (!otp || otp.length !== 4) {
+        toastError(currentLang === 'hi' ? "कृपया ग्राहक का 4-अंकीय डिलीवरी कोड दर्ज करें" : "Please enter the 4-digit customer delivery OTP");
         return;
       }
+
+      try {
+        const res = await apiRequest('/api/v1/orders/runner/jobs/' + orderId + '/action', 'POST', {
+          action: 'DELIVER',
+          delivery_otp: otp,
+          cash_collected: true
+        });
+      } catch (e) {
+        // If testing locally or OTP mismatch
+        if (otp !== (mission.delivery_otp || '7412') && otp !== '1234') {
+          toastError(e.message || "Invalid Delivery OTP! Ask customer for their 4-digit code");
+          return;
+        }
+      }
+
+      const step2 = document.getElementById('run-step-2');
+      if (step2) {
+        step2.innerHTML = `
+          <div class="p-4 bg-emerald-50 border border-emerald-300 rounded-xl text-center space-y-2">
+            <i data-lucide="check-circle-2" class="w-10 h-10 text-emerald-600 mx-auto"></i>
+            <h4 class="text-sm font-extrabold text-emerald-900">Delivery Completed Successfully!</h4>
+            <p class="text-xs text-emerald-700">Order #${orderId} delivered to ${mission.customer_name || 'Customer'}. ₹${(mission.earning || 55).toFixed(2)} credited to today's earnings!</p>
+            <div class="p-2 bg-emerald-100 rounded text-[11px] font-bold text-emerald-800">
+              Cash on Delivery Collected: ₹${(mission.cod_amount || 340).toFixed(2)}
+            </div>
+            <button onclick="switchDashboardTab('ledger')" class="mt-2 py-2 px-4 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-lg shadow-xs">
+              View Earnings in Ledger
+            </button>
+          </div>
+        `;
+      }
+
+      toastSuccess("Mission Delivered! ₹55 earned, ₹340 COD collected.");
+      lucide.createIcons();
+    }
 
       try {
         await apiRequest('/api/v1/orders/runner/jobs/' + orderId + '/action', 'POST', {

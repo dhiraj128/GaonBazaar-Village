@@ -84,4 +84,5 @@ class ProductStockUpdate(BaseModel):
     in_stock: Optional[bool] = None
     stock_quantity: Optional[int] = None
     price: Optional[float] = None
+    mrp: Optional[float] = None
 

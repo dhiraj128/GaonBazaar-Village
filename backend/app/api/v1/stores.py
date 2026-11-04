@@ -354,13 +354,16 @@ async def update_product_stock(
         p.stock_quantity = data.stock_quantity
     if data.price is not None:
         p.price = data.price
+    if data.mrp is not None:
+        p.mrp = data.mrp
     await db.commit()
     return {
         "message": "Product updated successfully",
         "product_id": p.id,
         "in_stock": p.in_stock,
         "stock_quantity": p.stock_quantity,
-        "price": p.price
+        "price": p.price,
+        "mrp": p.mrp
     }
 
 from pydantic import BaseModel
