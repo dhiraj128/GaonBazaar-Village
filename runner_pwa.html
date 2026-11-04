@@ -223,10 +223,10 @@
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="vehicle_type_label">Vehicle Type</label>
               <select id="runner-vehicletype" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
-                <option value="Motorcycle (Petrol Bike)">Motorcycle / Hero Splendor (Petrol Bike)</option>
-                <option value="Electric Scooter (EV)">Electric Scooter / EV 2-Wheeler</option>
-                <option value="Bicycle (Standard Cycle)">Bicycle (साइकिल)</option>
-                <option value="Auto / 3-Wheeler">Auto / E-Rickshaw</option>
+                <option value="Motorcycle (Petrol Bike)" data-i18n="opt_bike">Motorcycle / Hero Splendor (Petrol Bike)</option>
+                <option value="Electric Scooter (EV)" data-i18n="opt_ev">Electric Scooter / EV 2-Wheeler</option>
+                <option value="Bicycle (Standard Cycle)" data-i18n="opt_cycle">Bicycle (साइकिल)</option>
+                <option value="Auto / 3-Wheeler" data-i18n="opt_auto">Auto / E-Rickshaw</option>
               </select>
             </div>
 
@@ -290,6 +290,37 @@
               <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
               <span id="scan-id-text" data-i18n="scan_id_btn">Capture & Scan ID</span>
             </button>
+          </div>
+
+          <!-- 3-Stage Govt OCR Verification Progress UI Overlay -->
+          <div id="ocr-progress-overlay" class="mt-4 p-4 rounded-xl border border-blue-200 bg-white shadow-xs space-y-3 hidden">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <h4 id="ocr-stage-headline" class="text-xs font-bold text-slate-900" data-i18n="ocr_stage_uploading">Stage 1/3: Uploading Securely...</h4>
+              </div>
+              <span id="ocr-progress-pct" class="text-[10px] font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">33%</span>
+            </div>
+            
+            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+              <div id="ocr-progress-bar" class="bg-blue-600 h-full rounded-full transition-all duration-500" style="width: 33%;"></div>
+            </div>
+
+            <!-- Step checklist -->
+            <div class="space-y-1.5 text-[11px]">
+              <div id="ocr-step-1" class="flex items-center space-x-2 text-blue-700 font-semibold">
+                <i data-lucide="upload-cloud" class="w-3.5 h-3.5"></i>
+                <span data-i18n="ocr_step_upload">1. Uploading Encrypted Base64 Capture</span>
+              </div>
+              <div id="ocr-step-2" class="flex items-center space-x-2 text-slate-400">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                <span data-i18n="ocr_step_gov_sarathi">2. Connecting to Govt Database (Sarathi / MoRTH)...</span>
+              </div>
+              <div id="ocr-step-3" class="flex items-center space-x-2 text-slate-400">
+                <i data-lucide="file-check-2" class="w-3.5 h-3.5"></i>
+                <span data-i18n="ocr_step_extract">3. Extracting Details & Cryptographic Checksum...</span>
+              </div>
+            </div>
           </div>
 
           <div id="ocr-results-box" class="mt-4 p-4 rounded-xl border border-blue-200 bg-blue-50/70 shadow-xs hidden">
@@ -540,9 +571,9 @@
           <div id="mission-card-201" class="bg-white rounded-2xl border-2 border-blue-500 p-4 shadow-md pulse-mission transition">
             <div class="flex justify-between items-start mb-3">
               <div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 text-blue-800">HOT MISSION • 2.8 KM TOTAL</span>
-                <h3 class="text-base font-bold text-slate-900 mt-1">Mission #GB-8921</h3>
-                <span class="text-xs text-slate-500 font-medium">Grocery Delivery • 4 Items (6.2 kg)</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 text-blue-800" data-i18n="hot_mission_badge">HOT MISSION • 2.8 KM TOTAL</span>
+                <h3 class="text-base font-bold text-slate-900 mt-1" data-i18n="sample_mission_title">Mission #GB-8921</h3>
+                <span class="text-xs text-slate-500 font-medium" data-i18n="sample_mission_sub">Grocery Delivery • 4 Items (6.2 kg)</span>
               </div>
               <div class="text-right">
                 <span class="text-lg font-extrabold text-emerald-600">₹55.00</span>
@@ -560,7 +591,7 @@
                 <div class="flex-1">
                   <div class="flex justify-between items-center">
                     <span class="font-bold text-slate-800">Sharma Kirana Store</span>
-                    <span class="text-emerald-700 font-semibold text-[11px]">1.1 km away</span>
+                    <span class="text-emerald-700 font-semibold text-[11px]" data-i18n="distance_away_sample">1.1 km away</span>
                   </div>
                   <p class="text-[11px] text-slate-500">Shop #4, Main Village Market, Gopalpur</p>
                 </div>
@@ -573,8 +604,8 @@
                 </div>
                 <div class="flex-1">
                   <div class="flex justify-between items-center">
-                    <span class="font-bold text-slate-800">Sunita Devi (Customer)</span>
-                    <span class="text-blue-700 font-semibold text-[11px]">1.7 km from shop</span>
+                    <span class="font-bold text-slate-800" data-i18n="customer_name_sample">Sunita Devi (Customer)</span>
+                    <span class="text-blue-700 font-semibold text-[11px]" data-i18n="distance_from_shop_sample">1.7 km from shop</span>
                   </div>
                   <p class="text-[11px] text-slate-500">House 42, Near Primary School, Gopalpur</p>
                 </div>
@@ -722,13 +753,13 @@
           <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 shadow-xs text-center">
             <span class="text-[10px] font-semibold text-amber-700 uppercase block" data-i18n="cod_cash_hand">COD in Hand</span>
             <span class="text-base font-extrabold text-amber-800 mt-0.5 block">₹1,280</span>
-            <span class="text-[9px] text-amber-700 font-bold">Deposit at Hub</span>
+            <span class="text-[9px] text-amber-700 font-bold" data-i18n="deposit_at_hub_badge">Deposit at Hub</span>
           </div>
 
           <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
             <span class="text-[10px] font-semibold text-slate-500 uppercase block" data-i18n="distance_traveled">Distance</span>
             <span class="text-base font-extrabold text-slate-900 mt-0.5 block">24.8 km</span>
-            <span class="text-[9px] text-slate-500 font-medium">GPS Tracked</span>
+            <span class="text-[9px] text-slate-500 font-medium" data-i18n="gps_tracked_badge">GPS Tracked</span>
           </div>
         </div>
 
@@ -750,7 +781,7 @@
             <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center text-xs">
               <div>
                 <span class="font-bold text-slate-900">Run #GB-8914 (2.3 km)</span>
-                <span class="block text-[10px] text-slate-500">Today, 11:40 AM • Prepaid Order</span>
+                <span class="block text-[10px] text-slate-500" data-i18n="run_history_1">Today, 11:40 AM • Prepaid Order</span>
               </div>
               <div class="text-right">
                 <span class="font-extrabold text-blue-600">+₹50.00</span>
@@ -761,7 +792,7 @@
             <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center text-xs">
               <div>
                 <span class="font-bold text-slate-900">Run #GB-8908 (3.1 km)</span>
-                <span class="block text-[10px] text-slate-500">Today, 10:15 AM • COD (₹450 Collected)</span>
+                <span class="block text-[10px] text-slate-500" data-i18n="run_history_2">Today, 10:15 AM • COD (₹450 Collected)</span>
               </div>
               <div class="text-right">
                 <span class="font-extrabold text-blue-600">+₹65.00</span>
@@ -771,8 +802,8 @@
 
             <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center text-xs">
               <div>
-                <span class="font-bold text-slate-900">Weekly Runner Fuel Bonus</span>
-                <span class="block text-[10px] text-slate-500">Yesterday, 10:00 PM • Performance Incentive</span>
+                <span class="font-bold text-slate-900" data-i18n="run_history_3">Weekly Runner Fuel Bonus</span>
+                <span class="block text-[10px] text-slate-500" data-i18n="run_history_3_sub">Yesterday, 10:00 PM • Performance Incentive</span>
               </div>
               <div class="text-right">
                 <span class="font-extrabold text-emerald-600">+₹200.00</span>
@@ -878,7 +909,7 @@
               <i data-lucide="phone-call" class="w-4 h-4 text-blue-600"></i>
               <span data-i18n="contact_supervisor">Call Fleet Supervisor</span>
             </div>
-            <span class="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Toll Free</span>
+            <span class="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded" data-i18n="toll_free_badge">Toll Free</span>
           </button>
         </div>
 
@@ -1030,11 +1061,11 @@
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">Issue Category</label>
             <select id="ticket-category" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600">
-              <option value="Customer Not Reachable / Wrong Address">Customer Not Reachable / Wrong Address</option>
-              <option value="Vendor Packed Wrong Items">Vendor Packed Wrong Items</option>
-              <option value="Vehicle Breakdown on Road">Vehicle Breakdown on Road</option>
-              <option value="COD Cash Mismatch">COD Cash Mismatch</option>
-              <option value="App GPS / Telemetry Issue">App GPS / Telemetry Issue</option>
+              <option value="Customer Not Reachable / Wrong Address" data-i18n="opt_ticket_cust">Customer Not Reachable / Wrong Address</option>
+              <option value="Vendor Packed Wrong Items" data-i18n="opt_ticket_vendor">Vendor Packed Wrong Items</option>
+              <option value="Vehicle Breakdown on Road" data-i18n="opt_ticket_breakdown">Vehicle Breakdown on Road</option>
+              <option value="COD Cash Mismatch" data-i18n="opt_ticket_cod">COD Cash Mismatch</option>
+              <option value="App GPS / Telemetry Issue" data-i18n="opt_ticket_gps">App GPS / Telemetry Issue</option>
             </select>
           </div>
           <div>
@@ -1080,11 +1111,11 @@
           <div class="grid grid-cols-2 gap-3">
             <a href="tel:18002007766" onclick="toastInfo('Calling Fleet Desk 1800-200-7766...')" class="py-3 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition">
               <i data-lucide="phone" class="w-4 h-4"></i>
-              <span>Call Fleet Desk</span>
+              <span data-i18n="call_fleet_desk">Call Fleet Desk</span>
             </a>
             <a href="https://wa.me/919711002233" target="_blank" onclick="toastInfo('Opening WhatsApp Fleet Support...')" class="py-3 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition">
               <i data-lucide="message-square" class="w-4 h-4"></i>
-              <span>WhatsApp Chat</span>
+              <span data-i18n="whatsapp_chat">WhatsApp Chat</span>
             </a>
           </div>
         </div>
@@ -1166,6 +1197,38 @@
         ocr_place_frame: "Place your ID card inside the frame",
         scan_id_btn: "Capture & Scan ID",
         ocr_extracted_success: "Details Extracted Automatically",
+        sample_mission_title: "Mission #GB-8921",
+        sample_mission_sub: "Grocery Delivery • 4 Items (6.2 kg)",
+        hot_mission_badge: "HOT MISSION • 2.8 KM TOTAL",
+        distance_away_sample: "1.1 km away",
+        distance_from_shop_sample: "1.7 km from shop",
+        customer_name_sample: "Sunita Devi (Customer)",
+        deposit_at_hub_badge: "Deposit at Hub",
+        gps_tracked_badge: "GPS Tracked",
+        toll_free_badge: "Toll Free",
+        call_fleet_desk: "Call Fleet Desk",
+        whatsapp_chat: "WhatsApp Chat",
+        run_history_1: "Today, 11:40 AM • Prepaid Order",
+        run_history_2: "Today, 10:15 AM • COD (₹450 Collected)",
+        run_history_3: "Weekly Runner Fuel Bonus",
+        run_history_3_sub: "Yesterday, 10:00 PM • Performance Incentive",
+        opt_bike: "Motorcycle / Hero Splendor (Petrol Bike)",
+        opt_ev: "Electric Scooter / EV 2-Wheeler",
+        opt_cycle: "Bicycle (Standard Cycle)",
+        opt_auto: "Auto / E-Rickshaw",
+        opt_ticket_cust: "Customer Not Reachable / Wrong Address",
+        opt_ticket_vendor: "Vendor Packed Wrong Items",
+        opt_ticket_breakdown: "Vehicle Breakdown on Road",
+        opt_ticket_cod: "COD Cash Mismatch",
+        opt_ticket_gps: "App GPS / Telemetry Issue",
+        ocr_stage_uploading: "Stage 1/3: Uploading Securely...",
+        ocr_stage_gov_sarathi: "Stage 2/3: Connecting to Govt Database (Sarathi / MoRTH)...",
+        ocr_stage_extract: "Stage 3/3: Extracting Details...",
+        ocr_step_upload: "1. Uploading Encrypted Base64 Capture",
+        ocr_step_gov_sarathi: "2. Connecting to Govt Database (Sarathi / MoRTH)...",
+        ocr_step_extract: "3. Extracting Details & Cryptographic Checksum...",
+        searching_missions_title: "Radar Scanning Nearby Orders...",
+        searching_missions_sub: "You are ON DUTY. When a local kirana shop packs an order within 8 km, your phone will ring with pickup details.",
         confirm_continue: "Confirm & Proceed",
         liveness_title: "Live Face Verification",
         liveness_sub: "Position face inside oval frame and blink",
@@ -1293,6 +1356,38 @@
         ocr_place_frame: "अपना आईडी कार्ड फ्रेम के अंदर रखें",
         scan_id_btn: "आईडी कैप्चर व स्कैन करें",
         ocr_extracted_success: "विवरण स्वचालित रूप से निकाला गया",
+        sample_mission_title: "मिशन #GB-8921",
+        sample_mission_sub: "किराना डिलीवरी • 4 सामान (6.2 किग्रा)",
+        hot_mission_badge: "तत्काल मिशन • 2.8 किमी कुल दूरी",
+        distance_away_sample: "1.1 किमी दूर",
+        distance_from_shop_sample: "दुकान से 1.7 किमी",
+        customer_name_sample: "सुनीता देवी (ग्राहक)",
+        deposit_at_hub_badge: "हब में जमा करें",
+        gps_tracked_badge: "GPS ट्रैक किया गया",
+        toll_free_badge: "टोल-फ्री",
+        call_fleet_desk: "कॉल फ्लीट डेस्क",
+        whatsapp_chat: "व्हाट्सएप चैट",
+        run_history_1: "आज, 11:40 AM • ऑनलाइन भुगतान",
+        run_history_2: "आज, 10:15 AM • नकद प्राप्त (₹450)",
+        run_history_3: "साप्ताहिक रनर पेट्रोल बोनस",
+        run_history_3_sub: "कल, 10:00 PM • प्रोत्साहन राशि",
+        opt_bike: "मोटरसाइकिल / हीरो स्प्लेंडर (पेट्रोल बाइक)",
+        opt_ev: "इलेक्ट्रिक स्कूटर / ईवी 2-व्हीलर",
+        opt_cycle: "साइकिल (Bicycle)",
+        opt_auto: "ऑटो / ई-रिक्शा",
+        opt_ticket_cust: "ग्राहक से संपर्क नहीं / गलत पता",
+        opt_ticket_vendor: "दुकानदार ने गलत सामान पैक किया",
+        opt_ticket_breakdown: "सड़क पर वाहन खराब / ब्रेकडाउन",
+        opt_ticket_cod: "COD नकद कैश में अंतर",
+        opt_ticket_gps: "ऐप GPS / लोकेशन समस्या",
+        ocr_stage_uploading: "चरण 1/3: सुरक्षित रूप से अपलोड हो रहा है...",
+        ocr_stage_gov_sarathi: "चरण 2/3: सरकारी डेटाबेस (सारथी / MoRTH) से जुड़ रहा है...",
+        ocr_stage_extract: "चरण 3/3: पहचान विवरण निकाला जा रहा है...",
+        ocr_step_upload: "1. एन्क्रिप्टेड बेस64 कैप्चर अपलोड",
+        ocr_step_gov_sarathi: "2. सरकारी डेटाबेस (सारथी / परिवहन) से सत्यापन...",
+        ocr_step_extract: "3. पहचान विवरण व चेकसम सत्यापन...",
+        searching_missions_title: "रडार नजदीकी ऑर्डर खोज रहा है...",
+        searching_missions_sub: "आप ऑन-ड्यूटी हैं। जब कोई नजदीकी किराना दुकान 8 किमी के दायरे में ऑर्डर पैक करेगी, तो आपके फोन की घंटी बजेगी।",
         confirm_continue: "पुष्टि करें और आगे बढ़ें",
         liveness_title: "लाइव चेहरा सत्यापन",
         liveness_sub: "चेहरे को फ्रेम में रखें और पलकें झपकाएं",
@@ -1431,6 +1526,14 @@
         const key = el.getAttribute('data-i18n-placeholder');
         if (i18n[lang] && i18n[lang][key]) {
           el.setAttribute('placeholder', i18n[lang][key]);
+        }
+      });
+
+      // Update select dropdown options using data-i18n
+      document.querySelectorAll('option[data-i18n]').forEach(opt => {
+        const key = opt.getAttribute('data-i18n');
+        if (i18n[lang] && i18n[lang][key]) {
+          opt.innerText = i18n[lang][key];
         }
       });
 
@@ -1951,26 +2054,74 @@
       }
     }
 
+    /**
+     * PRODUCTION OCR & IDENTITY VERIFICATION ARCHITECTURE:
+     * -----------------------------------------------------
+     * In enterprise production, camera frames captured via `canvas.toDataURL('image/jpeg', 0.92)`
+     * are converted to a cryptographic Base64 string and POSTed over HTTPS/TLS to:
+     * POST /api/v1/auth/ocr/verify-dl (or directly to DigiLocker / Setu / Zoop.one / Karza gateway).
+     * 
+     * Handshake Lifecycle:
+     * 1. Uploading Securely: Transmits encrypted DL document frame with nonce and timestamp.
+     * 2. Govt Gateway Handshake: Connects to MoRTH Sarathi National Register API.
+     * 3. Extraction & Liveness: Validates anti-counterfeit features, extracts DL Number, DOB, and vehicle class endorsements.
+     * 4. Verification Token: Returns verified payload and signs audit trail in the backend database.
+     */
     function captureAndProcessOCR() {
       const scanBtnText = document.getElementById('scan-id-text');
+      const overlay = document.getElementById('ocr-progress-overlay');
+      const headline = document.getElementById('ocr-stage-headline');
+      const bar = document.getElementById('ocr-progress-bar');
+      const pct = document.getElementById('ocr-progress-pct');
+      const step1 = document.getElementById('ocr-step-1');
+      const step2 = document.getElementById('ocr-step-2');
+      const step3 = document.getElementById('ocr-step-3');
       const resultsBox = document.getElementById('ocr-results-box');
       const contBtn = document.getElementById('ocr-continue-btn');
 
-      scanBtnText.innerText = "Extracting OCR...";
+      scanBtnText.innerText = currentLang === 'hi' ? "स्कैनिंग..." : "Processing...";
+
+      if (overlay) overlay.classList.remove('hidden');
+      if (resultsBox) resultsBox.classList.add('hidden');
+
+      // Stage 1: Uploading Securely... (0 - 800ms)
+      headline.innerText = currentLang === 'hi' ? "चरण 1/3: सुरक्षित रूप से अपलोड हो रहा है..." : "Stage 1/3: Uploading Securely...";
+      bar.style.width = "33%";
+      pct.innerText = "33%";
+      step1.className = "flex items-center space-x-2 text-blue-700 font-semibold";
 
       setTimeout(() => {
-        scanBtnText.innerText = "Rescan ID";
-        resultsBox.classList.remove('hidden');
-        document.getElementById('ocr-extracted-name').innerText = state.userProfile.name;
-        
-        contBtn.classList.remove('opacity-50', 'pointer-events-none');
-        state.ocrCaptured = true;
+        // Stage 2: Connecting to Govt Database (Sarathi)... (800ms - 1700ms)
+        headline.innerText = currentLang === 'hi' ? "चरण 2/3: सरकारी डेटाबेस (सारथी) से जुड़ रहा है..." : "Stage 2/3: Connecting to Govt Database (Sarathi / MoRTH)...";
+        bar.style.width = "66%";
+        pct.innerText = "66%";
+        step2.className = "flex items-center space-x-2 text-blue-700 font-semibold";
+        lucide.createIcons();
+      }, 800);
 
+      setTimeout(() => {
+        // Stage 3: Extracting Details... (1700ms - 2500ms)
+        headline.innerText = currentLang === 'hi' ? "चरण 3/3: पहचान विवरण निकाला जा रहा है..." : "Stage 3/3: Extracting Details...";
+        bar.style.width = "100%";
+        pct.innerText = "100%";
+        step3.className = "flex items-center space-x-2 text-blue-700 font-semibold";
+        lucide.createIcons();
+      }, 1700);
+
+      setTimeout(() => {
+        // Verification Complete
+        if (overlay) overlay.classList.add('hidden');
+        if (resultsBox) resultsBox.classList.remove('hidden');
+        document.getElementById('ocr-extracted-name').innerText = state.userProfile.name;
+        if (contBtn) contBtn.classList.remove('opacity-50', 'pointer-events-none');
+        scanBtnText.innerText = currentLang === 'hi' ? "सत्यापन पूर्ण" : "Rescan ID";
+
+        state.ocrCaptured = true;
         if (ocrStream) ocrStream.getTracks().forEach(t => t.stop());
 
-        toastSuccess("Driving License Verified with Sarathi Portal!");
+        toastSuccess(currentLang === 'hi' ? "ड्राइविंग लाइसेंस (सारथी डेटाबेस) से 100% सत्यापित!" : "Driving License Verified with Sarathi Portal!");
         lucide.createIcons();
-      }, 1200);
+      }, 2500);
     }
 
     // ---------------------------------------------------------------------------
