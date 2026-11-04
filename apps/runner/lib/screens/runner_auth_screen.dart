@@ -87,7 +87,12 @@ class _RunnerAuthScreenState extends State<RunnerAuthScreen> {
       await state.fetchProfile();
       if (!mounted) return;
 
-      if (state.runnerProfile == null) {
+      final hasCompletedOnboarding = state.runnerProfile != null &&
+          state.runnerProfile?['upi_id'] != null &&
+          state.runnerProfile?['upi_id'].toString().trim().isNotEmpty &&
+          state.runnerProfile?['upi_id'] != 'NOT_CONFIGURED';
+
+      if (!hasCompletedOnboarding) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const RunnerOnboardingWizard()),
         );

@@ -591,6 +591,7 @@ class RunnerOnboardRequest(BaseModel):
     ifsc_code: Optional[str] = None
 
 @router.post("/runner/onboard")
+@router.post("/runners/onboard")
 async def onboard_runner(
     data: RunnerOnboardRequest,
     payload: dict = Depends(get_current_user_payload),
@@ -650,6 +651,8 @@ async def onboard_runner(
     }
 
 @router.get("/runner/me")
+@router.get("/runner/profile")
+@router.get("/runners/profile")
 async def get_runner_profile(
     payload: dict = Depends(get_current_user_payload),
     db: AsyncSession = Depends(get_db)

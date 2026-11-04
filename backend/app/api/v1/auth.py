@@ -22,12 +22,16 @@ TEST_PHONE_WHITELIST = {
     "9800000000", # Customer A
     "9800000010", # Customer B
     "9800000011", # Customer C
-    "9800000001", # Vendor 1
+    "9800000001", # Vendor 1 (Pre-approved)
     "9800000002", # Vendor 2
-    "9800000003", # Runner 1
+    "9800000021", # Vendor New Applicant (Pending Review)
+    "9800000003", # Runner 1 (Pre-approved)
     "9800000004", # Runner 2
+    "9800000031", # Runner New Applicant (Pending Review)
     "9800000099", # Super Admin
 }
+
+PRE_APPROVED_PERSONAS = {"9800000001", "9800000003"}
 
 OTP_SALT = "gaonbazaar_secure_otp_salt_2026"
 
@@ -69,7 +73,7 @@ async def send_otp(
     # Whitelisted staging personas get predictable challenge in dev/staging;
     # Real public users get a crypto-random 6-digit challenge.
     if is_whitelisted_test_phone(payload.phone):
-        otp_code = "123456"
+        otp_code = "1234"
         delivery_channel = "staging_sandbox"
     else:
         otp_code = f"{secrets.SystemRandom().randint(100000, 999999)}"
@@ -234,8 +238,8 @@ async def verify_otp(
         await db.commit()
         await db.refresh(user)
 
-        # If Vendor, create linked Store entry (Pre-approved for whitelisted test personas)
-        if matched_role == "vendor":
+        # Linked Store/Runner setup
+        if matched_role == "vendor" and payload.phone in PRE_APPROVED_PERSONAS:
             store = Store(
                 owner_id=user.id,
                 shop_name=user.name or f"{user.phone[-4:]} Kirana Store",
@@ -244,28 +248,28 @@ async def verify_otp(
                 latitude=26.2230,
                 longitude=85.3520,
                 village="Chaturshi",
-                is_approved=is_staging_persona, # Staging test vendors auto-approved for instant testing
+                is_approved=True,
                 is_online=True
             )
             db.add(store)
             await db.commit()
 
-        # If Runner, create linked Runner entry (Pre-approved for whitelisted test personas)
         elif matched_role == "runner":
+            is_approved = payload.phone in PRE_APPROVED_PERSONAS
             runner = Runner(
                 user_id=user.id,
                 full_name=user.name or "Runner Partner",
                 vehicle_type="Motorcycle",
-                is_approved=is_staging_persona, # Staging test runners auto-approved for instant testing
-                is_online=True,
+                is_approved=is_approved,
+                is_online=is_approved,
                 current_latitude=26.2230,
                 current_longitude=85.3520
             )
             db.add(runner)
             await db.commit()
     else:
-        # User already exists: if staging test persona, ensure role and approval match
-        if is_staging_persona:
+        # User already exists: only pre-approved personas are ensured approved
+        if payload.phone in PRE_APPROVED_PERSONAS:
             if matched_role == "vendor":
                 store_q = await db.execute(select(Store).where(Store.owner_id == user.id))
                 store = store_q.scalars().first()
