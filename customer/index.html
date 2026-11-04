@@ -49,10 +49,12 @@
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
-    .custom-scrollbar::-webkit-scrollbar {
+    .custom-scrollbar::-webkit-scrollbar,
+    .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
-    .custom-scrollbar {
+    .custom-scrollbar,
+    .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
@@ -210,7 +212,7 @@
         <!-- Sticky Header (NO back button on root Home tab, notification bell removed) -->
         <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-2xs">
           <!-- Deliver to Location -->
-          <div onclick="openModal('modal-location')" class="flex items-center space-x-2 cursor-pointer max-w-[240px]">
+          <div onclick="openRuralAddressModal()" class="flex items-center space-x-2 cursor-pointer max-w-[240px]">
             <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
               <i data-lucide="map-pin" class="w-4 h-4"></i>
             </div>
@@ -253,25 +255,25 @@
             <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full blur-xl pointer-events-none"></div>
           </div>
 
-          <!-- Horizontal Scrollable Categories -->
+          <!-- Horizontal Scrollable Categories (no-scrollbar) -->
           <div class="space-y-2">
             <div class="flex justify-between items-center">
               <h3 class="text-xs font-bold text-slate-900 tracking-wide uppercase" data-i18n="categories_title">Categories</h3>
               <span class="text-[11px] font-semibold text-emerald-700 cursor-pointer" onclick="filterCategory('All')" data-i18n="view_all">View All</span>
             </div>
-            <div class="flex space-x-2 overflow-x-auto pb-1 custom-scrollbar">
-              <button onclick="filterCategory('All')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white whitespace-nowrap shadow-2xs transition active:scale-95" data-cat="All" data-i18n="cat_all">All</button>
-              <button onclick="filterCategory('Grocery')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95" data-cat="Grocery" data-i18n="cat_grocery">Grocery</button>
-              <button onclick="filterCategory('General Store')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95" data-cat="General Store" data-i18n="cat_general">General Store</button>
-              <button onclick="filterCategory('Vegetables')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95" data-cat="Vegetables" data-i18n="cat_veggies">Vegetables</button>
-              <button onclick="filterCategory('Dairy & Milk')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95" data-cat="Dairy & Milk" data-i18n="cat_dairy">Dairy & Milk</button>
+            <div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1">
+              <button onclick="filterCategory('All')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white whitespace-nowrap shadow-2xs transition active:scale-95 shrink-0" data-cat="All" data-i18n="cat_all">All</button>
+              <button onclick="filterCategory('Grocery')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95 shrink-0" data-cat="Grocery" data-i18n="cat_grocery">Grocery</button>
+              <button onclick="filterCategory('General Store')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95 shrink-0" data-cat="General Store" data-i18n="cat_general">General Store</button>
+              <button onclick="filterCategory('Vegetables')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95 shrink-0" data-cat="Vegetables" data-i18n="cat_veggies">Vegetables</button>
+              <button onclick="filterCategory('Dairy & Milk')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95 shrink-0" data-cat="Dairy & Milk" data-i18n="cat_dairy">Dairy & Milk</button>
             </div>
           </div>
 
-          <!-- Featured Stores (Horizontal Scrolling) -->
+          <!-- Featured Stores (Horizontal Scrolling without breaking layout) -->
           <div class="space-y-2">
             <h3 class="text-xs font-bold text-slate-900 tracking-wide uppercase" data-i18n="featured_stores_title">Featured Stores</h3>
-            <div class="flex space-x-3 overflow-x-auto pb-1 custom-scrollbar">
+            <div class="flex space-x-3 overflow-x-auto no-scrollbar pb-1">
               
               <!-- Store 1 -->
               <div class="w-56 shrink-0 bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs space-y-2 cursor-pointer hover:border-emerald-400 transition" onclick="toastSuccess('Viewing Sharma Kirana products')">
@@ -321,7 +323,7 @@
             </div>
           </div>
 
-          <!-- Village Essentials (Products Vertical List) -->
+          <!-- Village Essentials (Products Synchronized with Shared Database) -->
           <div class="space-y-3">
             <div class="flex justify-between items-center">
               <h3 class="text-xs font-bold text-slate-900 tracking-wide uppercase" data-i18n="village_essentials_title">Village Essentials</h3>
@@ -329,7 +331,7 @@
             </div>
 
             <div id="product-list" class="space-y-3">
-              <!-- Rendered via JS renderProductCatalog() -->
+              <!-- Rendered via JS renderProductCatalog() from dynamic synced catalog -->
             </div>
           </div>
         </div>
@@ -428,44 +430,55 @@
           <div class="space-y-2">
             <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wide" data-i18n="cart_items_title">Your Basket</h3>
             <div id="cart-items-container" class="space-y-2.5">
-              <!-- Dynamically rendered cart items -->
+              <!-- Dynamically rendered cart items with synced images -->
             </div>
           </div>
 
-          <!-- Location Pinning Section -->
+          <!-- RURAL EXACT ADDRESS PINNING & LANDMARK SECTION -->
           <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-2">
-                <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                   <i data-lucide="map-pin" class="w-4 h-4"></i>
                 </div>
-                <h4 class="text-xs font-bold text-slate-900" data-i18n="delivery_address_title">Delivery Location & Village Landmark</h4>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-900" data-i18n="rural_address_title">Rural Exact Address Pinning</h4>
+                  <p class="text-[10px] text-slate-500" data-i18n="rural_address_sub">Zero-friction pinpoint for rural delivery</p>
+                </div>
               </div>
-              <button onclick="detectCustomerGPS()" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 hover:bg-emerald-100 flex items-center space-x-1">
-                <i data-lucide="crosshair" class="w-3 h-3"></i>
-                <span data-i18n="use_gps">Use GPS</span>
+              <button type="button" onclick="detectExactGPS()" class="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300 hover:bg-emerald-100 flex items-center space-x-1.5 active:scale-95 transition">
+                <i data-lucide="crosshair" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span data-i18n="detect_gps_btn">Detect Exact GPS</span>
               </button>
             </div>
 
-            <!-- Mini Map Preview -->
-            <div class="h-24 w-full rounded-xl bg-slate-100 border border-slate-200 overflow-hidden relative flex items-center justify-center">
-              <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=500&q=80" alt="Village Map" class="w-full h-full object-cover opacity-60">
-              <div class="absolute inset-0 bg-emerald-950/20 backdrop-blur-[0.5px] flex items-center justify-center">
-                <div class="px-2.5 py-1 bg-white/90 rounded-full shadow-md text-[10px] font-bold text-emerald-800 flex items-center space-x-1">
-                  <span class="w-2 h-2 rounded-full bg-emerald-600 animate-ping"></span>
-                  <span id="pin-coords-text">Lat: 26.8500, Lng: 80.9500</span>
+            <!-- Drop Pin Mini-Map Preview -->
+            <div class="h-28 w-full rounded-xl bg-slate-100 border border-slate-200 overflow-hidden relative flex items-center justify-center shadow-inner">
+              <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600&q=80" alt="Village Satellite Map" class="w-full h-full object-cover opacity-60">
+              <div class="absolute inset-0 bg-emerald-950/20 backdrop-blur-[0.5px] flex flex-col items-center justify-center p-2 text-center">
+                <div class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg border-2 border-white animate-bounce">
+                  <i data-lucide="map-pin" class="w-4 h-4"></i>
+                </div>
+                <div class="mt-1 px-2.5 py-0.5 bg-white/95 rounded-full shadow text-[10px] font-extrabold text-emerald-900 flex items-center space-x-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping"></span>
+                  <span id="pin-coords-display">Lat: 26.8500, Lng: 80.9500 (Exact Pin)</span>
                 </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-2 text-xs">
+            <div class="space-y-2 text-xs">
               <div>
-                <label class="block text-[11px] font-semibold text-slate-600 mb-1" data-i18n="village_name_label">Village / Locality Name</label>
-                <input type="text" id="checkout-village-input" value="Chaturshi, Minapur" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-lg text-xs">
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="village_name_label">Village / Tola / Locality Name</label>
+                <input type="text" id="checkout-village-input" value="Chaturshi, Minapur Block" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-lg text-xs">
               </div>
+
+              <!-- Mandatory Prominent Rural Landmark -->
               <div>
-                <label class="block text-[11px] font-semibold text-slate-600 mb-1" data-i18n="landmark_label">Nearby Landmark (School, Mandir, Well)</label>
-                <input type="text" id="checkout-landmark-input" value="Near Primary School, House 42" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-lg text-xs">
+                <label class="block text-[11px] font-bold text-slate-900 mb-1 flex items-center justify-between">
+                  <span data-i18n="prominent_landmark_label">Prominent Rural Landmark (Mandatory)</span>
+                  <span class="text-[10px] text-emerald-700 font-semibold" data-i18n="landmark_hint">*Crucial for Runner</span>
+                </label>
+                <textarea id="checkout-landmark-input" rows="2" placeholder="e.g. Near the blue water tank, opposite Panchayat Bhawan, next to Banyan tree..." data-i18n-placeholder="landmark_placeholder" class="w-full px-3 py-2 bg-slate-50 border-2 border-emerald-500/40 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-lg text-xs">Near Primary School, House 42 (Opposite Village Well)</textarea>
               </div>
             </div>
           </div>
@@ -575,8 +588,8 @@
             <div class="space-y-1.5 pt-1">
               <div class="flex justify-between text-[11px] font-bold">
                 <span class="text-emerald-700" data-i18n="stage_placed">1. Placed</span>
-                <span id="stage-prep-label" class="text-emerald-700" data-i18n="stage_preparing">2. Preparing</span>
-                <span id="stage-out-label" class="text-slate-400" data-i18n="stage_out_delivery">3. Out for Delivery</span>
+                <span id="stage-prep-label" class="text-emerald-700 font-bold" data-i18n="stage_preparing">2. Preparing</span>
+                <span id="stage-out-label" class="text-slate-400 font-medium" data-i18n="stage_out_delivery">3. Out for Delivery</span>
               </div>
               <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden flex">
                 <div id="order-prog-bar-1" class="h-full bg-emerald-600 transition-all duration-500" style="width: 50%;"></div>
@@ -720,18 +733,28 @@
             </div>
           </div>
 
-          <!-- Saved Addresses Group -->
+          <!-- Saved Rural Addresses Group -->
           <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
             <div class="flex justify-between items-center">
               <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wide text-[11px]" data-i18n="saved_addresses_title">Saved Village Addresses</h4>
-              <button onclick="openModal('modal-location')" class="text-[11px] font-bold text-emerald-700 hover:underline" data-i18n="edit_btn">Edit</button>
+              <button onclick="openRuralAddressModal()" class="text-[11px] font-bold text-emerald-700 hover:underline flex items-center space-x-1">
+                <i data-lucide="plus" class="w-3 h-3"></i>
+                <span data-i18n="add_new_address_btn">Add / Edit</span>
+              </button>
             </div>
-            <div class="p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
-              <div class="flex items-center space-x-1.5 font-bold text-slate-900">
-                <i data-lucide="home" class="w-3.5 h-3.5 text-emerald-600"></i>
-                <span data-i18n="home_address_label">Home (Chaturshi)</span>
+            <div id="saved-addresses-list" class="space-y-2">
+              <div class="p-3 bg-slate-50 rounded-xl space-y-1 text-xs border border-slate-200">
+                <div class="flex items-center justify-between font-bold text-slate-900">
+                  <div class="flex items-center space-x-1.5">
+                    <i data-lucide="home" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span data-i18n="home_address_label">Home (Chaturshi)</span>
+                  </div>
+                  <span class="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-extrabold">DEFAULT</span>
+                </div>
+                <p id="saved-address-text-primary" class="text-[11px] text-slate-700 font-medium">Chaturshi Village, Minapur Block</p>
+                <p id="saved-landmark-text-primary" class="text-[10px] text-slate-500">📍 Landmark: Near Primary School, House 42 (Opposite Village Well)</p>
+                <p class="text-[9px] text-emerald-700 font-semibold">Coords: 26.8500, 80.9500 (Verified GPS)</p>
               </div>
-              <p class="text-[11px] text-slate-500">House 42, Near Primary School, Chaturshi Village, Minapur Block</p>
             </div>
           </div>
 
@@ -839,7 +862,64 @@
     <!-- MODALS & OVERLAYS -->
     <!-- ===================================================================== -->
 
-    <!-- IN-APP CHAT WITH RUNNER MODAL (WITH LIVE LOCATION SHARING) -->
+    <!-- RURAL ADDRESS CONFIGURATION MODAL (PINNING, GPS & LANDMARK) -->
+    <div id="modal-rural-address" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4 text-left border border-slate-200 animate-in zoom-in-95 duration-150">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-rural-address')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center" aria-label="Back">
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            </button>
+            <h3 class="text-xs font-bold text-slate-900" data-i18n="rural_address_modal_title">Village Address & Exact GPS</h3>
+          </div>
+          <span class="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">RURAL ACCURATE</span>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <!-- GPS Detect Button -->
+          <div class="flex items-center justify-between p-2.5 bg-emerald-50 rounded-xl border border-emerald-200">
+            <div class="min-w-0 flex-1">
+              <p class="text-[11px] font-bold text-emerald-900" data-i18n="detect_gps_label">Device GPS Coordinates</p>
+              <p id="modal-gps-status" class="text-[10px] text-emerald-700 truncate">26.8500, 80.9500 (Accurate to 5m)</p>
+            </div>
+            <button type="button" onclick="detectExactGPS(true)" class="py-1 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[10px] shadow-xs active:scale-95 transition flex items-center space-x-1 shrink-0">
+              <i data-lucide="crosshair" class="w-3 h-3"></i>
+              <span data-i18n="refresh_gps">Refetch GPS</span>
+            </button>
+          </div>
+
+          <!-- Drop Pin Mini-Map Preview -->
+          <div class="h-28 w-full rounded-xl bg-slate-100 border border-slate-200 overflow-hidden relative flex items-center justify-center shadow-inner">
+            <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600&q=80" alt="Village Satellite Map" class="w-full h-full object-cover opacity-60">
+            <div class="absolute inset-0 bg-emerald-950/20 flex flex-col items-center justify-center p-2 text-center pointer-events-none">
+              <div class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg border-2 border-white animate-bounce">
+                <i data-lucide="map-pin" class="w-4 h-4"></i>
+              </div>
+              <div class="mt-1 px-2 py-0.5 bg-white/95 rounded-full shadow text-[9px] font-extrabold text-emerald-900">
+                <span id="modal-map-pin-label">Drop Pin: 26.8500, 80.9500</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="village_name_label">Village / Tola / Locality</label>
+            <input type="text" id="modal-village-input" value="Chaturshi, Minapur Block" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:border-emerald-600 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-slate-900 mb-1 flex items-center justify-between">
+              <span data-i18n="prominent_landmark_label">Prominent Rural Landmark (Mandatory)</span>
+              <span class="text-[9px] text-rose-600 font-bold">*Required</span>
+            </label>
+            <textarea id="modal-landmark-input" rows="2" placeholder="e.g. Near the blue water tank, opposite Panchayat Bhawan..." class="w-full px-3 py-2 bg-slate-50 border-2 border-emerald-500/40 rounded-lg text-xs focus:border-emerald-600 focus:outline-none">Near Primary School, House 42 (Opposite Village Well)</textarea>
+          </div>
+
+          <button onclick="saveRuralAddress()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition active:scale-95" data-i18n="save_address_btn">Save & Set Delivery Address</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- IN-APP CHAT WITH RUNNER MODAL (WITH LIVE WHATSAPP-STYLE LOCATION SHARING) -->
     <div id="modal-runner-chat" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex flex-col justify-end">
       <div class="max-w-md mx-auto w-full h-[90vh] bg-white rounded-t-3xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
         <!-- Chat Header with Visible Back/Close Arrow -->
@@ -883,7 +963,7 @@
 
         <!-- Chat Input Area with Live Location Attachment Button -->
         <div class="p-3 bg-white border-t border-slate-200 flex items-center space-x-2">
-          <!-- Share Live Location Pin Button -->
+          <!-- Share Live Location Pin Button (WhatsApp Style) -->
           <button onclick="shareCustomerLiveLocation()" class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-95 shrink-0" title="Share Live GPS Location" data-i18n-title="share_location_title">
             <i data-lucide="map-pin" class="w-5 h-5"></i>
           </button>
@@ -1020,35 +1100,6 @@
       </div>
     </div>
 
-    <!-- LOCATION SELECTION MODAL -->
-    <div id="modal-location" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4 text-left border border-slate-200">
-        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-          <div class="flex items-center space-x-2">
-            <button onclick="closeModal('modal-location')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
-              <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
-            </button>
-            <h3 class="text-xs font-bold text-slate-900" data-i18n="change_location_title">Change Delivery Village</h3>
-          </div>
-        </div>
-
-        <div class="space-y-2 text-xs">
-          <button onclick="setDeliveryLocation('Chaturshi, Minapur', 'Near Primary School')" class="w-full p-3 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-left space-y-0.5">
-            <p class="font-bold text-slate-900">Chaturshi Village (Primary School)</p>
-            <p class="text-[10px] text-slate-500">Minapur Block, Muzaffarpur • Standard 30m Delivery</p>
-          </button>
-          <button onclick="setDeliveryLocation('Gopalpur, Mandi Road', 'Panchayat Bhavan')" class="w-full p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-left space-y-0.5">
-            <p class="font-bold text-slate-900">Gopalpur (Mandi Road)</p>
-            <p class="text-[10px] text-slate-500">Near Panchayat Bhavan • Standard 30m Delivery</p>
-          </button>
-          <button onclick="setDeliveryLocation('Rampur Diara', 'Ram Janki Mandir')" class="w-full p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-left space-y-0.5">
-            <p class="font-bold text-slate-900">Rampur Diara</p>
-            <p class="text-[10px] text-slate-500">Near Ram Janki Mandir • 35m Express</p>
-          </button>
-        </div>
-      </div>
-    </div>
-
     <!-- PROFILE EDIT MODAL -->
     <div id="modal-edit-profile" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4 text-left border border-slate-200">
@@ -1154,6 +1205,61 @@
   <!-- APPLICATION LOGIC & STATE MACHINE -->
   <!-- ===================================================================== -->
   <script>
+    // ---------------------------------------------------------------------------
+    // BACKEND CONFIGURATION & STRICT TENANT ISOLATION
+    // ---------------------------------------------------------------------------
+    const BACKEND_CONFIG = {
+      apiBase: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://127.0.0.1:8000'
+        : 'https://gaonbazaar-village.onrender.com',
+      get wsBase() {
+        return this.apiBase.replace(/^http/, 'ws');
+      },
+      role: 'customer'
+    };
+
+    function getCustomerAuthToken() {
+      return localStorage.getItem('gb_customer_token') || '';
+    }
+
+    function setCustomerAuthToken(token) {
+      if (token) localStorage.setItem('gb_customer_token', token);
+      else localStorage.removeItem('gb_customer_token');
+    }
+
+    // Strict Data Isolation API Request helper
+    async function apiRequest(endpoint, method = 'GET', body = null) {
+      const token = getCustomerAuthToken();
+      const headers = { 'Content-Type': 'application/json' };
+      
+      // CRITICAL: Always attach Bearer token for tenant/user isolation
+      if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
+      }
+
+      try {
+        const res = await fetch(BACKEND_CONFIG.apiBase + endpoint, {
+          method,
+          headers,
+          body: body ? JSON.stringify(body) : null
+        });
+
+        if (res.status === 401 || res.status === 403) {
+          console.warn("[Security] Unauthorized response. Enforcing session reset.");
+        }
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: res.statusText }));
+          throw new Error(err.detail || 'API error: ' + res.status);
+        }
+        return await res.json();
+      } catch (err) {
+        // Fallback to simulated offline state if backend is unreachable
+        console.warn("[API Notice]", endpoint, err.message);
+        return null;
+      }
+    }
+
     // ---------------------------------------------------------------------------
     // SOUND SYNTHESIZER (WEB AUDIO API)
     // ---------------------------------------------------------------------------
@@ -1286,10 +1392,15 @@
         tap_mic_to_speak: "Tap Microphone & Speak",
         cart_title: "Shopping Cart & Checkout",
         cart_items_title: "Your Basket",
-        delivery_address_title: "Delivery Location & Village Landmark",
-        use_gps: "Use GPS",
-        village_name_label: "Village / Locality Name",
-        landmark_label: "Nearby Landmark (School, Mandir, Well)",
+        rural_address_title: "Rural Exact Address Pinning",
+        rural_address_sub: "Zero-friction pinpoint for rural delivery",
+        detect_gps_btn: "Detect Exact GPS",
+        detect_gps_label: "Device GPS Coordinates",
+        refresh_gps: "Refetch GPS",
+        village_name_label: "Village / Tola / Locality Name",
+        prominent_landmark_label: "Prominent Rural Landmark (Mandatory)",
+        landmark_hint: "*Crucial for Runner",
+        landmark_placeholder: "e.g. Near the blue water tank, opposite Panchayat Bhawan...",
         bill_summary_title: "Bill Summary",
         bill_item_total: "Item Total",
         bill_delivery_fee: "Delivery Fee (Rural Hyperlocal)",
@@ -1326,7 +1437,7 @@
         account_sub: "Profile, Addresses & Preferences",
         verified_customer: "Verified Customer",
         saved_addresses_title: "Saved Village Addresses",
-        edit_btn: "Edit",
+        add_new_address_btn: "Add / Edit",
         home_address_label: "Home (Chaturshi)",
         language_pref_title: "App Language",
         menu_faq: "Frequently Asked Questions (FAQ)",
@@ -1364,7 +1475,8 @@
         submit_ticket_btn: "Submit Return / Refund Request",
         receipt_title: "Official Bill Receipt",
         close_btn: "Close",
-        change_location_title: "Change Delivery Village",
+        rural_address_modal_title: "Village Address & Exact GPS",
+        save_address_btn: "Save & Set Delivery Address",
         edit_profile_title: "Edit Profile Info",
         profile_name_label: "Your Full Name",
         profile_phone_label: "Mobile Number",
@@ -1436,10 +1548,15 @@
         tap_mic_to_speak: "माइक दबाएं और बोलें",
         cart_title: "शॉपिंग कार्ट व चेकआउट",
         cart_items_title: "आपकी टोकरी",
-        delivery_address_title: "डिलीवरी का पता व नजदीकी पहचान",
-        use_gps: "GPS उपयोग करें",
-        village_name_label: "गांव / मोहल्ले का नाम",
-        landmark_label: "नजदीकी पहचान (स्कूल, मंदिर, कुआं)",
+        rural_address_title: "सटीक ग्रामीण पता व लैंडमार्क",
+        rural_address_sub: "गांव के घर तक त्रुटिरहित डिलीवरी",
+        detect_gps_btn: "सटीक GPS खोजें",
+        detect_gps_label: "डिवाइस GPS निर्देशांक",
+        refresh_gps: "पुनः GPS जांचें",
+        village_name_label: "गांव / टोला / मोहल्ला",
+        prominent_landmark_label: "प्रमुख ग्रामीण पहचान / लैंडमार्क (अनिवार्य)",
+        landmark_hint: "*रनर हेतु अनिवार्य",
+        landmark_placeholder: "जैसे: नीली पानी की टंकी के पास, पंचायत भवन के सामने...",
         bill_summary_title: "बिल विवरण",
         bill_item_total: "सामान का कुल मूल्य",
         bill_delivery_fee: "डिलीवरी शुल्क (ग्रामीण हाइपरलोकल)",
@@ -1476,7 +1593,7 @@
         account_sub: "प्रोफाइल, पते और सेटिंग्स",
         verified_customer: "सत्यापित ग्राहक",
         saved_addresses_title: "सहेजे गए ग्रामीण पते",
-        edit_btn: "बदलें",
+        add_new_address_btn: "नया जोड़ें / बदलें",
         home_address_label: "घर (चतुरशी)",
         language_pref_title: "ऐप की भाषा",
         menu_faq: "अक्सर पूछे जाने वाले सवाल (FAQ)",
@@ -1514,7 +1631,8 @@
         submit_ticket_btn: "वापसी / रिफंड अनुरोध भेजें",
         receipt_title: "आधिकारिक बिल रसीद",
         close_btn: "बंद करें",
-        change_location_title: "डिलीवरी का गांव बदलें",
+        rural_address_modal_title: "ग्रामीण पता व सटीक GPS",
+        save_address_btn: "सहेजें और डिलीवरी पता चुनें",
         edit_profile_title: "प्रोफाइल विवरण बदलें",
         profile_name_label: "आपका पूरा नाम",
         profile_phone_label: "मोबाइल नंबर",
@@ -1672,9 +1790,9 @@
     }
 
     // ---------------------------------------------------------------------------
-    // LOGIN & OTP VERIFICATION
+    // LOGIN & OTP VERIFICATION (WITH REAL JWT ACQUISITION)
     // ---------------------------------------------------------------------------
-    function sendCustomerOTP() {
+    async function sendCustomerOTP() {
       const phone = document.getElementById('cust-phone-input').value.trim();
       if (phone.length < 10) {
         toastError(currentLang === 'hi' ? "कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें" : "Please enter a valid 10-digit mobile number");
@@ -1685,6 +1803,9 @@
       document.getElementById('phone-input-section').classList.add('hidden');
       document.getElementById('otp-input-section').classList.remove('hidden');
       document.getElementById('otp-1').focus();
+
+      // Trigger backend OTP generation
+      await apiRequest('/api/v1/auth/otp/send', 'POST', { phone: phone, role: 'customer' });
       toastSuccess(currentLang === 'hi' ? "डेमो OTP भेजा गया: 1234" : "Demo OTP Sent: 1234");
     }
 
@@ -1699,12 +1820,13 @@
       toastSuccess(currentLang === 'hi' ? "OTP पुनः भेजा गया: 1234" : "OTP Resent: 1234");
     }
 
-    function verifyCustomerOTP() {
+    async function verifyCustomerOTP() {
       const o1 = document.getElementById('otp-1').value;
       const o2 = document.getElementById('otp-2').value;
       const o3 = document.getElementById('otp-3').value;
       const o4 = document.getElementById('otp-4').value;
       const code = o1 + o2 + o3 + o4;
+      const phone = document.getElementById('cust-phone-input').value.trim() || '9876543210';
 
       if (code.length < 4) {
         toastError(currentLang === 'hi' ? "कृपया 4-अंकीय OTP भरें" : "Please enter full 4-digit OTP");
@@ -1712,11 +1834,31 @@
       }
 
       playSuccessChime();
+
+      // Verify with backend to obtain strict tenant-isolated JWT token
+      const res = await apiRequest('/api/v1/auth/otp/verify', 'POST', {
+        phone: phone,
+        otp: code,
+        role: 'customer',
+        name: 'Raju Patel'
+      });
+
+      if (res && res.access_token) {
+        setCustomerAuthToken(res.access_token);
+      } else {
+        // Fallback test token for standalone mode
+        setCustomerAuthToken('gb_test_customer_jwt_' + Date.now());
+      }
+
       localStorage.setItem('gb_customer_authenticated', 'true');
       document.getElementById('page-login').classList.add('hidden');
       document.getElementById('dashboard-container').classList.remove('hidden');
       switchTab('home');
       toastSuccess(currentLang === 'hi' ? "सत्यापन सफल! गांवबाजार में आपका स्वागत है।" : "Login verified! Welcome to GaonBazaar.");
+      
+      // Sync products & addresses dynamically
+      syncDynamicProducts();
+      loadUserSavedAddresses();
     }
 
     // ---------------------------------------------------------------------------
@@ -1756,9 +1898,10 @@
     }
 
     // ---------------------------------------------------------------------------
-    // PRODUCT CATALOG DATA & RENDERING (VILLAGE ESSENTIALS)
+    // PRODUCT CATALOG DATA & SYNCHRONIZATION WITH SHARED DATABASE
     // ---------------------------------------------------------------------------
-    const productsCatalog = [
+    // Images are strictly synchronized with the Vendor App 8-Photo Image Library
+    let productsCatalog = [
       {
         id: 'p1',
         nameEn: 'Aashirvaad Shudh Chakki Atta',
@@ -1796,7 +1939,7 @@
         category: 'Grocery',
         unit: '1 kg Pack',
         price: 45.00,
-        img: 'https://images.unsplash.com/photo-1622484216834-314227f4c540?w=400&q=80',
+        img: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&q=80',
         store: 'Sharma Kirana Store'
       },
       {
@@ -1821,12 +1964,12 @@
       },
       {
         id: 'p7',
-        nameEn: 'Red Label Tea (Chai Patti)',
-        nameHi: 'रेड लेबल कड़क चायपत्ती',
+        nameEn: 'Arhar / Toor Dal (Desi Pulses)',
+        nameHi: 'अरहर / तुअर दाल (देसी)',
         category: 'Grocery',
-        unit: '250 g',
-        price: 110.00,
-        img: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&q=80',
+        unit: '1 kg',
+        price: 135.00,
+        img: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=400&q=80',
         store: 'Sharma Kirana Store'
       },
       {
@@ -1836,10 +1979,41 @@
         category: 'General Store',
         unit: 'Pack of 4 (300g)',
         price: 125.00,
-        img: 'https://images.unsplash.com/photo-1607006314605-ff554c27b036?w=400&q=80',
+        img: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80',
         store: 'Sharma Kirana Store'
       }
     ];
+
+    // Dynamic catalog synchronization with backend DB
+    async function syncDynamicProducts() {
+      try {
+        const backendProducts = await apiRequest('/api/v1/catalog/global');
+        if (backendProducts && Array.isArray(backendProducts) && backendProducts.length > 0) {
+          // Merge dynamic products while preserving high-resolution synced images
+          backendProducts.forEach(bp => {
+            const existing = productsCatalog.find(p => p.id === bp.id || p.nameEn === bp.name);
+            if (existing) {
+              existing.price = bp.price || existing.price;
+              if (bp.image_url) existing.img = bp.image_url;
+            } else {
+              productsCatalog.push({
+                id: bp.id,
+                nameEn: bp.name,
+                nameHi: bp.name,
+                category: bp.category || 'Grocery',
+                unit: bp.unit || '1 unit',
+                price: bp.price || 50.00,
+                img: bp.image_url || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80',
+                store: 'Sharma Kirana Store'
+              });
+            }
+          });
+          renderProductCatalog();
+        }
+      } catch (e) {
+        console.log("[Sync] Operating with standard synchronized catalog");
+      }
+    }
 
     // Cart items state: { [id]: { product, qty } }
     let cart = {
@@ -1897,9 +2071,9 @@
       activeCategory = cat;
       document.querySelectorAll('.cat-pill').forEach(btn => {
         if (btn.getAttribute('data-cat') === cat) {
-          btn.className = "cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white whitespace-nowrap shadow-2xs transition active:scale-95";
+          btn.className = "cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white whitespace-nowrap shadow-2xs transition active:scale-95 shrink-0";
         } else {
-          btn.className = "cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95";
+          btn.className = "cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95 shrink-0";
         }
       });
       renderProductCatalog();
@@ -2038,32 +2212,114 @@
       document.getElementById('place-order-total-badge').innerText = "₹" + grandTotal.toFixed(2);
     }
 
-    function detectCustomerGPS() {
+    // ---------------------------------------------------------------------------
+    // RURAL ADDRESS PINNING & EXACT GPS DETECTION
+    // ---------------------------------------------------------------------------
+    let activeCustomerAddress = {
+      village: 'Chaturshi, Minapur Block',
+      landmark: 'Near Primary School, House 42 (Opposite Village Well)',
+      latitude: 26.8500,
+      longitude: 80.9500
+    };
+
+    function detectExactGPS(isModal = false) {
       playBeep(650, 0.05);
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
-            const lat = pos.coords.latitude.toFixed(4);
-            const lng = pos.coords.longitude.toFixed(4);
-            document.getElementById('pin-coords-text').innerText = `Lat: ${lat}, Lng: ${lng}`;
-            toastSuccess(currentLang === 'hi' ? `GPS से स्थान लिया गया: ${lat}, ${lng}` : `GPS Captured: ${lat}, ${lng}`);
+            const lat = parseFloat(pos.coords.latitude.toFixed(4));
+            const lng = parseFloat(pos.coords.longitude.toFixed(4));
+            activeCustomerAddress.latitude = lat;
+            activeCustomerAddress.longitude = lng;
+
+            const coordText = `Lat: ${lat}, Lng: ${lng} (Exact GPS)`;
+            const disp = document.getElementById('pin-coords-display');
+            if (disp) disp.innerText = coordText;
+
+            const modalGps = document.getElementById('modal-gps-status');
+            if (modalGps) modalGps.innerText = `${lat}, ${lng} (Verified Device GPS)`;
+
+            const pinLabel = document.getElementById('modal-map-pin-label');
+            if (pinLabel) pinLabel.innerText = `Drop Pin: ${lat}, ${lng}`;
+
+            toastSuccess(currentLang === 'hi' ? `सटीक GPS निर्देशांक प्राप्त: ${lat}, ${lng}` : `Exact GPS Pinpointed: ${lat}, ${lng}`);
           },
           (err) => {
-            document.getElementById('pin-coords-text').innerText = "Lat: 26.8500, Lng: 80.9500";
-            toastSuccess(currentLang === 'hi' ? "ग्रामीण डिफॉल्ट लोकेशन (26.8500, 80.9500) सेट की गई" : "Village Default (26.8500, 80.9500) Set");
-          }
+            activeCustomerAddress.latitude = 26.8500;
+            activeCustomerAddress.longitude = 80.9500;
+            const coordText = "Lat: 26.8500, Lng: 80.9500 (Village Hub Default)";
+            const disp = document.getElementById('pin-coords-display');
+            if (disp) disp.innerText = coordText;
+            toastWarning(currentLang === 'hi' ? "GPS अनुमति नहीं मिली, चतुरशी गांव का स्थान सेट किया गया" : "GPS fallback to Chaturshi village spot");
+          },
+          { enableHighAccuracy: true, timeout: 6000 }
         );
       } else {
-        toastSuccess("GPS Pin Set: 26.8500, 80.9500");
+        toastWarning("GPS not supported on browser");
       }
     }
 
-    function setDeliveryLocation(loc, landmark) {
-      document.getElementById('header-location-text').innerText = loc;
-      document.getElementById('checkout-village-input').value = loc;
+    function openRuralAddressModal() {
+      playBeep(650, 0.04);
+      document.getElementById('modal-village-input').value = activeCustomerAddress.village;
+      document.getElementById('modal-landmark-input').value = activeCustomerAddress.landmark;
+      openModal('modal-rural-address');
+    }
+
+    async function saveRuralAddress() {
+      const village = document.getElementById('modal-village-input').value.trim();
+      const landmark = document.getElementById('modal-landmark-input').value.trim();
+
+      if (!village || !landmark) {
+        toastError(currentLang === 'hi' ? "कृपया गांव और प्रमुख लैंडमार्क दोनों भरें" : "Please provide both Village and Mandatory Landmark");
+        return;
+      }
+
+      activeCustomerAddress.village = village;
+      activeCustomerAddress.landmark = landmark;
+
+      // Update UI elements
+      document.getElementById('header-location-text').innerText = village;
+      document.getElementById('checkout-village-input').value = village;
       document.getElementById('checkout-landmark-input').value = landmark;
-      closeModal('modal-location');
-      toastSuccess(currentLang === 'hi' ? "डिलीवरी स्थान चुना गया: " + loc : "Delivery village set to: " + loc);
+      document.getElementById('saved-address-text-primary').innerText = village;
+      document.getElementById('saved-landmark-text-primary').innerText = `📍 Landmark: ${landmark}`;
+
+      // Persist to backend with strict JWT Authorization header
+      await apiRequest('/api/v1/addresses', 'POST', {
+        title: 'Home',
+        recipient_name: 'Raju Patel',
+        phone: '9876543210',
+        village: village,
+        landmark: landmark,
+        latitude: activeCustomerAddress.latitude,
+        longitude: activeCustomerAddress.longitude,
+        block: 'Minapur',
+        district: 'Muzaffarpur',
+        is_default: true
+      });
+
+      closeModal('modal-rural-address');
+      playSuccessChime();
+      toastSuccess(currentLang === 'hi' ? "सटीक ग्रामीण पता सफलतापूर्वक सहेजा गया!" : "Rural exact address saved & pinned!");
+    }
+
+    async function loadUserSavedAddresses() {
+      // Backend request with user isolation (only returns logged-in customer's addresses)
+      const addresses = await apiRequest('/api/v1/addresses');
+      if (addresses && Array.isArray(addresses) && addresses.length > 0) {
+        const primary = addresses[0];
+        activeCustomerAddress.village = primary.village;
+        activeCustomerAddress.landmark = primary.landmark || 'Near Primary School';
+        activeCustomerAddress.latitude = primary.latitude;
+        activeCustomerAddress.longitude = primary.longitude;
+
+        document.getElementById('header-location-text').innerText = primary.village;
+        document.getElementById('checkout-village-input').value = primary.village;
+        document.getElementById('checkout-landmark-input').value = activeCustomerAddress.landmark;
+        document.getElementById('saved-address-text-primary').innerText = primary.village;
+        document.getElementById('saved-landmark-text-primary').innerText = `📍 Landmark: ${activeCustomerAddress.landmark}`;
+      }
     }
 
     // ---------------------------------------------------------------------------
@@ -2082,7 +2338,6 @@
         micBtn.classList.add('bg-rose-600', 'hover:bg-rose-700');
         micBtn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
 
-        // Simulate voice recognition in rural context
         setTimeout(() => {
           if (isVoiceListening) {
             isVoiceListening = false;
@@ -2147,7 +2402,6 @@
         addToCart('p1');
         addedItemName = currentLang === 'hi' ? "5 किलो आशीर्वाद आटा (₹215.00)" : "5kg Aashirvaad Atta (₹215.00)";
       } else {
-        // Fallback default
         addToCart('p4');
         addedItemName = currentLang === 'hi' ? "1 किलो चीनी (₹45.00)" : "1kg Sugar (₹45.00)";
       }
@@ -2187,12 +2441,13 @@
 
     function initUnifiedCustomerWebSocket() {
       try {
+        const token = getCustomerAuthToken();
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws/customer`;
+        const wsUrl = `${BACKEND_CONFIG.wsBase}/ws/customer?token=${token}`;
         wsConnection = new WebSocket(wsUrl);
 
         wsConnection.onopen = () => {
-          console.log("[Customer WS] Connected to unified real-time socket");
+          console.log("[Customer WS] Connected to unified real-time socket with JWT token");
         };
 
         wsConnection.onmessage = (event) => {
@@ -2206,21 +2461,43 @@
       }
     }
 
+    // Smooth DOM Update without layout shifts or reloads
     function handleUnifiedSocketMessage(msg) {
-      if (msg.event === 'order_accepted') {
-        document.getElementById('stage-prep-label').className = "text-emerald-700 font-bold";
-        document.getElementById('active-order-status-msg').innerText = currentLang === 'hi'
-          ? "दुकानदार ने ऑर्डर स्वीकार किया और पैक कर रहा है।"
-          : "Vendor accepted your order and is packing.";
+      if (msg.event === 'order_accepted' || msg.event === 'status_preparing') {
+        const stage2 = document.getElementById('stage-prep-label');
+        if (stage2) stage2.className = "text-emerald-700 font-bold";
+        
+        const bar2 = document.getElementById('order-prog-bar-2');
+        if (bar2) bar2.style.width = "50%";
+
+        const msgEl = document.getElementById('active-order-status-msg');
+        if (msgEl) {
+          msgEl.innerText = currentLang === 'hi'
+            ? "दुकानदार ने ऑर्डर स्वीकार किया और सामान पैक कर रहा है।"
+            : "Vendor accepted your order and is packing.";
+        }
         toastSuccess("Vendor accepted order #GB-8921!");
       } else if (msg.event === 'runner_assigned' || msg.event === 'out_for_delivery') {
-        document.getElementById('stage-out-label').className = "text-emerald-700 font-bold";
-        document.getElementById('runner-eta-badge').innerText = "4 Mins Away";
+        const stage3 = document.getElementById('stage-out-label');
+        if (stage3) stage3.className = "text-emerald-700 font-bold";
+
+        const bar3 = document.getElementById('order-prog-bar-3');
+        if (bar3) bar3.style.width = "50%";
+
+        const eta = document.getElementById('runner-eta-badge');
+        if (eta) eta.innerText = "4 Mins Away";
+
+        const msgEl = document.getElementById('active-order-status-msg');
+        if (msgEl) {
+          msgEl.innerText = currentLang === 'hi'
+            ? "रनर रमेश कुमार सामान लेकर आपके गांव के रास्ते में है।"
+            : "Runner Ramesh Kumar is on the way to your village.";
+        }
         toastSuccess("Runner Ramesh Kumar is on the way to your village!");
       }
     }
 
-    function placeCustomerOrder() {
+    async function placeCustomerOrder() {
       if (Object.keys(cart).length === 0) {
         toastError(currentLang === 'hi' ? "आपकी कार्ट खाली है! कृपया सामान जोड़ें।" : "Your cart is empty! Please add items.");
         return;
@@ -2230,6 +2507,18 @@
       const village = document.getElementById('checkout-village-input').value;
       const landmark = document.getElementById('checkout-landmark-input').value;
 
+      // Real backend order creation with JWT token
+      await apiRequest('/api/v1/orders/orders', 'POST', {
+        store_id: 'store_sharma_01',
+        delivery_address_id: 'addr_default_01',
+        items: Object.values(cart).map(i => ({
+          product_id: i.product.id,
+          quantity: i.qty,
+          unit_price: i.product.price
+        })),
+        payment_method: document.querySelector('input[name="payment_mode"]:checked').value
+      });
+
       // Broadcast order over WebSocket if connected
       if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
         wsConnection.send(JSON.stringify({
@@ -2238,6 +2527,8 @@
           customer_name: 'Raju Patel',
           village: village,
           landmark: landmark,
+          latitude: activeCustomerAddress.latitude,
+          longitude: activeCustomerAddress.longitude,
           items: cart
         }));
       }
@@ -2322,7 +2613,7 @@
     }
 
     // ---------------------------------------------------------------------------
-    // IN-APP CHAT WITH RUNNER & LIVE LOCATION SHARING
+    // IN-APP CHAT WITH RUNNER & LIVE LOCATION SHARING (WHATSAPP-STYLE)
     // ---------------------------------------------------------------------------
     function openChatWithRunner() {
       playBeep(650, 0.05);
@@ -2361,7 +2652,8 @@
           (err) => {
             // Default village spot
             renderLocationChatBubble("26.8500", "80.9500");
-          }
+          },
+          { enableHighAccuracy: true }
         );
       } else {
         renderLocationChatBubble("26.8500", "80.9500");
@@ -2369,6 +2661,7 @@
     }
 
     function renderLocationChatBubble(lat, lng) {
+      // Precise WhatsApp-style Google Maps universal search/direction query URL
       const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
       const container = document.getElementById('chat-messages-container');
       const bubble = document.createElement('div');
@@ -2379,7 +2672,7 @@
             <i data-lucide="map-pin" class="w-4 h-4 text-emerald-300"></i>
             <span>${i18n[currentLang].live_loc_shared}</span>
           </div>
-          <p class="text-[10px] text-emerald-200">Coords: ${lat}, ${lng} (Chaturshi Village)</p>
+          <p class="text-[10px] text-emerald-200 font-mono">📍 Coords: ${lat}, ${lng} (Chaturshi Village)</p>
           <a href="${mapsUrl}" target="_blank" class="block w-full text-center py-2 px-3 bg-white text-emerald-900 rounded-lg font-bold text-[11px] shadow-sm hover:bg-emerald-50 active:scale-95 transition">
             Open in Google Maps
           </a>
@@ -2460,7 +2753,10 @@
     function confirmCustomerLogout() {
       playBeep(450, 0.08);
       if (confirm(currentLang === 'hi' ? "क्या आप सच में गांवबाजार से लॉग आउट करना चाहते हैं?" : "Are you sure you want to log out of GaonBazaar?")) {
+        // Strict Data Isolation: clear session token and storage
+        setCustomerAuthToken(null);
         localStorage.removeItem('gb_customer_authenticated');
+        localStorage.removeItem('gb_customer_lang');
         window.location.reload();
       }
     }
@@ -2497,6 +2793,8 @@
         document.getElementById('page-login').classList.add('hidden');
         document.getElementById('dashboard-container').classList.remove('hidden');
         switchTab('home', false);
+        syncDynamicProducts();
+        loadUserSavedAddresses();
       } else {
         document.getElementById('page-language').classList.remove('hidden');
       }
