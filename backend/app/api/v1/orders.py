@@ -52,7 +52,7 @@ async def sync_cart(data: CartSyncRequest, db: AsyncSession = Depends(get_db)):
     subtotal = 0.0
     for itm in data.items:
         pres = await db.execute(
-            select(StoreProduct).where(StoreProduct.id == itm.product_id, StoreProduct.store_id == data.store_id)
+            select(StoreProduct).where(((StoreProduct.id == itm.product_id) | (StoreProduct.global_product_id == itm.product_id)), StoreProduct.store_id == data.store_id)
         )
         prod = pres.scalars().first()
         if prod:
@@ -110,7 +110,7 @@ async def create_order(
     
     for itm in data.items:
         p_res = await db.execute(
-            select(StoreProduct).options(selectinload(StoreProduct.global_item)).where(StoreProduct.id == itm.product_id, StoreProduct.store_id == data.store_id)
+            select(StoreProduct).options(selectinload(StoreProduct.global_item)).where(((StoreProduct.id == itm.product_id) | (StoreProduct.global_product_id == itm.product_id)), StoreProduct.store_id == data.store_id)
         )
         prod = p_res.scalars().first()
         if not prod:

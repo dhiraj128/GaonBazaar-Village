@@ -1,0 +1,23 @@
+{
+  "order_id": "1bcbb82e-5ccd-4258-9d7b-fed1b84e897c",
+  "otp": "6629",
+  "customer_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyZjU2ZDg1OC00NmVjLTQ5OTMtOGJlYi05YjdiNjc2OTMzNTUiLCJwaG9uZSI6Ijk4MTEyMjMzNDQiLCJyb2xlIjoiY3VzdG9tZXIiLCJleHAiOjE3OTQ0Nzc4Nzl9._zilDw32YE_cKX4cxx_ECye1_MPy3qzjCuIWCy4t0YY",
+  "customer_user": {
+    "id": "2f56d858-46ec-4993-8beb-9b7b67693355",
+    "phone": "9811223344",
+    "name": "Sunita Devi",
+    "email": null,
+    "role": "customer",
+    "preferred_language": "hi",
+    "avatar_url": null,
+    "primary_village": null,
+    "primary_panchayat": null,
+    "is_active": true
+  },
+  "runner_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfcjEiLCJwaG9uZSI6Ijk4MDAwMDAwMDMiLCJyb2xlIjoicnVubmVyIiwiZXhwIjoxNzk0NDc3ODc5fQ.vAfNN8-YCPv111Noxw1LI8qg3zasOMVePIeaDWBUNug",
+  "vendor_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfdjEiLCJwaG9uZSI6Ijk4MDAwMDAwMDEiLCJyb2xlIjoidmVuZG9yIiwiZXhwIjoxNzk0NDc3ODc5fQ.D74UU73nklPh9cbz2xZZnOGqLpU15_RUIVp6ZFOVOWw",
+  "admin_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfYWRtaW5fMDEiLCJwaG9uZSI6Ijk4MDAwMDAwOTkiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjE3OTQ0Nzc4Nzl9.8UTzcvQwRf62oxVqUo4GEzjKpwIxqqO-uY-sEr32EU8",
+  "ticket_id": "b9604bd5-a379-444c-83ca-11f713138c82",
+  "ration_id": "c9103497-1544-44ec-8f4c-13acf939921d",
+  "address_id": "85a5d47b-04e5-44f1-8a25-011f48277b66"
+}
