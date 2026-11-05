@@ -1131,8 +1131,8 @@
         <!-- Selected Coords & Geofence Status -->
         <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-xs">
           <div class="flex items-center justify-between">
-            <span class="text-[10px] font-bold text-slate-500 uppercase">Selected GPS Pin:</span>
-            <span id="picker-coords-text" class="font-mono text-[11px] font-bold text-slate-800">26.2315, 85.3610</span>
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Selected Location:</span>
+            <span id="picker-coords-text" class="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md">Doorstep Pin Verified ✓</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-[10px] font-bold text-slate-500 uppercase">Distance to Store:</span>
@@ -2176,6 +2176,134 @@
     ];
 
     // Master Product Image Library (Verified High-Res Photographs)
+        // ===========================================================================
+    // STATIC CURATED PRODUCT IMAGE CATALOG & LOOKUP (MVP STRICT MAPPING)
+    // ===========================================================================
+    const PRODUCT_IMAGE_CATALOG = {
+      // By Product ID
+      "p1": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80", // Chakki Atta / Wheat Flour
+      "p2": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80", // Mustard Oil
+      "p3": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80", // Fresh Cow Milk
+      "p4": "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=500&q=80", // Pure White Sugar
+      "p5": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80", // Red Fresh Tomatoes
+      "p6": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&q=80", // Fresh Potatoes
+      "p7": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80", // Arhar / Toor Dal
+      "p8": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80", // Parle-G Biscuits
+      "p9": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80", // Surf Excel Detergent
+      "p10": "https://images.unsplash.com/photo-1626197031507-c17099753214?w=500&q=80", // Tata Salt
+      "p11": "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80", // Fresh Red Onions
+
+      // Backend Catalog IDs
+      "cat_atta": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+      "cat_mustard_oil": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+      "cat_milk": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+      "cat_sugar": "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=500&q=80",
+      "cat_tomato": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80",
+      "cat_potato": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&q=80",
+      "cat_toor_dal": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+      "cat_salt": "https://images.unsplash.com/photo-1626197031507-c17099753214?w=500&q=80",
+      "cat_detergent": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
+      "cat_onion": "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80",
+      "cat_rice": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
+      "cat_tea": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
+      "cat_biscuits": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80",
+      "cat_bath_soap": "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80",
+      "cat_toothpaste": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&q=80",
+
+      // Normalized Keywords / Names
+      "atta": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+      "flour": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+      "aashirvaad": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+      "mustard oil": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+      "oil": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+      "sarso": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+      "milk": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+      "doodh": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+      "sugar": "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=500&q=80",
+      "cheeni": "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=500&q=80",
+      "salt": "https://images.unsplash.com/photo-1626197031507-c17099753214?w=500&q=80",
+      "namak": "https://images.unsplash.com/photo-1626197031507-c17099753214?w=500&q=80",
+      "tata salt": "https://images.unsplash.com/photo-1626197031507-c17099753214?w=500&q=80",
+      "dal": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+      "toor dal": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+      "arhar": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+      "pulses": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+      "tomato": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80",
+      "tamatar": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80",
+      "potato": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&q=80",
+      "aloo": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&q=80",
+      "onion": "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80",
+      "pyaz": "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80",
+      "detergent": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
+      "surf excel": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
+      "surf": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
+      "washing powder": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
+      "biscuits": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80",
+      "parle": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80",
+      "tea": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
+      "chai": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
+      "soap": "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80",
+      "sabun": "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80",
+      "toothpaste": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&q=80",
+      "colgate": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=500&q=80",
+      "rice": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
+      "chawal": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
+
+      // Generic Safe Category Placeholders (No random objects)
+      "Category_Grocery": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80",
+      "Category_Dairy & Milk": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+      "Category_Dairy": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+      "Category_Vegetables": "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500&q=80",
+      "Category_General Store": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
+      "Category_Household": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
+      "DEFAULT": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80"
+    };
+
+    function getProductImage(item, category = null) {
+      if (!item) return PRODUCT_IMAGE_CATALOG["DEFAULT"];
+      if (typeof item === 'string') {
+        const key = item.toLowerCase().trim();
+        if (PRODUCT_IMAGE_CATALOG[item]) return PRODUCT_IMAGE_CATALOG[item];
+        if (PRODUCT_IMAGE_CATALOG[key]) return PRODUCT_IMAGE_CATALOG[key];
+        for (const [k, url] of Object.entries(PRODUCT_IMAGE_CATALOG)) {
+          if (k.length > 2 && key.includes(k)) return url;
+        }
+        if (category && PRODUCT_IMAGE_CATALOG["Category_" + category]) {
+          return PRODUCT_IMAGE_CATALOG["Category_" + category];
+        }
+        return PRODUCT_IMAGE_CATALOG["DEFAULT"];
+      }
+
+      const id = item.id || item.product_id || item.global_product_id;
+      if (id && PRODUCT_IMAGE_CATALOG[id]) return PRODUCT_IMAGE_CATALOG[id];
+
+      const nameEn = (item.nameEn || item.name_en || item.name || '').toLowerCase();
+      const nameHi = (item.nameHi || item.name_hi || '').toLowerCase();
+
+      for (const [k, url] of Object.entries(PRODUCT_IMAGE_CATALOG)) {
+        if (k.length > 2 && (nameEn.includes(k) || nameHi.includes(k))) {
+          return url;
+        }
+      }
+
+      const cat = category || item.category;
+      if (cat && PRODUCT_IMAGE_CATALOG["Category_" + cat]) {
+        return PRODUCT_IMAGE_CATALOG["Category_" + cat];
+      }
+
+      if (item.img && typeof item.img === 'string' && item.img.startsWith('http') && !item.img.includes('undefined')) {
+        return item.img;
+      }
+      if (item.image_url && typeof item.image_url === 'string' && item.image_url.startsWith('http')) {
+        return item.image_url;
+      }
+
+      return PRODUCT_IMAGE_CATALOG["DEFAULT"];
+    }
+
+    window.PRODUCT_IMAGE_CATALOG = PRODUCT_IMAGE_CATALOG;
+    window.getProductImage = getProductImage;
+
     let productsCatalog = [
 
       {
@@ -4214,7 +4342,7 @@
       const badgeEl = document.getElementById('picker-service-badge');
       const confirmBtn = document.getElementById('btn-confirm-map-pin');
 
-      if (coordsEl) coordsEl.innerText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      if (coordsEl) coordsEl.innerText = 'Doorstep Pin Verified ✓';
 
       // Minapur pilot store coordinates
       const storeLat = 26.2315;
@@ -4262,7 +4390,7 @@
       const pinStatus = document.getElementById('modal-map-pin-status');
       if (pinStatus) {
         pinStatus.className = "text-[10px] font-bold text-emerald-700 truncate";
-        pinStatus.innerText = `Confirmed Pin: ${selectedPickerLat.toFixed(4)}, ${selectedPickerLng.toFixed(4)}`;
+        pinStatus.innerText = 'Confirmed Doorstep Pin ✓';
       }
 
       closeModal('modal-location-map-picker');
@@ -4790,10 +4918,10 @@
               const statePart = addr.state || "State";
               localityName = `${villagePart}, ${districtPart}`;
             } else {
-              localityName = `GPS Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+              localityName = 'Current Doorstep Location';
             }
           } catch (e) {
-            localityName = `GPS Location (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+            localityName = 'Current Doorstep Location';
           }
 
           activeCustomerAddress.village = localityName;
@@ -5002,8 +5130,8 @@
               <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
               <span>${defAddr.title || 'Home'} — Default</span>
             </span>
-            <span class="text-[10px] font-mono text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full font-bold">
-              📍 ${lat}, ${lng}
+            <span class="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+              📍 Doorstep Pin
             </span>
           </div>
           <p class="text-slate-800 font-bold">${defAddr.recipient_name || 'Customer'} • <span class="font-normal text-slate-600">${defAddr.phone}</span></p>
@@ -5040,7 +5168,7 @@
                 <span class="font-bold text-slate-900">${addr.title || 'Home'}</span>
                 ${isDef ? '<span class="text-[9px] bg-emerald-600 text-white font-bold px-1.5 py-0.2 rounded">DEFAULT</span>' : ''}
               </div>
-              <span class="text-[10px] font-mono text-slate-500 font-bold">📍 ${lat}, ${lng}</span>
+              <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">📍 Doorstep Pin</span>
             </div>
 
             <div>
