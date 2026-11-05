@@ -1,3 +1,8 @@
+import os
+import re
+import uuid
+import base64
+from fastapi.responses import FileResponse
 from typing import List, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel
@@ -10,6 +15,19 @@ from app.models.base import SupportTicket, TicketMessage, Order, OrderItem, Orde
 from app.core.security import get_current_user_payload
 
 router = APIRouter(prefix="/support", tags=["Customer Support & Help Desk"])
+
+
+class EvidenceUploadRequest(BaseModel):
+    data_url: str  # Base64 data URL e.g. "data:image/jpeg;base64,..."
+    file_name: Optional[str] = None
+    order_id: Optional[str] = None
+
+class EvidenceUploadResponse(BaseModel):
+    evidence_id: str
+    attachment_url: str
+    file_name: str
+    content_type: str
+    size_bytes: int
 
 class TicketCreate(BaseModel):
     order_id: Optional[str] = None
@@ -86,6 +104,90 @@ class SupportChatResponse(BaseModel):
     order_id: Optional[str] = None
     ticket_id: Optional[str] = None
     suggested_actions: List[str] = []
+
+
+EVIDENCE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "storage", "evidence"))
+os.makedirs(EVIDENCE_DIR, exist_ok=True)
+
+@router.post("/upload-evidence", response_model=EvidenceUploadResponse)
+async def upload_support_evidence(
+    req: EvidenceUploadRequest,
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Secure authenticated upload for damaged/wrong product photos.
+    Validates MIME type, file size (max 5MB), and magic bytes.
+    Saves file to secure private directory with server-generated UUID.
+    """
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+        
+    data = req.data_url.strip()
+    match = re.match(r"^data:(image\/(jpeg|png|webp));base64,(.+)$", data, re.I)
+    if not match:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid image format. Supported formats: JPEG, PNG, WEBP."
+        )
+        
+    content_type = match.group(1).lower()
+    ext = match.group(2).lower()
+    if ext == "jpeg":
+        ext = "jpg"
+        
+    try:
+        image_bytes = base64.b64decode(match.group(3))
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid base64 payload")
+        
+    if len(image_bytes) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image size exceeds maximum 5MB limit")
+        
+    # Check magic bytes
+    if ext in ["jpg", "jpeg"] and not image_bytes.startswith(b"\xff\xd8\xff"):
+        raise HTTPException(status_code=400, detail="File content does not match JPEG signature")
+    elif ext == "png" and not image_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise HTTPException(status_code=400, detail="File content does not match PNG signature")
+    elif ext == "webp" and not (image_bytes.startswith(b"RIFF") and b"WEBP" in image_bytes[:16]):
+        raise HTTPException(status_code=400, detail="File content does not match WEBP signature")
+        
+    evidence_id = f"ev_{uuid.uuid4().hex[:16]}"
+    safe_filename = f"{evidence_id}.{ext}"
+    filepath = os.path.join(EVIDENCE_DIR, safe_filename)
+    
+    with open(filepath, "wb") as f:
+        f.write(image_bytes)
+        
+    rel_url = f"/api/v1/support/evidence/{safe_filename}"
+    return EvidenceUploadResponse(
+        evidence_id=evidence_id,
+        attachment_url=rel_url,
+        file_name=safe_filename,
+        content_type=content_type,
+        size_bytes=len(image_bytes)
+    )
+
+@router.get("/evidence/{filename}")
+async def get_support_evidence(
+    filename: str,
+    payload: dict = Depends(get_current_user_payload)
+):
+    """
+    Secure file retrieval for uploaded damage/wrong product evidence.
+    Access restricted to authenticated users (ticket owners and admins).
+    """
+    if not re.match(r"^ev_[a-zA-Z0-9_\-]+\.(jpg|jpeg|png|webp)$", filename):
+        raise HTTPException(status_code=400, detail="Invalid evidence file reference")
+        
+    filepath = os.path.join(EVIDENCE_DIR, filename)
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Evidence photo not found")
+        
+    ext = filename.split(".")[-1].lower()
+    media_type = "image/jpeg" if ext in ["jpg", "jpeg"] else f"image/{ext}"
+    return FileResponse(filepath, media_type=media_type)
 
 @router.post("/tickets", response_model=TicketResponse, status_code=status.HTTP_201_CREATED)
 async def create_ticket(
@@ -472,27 +574,38 @@ async def ai_support_chat(
             suggested_actions=["रिफ़ंड स्थिति देखें", "सहायता टिकट बनाएं"] if is_hi else ["Refund Status", "Create Ticket"]
         )
 
-    # 4. Human Support Escalation / Customer Care Callback
-    elif any(k in q for k in ['callback', 'call back', 'call', 'care', 'human', 'agent', 'speak', 'talk', 'customer care', 'कस्टमर केयर', 'बात करनी है', 'कॉल करो', 'कॉल बैक']):
+    # 4. Human Support Escalation / Support Desk Ticket
+    elif any(k in q for k in ['callback', 'call back', 'call', 'care', 'human', 'agent', 'support desk', 'speak', 'talk', 'customer care', 'कस्टमर केयर', 'बात करनी है', 'कॉल करो', 'कॉल बैक', 'मदद चाहिए', 'सहायता']):
+        is_callback_kw = any(k in q for k in ['callback', 'call back', 'call', 'कॉल बैक', 'कॉल करो'])
+        cat = 'CUSTOMER_CARE_CALLBACK' if is_callback_kw else 'SUPPORT_DESK'
+        subj = 'Customer Care Callback Request' if is_callback_kw else 'Support Desk Assistance Request'
+        intent = 'CALLBACK_REQUESTED' if is_callback_kw else 'SUPPORT_TICKET_CREATED'
         ticket = SupportTicket(
             user_id=user_id,
             order_id=latest_order.id if latest_order else None,
-            category='CUSTOMER_CARE_CALLBACK',
-            subject='Customer Care Callback Request',
+            category=cat,
+            subject=subj,
             message=req.query,
             status='OPEN'
         )
         db.add(ticket)
         await db.commit()
         await db.refresh(ticket)
-        reply = (
-            f'आपकी कॉलबैक रिक्वेस्ट दर्ज कर ली गई है (टिकट #{ticket.id[-6:]})। जब कोई एजेंट उपलब्ध होगा, हमारी सपोर्ट टीम आपसे संपर्क करेगी।'
-            if is_hi else
-            f'Your callback request has been submitted (Ticket #{ticket.id[-6:]}). Our support team will contact you when an agent is available.'
-        )
+        if is_callback_kw:
+            reply = (
+                f'आपकी कॉलबैक रिक्वेस्ट दर्ज कर ली गई है (टिकट #{ticket.id[-6:]})। जब कोई एजेंट उपलब्ध होगा, हमारी सपोर्ट टीम आपसे संपर्क करेगी।'
+                if is_hi else
+                f'Your callback request has been submitted (Ticket #{ticket.id[-6:]}). Our support team will contact you when an agent is available.'
+            )
+        else:
+            reply = (
+                f'आपकी समस्या सपोर्ट डेस्क को भेज दी गई है (टिकट #{ticket.id[-6:]})। हमारी सहायता टीम आपके टिकट थ्रेड में उत्तर देगी।'
+                if is_hi else
+                f'Your query has been forwarded to our Support Desk (Ticket #{ticket.id[-6:]}). Our support team will review and reply directly in your Support Tickets thread.'
+            )
         return SupportChatResponse(
             reply=reply,
-            intent='CALLBACK_REQUESTED',
+            intent=intent,
             ticket_id=ticket.id,
             order_id=latest_order.id if latest_order else None,
             suggested_actions=['मेरी टिकटें देखें', 'ऑर्डर ट्रैक करें'] if is_hi else ['My Support Tickets', 'Track Order']

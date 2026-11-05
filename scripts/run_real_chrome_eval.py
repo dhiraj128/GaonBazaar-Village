@@ -4,6 +4,7 @@ import os
 import sys
 import json
 import time
+import base64
 import urllib.request
 import websockets
 
@@ -13,12 +14,29 @@ port = 8097
 cdp_port = 9224
 chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 temp_dir = r"C:\Users\dhira\AppData\Local\Temp\chrome_real_eval"
+artifact_dir = r"C:\Users\dhira\.gemini\antigravity\brain\918c8085-b60b-40a9-a077-a3344458bcc5"
 
 viewports = [
     {"name": "360px (Compact Mobile)", "width": 360, "height": 780},
     {"name": "393px (Standard Mobile)", "width": 393, "height": 852},
     {"name": "412px (Large Mobile)", "width": 412, "height": 915},
 ]
+
+async def capture_screenshot(ws, filename):
+    await ws.send(json.dumps({
+        "id": 999,
+        "method": "Page.captureScreenshot",
+        "params": {"format": "png"}
+    }))
+    while True:
+        resp = json.loads(await ws.recv())
+        if resp.get("id") == 999:
+            data = base64.b64decode(resp["result"]["data"])
+            path = os.path.join(artifact_dir, filename)
+            with open(path, "wb") as f:
+                f.write(data)
+            print(f"Captured screenshot: {filename} ({len(data)} bytes)")
+            return path
 
 async def run_eval_for_viewport(ws, vp):
     print(f"\n--- Testing Viewport: {vp['name']} ({vp['width']}x{vp['height']}) ---")
@@ -55,7 +73,7 @@ async def run_eval_for_viewport(ws, vp):
       check(typeof window.loadUserProfile === 'function', 'loadUserProfile defined');
       check(typeof window.saveUserProfile === 'function', 'saveUserProfile defined');
       check(typeof window.openMyTicketsModal === 'function', 'openMyTicketsModal defined');
-      check(typeof window.submitCustomerSupportTicket === 'function', 'submitCustomerSupportTicket defined');
+      check(typeof window.submitCustomerSupportTicketWithEvidence === 'function', 'submitCustomerSupportTicketWithEvidence defined');
       check(typeof window.renderFaqAccordion === 'function', 'renderFaqAccordion defined');
       check(typeof window.revealDeliveryOtp === 'function', 'revealDeliveryOtp defined');
       check(typeof window.openManageAddressesModal === 'function', 'openManageAddressesModal defined');
@@ -65,6 +83,8 @@ async def run_eval_for_viewport(ws, vp):
       check(typeof window.resolveRationItemDetails === 'function', 'resolveRationItemDetails defined');
       check(typeof window.proceedToMonthlyRationOrderReview === 'function', 'proceedToMonthlyRationOrderReview defined');
       check(typeof window.confirmMonthlyRationDirectOrder === 'function', 'confirmMonthlyRationDirectOrder defined');
+      check(typeof window.openPickerPinInExternalMaps === 'function', 'openPickerPinInExternalMaps defined');
+      check(typeof window.clearPickerMarkerPin === 'function', 'clearPickerMarkerPin defined');
       check(window.productCatalog === window.productsCatalog, 'productCatalog aliases productsCatalog');
 
       // 2. Authenticate and enter dashboard
@@ -99,33 +119,36 @@ async def run_eval_for_viewport(ws, vp):
       window.userSavedAddresses = [
         {
           id: 'addr_test_1',
-          title: 'Home / घर',
-          recipient_name: 'Ramesh Patel',
+          title: 'Home',
+          recipient_name: 'Dhiraj Sharma',
           phone: '9876543210',
-          village: 'Bithoor',
-          landmark: 'Near Shiva Temple',
+          village: 'Chaturshi, Muzaffarpur',
+          landmark: 'Near Shiv Mandir',
+          district: 'Muzaffarpur',
           is_default: true,
-          latitude: 26.6139,
-          longitude: 80.2718
+          latitude: 26.2315,
+          longitude: 85.3610
         },
         {
           id: 'addr_test_2',
-          title: 'Farm / खेत',
-          recipient_name: 'Ramesh Patel',
+          title: 'Work',
+          recipient_name: 'Dhiraj Sharma',
           phone: '9876543210',
           village: 'Parihar',
           landmark: 'Tubewell 4',
+          district: 'Muzaffarpur',
           is_default: false,
-          latitude: 26.6200,
-          longitude: 80.2800
+          latitude: 26.2500,
+          longitude: 85.3800
         }
       ];
       renderAccountAddressSummary();
 
       const summaryCard = document.getElementById('account-default-address-container');
       check(summaryCard && !summaryCard.classList.contains('hidden'), 'Default address summary container rendered on Account');
-      check(summaryCard.textContent.includes('Bithoor'), 'Default address card shows Bithoor');
-      check(summaryCard.textContent.includes('Near Shiva Temple'), 'Default address card shows landmark');
+      check(summaryCard.textContent.includes('Chaturshi'), 'Default address card shows Chaturshi');
+      check(summaryCard.textContent.includes('Near Shiv Mandir'), 'Default address card shows landmark');
+      check(!summaryCard.textContent.includes('26.2315'), 'Default address card has NO raw latitude');
       
       const countLabel = document.getElementById('saved-addresses-count-label');
       check(countLabel && countLabel.textContent.includes('2 Saved Locations'), 'Count label displays 2 Saved Locations');
@@ -145,6 +168,30 @@ async def run_eval_for_viewport(ws, vp):
       const mapM = document.getElementById('modal-location-map-picker');
       check(!mapM.classList.contains('hidden'), 'Location map picker modal opened');
       check(typeof window.locationPickerMap !== 'undefined' && window.locationPickerMap !== null, 'Leaflet locationPickerMap instance exists');
+
+      // Test 4 delivery fee bands
+      updatePickerGeofence(26.2315, 85.3610);
+      const b1 = document.getElementById('picker-service-badge').textContent;
+      check(b1.includes('₹15'), '0-2 km band displays ₹15: ' + b1);
+
+      updatePickerGeofence(26.2550, 85.3610);
+      const b2 = document.getElementById('picker-service-badge').textContent;
+      check(b2.includes('₹20'), 'Above 2-4 km band displays ₹20: ' + b2);
+
+      updatePickerGeofence(26.2730, 85.3610);
+      const b3 = document.getElementById('picker-service-badge').textContent;
+      check(b3.includes('₹25'), 'Above 4-5 km band displays ₹25: ' + b3);
+
+      updatePickerGeofence(26.2900, 85.3610);
+      const b4 = document.getElementById('picker-service-badge').textContent;
+      check(b4.includes('₹35'), 'Above 5-8 km band displays ₹35: ' + b4);
+
+      updatePickerGeofence(26.4500, 85.7000);
+      const b5 = document.getElementById('picker-service-badge').textContent;
+      check(b5.includes('Delivery is not available at this location yet'), 'Above 8 km shows unserviceable warning: ' + b5);
+      const btnConfirm = document.getElementById('btn-confirm-map-pin');
+      check(btnConfirm && btnConfirm.disabled, 'Confirm button disabled when outside 8km');
+
       closeModal('modal-location-map-picker');
       check(mapM.classList.contains('hidden'), 'Location map picker modal closed');
 
@@ -192,14 +239,43 @@ async def run_eval_for_viewport(ws, vp):
       }
       check(otpEl && !otpEl.textContent.includes('•') && otpEl.textContent.includes('7842'), 'Delivery OTP revealed on button click');
 
-      // 10. Cart Tab & Payment Mode
+      // 10. Cart Tab: Clean Empty Cart vs Products
       switchTab('cart');
+      window.cartItems = [];
+      renderCartItems();
+      const chkSections = document.getElementById('cart-checkout-sections');
+      check(chkSections && chkSections.classList.contains('hidden'), 'Empty cart hides checkout sections entirely');
+      check(document.getElementById('cart-items-list').textContent.includes('Your Cart is Empty'), 'Empty cart shows friendly title');
+      check(document.getElementById('cart-items-list').textContent.includes('Browse Products'), 'Empty cart shows Browse Products button');
+
+      // Add items to cart
+      window.cartItems = [
+        { id: 'p1', nameEn: 'Aashirvaad Shudh Chakki Atta', price: 215.00, qty: 1, unit: '5 kg' },
+        { id: 'p2', nameEn: 'Kachchi Ghani Mustard Oil', price: 145.00, qty: 1, unit: '1 Litre' }
+      ];
+      renderCartItems();
+      check(chkSections && !chkSections.classList.contains('hidden'), 'Cart with items shows checkout sections');
+      check(document.getElementById('checkout-selected-address-card') !== null, 'Compact deliver-to address card present');
+
       const upiRadio = document.querySelector('input[name="payment_mode"][value="ONLINE"]');
       check(upiRadio && upiRadio.disabled, 'UPI online radio is disabled');
       const codRadio = document.querySelector('input[name="payment_mode"][value="COD"]');
       check(codRadio && codRadio.checked, 'COD is selected by default');
 
-      // 11. Image Verification in Catalog
+      // 11. AI Support: Verify Call Me and Request Callback removed
+      const allButtons = Array.from(document.querySelectorAll('button')).map(b => b.textContent.trim());
+      check(!allButtons.some(t => t === 'Call Me'), 'Call Me button completely removed from DOM');
+      check(!allButtons.some(t => t === 'Request Callback'), 'Request Callback button completely removed from DOM');
+
+      // 12. Photo Evidence Upload elements in Issue Modal
+      openIssueModal('GB-TEST-9901', 'DAMAGED_ITEM');
+      check(!document.getElementById('modal-raise-ticket').classList.contains('hidden'), 'Issue report modal opened');
+      check(document.getElementById('ticket-photo-upload-section') !== null, 'Product photo upload section exists');
+      check(document.getElementById('ticket-evidence-file') !== null, 'File upload input exists');
+      check(document.getElementById('ticket-photo-preview-card') !== null, 'Photo preview card exists');
+      closeModal('modal-raise-ticket');
+
+      // 13. Image Verification in Catalog
       const chakkiAtta = productsCatalog.find(p => p.id === 'p1');
       check(chakkiAtta && chakkiAtta.img.includes('1509440159596'), 'Chakki Atta uses verified wheat flour sack URL: ' + chakkiAtta.img);
       const sugar = productsCatalog.find(p => p.id === 'p4');
@@ -211,7 +287,7 @@ async def run_eval_for_viewport(ws, vp):
       const dal = productsCatalog.find(p => p.id === 'p7');
       check(dal && dal.img.includes('1596040033229'), 'Toor Dal uses verified pulse legumes URL: ' + (dal ? dal.img : 'not found'));
 
-      // 12. Final switch back to Home and scroll lock check
+      // 14. Final switch back to Home and scroll lock check
       switchTab('home');
       check(!document.body.classList.contains('overflow-hidden'), 'Body is free to scroll on Home tab');
 
@@ -245,6 +321,108 @@ async def run_eval_for_viewport(ws, vp):
                 print(f"  [{status}] {item['msg']}")
             print(f"Viewport {vp['name']} Result: {len(result_val)} checks, Passed: {all_passed}")
             return all_passed
+
+async def take_screenshots_suite(ws):
+    print("\n--- Capturing Verified Visual Screenshots for Artifacts ---")
+
+    async def evaluate(expr):
+        await ws.send(json.dumps({
+            "id": 50,
+            "method": "Runtime.evaluate",
+            "params": {"expression": expr, "awaitPromise": True, "returnByValue": True}
+        }))
+        while True:
+            resp = json.loads(await ws.recv())
+            if resp.get("id") == 50:
+                return resp.get("result", {}).get("value")
+
+    # 1. Clean Empty Cart
+    await evaluate("""
+    window.cartItems = [];
+    switchTab('cart');
+    renderCartItems();
+    """)
+    await asyncio.sleep(0.4)
+    await capture_screenshot(ws, "proof_final_01_clean_empty_cart.png")
+
+    # 2. Cart with Products & Simplified Checkout
+    await evaluate("""
+    window.cartItems = [
+        { id: 'p1', nameEn: 'Aashirvaad Shudh Chakki Atta', price: 215.00, qty: 1, unit: '5 kg', img: getProductImage('p1') },
+        { id: 'p2', nameEn: 'Kachchi Ghani Mustard Oil', price: 145.00, qty: 1, unit: '1 Litre', img: getProductImage('p2') }
+    ];
+    renderCartItems();
+    """)
+    await asyncio.sleep(0.4)
+    await capture_screenshot(ws, "proof_final_02_cart_with_products_simplified_checkout.png")
+
+    # 3. Location Map Picker with 4 Distance Bands & Friendly Address
+    await evaluate("""
+    openLocationMapPickerModal();
+    updatePickerGeofence(26.2315, 85.3610);
+    """)
+    await asyncio.sleep(0.6)
+    await capture_screenshot(ws, "proof_final_03_readable_location_map_picker.png")
+
+    # 4. Map Geofence Boundary Check (Out of Range)
+    await evaluate("""
+    updatePickerGeofence(26.4500, 85.7000);
+    """)
+    await asyncio.sleep(0.4)
+    await capture_screenshot(ws, "proof_final_04_map_out_of_range_warning.png")
+    await evaluate("closeModal('modal-location-map-picker');")
+
+    # 5. Compact Saved Addresses Preview on Account Screen
+    await evaluate("""
+    switchTab('account');
+    renderAccountAddressSummary();
+    """)
+    await asyncio.sleep(0.4)
+    await capture_screenshot(ws, "proof_final_05_compact_saved_addresses_account.png")
+
+    # 6. Manage Addresses Subview Modal
+    await evaluate("""
+    openManageAddressesModal();
+    renderManageAddressesList();
+    """)
+    await asyncio.sleep(0.4)
+    await capture_screenshot(ws, "proof_final_06_manage_addresses_modal.png")
+    await evaluate("closeModal('modal-manage-addresses');")
+
+    # 7. Natural AI Support Chat (Zero Callback Buttons)
+    await evaluate("""
+    openAiSupportChatModal();
+    """)
+    await asyncio.sleep(0.4)
+    await capture_screenshot(ws, "proof_final_07_natural_ai_support_no_callback.png")
+
+    # 8. Damaged Product Photo Evidence Upload Modal
+    await evaluate("""
+    closeModal('modal-ai-support-chat');
+    openIssueModal('GB-TEST-7108', 'DAMAGED_ITEM');
+    """)
+    await asyncio.sleep(0.4)
+    await capture_screenshot(ws, "proof_final_08_photo_evidence_upload_modal.png")
+
+    # 9. Monthly Ration List
+    await evaluate("""
+    closeModal('modal-raise-ticket');
+    switchTab('orders');
+    openMonthlyRationModal();
+    """)
+    await asyncio.sleep(0.5)
+    await capture_screenshot(ws, "proof_final_09_monthly_ration_list.png")
+
+    # 10. Monthly Ration Direct Order Review with 4 Bands
+    await evaluate("""
+    proceedToMonthlyRationOrderReview();
+    """)
+    await asyncio.sleep(0.5)
+    await capture_screenshot(ws, "proof_final_10_monthly_ration_direct_order_review.png")
+    await evaluate("""
+    closeModal('modal-ration-order-review');
+    closeModal('modal-monthly-ration');
+    """)
 
 async def main():
     server_proc = subprocess.Popen(
@@ -290,6 +468,15 @@ async def main():
                 ok = await run_eval_for_viewport(ws, vp)
                 if not ok:
                     overall_pass = False
+
+            # Take full screenshots in 393px viewport
+            await ws.send(json.dumps({
+                "id": 10,
+                "method": "Emulation.setDeviceMetricsOverride",
+                "params": {"width": 393, "height": 852, "deviceScaleFactor": 2.0, "mobile": True}
+            }))
+            await ws.recv()
+            await take_screenshots_suite(ws)
 
             print(f"\n==========================================")
             print(f"ALL VIEWPORTS EVALUATION: {'ALL PASSED' if overall_pass else 'FAILURES DETECTED'}")
