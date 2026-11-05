@@ -10,7 +10,7 @@ ITEM_DICTIONARY = [
         "name_hi": "चक्की फ्रेश आटा",
         "unit": "5 kg",
         "price": 215.0,
-        "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+        "image_url": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80",
         "keywords": ["atta", "aata", "aashirvaad", "gehu", "wheat", "flour", "आटा", "गेहूं", "चक्की आटा"]
     },
     {
@@ -64,7 +64,7 @@ ITEM_DICTIONARY = [
         "name_hi": "टाटा आयोडाइज्ड नमक",
         "unit": "1 kg",
         "price": 28.0,
-        "image_url": "https://images.unsplash.com/photo-1626082896492-766af4eb6501?w=400",
+        "image_url": "https://images.unsplash.com/photo-1518110903415-32e5b77c1d76?w=400",
         "keywords": ["tata salt", "salt", "namak", "टाटा नमक", "नमक"]
     },
     {

@@ -14,6 +14,19 @@ class AddressCreate(BaseModel):
     state: str = "Bihar"
     is_default: bool = False
 
+class AddressUpdate(BaseModel):
+    title: Optional[str] = None
+    recipient_name: Optional[str] = None
+    phone: Optional[str] = Field(None, pattern=r"^[6-9]\d{9}$")
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    village: Optional[str] = None
+    landmark: Optional[str] = None
+    block: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
+    is_default: Optional[bool] = None
+
 class AddressResponse(BaseModel):
     id: str
     user_id: str

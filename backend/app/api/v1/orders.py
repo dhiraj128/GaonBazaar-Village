@@ -340,7 +340,7 @@ async def track_order_delivery(
         raise HTTPException(status_code=403, detail="Not authorized to track this order")
 
     runner = order.runner
-    is_live = order.status in ["PICKED_UP", "OUT_FOR_DELIVERY"] and runner is not None
+    is_live = order.status in ["ASSIGNED", "PICKED_UP", "OUT_FOR_DELIVERY"] and runner is not None
 
     runner_phone = None
     if runner and runner.user and runner.user.phone:

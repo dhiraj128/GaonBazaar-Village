@@ -13,8 +13,8 @@ from sqlalchemy import text
 from app.core.config import settings
 from app.core.ws import ws_manager
 from app.db.session import async_engine, AsyncSessionLocal
-from app.models.base import Base, User, Store, StoreProduct, GlobalCatalogItem, Runner, Address, OrderMessage, Notification
-from app.api.v1 import auth, addresses, stores, orders, ai, admin, support, payments, notifications
+from app.models.base import Base, User, Store, StoreProduct, GlobalCatalogItem, Runner, Address, OrderMessage, Notification, MonthlyRationList, MonthlyRationItem
+from app.api.v1 import auth, addresses, stores, orders, ai, admin, support, payments, notifications, ration_lists
 
 logger = logging.getLogger("gaonbazaar")
 
@@ -70,6 +70,25 @@ async def init_db_and_seed():
         f"{add_order_prefix}runner_payout FLOAT DEFAULT 10.0;",
         f"{add_store_prefix}rejection_reason TEXT;",
         f"{add_runner_prefix}rejection_reason TEXT;",
+                """CREATE TABLE IF NOT EXISTS monthly_ration_lists (
+            id VARCHAR(36) PRIMARY KEY,
+            user_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            name VARCHAR(100) NOT NULL DEFAULT 'My Monthly Ration',
+            is_active BOOLEAN DEFAULT TRUE NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE,
+            updated_at TIMESTAMP WITH TIME ZONE
+        );""",
+        """CREATE TABLE IF NOT EXISTS monthly_ration_items (
+            id VARCHAR(36) PRIMARY KEY,
+            list_id VARCHAR(36) NOT NULL REFERENCES monthly_ration_lists(id) ON DELETE CASCADE,
+            product_id VARCHAR(50),
+            product_name_en VARCHAR(150) NOT NULL,
+            product_name_hi VARCHAR(150),
+            unit VARCHAR(50) NOT NULL DEFAULT '1 kg',
+            quantity INTEGER NOT NULL DEFAULT 1,
+            notes VARCHAR(255),
+            created_at TIMESTAMP WITH TIME ZONE
+        );""",
         """CREATE TABLE IF NOT EXISTS notifications (
             id VARCHAR(36) PRIMARY KEY,
             user_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -914,6 +933,7 @@ app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(support.router, prefix=settings.API_V1_STR)
 app.include_router(payments.router, prefix=settings.API_V1_STR)
 app.include_router(notifications.router, prefix=settings.API_V1_STR)
+app.include_router(ration_lists.router, prefix=settings.API_V1_STR)
 
 @app.websocket("/ws/orders")
 @app.websocket("/ws/{client_role}")

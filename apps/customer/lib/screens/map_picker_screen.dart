@@ -143,8 +143,11 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   }
 
   void _calculateServiceability() {
+    final dist = _haversineKm(hubLat, hubLng, _currentLat, _currentLng);
+    final distanceKm = double.parse(dist.toStringAsFixed(1));
     setState(() {
-      _isServiceable = _currentLat != 0.0 && _currentLng != 0.0;
+      _distanceKm = distanceKm;
+      _isServiceable = _currentLat != 0.0 && _currentLng != 0.0 && distanceKm <= 8.0;
     });
   }
 
@@ -171,7 +174,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       _currentLat = lat;
       _currentLng = lng;
       _distanceKm = distanceKm;
-      _isServiceable = true;
+      _isServiceable = isWithin;
       _selectedVillage = villageName;
       _landmark = landmarkName;
     });
