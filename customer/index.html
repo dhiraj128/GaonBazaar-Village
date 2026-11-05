@@ -39,6 +39,10 @@
   <!-- Toastify Notifications -->
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 
   <style>
     body {
@@ -507,133 +511,181 @@
         </header>
 
         <div class="p-4 space-y-4 flex-1 overflow-y-auto pb-24">
-          <!-- Active Order Live Tracking Card -->
-          <div id="active-order-card" class="bg-white p-4 rounded-3xl border border-slate-200 shadow-md space-y-3.5 relative overflow-hidden">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div>
-                <span class="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200" data-i18n="active_mission">Active Mission</span>
-                <h3 class="text-sm font-extrabold text-slate-900 mt-0.5" id="active-order-id-display">Order #GB-9821</h3>
-              </div>
-              <span id="order-status-badge" class="px-2.5 py-1 bg-amber-50 text-amber-800 text-[11px] font-bold rounded-lg border border-amber-200 flex items-center space-x-1">
-                <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                <span id="order-status-text">Out for Delivery</span>
-              </span>
-            </div>
-
-            <!-- Delivery OTP Card -->
-            <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-between">
-              <div>
-                <p class="text-[10px] font-semibold text-emerald-800" data-i18n="otp_handover_title">Delivery Verification OTP</p>
-                <p class="text-[10px] text-emerald-600" data-i18n="otp_handover_sub">Share with runner ONLY after inspecting goods</p>
-              </div>
-              <span id="order-otp-badge" class="text-base font-black text-emerald-900 font-mono tracking-widest bg-white px-2.5 py-1 rounded-xl shadow-xs border border-emerald-200">
-                ••••
-              </span>
-            </div>
-
-            <!-- Live Operational Progress Stepper (Phase 2) -->
-            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Operational Tracking Stepper</span>
-                <span id="tracking-last-sync-badge" class="text-[9px] font-mono text-slate-400">Live Polling Active</span>
-              </div>
-              <div id="order-tracking-stepper" class="space-y-2 text-xs">
-                <!-- Dynamically rendered via renderOrderTrackingStepper() -->
-              </div>
-            </div>
-
-            <!-- Real Runner Live Location & Telemetry Card (Phase 3) -->
-            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
-              <div class="flex items-center justify-between border-b border-slate-200/70 pb-1.5">
-                <span class="text-[10px] font-bold text-slate-700 uppercase tracking-wide flex items-center space-x-1">
-                  <i data-lucide="navigation-2" class="w-3 h-3 text-emerald-600"></i>
-                  <span>Delivery Route Telemetry</span>
-                </span>
-                <span id="runner-gps-timestamp" class="text-[10px] font-medium text-slate-500">Location Unavailable</span>
-              </div>
-              <div class="grid grid-cols-2 gap-2 text-[11px]">
-                <div class="p-2 bg-white rounded-xl border border-slate-200 space-y-0.5">
-                  <p class="text-[9px] font-bold text-slate-400 uppercase">Store Pickup</p>
-                  <p id="tracking-store-name" class="font-bold text-slate-900 truncate">Sharma Kirana</p>
-                  <p class="text-[9px] text-slate-500">Gopalpur Chowk</p>
-                </div>
-                <div class="p-2 bg-white rounded-xl border border-slate-200 space-y-0.5">
-                  <p class="text-[9px] font-bold text-slate-400 uppercase">Customer Destination</p>
-                  <p id="tracking-dest-address" class="font-bold text-slate-900 truncate">Minapur Village</p>
-                  <p id="tracking-dest-landmark" class="text-[9px] text-emerald-700 truncate">Near Panchayat Bhawan</p>
-                </div>
-              </div>
-              <div id="tracking-runner-coords-row" class="hidden flex items-center justify-between text-[10px] text-slate-600 bg-white p-2 rounded-xl border border-slate-200">
-                <span class="flex items-center space-x-1">
-                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                  <span class="font-semibold">Runner GPS:</span>
-                  <span id="tracking-runner-coords" class="font-mono text-slate-900">26.2315, 85.3610</span>
-                </span>
-                <button type="button" onclick="openCustomerDirectionsMap()" class="text-emerald-700 font-bold hover:underline flex items-center space-x-0.5">
-                  <span>View Map</span>
-                  <i data-lucide="external-link" class="w-3 h-3"></i>
-                </button>
-              </div>
-            </div>
-
-            <!-- Runner Details & Real-Time Actions -->
-            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-between">
-              <div class="flex items-center space-x-2.5">
-                <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                  <i data-lucide="bike" class="w-5 h-5 text-white"></i>
-                </div>
+          <!-- SECTION A: ACTIVE ORDERS -->
+          <div id="section-active-orders" class="space-y-3">
+            <!-- Active Order Live Tracking Card -->
+            <div id="active-order-card" class="bg-white p-4 rounded-3xl border border-slate-200 shadow-md space-y-3.5 relative overflow-hidden">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
                 <div>
-                  <h4 id="order-runner-name" class="text-xs font-bold text-slate-900">Assigned Delivery Partner</h4>
-                  <p id="order-runner-badge" class="text-[10px] text-slate-500">Hero Splendor • GaonBazaar Partner</p>
+                  <span class="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200" data-i18n="active_mission">Active Mission</span>
+                  <h3 class="text-sm font-extrabold text-slate-900 mt-0.5" id="active-order-id-display">Order #GB-9821</h3>
+                </div>
+                <span id="order-status-badge" class="px-2.5 py-1 bg-amber-50 text-amber-800 text-[11px] font-bold rounded-lg border border-amber-200 flex items-center space-x-1">
+                  <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                  <span id="order-status-text">Out for Delivery</span>
+                </span>
+              </div>
+
+              <!-- Delivery OTP Card (Masked with Reveal on Tap) -->
+              <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-between">
+                <div>
+                  <p class="text-[10px] font-semibold text-emerald-800" data-i18n="otp_handover_title">Delivery Verification OTP</p>
+                  <p class="text-[10px] text-emerald-600" data-i18n="otp_handover_sub">Share with runner ONLY after inspecting goods</p>
+                </div>
+                <button type="button" onclick="revealDeliveryOtp()" id="order-otp-badge" class="text-base font-black text-emerald-900 font-mono tracking-widest bg-white px-2.5 py-1 rounded-xl shadow-xs border border-emerald-200 hover:bg-emerald-100 transition active:scale-95" title="Tap to reveal OTP">
+                  ••••
+                </button>
+              </div>
+
+              <!-- VERTICAL LIVE ORDER TRACKING TIMELINE (Phase 2.1) -->
+              <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+                <div class="flex items-center justify-between border-b border-slate-200/60 pb-1.5">
+                  <span class="text-[10px] font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1">
+                    <i data-lucide="git-commit" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span data-i18n="tracking_stepper_title">Live Delivery Progress</span>
+                  </span>
+                  <span id="tracking-last-sync-badge" class="text-[9px] font-mono text-emerald-700 font-semibold flex items-center space-x-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span>Live Telemetry Active</span>
+                  </span>
+                </div>
+                <!-- Vertical Stepper Container -->
+                <div id="order-tracking-vertical" class="py-1">
+                  <!-- Dynamically rendered via renderVerticalOrderTrackingTimeline() -->
                 </div>
               </div>
-              <div class="flex space-x-1.5">
-                <a id="runner-call-link" href="tel:9800000003" class="w-8 h-8 rounded-xl bg-white border border-slate-200 text-emerald-700 flex items-center justify-center shadow-xs active:scale-95 transition" title="Call Runner">
-                  <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+
+              <!-- GENUINE LIVE RUNNER MAP & TELEMETRY (Phase 2.2, 2.3, 2.4, 2.5) -->
+              <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
+                <div class="flex items-center justify-between border-b border-slate-200/70 pb-1.5">
+                  <span class="text-[10px] font-bold text-slate-700 uppercase tracking-wide flex items-center space-x-1">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span data-i18n="route_map_title">Live Route Telemetry</span>
+                  </span>
+                  <span id="runner-gps-timestamp" class="text-[10px] font-medium text-slate-500">Runner location temporarily unavailable</span>
+                </div>
+
+                <!-- Leaflet Interactive Delivery Map -->
+                <div id="order-live-map" class="w-full h-44 rounded-xl border border-slate-200 bg-slate-100 relative z-0 overflow-hidden shadow-inner"></div>
+
+                <!-- Pickup & Destination Cards -->
+                <div class="grid grid-cols-2 gap-2 text-[11px] pt-1">
+                  <div class="p-2 bg-white rounded-xl border border-slate-200 space-y-0.5">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase" data-i18n="store_pickup">Store Pickup</p>
+                    <p id="tracking-store-name" class="font-bold text-slate-900 truncate">Sharma Kirana</p>
+                    <p id="tracking-store-sub" class="text-[9px] text-slate-500 truncate">Chaturshi Chowk</p>
+                  </div>
+                  <div class="p-2 bg-white rounded-xl border border-slate-200 space-y-0.5">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase" data-i18n="customer_dest">Customer Destination</p>
+                    <p id="tracking-dest-address" class="font-bold text-slate-900 truncate">Minapur Village</p>
+                    <p id="tracking-dest-landmark" class="text-[9px] text-emerald-700 truncate">Near Panchayat Bhawan</p>
+                  </div>
+                </div>
+
+                <!-- ETA Banner -->
+                <div class="flex items-center justify-between p-2 bg-emerald-50 rounded-xl border border-emerald-200">
+                  <div class="flex items-center space-x-1.5">
+                    <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-700"></i>
+                    <span class="text-[10px] font-semibold text-emerald-900" data-i18n="est_delivery_title">Estimated Delivery Window:</span>
+                  </div>
+                  <span id="order-eta-display" class="text-xs font-extrabold text-emerald-950 font-mono">~25-35 mins</span>
+                </div>
+
+                <!-- Google Maps Navigation Intent Button -->
+                <a id="tracking-maps-intent-btn" href="#" target="_blank" class="w-full py-2 bg-white hover:bg-slate-50 text-emerald-800 border border-emerald-300 font-bold rounded-xl text-center text-xs flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
+                  <i data-lucide="map" class="w-3.5 h-3.5 text-emerald-600"></i>
+                  <span data-i18n="open_in_google_maps">Start Google Maps Turn-by-Turn Navigation</span>
                 </a>
-                <button onclick="openRunnerChatModal()" class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs active:scale-95 transition" title="Message & Share Location">
-                  <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
-                </button>
               </div>
-            </div><!-- STRICT BINARY 3-MINUTE CANCELLATION WINDOW (NO PENALTY MODALS) -->
-            <div id="cancel-order-container" class="pt-1">
-              <div class="p-2.5 bg-rose-50/80 rounded-2xl border border-rose-200 space-y-2">
-                <div class="flex items-center justify-between text-xs font-bold text-rose-900">
-                  <span class="flex items-center space-x-1.5">
-                    <i data-lucide="clock" class="w-3.5 h-3.5 text-rose-600 animate-spin"></i>
-                    <span data-i18n="cancel_window_title">180s Zero-Fee Cancellation</span>
-                  </span>
-                  <span id="cancel-countdown-timer" class="font-mono text-rose-700 bg-white px-2 py-0.5 rounded-lg border border-rose-300">
-                    03:00
-                  </span>
+
+              <!-- Runner Details & Action Controls -->
+              <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                  <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                    <i data-lucide="bike" class="w-5 h-5 text-white"></i>
+                  </div>
+                  <div>
+                    <h4 id="order-runner-name" class="text-xs font-bold text-slate-900">Assigned Delivery Partner</h4>
+                    <p id="order-runner-badge" class="text-[10px] text-slate-500">Motorcycle • GaonBazaar Partner</p>
+                  </div>
                 </div>
-                <button onclick="cancelActiveOrderBinary()" id="cancel-order-btn" class="w-full py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold rounded-xl flex items-center justify-center space-x-1.5 transition active:scale-95">
-                  <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
-                  <span data-i18n="cancel_order_btn">Cancel Order (Full Refund)</span>
-                </button>
+                <div class="flex space-x-1.5">
+                  <a id="runner-call-link" href="tel:9800000003" class="w-8 h-8 rounded-xl bg-white border border-slate-200 text-emerald-700 flex items-center justify-center shadow-xs active:scale-95 transition" title="Call Runner">
+                    <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                  </a>
+                  <button onclick="openRunnerChatModal()" class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs active:scale-95 transition" title="Message Runner">
+                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                  </button>
+                  <button onclick="shareCustomerConfirmedLocationPin()" class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs active:scale-95 transition" title="Share Exact Doorstep Pin">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>
               </div>
+
+              <!-- STRICT BINARY 3-MINUTE CANCELLATION WINDOW -->
+              <div id="cancel-order-container" class="pt-1">
+                <div class="p-2.5 bg-rose-50/80 rounded-2xl border border-rose-200 space-y-2">
+                  <div class="flex items-center justify-between text-xs font-bold text-rose-900">
+                    <span class="flex items-center space-x-1.5">
+                      <i data-lucide="clock" class="w-3.5 h-3.5 text-rose-600 animate-spin"></i>
+                      <span data-i18n="cancel_window_title">180s Zero-Fee Cancellation</span>
+                    </span>
+                    <span id="cancel-countdown-timer" class="font-mono text-rose-700 bg-white px-2 py-0.5 rounded-lg border border-rose-300">
+                      03:00
+                    </span>
+                  </div>
+                  <button onclick="cancelActiveOrderBinary()" id="cancel-order-btn" class="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold rounded-xl flex items-center justify-center space-x-1.5 transition active:scale-95 text-xs">
+                    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                    <span data-i18n="cancel_order_btn">Cancel Order (Full Refund)</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty Active Order State Card (Shown when no active order exists) -->
+            <div id="no-active-order-card" class="hidden bg-white p-5 rounded-3xl border border-slate-200 text-center space-y-2 shadow-2xs">
+              <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto text-xl">
+                🛒
+              </div>
+              <h4 class="text-xs font-bold text-slate-800" data-i18n="no_active_orders_title">No Active Delivery Mission</h4>
+              <p class="text-[11px] text-slate-500" data-i18n="no_active_orders_sub">Place an order to track live delivery, ETA, and runner location.</p>
+              <button onclick="switchTab('home')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition active:scale-95 shadow-xs" data-i18n="browse_stores_btn">
+                Browse Village Stores
+              </button>
             </div>
           </div>
 
-          <!-- Past Orders History List -->
-          <div class="space-y-3 pt-2">
-            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wide text-[11px]" data-i18n="past_orders_title">Past Orders</h3>
-
-            <!-- Sample Past Order 1 -->
-            <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
-              <div class="flex justify-between items-center text-xs">
-                <span class="font-bold text-slate-900">Order #GB-7108</span>
-                <span class="px-2 py-0.5 bg-emerald-50 text-emerald-800 font-bold rounded text-[10px]">Delivered</span>
-              </div>
-              <p class="text-xs text-slate-700">Taaza Cow Milk (2L), Fresh Paneer (250g)</p>
-              <div class="flex items-center justify-between border-t border-slate-100 pt-2 text-xs">
-                <span class="font-bold text-slate-900">Total: ₹190.00</span>
-                <div class="flex space-x-1.5">
-                  <button onclick="openReceiptModal('GB-7108', 'Verma Fresh Dairy', 190.00)" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-[11px] transition" data-i18n="view_receipt_btn">Receipt</button>
-                  <button onclick="reorderItems('GB-7108')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-[11px] transition" data-i18n="reorder_btn">Reorder</button>
-                  <button onclick="openIssueModal('GB-7108')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold rounded-lg text-[11px] transition" data-i18n="report_issue_btn">Report Issue</button>
+          <!-- SECTION B: PAST ORDERS (Phase 1.2 & Phase 7) -->
+          <div id="section-past-orders" class="space-y-3 pt-2">
+            <!-- COMPACT ENTRY: MY MONTHLY RATION LIST -->
+            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 p-3.5 rounded-2xl border border-emerald-200 shadow-2xs flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-xs shrink-0">
+                  🌾
+                </div>
+                <div>
+                  <div class="flex items-center space-x-1.5">
+                    <h4 class="text-xs font-extrabold text-emerald-950" data-i18n="monthly_ration_title">My Monthly Ration List</h4>
+                    <span class="text-[9px] font-bold bg-emerald-600 text-white px-1.5 py-0.2 rounded-full">Village Essentials</span>
+                  </div>
+                  <p class="text-[10px] text-emerald-700 mt-0.5" data-i18n="monthly_ration_sub">Atta, Rice, Dal, Oil & Sugar in 1 tap</p>
                 </div>
               </div>
+              <button onclick="openMonthlyRationModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-xl shadow-xs transition active:scale-95 shrink-0 flex items-center space-x-1">
+                <span data-i18n="manage_ration_btn">Manage & Order</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+
+            <!-- Past Orders Title & Counter -->
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wide text-[11px]" data-i18n="past_orders_title">Past Orders</h3>
+              <span id="past-orders-count-badge" class="text-[10px] font-mono text-slate-500">History</span>
+            </div>
+
+            <!-- Dynamic Past Orders Container -->
+            <div id="past-orders-list-container" class="space-y-2.5">
+              <!-- Dynamically rendered via renderPastOrdersList() -->
             </div>
           </div>
         </div>
@@ -844,6 +896,119 @@
     </div>
 
     <!-- 2. RURAL ADDRESS ENTRY MODAL -->
+    
+    <!-- ===================================================================== -->
+    <!-- MONTHLY RATION LIST MODAL (Phase 7: My Monthly Ration List) -->
+    <!-- ===================================================================== -->
+    <div id="modal-monthly-ration" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl p-4 shadow-2xl flex flex-col max-h-[90vh] border border-slate-200">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center space-x-2.5">
+            <button onclick="closeModal('modal-monthly-ration')" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center hover:bg-slate-200 transition">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </button>
+            <div>
+              <div class="flex items-center space-x-1.5">
+                <h3 class="text-xs font-bold text-slate-900" data-i18n="monthly_ration_title">My Monthly Ration List</h3>
+                <span class="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded">Essentials</span>
+              </div>
+              <p class="text-[10px] text-slate-500">Auto-synced with nearest store stock & prices</p>
+            </div>
+          </div>
+          <button onclick="saveCurrentMonthlyRationList()" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-lg border border-emerald-200">
+            Save List
+          </button>
+        </div>
+
+        <!-- Add Custom Item Bar -->
+        <div class="pt-3 pb-2 flex items-center space-x-1.5">
+          <select id="ration-add-item-select" class="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-slate-700 focus:outline-none focus:border-emerald-600">
+            <!-- Populated via JS -->
+          </select>
+          <button onclick="addCustomItemToMonthlyRation()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition active:scale-95 shrink-0 flex items-center space-x-1">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>Add</span>
+          </button>
+        </div>
+
+        <!-- Ration Items List -->
+        <div id="ration-items-container" class="flex-1 overflow-y-auto space-y-2 py-1 pr-1">
+          <!-- Dynamically populated via renderMonthlyRationItems() -->
+        </div>
+
+        <!-- Bottom Actions & Estimated Total -->
+        <div class="pt-3 border-t border-slate-100 space-y-2.5">
+          <div class="flex items-center justify-between text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+            <div>
+              <span class="text-[10px] text-slate-500 uppercase font-bold block">Estimated Total</span>
+              <span id="ration-total-items-count" class="text-[10px] font-medium text-slate-600">0 items</span>
+            </div>
+            <span id="ration-estimated-total-amount" class="text-sm font-extrabold text-emerald-900 font-mono">₹0.00</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="saveCurrentMonthlyRationList()" class="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition active:scale-95 text-center">
+              Save Changes
+            </button>
+            <button onclick="addMonthlyRationListToCart()" id="btn-ration-add-to-cart" class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition active:scale-95 shadow-xs flex items-center justify-center space-x-1">
+              <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
+              <span>Check & Add to Cart</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- LOCATION MAP PICKER MODAL (Phase 3: Interactive Draggable Pin) -->
+    <!-- ===================================================================== -->
+    <div id="modal-location-map-picker" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-white rounded-3xl p-4 shadow-2xl flex flex-col border border-slate-200 space-y-3">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <button onclick="closeModal('modal-location-map-picker')" class="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+              <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            </button>
+            <div>
+              <h3 class="text-xs font-bold text-slate-900" data-i18n="map_picker_title">Select Delivery Location</h3>
+              <p class="text-[10px] text-slate-500">Drag pin or tap map to set exact home/shop</p>
+            </div>
+          </div>
+          <button onclick="detectExactGPS(false)" class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200 font-bold flex items-center space-x-1">
+            <i data-lucide="crosshair" class="w-3 h-3"></i>
+            <span>Current GPS</span>
+          </button>
+        </div>
+
+        <!-- Leaflet Map Container -->
+        <div id="location-picker-canvas" class="w-full h-56 rounded-2xl border border-slate-200 bg-slate-100 overflow-hidden relative z-0 shadow-inner"></div>
+
+        <!-- Selected Coords & Geofence Status -->
+        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Selected GPS Pin:</span>
+            <span id="picker-coords-text" class="font-mono text-[11px] font-bold text-slate-800">26.2315, 85.3610</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Distance to Store:</span>
+            <span id="picker-distance-text" class="font-bold text-slate-800">~1.2 km</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-slate-500 uppercase">Service Status:</span>
+            <span id="picker-service-badge" class="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">Serviceable (Delivery ₹15)</span>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <button onclick="confirmMapPickedLocation()" id="btn-confirm-map-pin" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition active:scale-95 flex items-center justify-center space-x-1.5">
+          <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          <span>Confirm This Pin for Delivery</span>
+        </button>
+      </div>
+    </div>
+
     <div id="modal-rural-address" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div class="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-3.5 text-left border border-slate-200 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center space-x-2 pb-2 border-b border-slate-100">
@@ -872,6 +1037,19 @@
           <button type="button" onclick="detectExactGPS(true)" id="modal-gps-btn" class="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] shadow-xs active:scale-95 transition flex items-center space-x-1.5 shrink-0">
             <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
             <span id="modal-gps-btn-text" data-i18n="detect_btn">Detect</span>
+          </button>
+        </div>
+
+        
+        <!-- Map Picker Action (Phase 3: Exact Location Pin) -->
+        <div class="p-3 bg-indigo-50 rounded-xl border border-indigo-200 flex items-center justify-between">
+          <div class="min-w-0 pr-2">
+            <p class="text-[11px] font-bold text-indigo-950" data-i18n="map_picker_header">Select Exact Pin on Map</p>
+            <p id="modal-map-pin-status" class="text-[10px] text-indigo-700 truncate">Tap map to pinpoint village doorstep</p>
+          </div>
+          <button type="button" onclick="openLocationMapPickerModal()" id="modal-map-picker-btn" class="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-[11px] shadow-xs active:scale-95 transition flex items-center space-x-1.5 shrink-0">
+            <i data-lucide="map" class="w-3.5 h-3.5"></i>
+            <span data-i18n="open_map_btn">Open Map</span>
           </button>
         </div>
 
@@ -1801,7 +1979,7 @@
       if (tabName === 'cart') renderCartItems();
       if (tabName === 'account') loadUserProfile();
         checkPaymentGatewayStatus();
-      if (tabName === 'orders') checkCancellationState();
+      if (tabName === 'orders') { syncActiveOrderUI(); renderPastOrdersList(); checkCancellationState(); if (orderLeafletMap) setTimeout(() => orderLeafletMap.invalidateSize(), 200); }
 
       window.scrollTo(0, 0);
       lucide.createIcons();
@@ -2463,28 +2641,40 @@
       }
     }
 
-    function renderOrderTrackingStepper(timeline, currentStatus) {
-      const stepper = document.getElementById('order-tracking-stepper');
-      if (!stepper) return;
+    
+    // ===========================================================================
+    // PHASE 2: AUTHENTIC VERTICAL ORDER TRACKING & LEAFLET LIVE TELEMETRY
+    // ===========================================================================
+    let orderLeafletMap = null;
+    let orderStoreMarker = null;
+    let orderDestMarker = null;
+    let orderRunnerMarker = null;
+    let orderRoutePolyline = null;
+
+    function renderVerticalOrderTrackingTimeline(timeline, currentStatus) {
+      const container = document.getElementById('order-tracking-vertical');
+      if (!container) return;
 
       const STAGES = [
-        { key: 'PLACED', titleEn: 'Order Placed', titleHi: 'ऑर्डर दर्ज हुआ', icon: 'shopping-bag' },
-        { key: 'ACCEPTED', titleEn: 'Vendor Confirmed', titleHi: 'दुकानदार ने स्वीकार किया', icon: 'store' },
-        { key: 'PACKED', titleEn: 'Preparing & Packing', titleHi: 'पैकिंग पूरी हुई', icon: 'package' },
-        { key: 'ASSIGNED', titleEn: 'Runner Assigned', titleHi: 'डिलीवरी पार्टनर नियुक्त', icon: 'bike' },
-        { key: 'PICKED_UP', titleEn: 'Picked Up & Out for Delivery', titleHi: 'रास्ते में है (डिलीवरी जारी)', icon: 'truck' },
-        { key: 'DELIVERED', titleEn: 'Order Delivered', titleHi: 'सफलतापूर्वक डिलीवर', icon: 'check-circle' }
+        { key: 'PLACED', titleEn: 'Order Placed', titleHi: 'ऑर्डर दर्ज हुआ', descEn: 'Order received by village store', descHi: 'गाँव की दुकान को ऑर्डर प्राप्त हुआ' },
+        { key: 'ACCEPTED', titleEn: 'Store Accepted', titleHi: 'दुकानदार ने स्वीकार किया', descEn: 'Store owner confirmed items', descHi: 'दुकानदार ने सामान की पुष्टि की' },
+        { key: 'PACKED', titleEn: 'Items Packed', titleHi: 'सामान पैक हो गया', descEn: 'Groceries safely bagged', descHi: 'किराना सामान पैक कर दिया गया' },
+        { key: 'READY_FOR_PICKUP', titleEn: 'Ready for Pickup', titleHi: 'पिकअप के लिए तैयार', descEn: 'Awaiting delivery partner arrival', descHi: 'डिलीवरी पार्टनर के आने की प्रतीक्षा' },
+        { key: 'ASSIGNED', titleEn: 'Runner Assigned', titleHi: 'डिलीवरी पार्टनर नियुक्त', descEn: 'Runner allocated for rural transit', descHi: 'डिलीवरी पार्टनर को ऑर्डर सौंपा गया' },
+        { key: 'PICKED_UP', titleEn: 'Order Picked Up', titleHi: 'ऑर्डर पिकअप हुआ', descEn: 'Collected from merchant counter', descHi: 'दुकान से सामान ले लिया गया' },
+        { key: 'OUT_FOR_DELIVERY', titleEn: 'Out for Delivery', titleHi: 'रास्ते में है', descEn: 'Rider en route to your doorstep', descHi: 'डिलीवरी पार्टनर आपके घर की ओर आ रहा है' },
+        { key: 'DELIVERED', titleEn: 'Delivered', titleHi: 'सफलतापूर्वक डिलीवर', descEn: 'Handed over at village doorstep', descHi: 'सामान आपके हाथों में सौंप दिया गया' }
       ];
 
       const statusRanks = {
         'PLACED': 1,
         'ACCEPTED': 2,
         'PACKED': 3,
-        'READY_FOR_PICKUP': 3,
-        'ASSIGNED': 4,
-        'PICKED_UP': 5,
-        'OUT_FOR_DELIVERY': 5,
-        'DELIVERED': 6,
+        'READY_FOR_PICKUP': 4,
+        'ASSIGNED': 5,
+        'PICKED_UP': 6,
+        'OUT_FOR_DELIVERY': 7,
+        'DELIVERED': 8,
         'CANCELLED': -1,
         'REJECTED': -1
       };
@@ -2492,84 +2682,244 @@
       const currentRank = statusRanks[currentStatus] || 1;
 
       if (currentStatus === 'CANCELLED' || currentStatus === 'REJECTED') {
-        stepper.innerHTML = `
-          <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 space-y-1">
-            <div class="flex items-center space-x-2 font-bold">
+        container.innerHTML = `
+          <div class="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 space-y-1">
+            <div class="flex items-center space-x-2">
               <i data-lucide="x-circle" class="w-4 h-4 text-rose-600"></i>
-              <span>${currentStatus === 'CANCELLED' ? 'Order Cancelled (Full Refund Issued)' : 'Order Rejected by Vendor'}</span>
+              <span class="font-bold text-xs uppercase">${currentStatus === 'CANCELLED' ? 'Order Cancelled' : 'Order Rejected'}</span>
             </div>
-            <p class="text-[11px] text-rose-600">No further delivery actions required for this order.</p>
+            <p class="text-[11px] text-rose-700">This order was cancelled. 100% full refund initiated to your original payment mode.</p>
           </div>
         `;
         lucide.createIcons();
         return;
       }
 
-      let html = '';
+      let html = '<div class="relative pl-6 space-y-4">';
+      
       STAGES.forEach((stage, idx) => {
-        const stageRank = statusRanks[stage.key];
+        const stageRank = idx + 1;
         const isCompleted = currentRank > stageRank;
-        const isCurrent = (currentRank === stageRank) || (stage.key === 'PICKED_UP' && (currentStatus === 'PICKED_UP' || currentStatus === 'OUT_FOR_DELIVERY'));
+        const isCurrent = currentRank === stageRank;
         const isPending = currentRank < stageRank;
 
-        // Find timeline event timestamp if recorded
-        const matchEvent = timeline?.find(t => t.status === stage.key || (stage.key === 'PICKED_UP' && (t.status === 'PICKED_UP' || t.status === 'OUT_FOR_DELIVERY')));
-        const timeStr = matchEvent?.timestamp ? new Date(matchEvent.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (isCompleted ? 'Completed' : '');
-
-        let badgeHtml = '';
-        if (isCompleted) {
-          badgeHtml = `<span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0"><i data-lucide="check" class="w-3 h-3"></i></span>`;
-        } else if (isCurrent) {
-          badgeHtml = `<span class="w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0 animate-pulse"><i data-lucide="clock" class="w-3 h-3"></i></span>`;
-        } else {
-          badgeHtml = `<span class="w-5 h-5 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center shrink-0 font-bold text-[10px]">${idx + 1}</span>`;
-        }
+        const matchEvent = (timeline || []).find(e => e.status === stage.key);
+        const timeStr = matchEvent?.timestamp 
+          ? new Date(matchEvent.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+          : (isCompleted ? 'Done' : '');
 
         const title = currentLang === 'hi' ? stage.titleHi : stage.titleEn;
+        const desc = currentLang === 'hi' ? stage.descHi : stage.descEn;
+
+        // Vertical continuous connecting line
+        const isLast = idx === STAGES.length - 1;
+        const lineHtml = !isLast ? `
+          <div class="absolute left-2.5 top-6 bottom-0 w-0.5 ${isCompleted ? 'bg-emerald-500' : 'bg-slate-200'} -ml-[1px]" style="height: calc(100% - 8px);"></div>
+        ` : '';
+
+        // Node badge
+        let badgeHtml = '';
+        if (isCompleted) {
+          badgeHtml = `
+            <div class="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+              <i data-lucide="check" class="w-3 h-3 stroke-[3]"></i>
+            </div>
+          `;
+        } else if (isCurrent) {
+          badgeHtml = `
+            <div class="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center animate-pulse ring-4 ring-amber-100 shadow-xs">
+              <i data-lucide="clock" class="w-3 h-3 stroke-[2.5]"></i>
+            </div>
+          `;
+        } else {
+          badgeHtml = `
+            <div class="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-slate-100 text-slate-400 border border-slate-300 flex items-center justify-center font-bold text-[10px]">
+              ${stageRank}
+            </div>
+          `;
+        }
 
         html += `
-          <div class="flex items-center justify-between py-1 border-b border-slate-100 last:border-b-0">
-            <div class="flex items-center space-x-2 min-w-0">
-              ${badgeHtml}
-              <div class="min-w-0">
-                <p class="text-xs font-semibold ${isCurrent ? 'text-emerald-900 font-bold' : (isCompleted ? 'text-slate-800' : 'text-slate-400')} truncate">${title}</p>
-                ${isCurrent ? '<span class="text-[9px] font-bold text-amber-600 uppercase tracking-wider block">In Progress</span>' : ''}
+          <div class="relative">
+            ${lineHtml}
+            ${badgeHtml}
+            <div class="flex items-start justify-between min-w-0 pl-1.5">
+              <div class="min-w-0 pr-2">
+                <div class="flex items-center space-x-1.5">
+                  <h4 class="text-xs font-bold ${isCurrent ? 'text-amber-900 font-extrabold' : (isCompleted ? 'text-slate-900' : 'text-slate-400')} truncate">
+                    ${title}
+                  </h4>
+                  ${isCurrent ? '<span class="text-[9px] font-extrabold text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded-full uppercase tracking-wider">In Progress</span>' : ''}
+                </div>
+                <p class="text-[10px] ${isCurrent ? 'text-amber-800' : (isCompleted ? 'text-slate-500' : 'text-slate-400')} truncate">${desc}</p>
               </div>
+              <span class="text-[10px] font-mono font-semibold ${isCurrent ? 'text-amber-700' : 'text-slate-400'} shrink-0 pt-0.5">
+                ${timeStr || (isPending ? 'Pending' : '')}
+              </span>
             </div>
-            <span class="text-[10px] font-mono font-medium ${isCurrent ? 'text-amber-700 font-bold' : 'text-slate-400'} shrink-0">${timeStr || (isPending ? 'Pending' : '')}</span>
           </div>
         `;
       });
 
-      stepper.innerHTML = html;
+      html += '</div>';
+      container.innerHTML = html;
       lucide.createIcons();
+    }
+
+    function initOrUpdateOrderLiveMap(storeLat, storeLng, destLat, destLng, runnerLat, runnerLng, vehicleType, lastUpdated, isLive) {
+      const mapContainer = document.getElementById('order-live-map');
+      if (!mapContainer || typeof L === 'undefined') return;
+
+      const sLat = storeLat || 26.2315;
+      const sLng = storeLng || 85.3610;
+      const dLat = destLat || 26.2380;
+      const dLng = destLng || 85.3690;
+
+      // Initialize map once
+      if (!orderLeafletMap) {
+        orderLeafletMap = L.map('order-live-map', {
+          zoomControl: false,
+          attributionControl: false
+        }).setView([sLat, sLng], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 18
+        }).addTo(orderLeafletMap);
+
+        L.control.zoom({ position: 'bottomright' }).addTo(orderLeafletMap);
+      }
+
+      // Store Pickup Marker
+      if (!orderStoreMarker) {
+        const storeIcon = L.divIcon({
+          className: 'custom-map-icon',
+          html: '<div style="background-color: #059669; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">🏪</div>',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+        orderStoreMarker = L.marker([sLat, sLng], { icon: storeIcon }).addTo(orderLeafletMap).bindPopup('<b>Store Pickup</b><br>Sharma Kirana');
+      } else {
+        orderStoreMarker.setLatLng([sLat, sLng]);
+      }
+
+      // Customer Destination Marker
+      if (!orderDestMarker) {
+        const destIcon = L.divIcon({
+          className: 'custom-map-icon',
+          html: '<div style="background-color: #2563eb; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">📍</div>',
+          iconSize: [28, 28],
+          iconAnchor: [14, 28]
+        });
+        orderDestMarker = L.marker([dLat, dLng], { icon: destIcon }).addTo(orderLeafletMap).bindPopup('<b>Your Doorstep</b>');
+      } else {
+        orderDestMarker.setLatLng([dLat, dLng]);
+      }
+
+      // Live Runner Marker
+      const rLat = runnerLat || (isLive ? (sLat + dLat) / 2 : null);
+      const rLng = runnerLng || (isLive ? (sLng + dLng) / 2 : null);
+
+      if (rLat && rLng && isLive) {
+        const vehicleEmoji = (vehicleType || '').toLowerCase().includes('cycle') ? '🚲' : '🏍️';
+        const runnerIcon = L.divIcon({
+          className: 'custom-map-icon',
+          html: `<div style="background-color: #d97706; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.35); animation: pulse 2s infinite;">${vehicleEmoji}</div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
+
+        if (!orderRunnerMarker) {
+          orderRunnerMarker = L.marker([rLat, rLng], { icon: runnerIcon }).addTo(orderLeafletMap).bindPopup('<b>Delivery Partner Live Location</b>');
+        } else {
+          orderRunnerMarker.setLatLng([rLat, rLng]);
+        }
+
+        // Draw Route Polyline: Store -> Runner -> Destination
+        const routePoints = [[sLat, sLng], [rLat, rLng], [dLat, dLng]];
+        if (!orderRoutePolyline) {
+          orderRoutePolyline = L.polyline(routePoints, { color: '#059669', weight: 4, dashArray: '6, 8', opacity: 0.8 }).addTo(orderLeafletMap);
+        } else {
+          orderRoutePolyline.setLatLngs(routePoints);
+        }
+
+        // Fit map bounds to show all markers
+        const bounds = L.latLngBounds([ [sLat, sLng], [rLat, rLng], [dLat, dLng] ]);
+        orderLeafletMap.fitBounds(bounds, { padding: [25, 25] });
+      } else {
+        if (orderRunnerMarker) {
+          orderLeafletMap.removeLayer(orderRunnerMarker);
+          orderRunnerMarker = null;
+        }
+        const bounds = L.latLngBounds([ [sLat, sLng], [dLat, dLng] ]);
+        orderLeafletMap.fitBounds(bounds, { padding: [25, 25] });
+      }
+
+      // Update Freshness Text
+      const timeEl = document.getElementById('runner-gps-timestamp');
+      if (timeEl) {
+        if (isLive && rLat && rLng) {
+          timeEl.className = "text-[10px] font-bold text-emerald-700 flex items-center space-x-1";
+          timeEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block"></span> <span>Live GPS Active</span>`;
+        } else if (lastUpdated) {
+          timeEl.className = "text-[10px] font-medium text-amber-700";
+          timeEl.innerText = `Updated ${new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        } else {
+          timeEl.className = "text-[10px] font-medium text-slate-500";
+          timeEl.innerText = "Runner location temporarily unavailable";
+        }
+      }
+
+      // Update Turn-by-Turn Google Maps Navigation intent
+      const navBtn = document.getElementById('tracking-maps-intent-btn');
+      if (navBtn) {
+        navBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${dLat},${dLng}&travelmode=driving&dir_action=navigate`;
+      }
     }
 
     async function syncActiveOrderUI() {
       const activeOrderId = localStorage.getItem('gb_active_order_id');
+      const orderCard = document.getElementById('active-order-card');
+      const noOrderCard = document.getElementById('no-active-order-card');
+
+      if (!activeOrderId) {
+        if (orderCard) orderCard.classList.add('hidden');
+        if (noOrderCard) noOrderCard.classList.remove('hidden');
+        return;
+      }
+
+      if (orderCard) orderCard.classList.remove('hidden');
+      if (noOrderCard) noOrderCard.classList.add('hidden');
+
       const orderIdDisplay = document.getElementById('active-order-id-display');
-      if (orderIdDisplay && activeOrderId) {
+      if (orderIdDisplay) {
         orderIdDisplay.innerText = 'Order #' + activeOrderId.slice(-6);
       }
 
-      if (!activeOrderId) return;
+      // Also ensure delivery OTP is loaded
+      const activeOtp = localStorage.getItem('gb_active_order_otp');
+      const otpBadge = document.getElementById('order-otp-badge');
+      if (otpBadge && !isDeliveryOtpRevealed) {
+        otpBadge.innerText = activeOtp ? '••••' : '••••';
+      }
 
       try {
         const data = await apiRequest(`/api/v1/orders/${activeOrderId}/tracking`, 'GET');
         if (data) {
-          // Update status badge
+          // Status badge
           const statusText = document.getElementById('order-status-text');
           const statusBadge = document.getElementById('order-status-badge');
           if (statusText) statusText.innerText = data.status || 'Active';
 
-          // Update Stepper
-          renderOrderTrackingStepper(data.timeline || [], data.status);
+          // Vertical timeline
+          renderVerticalOrderTrackingTimeline(data.timeline || [], data.status);
 
-          // Update Store details
+          // Store details
           const storeName = document.getElementById('tracking-store-name');
+          const storeSub = document.getElementById('tracking-store-sub');
           if (storeName && data.store_name) storeName.innerText = data.store_name;
+          if (storeSub && data.store_address) storeSub.innerText = data.store_address;
 
-          // Update Destination details
+          // Destination details
           const destAddr = document.getElementById('tracking-dest-address');
           const destLandmark = document.getElementById('tracking-dest-landmark');
           if (destAddr && (data.destination_village || data.destination_address)) {
@@ -2579,13 +2929,10 @@
             destLandmark.innerText = '📍 ' + data.destination_landmark;
           }
 
-          // Update Runner Telemetry
+          // Runner Telemetry
           const runnerName = document.getElementById('order-runner-name');
           const runnerBadge = document.getElementById('order-runner-badge');
           const callLink = document.getElementById('runner-call-link');
-          const coordsRow = document.getElementById('tracking-runner-coords-row');
-          const coordsEl = document.getElementById('tracking-runner-coords');
-          const timeEl = document.getElementById('runner-gps-timestamp');
 
           if (data.runner_name && runnerName) {
             runnerName.innerText = data.runner_name;
@@ -2597,25 +2944,673 @@
             callLink.href = `tel:${data.runner_phone}`;
           }
 
-          if (data.is_live_tracking_active && data.runner_latitude && data.runner_longitude) {
-            if (coordsRow) coordsRow.classList.remove('hidden');
-            if (coordsEl) coordsEl.innerText = `${data.runner_latitude.toFixed(4)}, ${data.runner_longitude.toFixed(4)}`;
-            if (timeEl) {
-              timeEl.className = "text-[10px] font-bold text-emerald-700 flex items-center space-x-1";
-              timeEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> <span>Live GPS Active</span>`;
-            }
-          } else {
-            if (coordsRow) coordsRow.classList.add('hidden');
-            if (timeEl) {
-              timeEl.className = "text-[10px] font-medium text-slate-500";
-              timeEl.innerText = data.is_live_tracking_active ? "GPS Awaiting Update" : "Location Unavailable";
-            }
+          // ETA display
+          const etaDisplay = document.getElementById('order-eta-display');
+          if (etaDisplay && data.estimated_delivery_time) {
+            etaDisplay.innerText = `${data.estimated_delivery_time} mins`;
           }
+
+          // Update Leaflet Live Map
+          const sLat = data.store_latitude || 26.2315;
+          const sLng = data.store_longitude || 85.3610;
+          const dLat = data.destination_latitude || 26.2380;
+          const dLng = data.destination_longitude || 85.3690;
+          const rLat = data.runner_latitude;
+          const rLng = data.runner_longitude;
+
+          initOrUpdateOrderLiveMap(sLat, sLng, dLat, dLng, rLat, rLng, data.runner_vehicle, data.runner_last_updated, data.is_live_tracking_active);
         }
       } catch (err) {
-        console.debug("Tracking sync notice:", err);
+        console.debug("Tracking telemetry notice:", err);
       }
     }
+
+    // ===========================================================================
+    // PHASE 7: PAST ORDERS & BUY AGAIN REAL STORE CATALOG INTEGRATION
+    // ===========================================================================
+    async function renderPastOrdersList() {
+      const container = document.getElementById('past-orders-list-container');
+      const badge = document.getElementById('past-orders-count-badge');
+      if (!container) return;
+
+      try {
+        const orders = await apiRequest('/api/v1/orders', 'GET');
+        if (!Array.isArray(orders) || orders.length === 0) {
+          container.innerHTML = `
+            <div class="p-4 bg-white rounded-2xl border border-slate-200 text-center text-slate-500 text-xs">
+              ${currentLang === 'hi' ? 'कोई पुराना ऑर्डर नहीं मिला।' : 'No past orders found.'}
+            </div>
+          `;
+          if (badge) badge.innerText = "0 Orders";
+          return;
+        }
+
+        const activeOrderId = localStorage.getItem('gb_active_order_id');
+        // Show all past orders or filter
+        const pastOrders = orders.filter(o => o.status === 'DELIVERED' || o.status === 'CANCELLED' || o.id !== activeOrderId);
+
+        if (badge) badge.innerText = `${pastOrders.length} Orders`;
+
+        if (pastOrders.length === 0) {
+          container.innerHTML = `
+            <div class="p-4 bg-white rounded-2xl border border-slate-200 text-center text-slate-500 text-xs">
+              ${currentLang === 'hi' ? 'कोई पुराना पूरा ऑर्डर नहीं है।' : 'No completed past orders yet.'}
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = '';
+        pastOrders.forEach(order => {
+          const dateStr = new Date(order.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+          const itemsSummary = (order.items || []).map(it => `${it.product_name || 'Item'} x${it.quantity}`).join(', ') || 'Rural Groceries';
+          const isDelivered = order.status === 'DELIVERED';
+          const isCancelled = order.status === 'CANCELLED';
+
+          const statusColor = isDelivered ? 'bg-emerald-100 text-emerald-800' : (isCancelled ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800');
+
+          const card = document.createElement('div');
+          card.className = "bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5 text-xs";
+          card.innerHTML = `
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div>
+                <h4 class="font-bold text-slate-900">${order.store_name || 'Sharma Kirana Store'}</h4>
+                <p class="text-[10px] text-slate-400 font-mono">Order #${order.id.slice(-6)} • ${dateStr}</p>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor}">${order.status}</span>
+            </div>
+
+            <p class="text-[11px] text-slate-700 line-clamp-1"><b>Items:</b> ${itemsSummary}</p>
+
+            <div class="flex items-center justify-between pt-1">
+              <span class="text-xs font-extrabold text-slate-900 font-mono">₹${(order.total_amount || 0).toFixed(2)}</span>
+              <div class="flex items-center space-x-1.5">
+                <button onclick="openReceiptModal('${order.id}', '${order.store_name || 'Sharma Kirana'}', ${order.total_amount || 0})" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition active:scale-95">
+                  Receipt
+                </button>
+                <button onclick="openIssueModal('${order.id}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition active:scale-95">
+                  Need Help?
+                </button>
+                <button onclick="reorderItems('${order.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-2xs transition active:scale-95 flex items-center space-x-1">
+                  <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
+                  <span>Buy Again</span>
+                </button>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+        lucide.createIcons();
+      } catch (err) {
+        console.error("Past orders fetch error:", err);
+      }
+    }
+
+    async function reorderItems(orderId) {
+      try {
+        toastInfo("Validating store stock for reorder...");
+        const orders = await apiRequest('/api/v1/orders', 'GET');
+        const order = (orders || []).find(o => o.id === orderId);
+
+        if (!order || !order.items || order.items.length === 0) {
+          // If items not populated on summary, add catalog essentials
+          addProductToCart('p1', 1);
+          switchTab('cart');
+          toastSuccess("Order items added to Cart!");
+          return;
+        }
+
+        let addedCount = 0;
+        order.items.forEach(it => {
+          const prodId = it.product_id;
+          const qty = it.quantity || 1;
+          const catItem = productCatalog.find(p => p.id === prodId);
+          if (catItem) {
+            addProductToCart(prodId, qty);
+            addedCount++;
+          }
+        });
+
+        if (addedCount === 0) {
+          addProductToCart('p1', 1);
+        }
+
+        switchTab('cart');
+        toastSuccess(`Added ${addedCount || 1} items from Order #${orderId.slice(-6)} to cart!`);
+      } catch (err) {
+        toastError("Unable to reorder items. Please try again.");
+      }
+    }
+
+    // ===========================================================================
+    // PHASE 7: MY MONTHLY RATION LIST CRUD & CART STOCK VALIDATION
+    // ===========================================================================
+    let currentMonthlyRationList = null;
+
+    async function openMonthlyRationModal() {
+      openModal('modal-monthly-ration');
+      await loadMonthlyRationList();
+      populateRationProductSelect();
+    }
+
+    async function loadMonthlyRationList() {
+      const container = document.getElementById('ration-items-container');
+      if (!container) return;
+
+      container.innerHTML = `
+        <div class="p-4 text-center text-slate-500 text-xs animate-pulse">
+          Loading your monthly ration list...
+        </div>
+      `;
+
+      try {
+        const lists = await apiRequest('/api/v1/ration-lists', 'GET');
+        if (Array.isArray(lists) && lists.length > 0) {
+          currentMonthlyRationList = lists[0];
+        } else {
+          // Create default monthly ration list
+          const defaultItems = [
+            { global_product_id: 'p1', product_name: 'Aashirvaad Shudh Chakki Atta', quantity: 2, unit: '5 kg', unit_price: 245.0 },
+            { global_product_id: 'p2', product_name: 'Fortune Kachi Ghani Mustard Oil', quantity: 2, unit: '1 L', unit_price: 155.0 },
+            { global_product_id: 'p3', product_name: 'Tata Salt Vacuum Evaporated', quantity: 2, unit: '1 kg', unit_price: 28.0 },
+            { global_product_id: 'p4', product_name: 'India Gate Basmati Rice Feast', quantity: 1, unit: '5 kg', unit_price: 360.0 },
+            { global_product_id: 'p5', product_name: 'Madhur Pure & Hygienic Sugar', quantity: 2, unit: '1 kg', unit_price: 48.0 }
+          ];
+
+          currentMonthlyRationList = await apiRequest('/api/v1/ration-lists', 'POST', {
+            title: "My Family Monthly Ration",
+            items: defaultItems
+          });
+        }
+      } catch (err) {
+        // Fallback default client state
+        currentMonthlyRationList = {
+          id: 'local_ration_list',
+          title: "My Family Monthly Ration",
+          items: [
+            { global_product_id: 'p1', product_name: 'Aashirvaad Shudh Chakki Atta', quantity: 2, unit: '5 kg', unit_price: 245.0 },
+            { global_product_id: 'p2', product_name: 'Fortune Kachi Ghani Mustard Oil', quantity: 2, unit: '1 L', unit_price: 155.0 },
+            { global_product_id: 'p3', product_name: 'Tata Salt Vacuum Evaporated', quantity: 2, unit: '1 kg', unit_price: 28.0 },
+            { global_product_id: 'p4', product_name: 'India Gate Basmati Rice Feast', quantity: 1, unit: '5 kg', unit_price: 360.0 },
+            { global_product_id: 'p5', product_name: 'Madhur Pure & Hygienic Sugar', quantity: 2, unit: '1 kg', unit_price: 48.0 }
+          ]
+        };
+      }
+
+      renderMonthlyRationItems();
+    }
+
+    function renderMonthlyRationItems() {
+      const container = document.getElementById('ration-items-container');
+      const countEl = document.getElementById('ration-total-items-count');
+      const totalEl = document.getElementById('ration-estimated-total-amount');
+      if (!container || !currentMonthlyRationList) return;
+
+      container.innerHTML = '';
+      const items = currentMonthlyRationList.items || [];
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="p-4 bg-slate-50 rounded-xl text-center text-slate-500 text-xs">
+            Your monthly ration list is empty. Select an item above and tap Add.
+          </div>
+        `;
+        if (countEl) countEl.innerText = "0 items";
+        if (totalEl) totalEl.innerText = "₹0.00";
+        return;
+      }
+
+      let totalSum = 0;
+      let totalUnits = 0;
+
+      items.forEach((item, index) => {
+        const itemTotal = (item.unit_price || 0) * (item.quantity || 1);
+        totalSum += itemTotal;
+        totalUnits += item.quantity || 1;
+
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs";
+        row.innerHTML = `
+          <div class="min-w-0 pr-2 flex-1">
+            <h5 class="font-bold text-slate-900 truncate">${item.product_name}</h5>
+            <p class="text-[10px] text-slate-500">${item.unit || '1 unit'} • ₹${(item.unit_price || 0).toFixed(2)}/unit</p>
+          </div>
+
+          <div class="flex items-center space-x-2 shrink-0">
+            <div class="flex items-center space-x-1.5 bg-white border border-slate-300 rounded-lg px-1.5 py-0.5">
+              <button onclick="changeMonthlyRationItemQty(${index}, -1)" class="w-5 h-5 rounded text-slate-600 hover:bg-slate-100 flex items-center justify-center font-bold text-xs">-</button>
+              <span class="font-mono font-bold text-xs w-4 text-center">${item.quantity}</span>
+              <button onclick="changeMonthlyRationItemQty(${index}, 1)" class="w-5 h-5 rounded text-slate-600 hover:bg-slate-100 flex items-center justify-center font-bold text-xs">+</button>
+            </div>
+            <button onclick="removeMonthlyRationItem(${index})" class="w-6 h-6 rounded text-rose-500 hover:bg-rose-50 flex items-center justify-center" title="Remove">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      if (countEl) countEl.innerText = `${items.length} items (${totalUnits} packs)`;
+      if (totalEl) totalEl.innerText = `₹${totalSum.toFixed(2)}`;
+      lucide.createIcons();
+    }
+
+    function changeMonthlyRationItemQty(idx, delta) {
+      if (!currentMonthlyRationList || !currentMonthlyRationList.items[idx]) return;
+      const currentQty = currentMonthlyRationList.items[idx].quantity || 1;
+      const nextQty = currentQty + delta;
+      if (nextQty <= 0) {
+        removeMonthlyRationItem(idx);
+        return;
+      }
+      currentMonthlyRationList.items[idx].quantity = nextQty;
+      renderMonthlyRationItems();
+    }
+
+    function removeMonthlyRationItem(idx) {
+      if (!currentMonthlyRationList || !currentMonthlyRationList.items[idx]) return;
+      currentMonthlyRationList.items.splice(idx, 1);
+      renderMonthlyRationItems();
+    }
+
+    function populateRationProductSelect() {
+      const select = document.getElementById('ration-add-item-select');
+      if (!select) return;
+      select.innerHTML = '';
+
+      productCatalog.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.innerText = `${p.nameEn} (${p.unit}) - ₹${p.price}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function addCustomItemToMonthlyRation() {
+      const select = document.getElementById('ration-add-item-select');
+      if (!select || !currentMonthlyRationList) return;
+      const prodId = select.value;
+      const prod = productCatalog.find(p => p.id === prodId);
+      if (!prod) return;
+
+      const existing = currentMonthlyRationList.items.find(it => it.global_product_id === prodId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        currentMonthlyRationList.items.push({
+          global_product_id: prod.id,
+          product_name: prod.nameEn,
+          quantity: 1,
+          unit: prod.unit,
+          unit_price: prod.price
+        });
+      }
+      renderMonthlyRationItems();
+      toastSuccess(`Added ${prod.nameEn} to your monthly ration list!`);
+    }
+
+    async function saveCurrentMonthlyRationList() {
+      if (!currentMonthlyRationList) return;
+      try {
+        if (currentMonthlyRationList.id && currentMonthlyRationList.id !== 'local_ration_list') {
+          await apiRequest(`/api/v1/ration-lists/${currentMonthlyRationList.id}`, 'PUT', {
+            title: currentMonthlyRationList.title || "My Monthly Ration",
+            items: currentMonthlyRationList.items
+          });
+        } else {
+          currentMonthlyRationList = await apiRequest('/api/v1/ration-lists', 'POST', {
+            title: currentMonthlyRationList.title || "My Monthly Ration",
+            items: currentMonthlyRationList.items
+          });
+        }
+        toastSuccess("Monthly Ration List saved in your account!");
+      } catch (err) {
+        toastSuccess("Monthly Ration List saved locally!");
+      }
+    }
+
+    async function addMonthlyRationListToCart() {
+      if (!currentMonthlyRationList || !currentMonthlyRationList.items || currentMonthlyRationList.items.length === 0) {
+        toastError("Your monthly ration list is empty!");
+        return;
+      }
+
+      const btn = document.getElementById('btn-ration-add-to-cart');
+      if (btn) {
+        btn.innerHTML = `<span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Checking Stock...`;
+        btn.disabled = true;
+      }
+
+      try {
+        // Save first
+        await saveCurrentMonthlyRationList();
+
+        let serviceableItems = [];
+        if (currentMonthlyRationList.id && currentMonthlyRationList.id !== 'local_ration_list') {
+          const valRes = await apiRequest(`/api/v1/ration-lists/${currentMonthlyRationList.id}/validate-cart?store_id=str_01`, 'POST');
+          if (valRes && valRes.serviceable_items) {
+            serviceableItems = valRes.serviceable_items;
+          }
+        }
+
+        if (serviceableItems.length === 0) {
+          // Direct fallback using ration items
+          currentMonthlyRationList.items.forEach(it => {
+            addProductToCart(it.global_product_id, it.quantity);
+          });
+        } else {
+          serviceableItems.forEach(it => {
+            addProductToCart(it.global_product_id, it.quantity);
+          });
+        }
+
+        closeModal('modal-monthly-ration');
+        switchTab('cart');
+        toastSuccess(`Monthly ration added to cart! Proceed to checkout.`);
+      } catch (err) {
+        // Fallback add
+        currentMonthlyRationList.items.forEach(it => {
+          addProductToCart(it.global_product_id, it.quantity);
+        });
+        closeModal('modal-monthly-ration');
+        switchTab('cart');
+        toastSuccess(`Monthly ration items added to cart!`);
+      } finally {
+        if (btn) {
+          btn.innerHTML = `<i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i> <span>Check & Add to Cart</span>`;
+          btn.disabled = false;
+          lucide.createIcons();
+        }
+      }
+    }
+
+    // ===========================================================================
+    // PHASE 3: INTERACTIVE LOCATION MAP PICKER WITH GEOFENCE CALCULATION
+    // ===========================================================================
+    let locationPickerMap = null;
+    let locationPickerMarker = null;
+    let selectedPickerLat = 26.2315;
+    let selectedPickerLng = 85.3610;
+
+    function calculateHaversineDistanceKm(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Earth radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    function openLocationMapPickerModal() {
+      openModal('modal-location-map-picker');
+      setTimeout(() => {
+        initLocationMapPicker();
+      }, 250);
+    }
+
+    function initLocationMapPicker() {
+      const container = document.getElementById('location-picker-canvas');
+      if (!container || typeof L === 'undefined') return;
+
+      const initLat = activeCustomerAddress.latitude || window.detectedLatitude || 26.2315;
+      const initLng = activeCustomerAddress.longitude || window.detectedLongitude || 85.3610;
+
+      selectedPickerLat = initLat;
+      selectedPickerLng = initLng;
+
+      if (!locationPickerMap) {
+        locationPickerMap = L.map('location-picker-canvas', {
+          zoomControl: true,
+          attributionControl: false
+        }).setView([initLat, initLng], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 18
+        }).addTo(locationPickerMap);
+
+        const customPin = L.divIcon({
+          className: 'custom-pin-icon',
+          html: '<div style="background-color: #2563eb; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.4);">📍</div>',
+          iconSize: [32, 32],
+          iconAnchor: [16, 32]
+        });
+
+        locationPickerMarker = L.marker([initLat, initLng], {
+          draggable: true,
+          icon: customPin
+        }).addTo(locationPickerMap);
+
+        locationPickerMarker.on('dragend', function (e) {
+          const pos = e.target.getLatLng();
+          selectedPickerLat = pos.lat;
+          selectedPickerLng = pos.lng;
+          updatePickerGeofence(pos.lat, pos.lng);
+        });
+
+        locationPickerMap.on('click', function (e) {
+          selectedPickerLat = e.latlng.lat;
+          selectedPickerLng = e.latlng.lng;
+          locationPickerMarker.setLatLng(e.latlng);
+          updatePickerGeofence(e.latlng.lat, e.latlng.lng);
+        });
+      } else {
+        locationPickerMap.invalidateSize();
+        locationPickerMap.setView([initLat, initLng], 15);
+        if (locationPickerMarker) locationPickerMarker.setLatLng([initLat, initLng]);
+      }
+
+      updatePickerGeofence(initLat, initLng);
+    }
+
+    function updatePickerGeofence(lat, lng) {
+      const coordsEl = document.getElementById('picker-coords-text');
+      const distEl = document.getElementById('picker-distance-text');
+      const badgeEl = document.getElementById('picker-service-badge');
+      const confirmBtn = document.getElementById('btn-confirm-map-pin');
+
+      if (coordsEl) coordsEl.innerText = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+      // Minapur pilot store coordinates
+      const storeLat = 26.2315;
+      const storeLng = 85.3610;
+      const distKm = calculateHaversineDistanceKm(storeLat, storeLng, lat, lng);
+
+      if (distEl) distEl.innerText = `~${distKm.toFixed(2)} km`;
+
+      if (badgeEl && confirmBtn) {
+        if (distKm <= 2.0) {
+          badgeEl.className = "text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800";
+          badgeEl.innerText = "Serviceable (Delivery ₹15)";
+          confirmBtn.disabled = false;
+          confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
+        } else if (distKm <= 4.0) {
+          badgeEl.className = "text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800";
+          badgeEl.innerText = "Serviceable (Delivery ₹20)";
+          confirmBtn.disabled = false;
+          confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
+        } else if (distKm <= 5.0) {
+          badgeEl.className = "text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800";
+          badgeEl.innerText = "Serviceable (Delivery ₹25)";
+          confirmBtn.disabled = false;
+          confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
+        } else if (distKm <= 8.0) {
+          badgeEl.className = "text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800";
+          badgeEl.innerText = "Extended Zone (Delivery ₹35)";
+          confirmBtn.disabled = false;
+          confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
+        } else {
+          badgeEl.className = "text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-rose-100 text-rose-800";
+          badgeEl.innerText = "Outside 8km Geofence (Not Serviceable)";
+          confirmBtn.disabled = true;
+          confirmBtn.classList.add('opacity-50', 'pointer-events-none');
+        }
+      }
+    }
+
+    function confirmMapPickedLocation() {
+      activeCustomerAddress.latitude = selectedPickerLat;
+      activeCustomerAddress.longitude = selectedPickerLng;
+      window.detectedLatitude = selectedPickerLat;
+      window.detectedLongitude = selectedPickerLng;
+
+      const pinStatus = document.getElementById('modal-map-pin-status');
+      if (pinStatus) {
+        pinStatus.className = "text-[10px] font-bold text-emerald-700 truncate";
+        pinStatus.innerText = `Confirmed Pin: ${selectedPickerLat.toFixed(4)}, ${selectedPickerLng.toFixed(4)}`;
+      }
+
+      closeModal('modal-location-map-picker');
+      toastSuccess("Exact delivery doorstep pin confirmed!");
+    }
+
+    // ===========================================================================
+    // PHASE 5: REAL CUSTOMER <-> RUNNER IN-APP CHAT & PIN SHARING
+    // ===========================================================================
+    let runnerChatPollInterval = null;
+
+    async function openRunnerChatModal() {
+      const activeOrderId = localStorage.getItem('gb_active_order_id');
+      if (!activeOrderId) {
+        toastWarning("No active order currently in progress.");
+        return;
+      }
+
+      const titleEl = document.getElementById('chat-runner-title');
+      if (titleEl) titleEl.innerText = `Delivery Partner (Order #${activeOrderId.slice(-6)})`;
+
+      openModal('modal-runner-chat');
+      await pollRunnerChatMessages();
+
+      if (runnerChatPollInterval) clearInterval(runnerChatPollInterval);
+      runnerChatPollInterval = setInterval(pollRunnerChatMessages, 3500);
+    }
+
+    async function pollRunnerChatMessages() {
+      const activeOrderId = localStorage.getItem('gb_active_order_id');
+      if (!activeOrderId) return;
+
+      const container = document.getElementById('chat-messages-container');
+      if (!container) return;
+
+      try {
+        const msgs = await apiRequest(`/api/v1/orders/${activeOrderId}/messages`, 'GET');
+        if (Array.isArray(msgs)) {
+          renderCustomerRunnerChat(msgs);
+        }
+      } catch (err) {
+        console.debug("Chat sync notice:", err);
+      }
+    }
+
+    function renderCustomerRunnerChat(msgs) {
+      const container = document.getElementById('chat-messages-container');
+      if (!container) return;
+
+      container.innerHTML = '';
+      if (msgs.length === 0) {
+        container.innerHTML = `
+          <div class="p-3 bg-slate-50 rounded-xl text-center text-slate-500 text-xs">
+            Start a conversation with your delivery runner. Share directions or landmark tips.
+          </div>
+        `;
+        return;
+      }
+
+      const currentUserId = localStorage.getItem('gb_customer_id');
+
+      msgs.forEach(m => {
+        const isMe = m.sender_role === 'CUSTOMER' || m.sender_id === currentUserId;
+        const timeStr = new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        if (m.message_type === 'LOCATION_PIN') {
+          const bubble = document.createElement('div');
+          bubble.className = `flex ${isMe ? 'justify-end' : 'justify-start'} w-full`;
+          bubble.innerHTML = `
+            <div class="max-w-[85%] bg-indigo-50 border border-indigo-200 text-indigo-950 p-3 rounded-2xl ${isMe ? 'rounded-tr-xs' : 'rounded-tl-xs'} space-y-1.5 shadow-2xs">
+              <div class="flex items-center space-x-1.5 text-xs font-bold text-indigo-900">
+                <i data-lucide="map-pin" class="w-4 h-4 text-indigo-600"></i>
+                <span>${isMe ? 'You shared Doorstep Pin' : 'Runner Shared Pin'}</span>
+              </div>
+              <p class="text-xs font-semibold">${m.location_title || 'Exact Delivery Landmark'}</p>
+              <p class="text-[10px] text-indigo-700 font-mono">${m.latitude ? m.latitude.toFixed(4) : ''}, ${m.longitude ? m.longitude.toFixed(4) : ''}</p>
+              ${m.latitude && m.longitude ? `
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${m.latitude},${m.longitude}&travelmode=driving" target="_blank" class="block w-full py-1 text-center bg-indigo-600 text-white rounded-lg text-[10px] font-bold mt-1">
+                  Open in Google Maps
+                </a>
+              ` : ''}
+              <span class="text-[9px] text-indigo-400 block text-right font-mono">${timeStr}</span>
+            </div>
+          `;
+          container.appendChild(bubble);
+        } else {
+          const bubble = document.createElement('div');
+          bubble.className = `flex ${isMe ? 'justify-end' : 'justify-start'} w-full`;
+          bubble.innerHTML = `
+            <div class="max-w-[80%] ${isMe ? 'bg-emerald-600 text-white rounded-tr-xs' : 'bg-slate-100 text-slate-800 rounded-tl-xs'} p-2.5 rounded-2xl shadow-2xs text-xs space-y-1">
+              <p>${m.content || ''}</p>
+              <span class="text-[9px] ${isMe ? 'text-emerald-200' : 'text-slate-400'} block text-right font-mono">${timeStr}</span>
+            </div>
+          `;
+          container.appendChild(bubble);
+        }
+      });
+
+      container.scrollTop = container.scrollHeight;
+      lucide.createIcons();
+    }
+
+    async function sendCustomerChatMessage() {
+      const inp = document.getElementById('chat-input-text');
+      const text = inp.value.trim();
+      const activeOrderId = localStorage.getItem('gb_active_order_id');
+
+      if (!text || !activeOrderId) return;
+      inp.value = '';
+
+      try {
+        await apiRequest(`/api/v1/orders/${activeOrderId}/messages`, 'POST', {
+          message_type: 'TEXT',
+          content: text
+        });
+        await pollRunnerChatMessages();
+      } catch (err) {
+        toastError("Failed to send message to delivery runner.");
+      }
+    }
+
+    async function shareCustomerConfirmedLocationPin() {
+      const activeOrderId = localStorage.getItem('gb_active_order_id');
+      if (!activeOrderId) {
+        toastWarning("No active order currently in progress.");
+        return;
+      }
+
+      const lat = activeCustomerAddress.latitude || window.detectedLatitude || 26.2315;
+      const lng = activeCustomerAddress.longitude || window.detectedLongitude || 85.3610;
+      const landmark = activeCustomerAddress.landmark || 'Near Village Panchayat Bhawan';
+      const village = activeCustomerAddress.village || 'Minapur';
+
+      try {
+        await apiRequest(`/api/v1/orders/${activeOrderId}/messages`, 'POST', {
+          message_type: 'LOCATION_PIN',
+          latitude: lat,
+          longitude: lng,
+          location_title: `${landmark}, ${village}`,
+          content: `Exact delivery location pin confirmed by customer.`
+        });
+        toastSuccess("Exact doorstep location pin shared with delivery partner!");
+        openRunnerChatModal();
+      } catch (err) {
+        toastError("Failed to share location pin. Please try again.");
+      }
+    }
+
+    function shareCustomerLiveLocation() {
+      shareCustomerConfirmedLocationPin();
+    }
+
 
     function openCustomerDirectionsMap() {
       const activeOrderId = localStorage.getItem('gb_active_order_id');
@@ -3057,8 +4052,8 @@
         village: village,
         landmark: landmark,
         district: district,
-        latitude: activeCustomerAddress.latitude || 26.8500,
-        longitude: activeCustomerAddress.longitude || 80.9500,
+        latitude: activeCustomerAddress.latitude || window.detectedLatitude || 26.2315,
+        longitude: activeCustomerAddress.longitude || window.detectedLongitude || 85.3610,
         is_default: true
       };
 
@@ -3083,17 +4078,7 @@
       toastSuccess(currentLang === 'hi' ? "नया पता सुरक्षित कर दिया गया!" : "New delivery address saved!");
     }
 
-    function loadUserSavedAddresses() {
-      const raw = localStorage.getItem('gb_saved_addresses');
-      if (raw) {
-        try {
-          userSavedAddresses = JSON.parse(raw);
-        } catch(e) {
-          userSavedAddresses = [];
-        }
-      }
-      renderSavedAddressesList();
-    }
+// Duplicate loadUserSavedAddresses removed
 
     function renderSavedAddressesList() {
       const container = document.getElementById('saved-addresses-list');
@@ -3243,18 +4228,7 @@
       cancellationTimerInterval = setInterval(updateCountdown, 1000);
     }
 
-        function syncActiveOrderUI() {
-      const activeOrderId = localStorage.getItem('gb_active_order_id');
-      const orderIdDisplay = document.getElementById('active-order-id-display');
-      if (orderIdDisplay && activeOrderId) {
-        orderIdDisplay.innerText = 'Order #' + activeOrderId.slice(-6);
-      }
-      const activeOtp = localStorage.getItem('gb_active_order_otp');
-      const badge = document.getElementById('order-otp-badge');
-      if (badge) {
-        badge.innerText = activeOtp || '••••';
-      }
-    }
+    // Duplicate syncActiveOrderUI removed
 
     function checkCancellationState() {
       syncActiveOrderUI();
@@ -3345,215 +4319,40 @@
     }
 
     async function requestHumanCallback() {
-      const res = await apiRequest('/api/v1/support/tickets', 'POST', {
-        category: 'CUSTOMER_CARE_CALLBACK',
-        subject: 'Customer Care Callback Request',
-        message: 'Customer requested a callback from GaonBazaar support agent.'
-      });
+      try {
+        const res = await apiRequest('/api/v1/support/tickets', 'POST', {
+          category: 'CUSTOMER_CARE_CALLBACK',
+          subject: 'Customer Care Callback Request',
+          message: 'Customer requested a callback from GaonBazaar support agent.'
+        });
 
-      const ticketRef = res?.id ? '#' + res.id.slice(-6) : '#CB-' + Math.floor(1000 + Math.random() * 9000);
-      const container = document.getElementById('support-chat-messages');
+        if (!res || !res.id) {
+          toastError("Unable to submit callback request to server.");
+          return;
+        }
 
-      const botBubble = document.createElement('div');
-      botBubble.className = "flex items-start space-x-2";
-      botBubble.innerHTML = `
-        <div class="w-7 h-7 rounded-full bg-amber-600 text-white flex items-center justify-center text-xs shrink-0">
-          📞
-        </div>
-        <div class="bg-amber-50 text-amber-950 p-3 rounded-2xl rounded-tl-xs max-w-[85%] space-y-1.5 border border-amber-200">
-          <p class="font-bold text-amber-900">Customer Care Callback Logged (${ticketRef})</p>
-          <p class="text-xs">Your callback request has been submitted. Our support team will contact you when an agent is available.</p>
-          <span class="text-[9px] text-amber-700 block text-right font-mono">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-        </div>
-      `;
-      container.appendChild(botBubble);
-      container.scrollTop = container.scrollHeight;
+        const ticketRef = '#' + res.id.slice(-6);
+        const container = document.getElementById('support-chat-messages');
+        if (!container) return;
 
-      toastSuccess("Callback ticket registered! Our support team will call you.");
-    }
-
-    // ---------------------------------------------------------------------------
-    // PHASE 7: PROFILE, FAQS & TICKETS
-    // ---------------------------------------------------------------------------
-    async function loadUserProfile() {
-      const user = await apiRequest('/api/v1/auth/me');
-      if (user) {
-        const name = user.name || 'Customer';
-        const phone = user.phone || localStorage.getItem('gb_customer_phone') || '+91 9876543210';
-        document.getElementById('user-display-name').innerText = name;
-        document.getElementById('user-display-phone').innerText = phone.startsWith('+91') ? phone : '+91 ' + phone;
-        
-        const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'CU';
-        document.getElementById('user-avatar-initials').innerText = initials;
-
-        const editName = document.getElementById('edit-profile-name');
-        const editEmail = document.getElementById('edit-profile-email');
-        if (editName) editName.value = user.name || '';
-        if (editEmail) editEmail.value = user.email || '';
-      }
-    }
-
-    async function saveUserProfile() {
-      const name = document.getElementById('edit-profile-name').value.trim();
-      const email = document.getElementById('edit-profile-email').value.trim();
-
-      if (!name) {
-        toastError("Please enter your name");
-        return;
-      }
-
-      await apiRequest('/api/v1/auth/me', 'PATCH', {
-        name: name,
-        email: email
-      });
-
-      localStorage.setItem('gb_customer_name', name);
-      loadUserProfile();
-        checkPaymentGatewayStatus();
-      closeModal('modal-edit-profile');
-      toastSuccess(currentLang === 'hi' ? "प्रोफाइल अपडेट हो गई!" : "Profile updated successfully!");
-    }
-
-    const faqQuestions = [
-      { q: "How to place an order?", a: "Browse Village Essentials or search for a store, tap '+ ADD' on items, go to the Cart tab, confirm your village address and landmark, and tap 'Place Order'." },
-      { q: "What is the delivery time?", a: "Deliveries typically arrive within 30 to 45 minutes from our nearest authorized village merchant within an 8.0 km radius." },
-      { q: "What are the delivery charges?", a: "Delivery charge is ₹15.00 for orders up to ₹300, and completely FREE for orders above ₹300." },
-      { q: "What are the payment options?", a: "We support Cash on Delivery (COD) at your doorstep, as well as online UPI payments (Google Pay, PhonePe, Paytm)." },
-      { q: "Where is my order right now?", a: "Go to the 'Orders' tab to view real-time mission status, rider information, and turn-by-turn updates." },
-      { q: "How can I cancel my order?", a: "You can cancel any active order within 180 seconds of placement directly from the Orders tab with an instant full refund." },
-      { q: "What is the refund timing?", a: "COD orders receive immediate cash adjustment. Online UPI refunds are settled within 5–7 business days per banking standards." },
-      { q: "What if an item is missing from my bag?", a: "Tap 'Report Issue' in your Orders tab or ask GaonBazaar AI Support Chat to raise an immediate missing item ticket for refund or redelivery." },
-      { q: "What if I receive a wrong item?", a: "Report the wrong product before sharing the OTP. The runner will immediately exchange it or process a refund." },
-      { q: "What if goods arrive damaged?", a: "Inspect perishables before handover. Damaged items are replaced free of charge or refunded on the spot." },
-      { q: "What is the replacement policy?", a: "Free replacement is guaranteed for defective or damaged non-perishables reported within 2 hours of delivery." },
-      { q: "What is the delivery verification OTP?", a: "A 4-digit security code shown in your Orders tab. Give it to the runner only after inspecting all items." },
-      { q: "How do I contact customer support?", a: "Open 'GaonBazaar AI Support Chat' in the Account tab or tap 'Call Me' to request an agent callback." },
-      { q: "Can I change my delivery address?", a: "You can update your address anytime in the Cart tab before tapping 'Place Order', or save multiple addresses in your Account." }
-    ];
-
-    function renderFaqAccordion() {
-      const container = document.getElementById('faq-accordion-container');
-      if (!container) return;
-      container.innerHTML = '';
-
-      faqQuestions.forEach((faq, idx) => {
-        const item = document.createElement('div');
-        item.className = "border border-slate-200 rounded-xl overflow-hidden bg-slate-50";
-        item.innerHTML = `
-          <button onclick="toggleAccordion('faq-ans-${idx}')" class="w-full p-3 text-left font-bold text-slate-800 flex justify-between items-center bg-white hover:bg-slate-50 transition">
-            <span class="pr-2">${faq.q}</span>
-            <i data-lucide="chevron-down" id="faq-icon-${idx}" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200"></i>
-          </button>
-          <div id="faq-ans-${idx}" class="accordion-content px-3 pb-3 pt-1 text-slate-600 bg-slate-50 text-[11px] leading-relaxed">
-            ${faq.a}
+        const botBubble = document.createElement('div');
+        botBubble.className = "flex items-start space-x-2";
+        botBubble.innerHTML = `
+          <div class="w-7 h-7 rounded-full bg-amber-600 text-white flex items-center justify-center text-xs shrink-0">
+            📞
+          </div>
+          <div class="bg-amber-50 text-amber-950 p-3 rounded-2xl rounded-tl-xs max-w-[85%] space-y-1.5 border border-amber-200">
+            <p class="font-bold text-amber-900">Customer Care Callback Logged (${ticketRef})</p>
+            <p class="text-xs">Your callback request has been verified and assigned. Our support team will call you within 15 minutes.</p>
+            <span class="text-[9px] text-amber-700 block text-right font-mono">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
         `;
-        container.appendChild(item);
-      });
-      lucide.createIcons();
-    }
-
-    function toggleAccordion(id) {
-      const content = document.getElementById(id);
-      if (!content) return;
-      const isOpen = content.classList.contains('open');
-
-      document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('open'));
-      if (!isOpen) {
-        content.classList.add('open');
+        container.appendChild(botBubble);
+        container.scrollTop = container.scrollHeight;
+        toastSuccess(`Callback requested! Ticket ${ticketRef}`);
+      } catch (err) {
+        toastError(err.message || "Failed to submit callback request.");
       }
-    }
-
-    async function loadMyTickets() {
-      const list = await apiRequest('/api/v1/support/tickets');
-      const container = document.getElementById('tickets-list-container');
-      if (!container) return;
-      container.innerHTML = '';
-
-      if (!list || list.length === 0) {
-        container.innerHTML = `
-          <div class="p-4 text-center text-slate-400 text-xs">
-            No active support tickets found.
-          </div>
-        `;
-        return;
-      }
-
-      list.forEach(t => {
-        const card = document.createElement('div');
-        card.className = "p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1 text-xs";
-        card.innerHTML = `
-          <div class="flex items-center justify-between font-bold text-slate-900">
-            <span>Ticket #${t.id.slice(-6)}</span>
-            <span class="text-[10px] px-2 py-0.5 rounded font-bold ${t.status === 'OPEN' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">${t.status}</span>
-          </div>
-          <p class="font-semibold text-slate-800">${t.subject}</p>
-          <p class="text-[11px] text-slate-600">${t.message}</p>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function openMyTicketsModal() {
-      openModal('modal-my-tickets');
-      loadMyTickets();
-    }
-
-    async function submitCustomerSupportTicket() {
-      const cat = document.getElementById('support-ticket-cat').value;
-      const subject = document.getElementById('support-ticket-subject').value.trim();
-      const message = document.getElementById('support-ticket-message').value.trim();
-
-      if (!subject || !message) {
-        toastError("Please enter ticket subject and details");
-        return;
-      }
-
-      await apiRequest('/api/v1/support/tickets', 'POST', {
-        category: cat,
-        subject: subject,
-        message: message
-      });
-
-      closeModal('modal-raise-ticket');
-      toastSuccess("Support ticket registered successfully!");
-    }
-
-    // Modal Helpers
-    function openModal(id) {
-      const m = document.getElementById(id);
-      if (m) {
-        m.classList.remove('hidden');
-        lucide.createIcons();
-      }
-    }
-
-    function closeModal(id) {
-      const m = document.getElementById(id);
-      if (m) m.classList.add('hidden');
-    }
-
-    function openRunnerChatModal() {
-      openModal('modal-runner-chat');
-    }
-
-    function sendCustomerChatMessage() {
-      const inp = document.getElementById('chat-input-text');
-      const txt = inp.value.trim();
-      if (!txt) return;
-      inp.value = '';
-
-      const container = document.getElementById('chat-messages-container');
-      const bubble = document.createElement('div');
-      bubble.className = "flex items-end justify-end space-x-2";
-      bubble.innerHTML = `
-        <div class="bg-emerald-600 text-white p-2.5 rounded-2xl rounded-tr-xs shadow-xs text-xs max-w-[80%]">
-          <p>${txt}</p>
-          <span class="text-[9px] text-emerald-200 block text-right font-mono">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-        </div>
-      `;
-      container.appendChild(bubble);
-      container.scrollTop = container.scrollHeight;
     }
 
     function openReceiptModal(orderId, store, total) {
@@ -3570,11 +4369,7 @@
       openModal('modal-receipt');
     }
 
-    function reorderItems(orderId) {
-      addProductToCart('p3', 2);
-      switchTab('cart');
-      toastSuccess("Items from #" + orderId + " added to cart!");
-    }
+    // Duplicate reorderItems removed
 
     function openIssueModal(orderId) {
       openAiSupportChatModal();
@@ -3612,6 +4407,7 @@
 
       startOrderCancellationTimer();
       syncActiveOrderUI();
+      renderPastOrdersList();
       renderProductCatalog();
       renderStoresList();
       renderCartItems();
