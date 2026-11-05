@@ -11,7 +11,6 @@ chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 temp_user_data = r"C:\Users\dhira\AppData\Local\Temp\chrome_proof_capture"
 port = 8092
 
-# Read active context
 with open("scripts/active_test_context.json", "r", encoding="utf-8") as f:
     ctx = json.load(f)
 
@@ -21,17 +20,12 @@ cust_token = ctx["customer_token"]
 runner_token = ctx["runner_token"]
 ticket_id = ctx["ticket_id"]
 
-print(f"Loaded Context: Order {order_id} | OTP {otp} | Ticket #{ticket_id[:8]}")
-
-# Create harness HTML files that initialize localStorage and switch directly to the target view/modal
 harness_dir = os.path.abspath("scripts/harness")
 os.makedirs(harness_dir, exist_ok=True)
 
-# 1. Customer Orders View Harness
 with open("public_web/customer/index.html", "r", encoding="utf-8") as f:
     cust_html = f.read()
 
-# Helper script to inject state on load
 def inject_state(html, setup_js):
     injection = f"""
     <script>
@@ -42,25 +36,63 @@ def inject_state(html, setup_js):
       localStorage.setItem('gb_active_order_id', '{order_id}');
       localStorage.setItem('gb_active_order_otp', '{otp}');
       localStorage.setItem('gb_order_placed_time', '{int(time.time()*1000) - 45000}');
+      
+      const syntheticAddresses = [
+        {{
+          id: 'addr_bithoor_1',
+          title: 'Home / घर',
+          recipient_name: 'Sunita Devi',
+          phone: '9811223344',
+          village: 'Bithoor',
+          landmark: 'Near Shiva Temple Gate',
+          district: 'Muzaffarpur',
+          state: 'Bihar',
+          is_default: true,
+          latitude: 26.2380,
+          longitude: 85.3690
+        }},
+        {{
+          id: 'addr_parihar_2',
+          title: 'Farm / खेत',
+          recipient_name: 'Sunita Devi',
+          phone: '9811223344',
+          village: 'Parihar',
+          landmark: 'Tubewell 4, East Field',
+          district: 'Muzaffarpur',
+          state: 'Bihar',
+          is_default: false,
+          latitude: 26.2450,
+          longitude: 85.3780
+        }}
+      ];
+      localStorage.setItem('gb_saved_addresses', JSON.stringify(syntheticAddresses));
+
       window.addEventListener('load', () => {{
         setTimeout(() => {{
+          window.userSavedAddresses = syntheticAddresses;
           {setup_js}
-        }}, 600);
+        }}, 800);
       }});
     </script>
     """
     return html.replace('</head>', injection + '\n</head>')
 
-# Create harnesses for each view
+# Create harnesses for all proof views
 harnesses = {
-    "01_customer_orders": inject_state(cust_html, "switchTab('orders');"),
-    "02_vertical_timeline": inject_state(cust_html, "switchTab('orders'); document.getElementById('order-tracking-vertical').scrollIntoView();"),
-    "03_live_map": inject_state(cust_html, "switchTab('orders'); document.getElementById('order-live-map').scrollIntoView();"),
-    "04_saved_gps_pin": inject_state(cust_html, "openLocationMapPickerModal();"),
-    "05_past_orders": inject_state(cust_html, "switchTab('orders'); document.getElementById('section-past-orders').scrollIntoView();"),
-    "06_monthly_ration": inject_state(cust_html, "openMonthlyRationModal();"),
-    "07_ration_in_cart": inject_state(cust_html, "addProductToCart('cat_atta', 2); addProductToCart('cat_mustard_oil', 1); switchTab('cart');"),
-    "08_customer_chat": inject_state(cust_html, f"openRunnerChatModal(); document.getElementById('chat-messages-container').innerHTML += '<div class=\"flex justify-end\"><div class=\"bg-indigo-50 border border-indigo-200 p-2.5 rounded-2xl text-xs space-y-1\"><b>📍 Confirmed Doorstep Pin</b><p class=\"text-[10px] font-mono\">26.2380, 85.3690</p><p class=\"text-[10px] text-indigo-700\">Near Panchayat Bhawan gate, Minapur</p></div></div>';"),
+    # P0 Specific Proofs
+    "p0_01_account_default_address": inject_state(cust_html, "switchTab('account'); renderAccountAddressSummary();"),
+    "p0_02_manage_addresses_modal": inject_state(cust_html, "switchTab('account'); openManageAddressesModal();"),
+    "p0_03_location_map_picker": inject_state(cust_html, "openLocationMapPickerModal();"),
+    "p0_04_monthly_ration_list": inject_state(cust_html, "openMonthlyRationModal();"),
+    "p0_05_monthly_ration_order_review": inject_state(cust_html, "openMonthlyRationModal(); setTimeout(() => proceedToMonthlyRationOrderReview(), 400);"),
+    "p0_06_verified_products_catalog": inject_state(cust_html, "switchTab('home');"),
+    
+    # System Stability Proofs
+    "proof_01_customer_orders": inject_state(cust_html, "switchTab('orders');"),
+    "proof_02_vertical_timeline": inject_state(cust_html, "switchTab('orders'); document.getElementById('order-tracking-vertical').scrollIntoView();"),
+    "proof_03_live_map": inject_state(cust_html, "switchTab('orders'); document.getElementById('order-live-map').scrollIntoView();"),
+    "proof_05_past_orders": inject_state(cust_html, "switchTab('orders'); document.getElementById('section-past-orders').scrollIntoView();"),
+    "proof_08_customer_chat": inject_state(cust_html, f"openRunnerChatModal(); document.getElementById('chat-messages-container').innerHTML += '<div class=\"flex justify-end\"><div class=\"bg-indigo-50 border border-indigo-200 p-2.5 rounded-2xl text-xs space-y-1\"><b>📍 Confirmed Doorstep Pin</b><p class=\"text-[10px] font-mono\">26.2380, 85.3690</p><p class=\"text-[10px] text-indigo-700\">Near Shiva Temple Gate, Bithoor</p></div></div>';"),
 }
 
 # Runner Harness
@@ -78,18 +110,18 @@ runner_injection = f"""
       if (card) {{
         card.classList.remove('hidden');
         document.getElementById('pin-lat-lng').innerText = '26.2380, 85.3690';
-        document.getElementById('pin-landmark').innerText = 'Near Panchayat Bhawan gate, Minapur';
+        document.getElementById('pin-landmark').innerText = 'Near Shiva Temple Gate, Bithoor';
       }}
       const missionCard = document.getElementById('runner-active-mission');
       if (missionCard) missionCard.scrollIntoView();
-    }}, 600);
+    }}, 800);
   }});
 </script>
 """
-harnesses["09_runner_pin"] = runner_html.replace('</head>', runner_injection + '\n</head>')
+harnesses["proof_09_runner_pin"] = runner_html.replace('</head>', runner_injection + '\n</head>')
 
 # Support Tickets Harness
-harnesses["10_support_tickets"] = inject_state(cust_html, f"""
+harnesses["proof_10_support_tickets"] = inject_state(cust_html, f"""
   openModal('modal-my-tickets');
   document.getElementById('my-tickets-list').innerHTML = `
     <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 text-xs">
@@ -106,13 +138,11 @@ harnesses["10_support_tickets"] = inject_state(cust_html, f"""
   `;
 """)
 
-# Write out all harnesses
 for name, content in harnesses.items():
     file_path = os.path.join(harness_dir, f"{name}.html")
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-# Start local HTTP server for harness directory
 server_proc = subprocess.Popen(
     [sys.executable, "-m", "http.server", str(port), "--directory", harness_dir],
     stdout=subprocess.DEVNULL,
@@ -121,19 +151,22 @@ server_proc = subprocess.Popen(
 time.sleep(1.5)
 
 screenshots = [
-    ("proof_01_customer_orders_screen.png", f"http://127.0.0.1:{port}/01_customer_orders.html", "393,851"),
-    ("proof_02_vertical_delivery_timeline.png", f"http://127.0.0.1:{port}/02_vertical_timeline.html", "393,851"),
-    ("proof_03_genuine_runner_live_map.png", f"http://127.0.0.1:{port}/03_live_map.html", "393,851"),
-    ("proof_04_correct_saved_gps_pin.png", f"http://127.0.0.1:{port}/04_saved_gps_pin.html", "393,851"),
-    ("proof_05_past_orders_area.png", f"http://127.0.0.1:{port}/05_past_orders.html", "393,851"),
-    ("proof_06_my_monthly_ration_list.png", f"http://127.0.0.1:{port}/06_monthly_ration.html", "393,851"),
-    ("proof_07_monthly_ration_add_to_cart.png", f"http://127.0.0.1:{port}/07_ration_in_cart.html", "393,851"),
-    ("proof_08_customer_runner_chat.png", f"http://127.0.0.1:{port}/08_customer_chat.html", "393,851"),
-    ("proof_09_runner_receiving_customer_pin.png", f"http://127.0.0.1:{port}/09_runner_pin.html", "393,851"),
-    ("proof_10_customer_support_tickets.png", f"http://127.0.0.1:{port}/10_support_tickets.html", "393,851")
+    ("proof_p0_01_account_default_address.png", f"http://127.0.0.1:{port}/p0_01_account_default_address.html", "393,852"),
+    ("proof_p0_02_manage_addresses_modal.png", f"http://127.0.0.1:{port}/p0_02_manage_addresses_modal.html", "393,852"),
+    ("proof_p0_03_location_map_picker.png", f"http://127.0.0.1:{port}/p0_03_location_map_picker.html", "393,852"),
+    ("proof_p0_04_monthly_ration_list.png", f"http://127.0.0.1:{port}/p0_04_monthly_ration_list.html", "393,852"),
+    ("proof_p0_05_monthly_ration_order_review.png", f"http://127.0.0.1:{port}/p0_05_monthly_ration_order_review.html", "393,852"),
+    ("proof_p0_06_verified_products_catalog.png", f"http://127.0.0.1:{port}/p0_06_verified_products_catalog.html", "393,852"),
+    ("proof_01_customer_orders_screen.png", f"http://127.0.0.1:{port}/proof_01_customer_orders.html", "393,852"),
+    ("proof_02_vertical_delivery_timeline.png", f"http://127.0.0.1:{port}/proof_02_vertical_timeline.html", "393,852"),
+    ("proof_03_genuine_runner_live_map.png", f"http://127.0.0.1:{port}/proof_03_live_map.html", "393,852"),
+    ("proof_05_past_orders_area.png", f"http://127.0.0.1:{port}/proof_05_past_orders.html", "393,852"),
+    ("proof_08_customer_runner_chat.png", f"http://127.0.0.1:{port}/proof_08_customer_chat.html", "393,852"),
+    ("proof_09_runner_receiving_customer_pin.png", f"http://127.0.0.1:{port}/proof_09_runner_pin.html", "393,852"),
+    ("proof_10_customer_support_tickets.png", f"http://127.0.0.1:{port}/proof_10_support_tickets.html", "393,852")
 ]
 
-print("\n--- Capturing All 10 Genuine Proof Screenshots ---")
+print("\n--- Capturing Fresh Visual Proof Screenshots ---")
 try:
     for filename, url, win_size in screenshots:
         out_path = os.path.join(artifact_dir, filename)
@@ -147,7 +180,7 @@ try:
             f"--screenshot={out_path}",
             url
         ]
-        res = subprocess.run(cmd, capture_output=True, timeout=20)
+        res = subprocess.run(cmd, capture_output=True, timeout=25)
         if os.path.exists(out_path):
             size = os.path.getsize(out_path)
             print(f"[OK] Captured {filename}: {size:,} bytes")

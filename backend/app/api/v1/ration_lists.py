@@ -365,20 +365,22 @@ async def validate_ration_list_for_cart(
             price = float(sp.price)
             is_in_stock = bool(sp.in_stock and (sp.stock_quantity is None or sp.stock_quantity >= item.quantity))
             status_str = "IN_STOCK" if is_in_stock else "OUT_OF_STOCK"
+            if is_in_stock:
+                total_amount += price * item.quantity
+            else:
+                all_available = False
         elif cat_item:
-            price = float(cat_item.suggested_mrp or 40.0)
+            # Genuine catalog item carried in master catalog
+            price = float(cat_item.suggested_mrp) if (cat_item and cat_item.suggested_mrp) else 0.0
             is_in_stock = True
             status_str = "IN_STOCK"
+            total_amount += price * item.quantity
         else:
-            price = 45.0
-            is_in_stock = True
-            status_str = "IN_STOCK"
-
-        if not is_in_stock:
+            # Unverified / unknown item: do not invent fake price
+            price = 0.0
+            is_in_stock = False
+            status_str = "UNAVAILABLE"
             all_available = False
-
-        item_total = price * item.quantity
-        total_amount += item_total
 
         validated_items.append(
             RationValidateCartItem(

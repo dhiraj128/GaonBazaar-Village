@@ -65,23 +65,52 @@ async def create_address(
         for existing in result.scalars().all():
             existing.is_default = False
             
-    address = Address(
-        user_id=user_id,
-        title=data.title,
-        recipient_name=data.recipient_name,
-        phone=data.phone,
-        latitude=data.latitude,
-        longitude=data.longitude,
-        village=data.village,
-        landmark=data.landmark,
-        block=data.block,
-        district=data.district,
-        state=data.state,
-        is_default=data.is_default
+    # Duplicate check: if user already has an address with identical title, village and landmark, update it
+    dup_res = await db.execute(
+        select(Address).where(
+            Address.user_id == user_id,
+            Address.village == data.village,
+            Address.landmark == data.landmark,
+            Address.title == data.title
+        )
     )
-    db.add(address)
-    await db.commit()
-    await db.refresh(address)
+    existing_dup = dup_res.scalars().first()
+    if existing_dup:
+        existing_dup.recipient_name = data.recipient_name
+        existing_dup.phone = data.phone
+        if data.latitude is not None:
+            existing_dup.latitude = data.latitude
+        if data.longitude is not None:
+            existing_dup.longitude = data.longitude
+        if data.block:
+            existing_dup.block = data.block
+        if data.district:
+            existing_dup.district = data.district
+        if data.state:
+            existing_dup.state = data.state
+        if data.is_default:
+            existing_dup.is_default = True
+        await db.commit()
+        await db.refresh(existing_dup)
+        address = existing_dup
+    else:
+        address = Address(
+            user_id=user_id,
+            title=data.title,
+            recipient_name=data.recipient_name,
+            phone=data.phone,
+            latitude=data.latitude,
+            longitude=data.longitude,
+            village=data.village,
+            landmark=data.landmark,
+            block=data.block,
+            district=data.district,
+            state=data.state,
+            is_default=data.is_default
+        )
+        db.add(address)
+        await db.commit()
+        await db.refresh(address)
     
     return AddressResponse(
         id=address.id,
