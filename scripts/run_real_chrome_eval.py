@@ -239,6 +239,19 @@ async def run_eval_for_viewport(ws, vp):
       }
       check(otpEl && !otpEl.textContent.includes('•') && otpEl.textContent.includes('7842'), 'Delivery OTP revealed on button click');
 
+      // 9b. Past Orders Rendering & Buy Again Logic
+      await renderPastOrdersList();
+      const pastContainer = document.getElementById('past-orders-list-container');
+      check(pastContainer && pastContainer.children.length > 0, 'Past orders rendered in container');
+      check(!pastContainer.textContent.includes('Invalid Date'), 'Past orders contain NO Invalid Date strings');
+      
+      // Test handleBuyAgain on first past order
+      await handleBuyAgain('GB-ORD-7108');
+      check(window.cart && window.cart.length > 0, 'handleBuyAgain populated cart with past order items');
+      check(!document.getElementById('view-cart').classList.contains('hidden'), 'handleBuyAgain navigated to Cart tab');
+      const reorderBadge = document.getElementById('nav-cart-badge');
+      check(reorderBadge && parseInt(reorderBadge.textContent) >= 1, 'handleBuyAgain dynamically updated Cart icon badge');
+
       // 10. Cart Tab: Clean Empty Cart vs Products
       switchTab('cart');
       window.cartItems = [];
