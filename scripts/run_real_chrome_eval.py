@@ -248,11 +248,19 @@ async def run_eval_for_viewport(ws, vp):
       check(document.getElementById('cart-items-list').textContent.includes('Your Cart is Empty'), 'Empty cart shows friendly title');
       check(document.getElementById('cart-items-list').textContent.includes('Browse Products'), 'Empty cart shows Browse Products button');
 
-      // Add items to cart
-      window.cartItems = [
-        { id: 'p1', nameEn: 'Aashirvaad Shudh Chakki Atta', price: 215.00, qty: 1, unit: '5 kg' },
-        { id: 'p2', nameEn: 'Kachchi Ghani Mustard Oil', price: 145.00, qty: 1, unit: '1 Litre' }
-      ];
+      // Test dynamic addToCart functionality
+      window.cartItems = [];
+      window.cart = [];
+      addToCart('p1', 'Aashirvaad Shudh Chakki Atta', 215.00);
+      check(window.cart.length === 1, 'addToCart successfully pushes item to global cart array');
+      check(window.cart[0].id === 'p1', 'addToCart preserves product ID');
+      const badge = document.getElementById('nav-cart-badge');
+      check(badge && badge.textContent === '1', 'Cart badge updates dynamically on addToCart');
+      
+      // Add another item
+      addToCart('p2', 'Kachchi Ghani Mustard Oil', 145.00);
+      check(window.cart.length === 2, 'addToCart adds second item to global cart');
+      check(badge && badge.textContent === '2', 'Cart badge updates to 2');
       renderCartItems();
       check(chkSections && !chkSections.classList.contains('hidden'), 'Cart with items shows checkout sections');
       check(document.getElementById('checkout-selected-address-card') !== null, 'Compact deliver-to address card present');
