@@ -258,9 +258,19 @@ async def run_eval_for_viewport(ws, vp):
       check(document.getElementById('checkout-selected-address-card') !== null, 'Compact deliver-to address card present');
 
       const upiRadio = document.querySelector('input[name="payment_mode"][value="ONLINE"]');
-      check(upiRadio && upiRadio.disabled, 'UPI online radio is disabled');
       const codRadio = document.querySelector('input[name="payment_mode"][value="COD"]');
       check(codRadio && codRadio.checked, 'COD is selected by default');
+      const codFeeInitial = document.getElementById('bill-cod-fee');
+      check(codFeeInitial && codFeeInitial.textContent.includes('10'), 'COD fee row shows +₹10 convenience fee');
+      
+      // Test dynamic UPI fee logic
+      selectPaymentMode('ONLINE');
+      const upiFee = document.getElementById('bill-cod-fee');
+      check(upiFee && upiFee.textContent.includes('0.00'), 'Selecting UPI removes COD fee to ₹0.00 discount');
+      
+      // Re-select COD
+      selectPaymentMode('COD');
+      check(codRadio.checked, 'Re-selecting COD restores COD payment mode');
 
       // 11. AI Support: Verify Call Me and Request Callback removed
       const allButtons = Array.from(document.querySelectorAll('button')).map(b => b.textContent.trim());

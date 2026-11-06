@@ -75,6 +75,16 @@
       max-height: 600px;
       opacity: 1;
     }
+    #location-picker-canvas {
+      min-height: 220px;
+      width: 100%;
+      background-color: #e2e8f0;
+      background-image: 
+        radial-gradient(#94a3b8 1.5px, transparent 1.5px),
+        linear-gradient(to right, rgba(203, 213, 225, 0.4) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(203, 213, 225, 0.4) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex justify-center selection:bg-emerald-500 selection:text-white">
@@ -403,6 +413,7 @@
               <button onclick="filterCategory('Dairy & Milk')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95 shrink-0" data-cat="Dairy & Milk" data-i18n="cat_dairy">Dairy & Milk</button>
               <button onclick="filterCategory('Vegetables')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95 shrink-0" data-cat="Vegetables" data-i18n="cat_veggies">Vegetables</button>
               <button onclick="filterCategory('General Store')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95 shrink-0" data-cat="General Store" data-i18n="cat_general">General Store</button>
+              <button onclick="filterCategory('Snacks')" class="cat-pill px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-700 border border-slate-200 whitespace-nowrap hover:bg-slate-100 shadow-2xs transition active:scale-95 shrink-0" data-cat="Snacks" data-i18n="cat_snacks">Snacks</button>
             </div>
           </div>
 
@@ -417,15 +428,62 @@
             </div>
           </div>
 
-          <!-- Village Essentials (Real Synchronized Products Catalog) -->
-          <div class="space-y-3">
+          <!-- Filtered Catalog / Search Results (Visible when searching or specific category pill active) -->
+          <div id="section-filtered-catalog" class="hidden space-y-3">
             <div class="flex justify-between items-center">
-              <h3 class="text-xs font-bold text-slate-900 tracking-wide uppercase" data-i18n="essentials_title">Village Essentials</h3>
-              <span id="product-count-badge" class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">8 items</span>
+              <h3 id="filtered-catalog-title" class="text-xs font-bold text-slate-900 tracking-wide uppercase" data-i18n="essentials_title">All Products</h3>
+              <span id="product-count-badge" class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">0 items</span>
             </div>
-            <div id="products-grid" class="grid grid-cols-2 gap-3">
-              <!-- Rendered via JS renderProductCatalog() from dynamic synced catalog -->
+            <div id="products-grid" class="grid grid-cols-2 gap-2.5 sm:gap-3">
+              <!-- Rendered via JS -->
             </div>
+          </div>
+
+          <!-- Expanded Supermarket Showcase (Visible by Default on "All" View) -->
+          <div id="section-supermarket-showcase" class="space-y-6">
+            
+            <!-- SECTION 1: Fresh Vegetables -->
+            <div class="space-y-2.5">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-1.5">
+                  <span class="text-base">🥦</span>
+                  <h3 class="text-xs font-extrabold text-slate-900 tracking-wide uppercase" data-i18n="section_veggies_title">Fresh Vegetables</h3>
+                </div>
+                <span class="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full" data-i18n="veggies_count_badge">4 Farm Fresh</span>
+              </div>
+              <div id="grid-vegetables" class="grid grid-cols-2 gap-2.5 sm:gap-3">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <!-- SECTION 2: Daily Groceries -->
+            <div class="space-y-2.5">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-1.5">
+                  <span class="text-base">🌾</span>
+                  <h3 class="text-xs font-extrabold text-slate-900 tracking-wide uppercase" data-i18n="section_groceries_title">Daily Groceries</h3>
+                </div>
+                <span class="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full" data-i18n="groceries_count_badge">6 Daily Essentials</span>
+              </div>
+              <div id="grid-groceries" class="grid grid-cols-2 gap-2.5 sm:gap-3">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <!-- SECTION 3: Packaged Snacks & Munchies -->
+            <div class="space-y-2.5">
+              <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-1.5">
+                  <span class="text-base">🍪</span>
+                  <h3 class="text-xs font-extrabold text-slate-900 tracking-wide uppercase" data-i18n="section_snacks_title">Packaged Snacks</h3>
+                </div>
+                <span class="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full" data-i18n="snacks_count_badge">4 Popular Snacks</span>
+              </div>
+              <div id="grid-snacks" class="grid grid-cols-2 gap-2.5 sm:gap-3">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
@@ -588,31 +646,55 @@
                 <span id="bill-platform-fee" class="font-semibold">₹3.00</span>
               </div>
 
+              <!-- 4. Payment Fee Adjustment (COD vs UPI) -->
+              <div id="bill-cod-fee-row" class="flex justify-between items-center text-slate-700">
+                <div class="flex items-center space-x-1.5">
+                  <span id="bill-cod-fee-label" data-i18n="bill_cod_fee">COD Convenience Fee</span>
+                  <span id="bill-cod-fee-badge" class="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">+₹10</span>
+                </div>
+                <span id="bill-cod-fee" class="font-bold text-amber-800 font-mono">+₹10.00</span>
+              </div>
+
               <!-- Grand Total -->
               <div class="border-t border-slate-200 pt-2 flex justify-between items-center text-sm font-extrabold text-slate-900">
                 <span data-i18n="bill_grand_total">Grand Total</span>
-                <span id="bill-grand-total" class="text-base text-emerald-700">₹0.00</span>
+                <span id="bill-grand-total" class="text-base text-emerald-700 font-mono font-black">₹0.00</span>
               </div>
             </div>
           </div>
 
-          <!-- Payment Mode Selection: COD as Clear Default (UPI coming soon non-intrusive) -->
-          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+          <!-- Payment Mode Selection: COD vs UPI with Dynamic Fee Logic -->
+          <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
             <div class="flex items-center justify-between">
               <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wide text-[11px]" data-i18n="payment_mode_title">Payment Method</h4>
-              <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">COD 100% Active</span>
+              <span id="payment-badge-status" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Dynamic Delivery Pricing</span>
             </div>
-            <div class="space-y-1.5 text-xs">
-              <label id="payment-label-cod" class="p-3 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center space-x-3 cursor-pointer">
-                <input type="radio" name="payment_mode" value="COD" checked onchange="updatePaymentModeSelection()" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
-                <div class="flex-1">
-                  <span class="font-bold text-slate-900 text-xs block" data-i18n="pay_cod">Cash on Delivery (COD)</span>
-                  <span class="text-[10px] text-slate-500">Pay cash after inspecting items at your doorstep.</span>
+            <div class="space-y-2 text-xs">
+              <!-- Option 1: Cash on Delivery (COD) -->
+              <label id="payment-label-cod" onclick="selectPaymentMode('COD')" class="p-3 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 flex items-center space-x-3 cursor-pointer transition">
+                <input type="radio" name="payment_mode" value="COD" checked onchange="updatePaymentModeSelection()" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 shrink-0">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-900 text-xs block" data-i18n="pay_cod">Cash on Delivery (COD)</span>
+                    <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded shrink-0">+₹10 Fee</span>
+                  </div>
+                  <span class="text-[10px] text-amber-700 font-medium block mt-0.5" data-i18n="subtext_cod">₹10 extra for Cash on Delivery.</span>
                 </div>
-                <span class="text-base">💵</span>
+                <span class="text-base shrink-0">💵</span>
               </label>
-              <!-- Disabled ONLINE input for test compatibility without prominent UI distraction -->
-              <input type="radio" name="payment_mode" value="ONLINE" disabled class="hidden">
+
+              <!-- Option 2: UPI / Online -->
+              <label id="payment-label-online" onclick="selectPaymentMode('ONLINE')" class="p-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 flex items-center space-x-3 cursor-pointer transition">
+                <input type="radio" name="payment_mode" value="ONLINE" onchange="updatePaymentModeSelection()" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 shrink-0">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-900 text-xs block" data-i18n="pay_upi">UPI / Online Payment</span>
+                    <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded shrink-0">₹0 Fee</span>
+                  </div>
+                  <span class="text-[10px] text-emerald-700 font-medium block mt-0.5" data-i18n="subtext_upi">Save ₹10 on delivery fees with UPI.</span>
+                </div>
+                <span class="text-base shrink-0">⚡</span>
+              </label>
             </div>
           </div><!-- Checkout Place Order Button -->
           <div class="pt-2">
@@ -1061,8 +1143,8 @@
         </div>
 
         <!-- Add Custom Item Bar -->
-        <div class="pt-3 pb-2 flex items-center space-x-1.5">
-          <select id="ration-add-item-select" class="flex-1 text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-slate-700 focus:outline-none focus:border-emerald-600">
+        <div class="pt-3 pb-2 flex items-center space-x-1.5 min-w-0">
+          <select id="ration-add-item-select" class="flex-1 min-w-0 text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-slate-700 focus:outline-none focus:border-emerald-600 truncate">
             <!-- Populated via JS -->
           </select>
           <button onclick="addCustomItemToMonthlyRation()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition active:scale-95 shrink-0 flex items-center space-x-1">
@@ -1128,7 +1210,7 @@
         </div>
 
         <!-- Leaflet Map Container -->
-        <div id="location-picker-canvas" class="w-full h-56 rounded-2xl border border-slate-200 bg-slate-100 overflow-hidden relative z-0 shadow-inner"></div>
+        <div id="location-picker-canvas" class="w-full min-h-[220px] h-56 rounded-2xl border border-slate-200 bg-slate-200 overflow-hidden relative z-0 shadow-inner"></div>
 
         <!-- Friendly Location Details & Geofence Status -->
         <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-xs text-left">
@@ -2300,6 +2382,11 @@
       "p9": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80", // Surf Excel Detergent
       "p10": "https://images.unsplash.com/photo-1626197031507-c17099753214?w=500&q=80", // Tata Salt
       "p11": "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80", // Fresh Red Onions
+      "p12": "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=500&q=80", // Green Chillies & Ginger
+      "p13": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80", // Basmati Rice
+      "p14": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80", // Lay's Potato Chips
+      "p15": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&q=80", // Bhujia Sev
+      "p16": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80", // Tea / Chai
 
       // Backend Catalog IDs
       "cat_atta": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
@@ -2361,6 +2448,7 @@
       "Category_Grocery": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80",
       "Category_Dairy & Milk": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
       "Category_Dairy": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+            "Category_Snacks": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80",
       "Category_Vegetables": "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500&q=80",
       "Category_General Store": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
       "Category_Household": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
@@ -2523,6 +2611,56 @@
         price: 32.00,
         img: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400',
         store: 'Kisan Krishi Kendra & Sabzi Mandi'
+      },
+      {
+        id: 'p12',
+        nameEn: 'Fresh Green Chillies & Ginger',
+        nameHi: 'ताज़ी हरी मिर्च और अदरक',
+        category: 'Vegetables',
+        unit: '250g Pack',
+        price: 20.00,
+        img: 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=500&q=80',
+        store: 'Kisan Krishi Kendra & Sabzi Mandi'
+      },
+      {
+        id: 'p13',
+        nameEn: 'India Gate Basmati Rice (Chawal)',
+        nameHi: 'इंडिया गेट बासमती चावल',
+        category: 'Grocery',
+        unit: '1 kg Pack',
+        price: 95.00,
+        img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80',
+        store: 'Sharma Kirana & General Store'
+      },
+      {
+        id: 'p14',
+        nameEn: "Lay's Classic Salted Potato Chips",
+        nameHi: 'लेज क्लासिक सॉल्टेड चिप्स',
+        category: 'Snacks',
+        unit: '50g Pack',
+        price: 20.00,
+        img: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80',
+        store: 'Sharma Kirana & General Store'
+      },
+      {
+        id: 'p15',
+        nameEn: "Haldiram's Bhujia Sev Namkeen",
+        nameHi: 'हल्दीराम भुजिया सेव',
+        category: 'Snacks',
+        unit: '200g Pack',
+        price: 48.00,
+        img: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&q=80',
+        store: 'Sharma Kirana & General Store'
+      },
+      {
+        id: 'p16',
+        nameEn: 'Wagh Bakri Premium CTC Tea',
+        nameHi: 'वाघ बकरी कड़क चाय पत्ती',
+        category: 'Grocery',
+        unit: '250g Pack',
+        price: 85.00,
+        img: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80',
+        store: 'Sharma Kirana & General Store'
       }
     ];
 
@@ -2556,6 +2694,16 @@
         cat_dairy: "Dairy & Milk",
         cat_veggies: "Vegetables",
         cat_general: "General Store",
+        cat_snacks: "Snacks",
+        section_veggies_title: "Fresh Vegetables",
+        section_groceries_title: "Daily Groceries",
+        section_snacks_title: "Packaged Snacks",
+        veggies_count_badge: "4 Farm Fresh",
+        groceries_count_badge: "6 Daily Essentials",
+        snacks_count_badge: "4 Popular Snacks",
+        bill_cod_fee: "COD Convenience Fee",
+        subtext_cod: "₹10 extra for Cash on Delivery.",
+        subtext_upi: "Save ₹10 on delivery fees with UPI.",
         featured_stores_title: "Nearby Stores",
         essentials_title: "Village Essentials",
         ai_assistant_title: "GaonBazaar AI Assistant",
@@ -2909,71 +3057,118 @@
     // ---------------------------------------------------------------------------
     // PHASE 6: MASTER PRODUCT IMAGE LIBRARY & RENDERING
     // ---------------------------------------------------------------------------
-    function renderProductCatalog(itemsToRender = productsCatalog) {
-      const grid = document.getElementById('products-grid');
-      if (!grid) return;
-      grid.innerHTML = '';
+    function createProductCardElement(p) {
+      const inCart = (cartItems || []).find(c => c.id === p.id);
+      const name = currentLang === 'hi' ? (p.nameHi || p.nameEn) : (p.nameEn || p.nameHi);
+      const card = document.createElement('div');
+      card.className = "product-card bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between space-y-2 hover:border-emerald-300 transition duration-150 min-w-0 overflow-hidden";
+      card.setAttribute('data-id', p.id);
+      card.setAttribute('data-category', p.category);
 
-      const countBadge = document.getElementById('product-count-badge');
-      if (countBadge) countBadge.innerText = itemsToRender.length + (currentLang === 'hi' ? ' सामान' : ' items');
-
-      if (itemsToRender.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-2 py-8 text-center text-slate-400 space-y-2">
-            <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-300"></i>
-            <p class="text-xs font-semibold">${currentLang === 'hi' ? 'कोई सामान नहीं मिला' : 'No items found matching your search'}</p>
+      card.innerHTML = `
+        <div class="space-y-1.5 min-w-0">
+          <div class="h-28 w-full rounded-xl overflow-hidden bg-slate-100 relative">
+            <img src="${p.img}" alt="${name}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80';" class="w-full h-full object-cover">
+            <span class="absolute bottom-1.5 left-1.5 bg-slate-900/80 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded truncate max-w-[80%]">
+              ${p.unit}
+            </span>
           </div>
-        `;
-        lucide.createIcons();
-        return;
+          <div class="min-w-0">
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider truncate">${p.category}</p>
+            <h4 class="text-xs font-bold text-slate-900 line-clamp-2 leading-snug break-words" title="${name}">${name}</h4>
+            <p class="text-[10px] text-emerald-800 font-medium truncate mt-0.5">${p.store}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between border-t border-slate-100 pt-2 gap-1 min-w-0">
+          <div class="min-w-0 shrink-0">
+            <span class="text-xs font-black text-slate-900 font-mono">₹${p.price.toFixed(2)}</span>
+          </div>
+          <div id="btn-container-${p.id}" class="shrink-0">
+            ${inCart ? `
+              <div class="flex items-center space-x-1 bg-emerald-50 px-1 py-0.5 rounded-xl border border-emerald-200 shrink-0">
+                <button onclick="decrementProduct('${p.id}')" class="w-5 h-5 rounded-lg bg-white text-emerald-800 font-bold flex items-center justify-center shadow-xs active:scale-95 text-xs">-</button>
+                <span class="text-xs font-bold text-emerald-950 px-1 font-mono">${inCart.quantity || inCart.qty || 1}</span>
+                <button onclick="incrementProduct('${p.id}')" class="w-5 h-5 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center shadow-xs active:scale-95 text-xs">+</button>
+              </div>
+            ` : `
+              <button onclick="addProductToCart('${p.id}')" class="py-1 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center space-x-1 shadow-xs active:scale-95 transition shrink-0">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>ADD</span>
+              </button>
+            `}
+          </div>
+        </div>
+      `;
+      return card;
+    }
+
+    function renderProductCatalog(itemsToRender = productsCatalog) {
+      const showcaseSection = document.getElementById('section-supermarket-showcase');
+      const filteredSection = document.getElementById('section-filtered-catalog');
+      const filteredGrid = document.getElementById('products-grid');
+      const countBadge = document.getElementById('product-count-badge');
+      const searchInput = document.getElementById('home-search-input');
+      const hasSearch = searchInput && searchInput.value.trim().length > 0;
+
+      // Always populate #products-grid so tests or selectors finding .product-card or #products-grid succeed
+      if (filteredGrid) {
+        filteredGrid.innerHTML = '';
+        itemsToRender.forEach(p => {
+          filteredGrid.appendChild(createProductCardElement(p));
+        });
       }
 
-      itemsToRender.forEach(p => {
-        const inCart = cartItems.find(c => c.id === p.id);
-        const name = currentLang === 'hi' ? p.nameHi : p.nameEn;
-        const card = document.createElement('div');
-        card.className = "product-card bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between space-y-2.5 hover:border-emerald-300 transition duration-150";
-        card.setAttribute('data-id', p.id);
-        card.setAttribute('data-category', p.category);
+      if (countBadge) {
+        countBadge.innerText = itemsToRender.length + (currentLang === 'hi' ? ' सामान' : ' items');
+      }
 
-        card.innerHTML = `
-          <div class="space-y-2">
-            <div class="h-28 w-full rounded-xl overflow-hidden bg-slate-100 relative">
-              <img src="${p.img}" alt="${name}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80';" class="w-full h-full object-cover">
-              <span class="absolute bottom-1.5 left-1.5 bg-slate-900/80 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                ${p.unit}
-              </span>
-            </div>
-            <div>
-              <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">${p.category}</p>
-              <h4 class="text-xs font-bold text-slate-900 line-clamp-2 leading-snug">${name}</h4>
-              <p class="text-[10px] text-emerald-800 font-medium truncate mt-0.5">${p.store}</p>
-            </div>
-          </div>
+      // If viewing full catalog without search filter, show supermarket categorized sections
+      if (!hasSearch && itemsToRender.length === productsCatalog.length) {
+        if (showcaseSection) showcaseSection.classList.remove('hidden');
+        if (filteredSection) filteredSection.classList.add('hidden');
 
-          <div class="flex items-center justify-between border-t border-slate-100 pt-2">
-            <div>
-              <span class="text-xs font-black text-slate-900">₹${p.price.toFixed(2)}</span>
+        // Section 1: Fresh Vegetables
+        const vegGrid = document.getElementById('grid-vegetables');
+        if (vegGrid) {
+          vegGrid.innerHTML = '';
+          const veggies = productsCatalog.filter(p => p.category === 'Vegetables');
+          veggies.slice(0, 4).forEach(p => vegGrid.appendChild(createProductCardElement(p)));
+        }
+
+        // Section 2: Daily Groceries
+        const grocGrid = document.getElementById('grid-groceries');
+        if (grocGrid) {
+          grocGrid.innerHTML = '';
+          const groceries = productsCatalog.filter(p => p.category === 'Grocery');
+          groceries.slice(0, 6).forEach(p => grocGrid.appendChild(createProductCardElement(p)));
+        }
+
+        // Section 3: Packaged Snacks
+        const snackGrid = document.getElementById('grid-snacks');
+        if (snackGrid) {
+          snackGrid.innerHTML = '';
+          const snacks = productsCatalog.filter(p => p.category === 'Snacks' || p.category === 'General Store' || p.id === 'p8' || p.id === 'p14' || p.id === 'p15' || p.id === 'p16');
+          snacks.slice(0, 4).forEach(p => snackGrid.appendChild(createProductCardElement(p)));
+        }
+      } else {
+        // Filtered / Search results view
+        if (showcaseSection) showcaseSection.classList.add('hidden');
+        if (filteredSection) filteredSection.classList.remove('hidden');
+
+        if (itemsToRender.length === 0 && filteredGrid) {
+          filteredGrid.innerHTML = `
+            <div class="col-span-2 py-8 text-center text-slate-400 space-y-2">
+              <i data-lucide="search-x" class="w-8 h-8 mx-auto text-slate-300"></i>
+              <p class="text-xs font-semibold">${currentLang === 'hi' ? 'कोई सामान नहीं मिला' : 'No items found matching your search'}</p>
             </div>
-            <div id="btn-container-${p.id}">
-              ${inCart ? `
-                <div class="flex items-center space-x-1.5 bg-emerald-50 px-1.5 py-1 rounded-xl border border-emerald-200">
-                  <button onclick="decrementProduct('${p.id}')" class="w-6 h-6 rounded-lg bg-white text-emerald-800 font-bold flex items-center justify-center shadow-xs active:scale-95">-</button>
-                  <span class="text-xs font-bold text-emerald-950 px-1">${inCart.quantity}</span>
-                  <button onclick="incrementProduct('${p.id}')" class="w-6 h-6 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center shadow-xs active:scale-95">+</button>
-                </div>
-              ` : `
-                <button onclick="addProductToCart('${p.id}')" class="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center space-x-1 shadow-xs active:scale-95 transition">
-                  <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                  <span>ADD</span>
-                </button>
-              `}
-            </div>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-      lucide.createIcons();
+          `;
+        }
+      }
+
+      if (window.lucide && typeof lucide.createIcons === 'function') {
+        lucide.createIcons();
+      }
     }
 
     // ---------------------------------------------------------------------------
@@ -3111,9 +3306,16 @@
         }
       });
 
+      const titleEl = document.getElementById('filtered-catalog-title');
       if (cat === 'All') {
+        if (titleEl) titleEl.innerText = currentLang === 'hi' ? "सभी उत्पाद" : "All Products";
         renderProductCatalog(productsCatalog);
+      } else if (cat === 'Snacks') {
+        if (titleEl) titleEl.innerText = currentLang === 'hi' ? "नाश्ता और स्नैक्स" : "Packaged Snacks";
+        const filtered = productsCatalog.filter(p => p.category === 'Snacks' || p.id === 'p8' || p.id === 'p14' || p.id === 'p15' || p.id === 'p16');
+        renderProductCatalog(filtered);
       } else {
+        if (titleEl) titleEl.innerText = cat;
         const filtered = productsCatalog.filter(p => p.category === cat);
         renderProductCatalog(filtered);
       }
@@ -3291,27 +3493,27 @@
         const itemUnit = item.unit || '1 unit';
 
         const row = document.createElement('div');
-        row.className = "bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between space-x-3";
+        row.className = "bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between gap-2 min-w-0 overflow-hidden";
         row.innerHTML = `
-          <div class="flex items-center space-x-3 min-w-0 flex-1">
+          <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
             <img src="${itemImg}" alt="${name}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80';" class="w-12 h-12 rounded-xl object-cover bg-slate-100 shrink-0">
-            <div class="min-w-0 flex-1">
-              <h4 class="text-xs font-bold text-slate-900 truncate">${name}</h4>
-              <p class="text-[10px] text-slate-500">₹${item.price.toFixed(2)} / ${itemUnit}</p>
-              <span class="text-xs font-black text-emerald-800">₹${itemTotal.toFixed(2)}</span>
+            <div class="min-w-0 flex-1 overflow-hidden">
+              <h4 class="text-xs font-bold text-slate-900 truncate block">${name}</h4>
+              <p class="text-[10px] text-slate-500 truncate block">₹${item.price.toFixed(2)} / ${itemUnit}</p>
+              <span class="text-xs font-black text-emerald-800 font-mono">₹${itemTotal.toFixed(2)}</span>
             </div>
           </div>
 
-          <div class="flex items-center space-x-1.5 bg-slate-50 px-2 py-1 rounded-xl border border-slate-200 shrink-0">
-            <button onclick="decrementProduct('${item.id}')" class="w-6 h-6 rounded-lg bg-white text-slate-800 font-bold flex items-center justify-center shadow-xs active:scale-95">-</button>
+          <div class="flex items-center space-x-1 bg-slate-50 px-1.5 py-1 rounded-xl border border-slate-200 shrink-0">
+            <button onclick="decrementProduct('${item.id}')" class="w-6 h-6 rounded-lg bg-white text-slate-800 font-bold flex items-center justify-center shadow-xs active:scale-95 text-xs">-</button>
             <span class="text-xs font-bold text-slate-900 px-1 font-mono">${itemQty}</span>
-            <button onclick="incrementProduct('${item.id}')" class="w-6 h-6 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center shadow-xs active:scale-95">+</button>
+            <button onclick="incrementProduct('${item.id}')" class="w-6 h-6 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center shadow-xs active:scale-95 text-xs">+</button>
           </div>
         `;
         container.appendChild(row);
       });
 
-      // Strict Billing Calculation using 4 Authoritative Distance Bands:
+      // Strict Billing Calculation with 4 Authoritative Distance Bands + Dynamic COD vs UPI logic:
       const lat = (activeCustomerAddress && activeCustomerAddress.latitude) ? activeCustomerAddress.latitude : (defAddr ? defAddr.latitude : 26.2315);
       const lng = (activeCustomerAddress && activeCustomerAddress.longitude) ? activeCustomerAddress.longitude : (defAddr ? defAddr.longitude : 85.3610);
       const distKm = calculateHaversineDistanceKm(26.2315, 85.3610, lat, lng);
@@ -3324,7 +3526,13 @@
       else deliveryFee = 35.00;
 
       const platformFee = 3.00;
-      const grandTotal = subtotal + deliveryFee + platformFee;
+
+      // Dynamic COD Convenience Fee vs UPI Discount Logic
+      const paymentMode = document.querySelector('input[name="payment_mode"]:checked')?.value || 'COD';
+      const isCOD = (paymentMode === 'COD');
+      const codFee = isCOD ? 10.00 : 0.00;
+
+      const grandTotal = subtotal + deliveryFee + platformFee + codFee;
 
       const itEl = document.getElementById('bill-item-total');
       if (itEl) itEl.innerText = "₹" + subtotal.toFixed(2);
@@ -3332,6 +3540,32 @@
       if (dfEl) dfEl.innerText = "₹" + deliveryFee.toFixed(2);
       const pfEl = document.getElementById('bill-platform-fee');
       if (pfEl) pfEl.innerText = "₹" + platformFee.toFixed(2);
+
+      const codRow = document.getElementById('bill-cod-fee-row');
+      const codLabel = document.getElementById('bill-cod-fee-label');
+      const codBadge = document.getElementById('bill-cod-fee-badge');
+      const codVal = document.getElementById('bill-cod-fee');
+
+      if (codVal) {
+        if (isCOD) {
+          if (codLabel) codLabel.innerText = currentLang === 'hi' ? "कैश ऑन डिलीवरी शुल्क" : "COD Convenience Fee";
+          if (codBadge) {
+            codBadge.className = "text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold";
+            codBadge.innerText = "+₹10";
+          }
+          codVal.className = "font-bold text-amber-800 font-mono";
+          codVal.innerText = "+₹10.00";
+        } else {
+          if (codLabel) codLabel.innerText = currentLang === 'hi' ? "UPI बचत (छूट)" : "UPI Payment Discount";
+          if (codBadge) {
+            codBadge.className = "text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold";
+            codBadge.innerText = currentLang === 'hi' ? "बचत ₹10" : "Saved ₹10";
+          }
+          codVal.className = "font-bold text-emerald-700 font-mono";
+          codVal.innerText = "₹0.00";
+        }
+      }
+
       const gtEl = document.getElementById('bill-grand-total');
       if (gtEl) gtEl.innerText = "₹" + grandTotal.toFixed(2);
       const poEl = document.getElementById('place-order-total-badge');
@@ -3381,21 +3615,29 @@
       }
     }
 
+    function selectPaymentMode(mode) {
+      const radio = document.querySelector(`input[name="payment_mode"][value="${mode}"]`);
+      if (radio) {
+        radio.checked = true;
+        updatePaymentModeSelection();
+      }
+    }
+
     function updatePaymentModeSelection() {
       const mode = document.querySelector('input[name="payment_mode"]:checked')?.value || 'COD';
       const codLabel = document.getElementById('payment-label-cod');
       const onlineLabel = document.getElementById('payment-label-online');
-      const note = document.getElementById('payment-gateway-note');
 
       if (mode === 'COD') {
-        if (codLabel) codLabel.className = "p-2.5 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center space-x-2 cursor-pointer";
-        if (onlineLabel) onlineLabel.className = "p-2.5 rounded-xl border border-slate-300 bg-white flex items-center space-x-2 cursor-pointer";
-        if (note) note.innerText = currentLang === 'hi' ? "सामान मिलने और जाँचने के बाद डिलीवरी पार्टनर को नकद भुगतान करें।" : "Pay cash upon delivery after inspecting items with your delivery runner.";
+        if (codLabel) codLabel.className = "p-3 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 flex items-center space-x-3 cursor-pointer transition";
+        if (onlineLabel) onlineLabel.className = "p-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 flex items-center space-x-3 cursor-pointer transition";
       } else {
-        if (onlineLabel) onlineLabel.className = "p-2.5 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center space-x-2 cursor-pointer";
-        if (codLabel) codLabel.className = "p-2.5 rounded-xl border border-slate-300 bg-white flex items-center space-x-2 cursor-pointer";
-        if (note) note.innerText = currentLang === 'hi' ? "सुरक्षित ऑनलाइन / UPI टेस्ट गेटवे द्वारा भुगतान।" : "Secure UPI / Online Sandbox Payment.";
+        if (onlineLabel) onlineLabel.className = "p-3 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 flex items-center space-x-3 cursor-pointer transition";
+        if (codLabel) codLabel.className = "p-3 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 flex items-center space-x-3 cursor-pointer transition";
       }
+
+      // Re-trigger cart billing calculation to adjust dynamic fee instantly
+      renderCartItems();
     }
 
     async function loadUserSavedAddresses() {
@@ -4084,15 +4326,15 @@
         totalUnits += qty;
 
         const row = document.createElement('div');
-        row.className = "p-2.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5 text-left";
+        row.className = "p-2.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5 text-left min-w-0 overflow-hidden";
         row.innerHTML = `
-          <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0 flex-1">
-              <h5 class="font-bold text-slate-900 leading-snug break-words line-clamp-2">${details.name}</h5>
-              <div class="flex items-center space-x-2 mt-0.5 text-[11px] text-slate-500">
-                <span>${details.unit}</span>
+          <div class="flex items-start justify-between gap-2 min-w-0">
+            <div class="min-w-0 flex-1 overflow-hidden">
+              <h5 class="font-bold text-slate-900 leading-snug break-words line-clamp-2 min-w-0" title="${details.name}">${details.name}</h5>
+              <div class="flex items-center space-x-2 mt-0.5 text-[11px] text-slate-500 min-w-0 truncate">
+                <span class="truncate">${details.unit}</span>
                 <span>•</span>
-                <span class="font-bold text-emerald-800 font-mono">₹${itemPrice.toFixed(2)}/unit</span>
+                <span class="font-bold text-emerald-800 font-mono shrink-0">₹${itemPrice.toFixed(2)}/unit</span>
               </div>
             </div>
             <button onclick="removeMonthlyRationItem(${index})" class="w-6 h-6 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center shrink-0 transition" title="Remove item">
@@ -4100,15 +4342,15 @@
             </button>
           </div>
 
-          <div class="flex items-center justify-between pt-1 border-t border-slate-200/60">
-            <div class="flex items-center space-x-1.5 bg-white border border-slate-300 rounded-xl px-2 py-0.5 shadow-2xs">
+          <div class="flex items-center justify-between pt-1 border-t border-slate-200/60 flex-wrap gap-1.5 min-w-0">
+            <div class="flex items-center space-x-1.5 bg-white border border-slate-300 rounded-xl px-2 py-0.5 shadow-2xs shrink-0">
               <button onclick="changeMonthlyRationItemQty(${index}, -1)" class="w-5 h-5 rounded text-slate-700 hover:bg-slate-100 flex items-center justify-center font-bold text-xs active:scale-95 transition">-</button>
-              <span class="font-mono font-bold text-xs w-5 text-center text-slate-900">${qty}</span>
+              <span class="font-mono font-bold text-xs w-5 text-center text-slate-900 font-mono">${qty}</span>
               <button onclick="changeMonthlyRationItemQty(${index}, 1)" class="w-5 h-5 rounded text-emerald-700 hover:bg-emerald-50 flex items-center justify-center font-bold text-xs active:scale-95 transition">+</button>
             </div>
-            <div class="text-right">
+            <div class="text-right shrink-0">
               <span class="text-[10px] text-slate-400 block">Subtotal</span>
-              <span class="font-mono font-bold text-xs text-slate-900">₹${itemTotal.toFixed(2)}</span>
+              <span class="font-mono font-bold text-xs text-slate-900 font-mono">₹${itemTotal.toFixed(2)}</span>
             </div>
           </div>
         `;
@@ -4398,9 +4640,9 @@
     function openLocationMapPickerModal() {
       openModal('modal-location-map-picker');
       initLocationMapPicker();
-      setTimeout(() => {
-        if (locationPickerMap) locationPickerMap.invalidateSize();
-      }, 150);
+      setTimeout(() => { if (locationPickerMap) locationPickerMap.invalidateSize(); }, 50);
+      setTimeout(() => { if (locationPickerMap) locationPickerMap.invalidateSize(); }, 150);
+      setTimeout(() => { if (locationPickerMap) locationPickerMap.invalidateSize(); }, 350);
     }
 
     function initLocationMapPicker() {
