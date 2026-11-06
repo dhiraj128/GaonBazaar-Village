@@ -2369,24 +2369,85 @@
         // ===========================================================================
     // STATIC CURATED PRODUCT IMAGE CATALOG & LOOKUP (MVP STRICT MAPPING)
     // ===========================================================================
-        const IMAGE_CATALOG = {
+    const IMAGE_CATALOG = {
       // Exact Product Name Mapping
       "Aashirvaad Shudh Chakki Atta": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+      "Aashirvaad Atta": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+      "Atta": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+      "Chakki Atta": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+      "Wheat Flour": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+
       "Kachchi Ghani Mustard Oil": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+      "Fortune Kachi Ghani Mustard Oil": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+      "Mustard Oil": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+      "Sarson Tel": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+
       "Fresh Pure Cow Milk (Taaza)": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+      "Cow Milk": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+      "Milk": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+      "Doodh": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
+
       "Pure Refined White Sugar (Cheeni)": "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=500&q=80",
+      "Sugar": "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=500&q=80",
+      "White Sugar": "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=500&q=80",
+      "Cheeni": "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=500&q=80",
+
       "Red Desi Fresh Tomatoes (Tamatar)": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80",
+      "Tomatoes": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80",
+      "Tamatar": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80",
+
       "Fresh Farm Potatoes (Aloo)": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&q=80",
+      "Potatoes": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&q=80",
+      "Aloo": "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&q=80",
+
       "Arhar / Toor Dal (Desi Pulses)": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+      "Tata Sampann Unpolished Toor Dal": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+      "Toor Dal": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+      "Arhar Dal": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+      "Dal": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80",
+
       "Parle-G Glucose Biscuits": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80",
+      "Parle-G": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80",
+      "Biscuits": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80",
+
       "Surf Excel Detergent Powder": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
+      "Surf Excel Quick Wash Detergent Powder": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
+      "Detergent Powder": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
+      "Detergent": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80",
+
       "Tata Iodized Salt (Namak)": "https://images.unsplash.com/photo-1626197031507-c17099753214?w=500&q=80",
+      "Tata Salt Vacuum Evaporated": "https://images.unsplash.com/photo-1626197031507-c17099753214?w=500&q=80",
+      "Tata Salt": "https://images.unsplash.com/photo-1626197031507-c17099753214?w=500&q=80",
+      "Salt": "https://images.unsplash.com/photo-1626197031507-c17099753214?w=500&q=80",
+      "Namak": "https://images.unsplash.com/photo-1626197031507-c17099753214?w=500&q=80",
+
       "Fresh Red Onions (Pyaz)": "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80",
+      "Onions": "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80",
+      "Pyaz": "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80",
+
       "Fresh Green Chillies & Ginger": "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=500&q=80",
+      "Green Chillies": "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=500&q=80",
+      "Ginger": "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=500&q=80",
+
       "India Gate Basmati Rice (Chawal)": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
+      "Basmati Rice": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
+      "Rice": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
+      "Chawal": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
+
       "Lay's Classic Salted Potato Chips": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80",
+      "Lay's Chips": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80",
+      "Potato Chips": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80",
+      "Chips": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80",
+
       "Haldiram's Bhujia Sev Namkeen": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&q=80",
+      "Haldiram's Bhujia": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&q=80",
+      "Bhujia Sev": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&q=80",
+      "Namkeen": "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&q=80",
+
       "Wagh Bakri Premium CTC Tea": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
+      "Wagh Bakri Tea": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
+      "Chai": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
+      "Tea": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
 
       // ID Mapping
       "p1": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
@@ -2428,36 +2489,54 @@
     window.PRODUCT_IMAGE_CATALOG = IMAGE_CATALOG;
 
     function getProductImage(item, category = null) {
-      if (!item) return IMAGE_CATALOG["Aashirvaad Shudh Chakki Atta"];
-      if (typeof item === 'string') {
-        if (IMAGE_CATALOG[item]) return IMAGE_CATALOG[item];
-        const lower = item.toLowerCase();
-        for (const [k, url] of Object.entries(IMAGE_CATALOG)) {
-          if (lower === k.toLowerCase() || lower.includes(k.toLowerCase()) || k.toLowerCase().includes(lower)) {
-            return url;
+      const catalog = window.PRODUCT_IMAGE_CATALOG || window.IMAGE_CATALOG || IMAGE_CATALOG;
+      let url = null;
+      if (!item) {
+        url = catalog["Aashirvaad Shudh Chakki Atta"] || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80';
+      } else if (typeof item === 'string') {
+        if (catalog[item]) {
+          url = catalog[item];
+        } else {
+          const lower = item.toLowerCase();
+          for (const [k, u] of Object.entries(catalog)) {
+            if (lower === k.toLowerCase() || lower.includes(k.toLowerCase()) || k.toLowerCase().includes(lower)) {
+              url = u;
+              break;
+            }
           }
         }
-        return IMAGE_CATALOG["Aashirvaad Shudh Chakki Atta"];
+        if (!url) url = catalog["Aashirvaad Shudh Chakki Atta"];
+      } else {
+        const name = item.nameEn || item.name_en || item.name || '';
+        if (name && catalog[name]) {
+          url = catalog[name];
+        } else {
+          const id = item.id || item.product_id;
+          if (id && catalog[id]) {
+            url = catalog[id];
+          } else {
+            const lowerName = name.toLowerCase();
+            for (const [k, u] of Object.entries(catalog)) {
+              if (k.length > 3 && (lowerName.includes(k.toLowerCase()) || k.toLowerCase().includes(lowerName))) {
+                url = u;
+                break;
+              }
+            }
+          }
+        }
+        if (!url && item.img && typeof item.img === 'string' && item.img.startsWith('http') && !item.img.includes('undefined')) {
+          url = item.img;
+        }
+        if (!url) url = catalog["Aashirvaad Shudh Chakki Atta"];
       }
 
-      const name = item.nameEn || item.name_en || item.name || '';
-      if (name && IMAGE_CATALOG[name]) return IMAGE_CATALOG[name];
-
-      const id = item.id || item.product_id;
-      if (id && IMAGE_CATALOG[id]) return IMAGE_CATALOG[id];
-
-      const lowerName = name.toLowerCase();
-      for (const [k, url] of Object.entries(IMAGE_CATALOG)) {
-        if (k.length > 3 && (lowerName.includes(k.toLowerCase()) || k.toLowerCase().includes(lowerName))) {
-          return url;
+      if (url && typeof url === 'string') {
+        const sep = url.includes('?') ? '&' : '?';
+        if (!url.includes('v=')) {
+          url += sep + "v=" + new Date().getTime();
         }
       }
-
-      if (item.img && typeof item.img === 'string' && item.img.startsWith('http') && !item.img.includes('undefined')) {
-        return item.img;
-      }
-
-      return IMAGE_CATALOG["Aashirvaad Shudh Chakki Atta"];
+      return url;
     }
 
     window.IMAGE_CATALOG = IMAGE_CATALOG;
@@ -3029,10 +3108,16 @@
       card.setAttribute('data-id', p.id);
       card.setAttribute('data-category', p.category);
 
+            let imageUrl = (window.PRODUCT_IMAGE_CATALOG && (window.PRODUCT_IMAGE_CATALOG[p.nameEn] || window.PRODUCT_IMAGE_CATALOG[p.name] || window.PRODUCT_IMAGE_CATALOG[p.id])) || p.img || (typeof getProductImage === 'function' ? getProductImage(p) : 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80');
+      if (imageUrl && !imageUrl.includes('v=')) {
+        const sep = imageUrl.includes('?') ? '&' : '?';
+        imageUrl += sep + "v=" + new Date().getTime();
+      }
+
       card.innerHTML = `
         <div class="space-y-1.5 min-w-0">
           <div class="h-28 w-full rounded-xl overflow-hidden bg-slate-100 relative">
-            <img src="${p.img}" alt="${name}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80';" class="w-full h-full object-cover">
+            <img src="${imageUrl}" alt="${name}" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80&v=' + Date.now();" class="w-full h-full object-cover">
             <span class="absolute bottom-1.5 left-1.5 bg-slate-900/80 backdrop-blur-xs text-white text-[9px] font-bold px-1.5 py-0.5 rounded truncate max-w-[80%]">
               ${p.unit}
             </span>
@@ -3492,7 +3577,11 @@
         const itemTotal = item.price * itemQty;
         subtotal += itemTotal;
         const name = (currentLang === 'hi' && item.nameHi) ? item.nameHi : (item.nameEn || item.name);
-        const itemImg = item.img || getProductImage(item.id);
+        let itemImg = (window.PRODUCT_IMAGE_CATALOG && (window.PRODUCT_IMAGE_CATALOG[item.nameEn] || window.PRODUCT_IMAGE_CATALOG[item.name] || window.PRODUCT_IMAGE_CATALOG[item.id])) || item.img || getProductImage(item);
+        if (itemImg && !itemImg.includes('v=')) {
+          const sep = itemImg.includes('?') ? '&' : '?';
+          itemImg += sep + "v=" + new Date().getTime();
+        }
         const itemUnit = item.unit || '1 unit';
 
         const row = document.createElement('div');
