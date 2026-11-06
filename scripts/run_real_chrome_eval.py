@@ -306,7 +306,11 @@ async def run_eval_for_viewport(ws, vp):
       check(document.getElementById('ticket-photo-preview-card') !== null, 'Photo preview card exists');
       closeModal('modal-raise-ticket');
 
-      // 13. Image Verification in Catalog
+      // 13. Image Verification in Catalog & DOM Cache-Busting
+      const firstCardImg = document.querySelector('.product-card img');
+      check(firstCardImg && firstCardImg.src.includes('v='), 'Product card image DOM element has dynamic cache-busting timestamp: ' + (firstCardImg ? firstCardImg.src : 'null'));
+      const attaImg = getProductImage('Aashirvaad Shudh Chakki Atta');
+      check(attaImg.includes('1509440159596') && attaImg.includes('v='), 'getProductImage returns verified URL with cache buster: ' + attaImg);
       const chakkiAtta = productsCatalog.find(p => p.id === 'p1');
       check(chakkiAtta && chakkiAtta.img.includes('1509440159596'), 'Chakki Atta uses verified wheat flour sack URL: ' + chakkiAtta.img);
       const sugar = productsCatalog.find(p => p.id === 'p4');
