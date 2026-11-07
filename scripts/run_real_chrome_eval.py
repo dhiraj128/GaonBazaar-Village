@@ -337,6 +337,35 @@ async def run_eval_for_viewport(ws, vp):
       const allText = document.getElementById('view-account').textContent;
       check(!allText.includes('Order & Refund Help'), 'Account tab clean: Order & Refund Help pill removed');
 
+      
+      // 15. Dynamic Serviceability Verification (Silent Background 8km Check)
+      check(typeof checkServiceability === 'function', 'checkServiceability defined in global scope');
+      
+      // Test within 8km (Chaturshi / local hub coords ~0km)
+      const servNear = checkServiceability(26.2315, 85.3610);
+      check(servNear === true, 'Location within 8km is serviceable');
+      const homeBanner = document.getElementById('service-unreachable-banner');
+      const cartBanner = document.getElementById('cart-service-unreachable-banner');
+      check(homeBanner && homeBanner.classList.contains('hidden'), 'service-unreachable-banner hidden for nearby location');
+      check(cartBanner && cartBanner.classList.contains('hidden'), 'cart-service-unreachable-banner hidden for nearby location');
+
+      // Test outside 8km (~18km away)
+      const servFar = checkServiceability(26.3800, 85.5000);
+      check(servFar === false, 'Location beyond 8km is unserviceable');
+      check(homeBanner && !homeBanner.classList.contains('hidden'), 'service-unreachable-banner prominently displayed for unserviceable location');
+      check(cartBanner && !cartBanner.classList.contains('hidden'), 'cart-service-unreachable-banner prominently displayed for unserviceable location');
+      const btnPlaceEl = document.getElementById('btn-place-order');
+      check(btnPlaceEl && btnPlaceEl.disabled === true, 'Place order button disabled when outside 8km service radius');
+
+      // Reset to serviceable
+      checkServiceability(26.2315, 85.3610);
+      check(homeBanner.classList.contains('hidden'), 'service-unreachable-banner hidden after reset to serviceable');
+
+      // Static copy audit
+      const fullDocText = document.body.textContent;
+      check(!fullDocText.includes('within an 8.0 km radius'), 'No static 8.0 km radius claim in user text');
+      check(!fullDocText.includes('Accepting orders within 8km'), 'No static Accepting orders within 8km text');
+
       // 14. Final switch back to Home and scroll lock check
       switchTab('home');
       check(!document.body.classList.contains('overflow-hidden'), 'Body is free to scroll on Home tab');

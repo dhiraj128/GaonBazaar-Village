@@ -1128,7 +1128,7 @@
     <!-- MODALS -->
     <!-- ========================================================================= -->
     
-    <!-- MODAL 1: ADD PRODUCT (PROFESSIONAL ALIGNMENT & THUMBNAIL SELECTOR) -->
+    <!-- MODAL 1: ADD PRODUCT (ENTERPRISE CENTRALIZED MASTER CATALOG LIBRARY) -->
     <div id="modal-add-product" class="app-modal fixed inset-0 bg-black/60 z-50 flex items-end justify-center hidden">
       <div class="w-full max-w-lg bg-white rounded-t-2xl p-5 shadow-2xl max-h-[92vh] overflow-y-auto">
         <div class="flex items-center justify-between pb-3 border-b border-slate-200">
@@ -1138,7 +1138,7 @@
             </button>
             <div>
               <h3 class="text-base font-bold text-slate-900" data-i18n="add_new_item_title">Add Store Inventory Item</h3>
-              <p class="text-[11px] text-slate-500" data-i18n="modal_catalog_sub">Select verified product from library or add custom item</p>
+              <p class="text-[11px] text-slate-500">Centralized Product Library (Platform Verified Standards)</p>
             </div>
           </div>
           <button onclick="closeModal('modal-add-product')" class="text-slate-400 hover:text-slate-600 p-1">
@@ -1147,200 +1147,124 @@
         </div>
 
         <div class="py-3.5 space-y-4">
-          <!-- Centralized Master Catalog Quick-Search Section -->
+          <!-- STEP 1: Search Centralized Product Library -->
           <div class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200/80 space-y-2.5">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-emerald-950 flex items-center space-x-1.5">
-                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-600"></i>
-                <span data-i18n="library_search_title">Centralized Product Library (One-Click Auto-Fill)</span>
+                <i data-lucide="library" class="w-3.5 h-3.5 text-emerald-600"></i>
+                <span>Step 1: Search Centralized Product Library</span>
               </span>
-              <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full" data-i18n="verified_photos_badge">Verified Photos & MRP</span>
+              <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Locked FMCG Master SKUs</span>
             </div>
             
             <div class="relative">
               <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5"></i>
-              <input type="text" id="catalog-library-search" oninput="filterMasterCatalog()" placeholder="Search library (Atta, Oil, Milk, Sugar, Biscuits, Soap, Dal)..." data-i18n-placeholder="search_library_placeholder" class="w-full pl-8 pr-3 py-2 bg-white text-xs rounded-lg border border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 placeholder-slate-400 shadow-2xs">
+              <input type="text" id="catalog-library-search" oninput="filterMasterCatalog()" placeholder="Search library (Atta, Oil, Milk, Sugar, Biscuits, Soap, Dal)..." class="w-full pl-8 pr-3 py-2 bg-white text-xs rounded-lg border border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 placeholder-slate-400 shadow-2xs">
             </div>
 
-            <!-- Master Catalog Carousel / Results Grid -->
-            <div id="master-catalog-results" class="max-h-40 overflow-y-auto space-y-1.5 pr-1 pt-1 divide-y divide-emerald-100/60">
+            <!-- Master SKU Results List -->
+            <div id="master-catalog-results" class="max-h-48 overflow-y-auto space-y-1.5 pr-1 pt-1 divide-y divide-emerald-100/60">
               <!-- Dynamically populated by renderMasterCatalog() -->
             </div>
-            <p class="text-[10px] text-emerald-800 font-medium">Click any library item above to auto-populate product photo, brand, pack size, suggested MRP, and default category.</p>
+            <p class="text-[10px] text-emerald-800 font-medium">👉 Tap any library SKU above to auto-fill verified product name, photo, brand, and locked MRP.</p>
           </div>
 
-          <!-- Product Details Form -->
-          <div class="space-y-3">
-            <!-- Active Image Preview & Custom URL -->
-            <div class="flex items-start space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-inner">
-              <img id="add-item-preview-img" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80" alt="Product Thumbnail" class="w-16 h-16 shrink-0 rounded-xl object-cover border-2 border-emerald-600 shadow-sm">
-              <div class="flex-1 min-w-0 space-y-1">
-                <div class="flex items-center space-x-1.5">
-                  <span id="add-item-img-tag" class="text-xs font-bold text-slate-900 block truncate">Aashirvaad Shudh Chakki Atta (5kg)</span>
+          <!-- STEP 2: Selected Item Details & Vendor Pricing -->
+          <div id="selected-sku-container" class="space-y-3.5">
+            <div id="no-sku-selected-placeholder" class="p-4 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-center space-y-1">
+              <p class="text-xs font-semibold text-slate-600">No Library Product Selected</p>
+              <p class="text-[11px] text-slate-400">Search and tap an item from the Centralized Library above to set your selling price.</p>
+            </div>
+
+            <div id="sku-form-fields" class="space-y-3 hidden">
+              <!-- Locked Preview Header -->
+              <div class="flex items-start space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-xs">
+                <img id="add-item-preview-img" src="" alt="Product Thumbnail" class="w-16 h-16 shrink-0 rounded-xl object-cover border-2 border-emerald-600 shadow-sm" style="width: 64px; height: 64px; min-width: 64px; max-width: 64px; min-height: 64px; max-height: 64px; object-fit: cover;">
+                <div class="flex-1 min-w-0 space-y-1">
+                  <div class="flex items-center space-x-1.5">
+                    <span id="add-item-img-tag" class="text-xs font-bold text-slate-900 block truncate">Selected SKU</span>
+                  </div>
+                  <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full inline-flex items-center space-x-1">
+                    <i data-lucide="lock" class="w-3 h-3"></i>
+                    <span>Locked Platform Master Photo</span>
+                  </span>
+                  <p class="text-[10px] text-slate-500 font-medium" id="add-item-category-unit-tag">Grocery • 5 kg</p>
                 </div>
-                <span class="text-[11px] text-emerald-700 font-semibold block" data-i18n="img_selected_badge">✓ Verified High-Resolution Photograph Assigned</span>
-                <input type="text" id="selected-product-img-url" oninput="updateManualImagePreview(this.value)" placeholder="Image URL (Unsplash or direct CDN link)" value="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80" class="w-full px-2.5 py-1 text-[11px] font-mono text-slate-600 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-emerald-500">
-                <div class="pt-1.5 flex items-center space-x-2">
-                  <label class="inline-flex items-center space-x-1 px-2.5 py-1 bg-white border border-emerald-400 text-emerald-700 rounded-lg text-xs font-bold hover:bg-emerald-50 cursor-pointer shadow-xs transition active:scale-95">
-                    <i data-lucide="upload" class="w-3.5 h-3.5"></i>
-                    <span>Upload Image</span>
-                    <input type="file" id="vendor-product-image-upload" accept="image/*" class="hidden" onchange="handleVendorImageUpload(event)">
-                  </label>
-                  <span id="vendor-upload-filename" class="text-[10px] text-slate-500 truncate">Upload photo to override catalog</span>
-                </div>
               </div>
-            </div>
 
-            <input type="hidden" id="selected-global-catalog-id" value="">
+              <input type="hidden" id="selected-global-catalog-id" value="">
+              <input type="hidden" id="selected-product-img-url" value="">
+              <input type="hidden" id="new-item-cat" value="Grocery">
+              <input type="hidden" id="new-item-unit" value="unit">
 
-            <!-- Item Name (English & Hindi) -->
-            <div>
-              <label class="block text-xs font-bold text-slate-800 mb-1" data-i18n="item_name_label">Product Name & Variant (EN)</label>
-              <input type="text" id="new-item-name" placeholder="e.g. Aashirvaad Shudh Chakki Atta 5kg" data-i18n-placeholder="item_name_placeholder" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-emerald-600 text-slate-900 font-semibold shadow-2xs">
-            </div>
-
-            <div class="grid grid-cols-2 gap-2.5">
+              <!-- Locked Product Name -->
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="brand_label">Brand</label>
-                <input type="text" id="new-item-brand" placeholder="e.g. Aashirvaad / Amul / Local" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-emerald-600 text-slate-800">
+                <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                  <span>Product Name (Locked)</span>
+                  <span class="text-[10px] text-slate-400 flex items-center"><i data-lucide="lock" class="w-3 h-3 mr-0.5"></i> Read-only</span>
+                </label>
+                <input type="text" id="new-item-name" readonly class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 bg-slate-100 text-slate-800 font-bold cursor-not-allowed">
               </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="variant_pack_label">Pack Size / Variant</label>
-                <input type="text" id="new-item-variant" placeholder="e.g. 5 kg / 1 L / 250 g" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-emerald-600 text-slate-800">
-              </div>
-            </div>
 
-            <div class="grid grid-cols-2 gap-2.5">
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="item_cat_label">Category</label>
-                <select id="new-item-cat" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-emerald-600 text-slate-800">
-                  <option value="Grocery" data-i18n="cat_grocery">Kirana & Grocery</option>
-                  <option value="Dairy" data-i18n="cat_dairy">Dairy & Milk</option>
-                  <option value="Produce" data-i18n="cat_veggies">Produce & Veg</option>
-                  <option value="Household" data-i18n="cat_household">Household & Cleaners</option>
-                  <option value="Personal Care" data-i18n="cat_personal">Soap & Personal</option>
-                  <option value="Beverages" data-i18n="cat_beverages">Tea & Beverages</option>
-                  <option value="Snacks" data-i18n="cat_snacks">Snacks & Biscuits</option>
-                  <option value="Pooja" data-i18n="cat_pooja">Pooja & Essentials</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="unit_label">Unit of Measure</label>
-                <select id="new-item-unit" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-emerald-600 text-slate-800">
-                  <option value="kg">kg (Kilogram)</option>
-                  <option value="g">g (Gram)</option>
-                  <option value="litre">litre (L / Liter)</option>
-                  <option value="ml">ml (Milliliter)</option>
-                  <option value="packet">packet (Pack)</option>
-                  <option value="piece">piece (Pcs)</option>
-                  <option value="dozen">dozen</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Pricing & Dynamic Discount Calculation -->
-            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-800 uppercase tracking-wide" data-i18n="pricing_section_title">Pricing & Rural Discount</span>
-                <span id="discount-badge-display" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-200 text-slate-700">0% Discount</span>
-              </div>
-              
+              <!-- Locked Brand & MRP -->
               <div class="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="mrp_label">Maximum Retail Price (MRP ₹)</label>
-                  <input type="number" step="0.5" id="new-item-mrp" oninput="recalculateDiscount()" placeholder="e.g. 260" data-i18n-placeholder="mrp_placeholder" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-emerald-600 font-bold text-slate-800">
-                  <span class="text-[10px] text-slate-400 block mt-0.5" data-i18n="mrp_hint">Official printed MRP</span>
+                  <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                    <span>Brand (Locked)</span>
+                    <span class="text-[10px] text-slate-400 flex items-center"><i data-lucide="lock" class="w-3 h-3 mr-0.5"></i> Locked</span>
+                  </label>
+                  <input type="text" id="new-item-brand" readonly class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 bg-slate-100 text-slate-700 font-semibold cursor-not-allowed">
                 </div>
                 <div>
-                  <label class="block text-xs font-bold text-emerald-800 mb-1" data-i18n="selling_price_label">Your Selling Price (₹)</label>
-                  <input type="number" step="0.5" id="new-item-price" oninput="recalculateDiscount()" placeholder="e.g. 240" data-i18n-placeholder="price_placeholder" class="w-full px-3 py-2 text-xs rounded-lg border-2 border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400 font-bold text-emerald-900">
-                  <span class="text-[10px] text-emerald-700 block mt-0.5 font-medium" data-i18n="selling_price_hint">Amount customer actually pays</span>
+                  <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                    <span>MRP (Locked)</span>
+                    <span class="text-[10px] text-slate-400 flex items-center"><i data-lucide="lock" class="w-3 h-3 mr-0.5"></i> Fixed</span>
+                  </label>
+                  <div class="relative">
+                    <span class="absolute left-3 top-2 text-xs text-slate-400 font-bold">₹</span>
+                    <input type="number" id="new-item-mrp" readonly class="w-full pl-6 pr-3 py-2 text-xs rounded-lg border border-slate-200 bg-slate-100 text-slate-800 font-bold cursor-not-allowed">
+                  </div>
                 </div>
               </div>
 
-              <div id="savings-summary-box" class="text-[11px] font-semibold text-emerald-800 bg-emerald-100/70 p-2 rounded-lg flex items-center justify-between">
-                <span>Customer Savings: <strong id="savings-amount-text">₹0.00</strong></span>
-                <span id="savings-percent-text" class="text-emerald-900 font-bold">0% OFF</span>
+              <!-- Vendor Actionable Inputs: Selling Price & Stock -->
+              <div class="p-3.5 bg-emerald-50/60 rounded-xl border-2 border-emerald-300 space-y-2.5">
+                <span class="text-xs font-bold text-emerald-950 block">Step 2: Enter Your Store Selling Price & Stock</span>
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-800 mb-1">
+                      <span>Selling Price (₹) *</span>
+                    </label>
+                    <div class="relative">
+                      <span class="absolute left-3 top-2 text-xs text-emerald-700 font-bold">₹</span>
+                      <input type="number" id="new-item-price" step="0.5" min="1" oninput="recalculateDiscount()" placeholder="e.g. 240" class="w-full pl-6 pr-3 py-2 text-xs rounded-lg border-2 border-emerald-500 font-bold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 shadow-2xs">
+                    </div>
+                    <span id="discount-calc-badge" class="text-[10px] text-emerald-700 font-semibold mt-1 block"></span>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-800 mb-1">
+                      <span>Stock Quantity *</span>
+                    </label>
+                    <input type="number" id="new-item-stock" min="1" value="25" placeholder="e.g. 50" class="w-full px-3 py-2 text-xs rounded-lg border-2 border-emerald-500 font-bold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 shadow-2xs">
+                  </div>
+                </div>
+
+                <div class="pt-1 flex items-center space-x-2">
+                  <input type="checkbox" id="new-item-instock" checked class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+                  <label for="new-item-instock" class="text-xs font-medium text-slate-700">Make immediately Available / In-Stock</label>
+                </div>
               </div>
-            </div>
 
-            <!-- Stock & Availability -->
-            <div class="grid grid-cols-2 gap-2.5 pt-1">
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="stock_qty_label">Available Stock Quantity</label>
-                <input type="number" id="new-item-stock" value="50" min="0" placeholder="50" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:border-emerald-600 font-bold text-slate-800">
-              </div>
-              <div class="flex flex-col justify-end">
-                <label class="flex items-center space-x-2 p-2 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
-                  <input type="checkbox" id="new-item-instock" checked class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
-                  <span class="text-xs font-bold text-slate-800" data-i18n="immediate_instock_toggle">Mark In Stock Now</span>
-                </label>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <div class="pt-3 border-t border-slate-200 flex space-x-2.5">
-          <button type="button" onclick="closeModal('modal-add-product')" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95" data-i18n="cancel_btn">
-            Cancel
-          </button>
-          <button type="button" id="save-product-submit-btn" onclick="saveNewProduct()" class="flex-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md active:scale-95 transition flex items-center justify-center space-x-1.5" data-i18n="save_item_btn">
-            <i data-lucide="check-circle" class="w-4 h-4"></i>
-            <span>Add to Live Store</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- MODAL: PAYOUT SCHEDULE POLICY (AUTHENTIC T+1 SETTLEMENT) -->
-    <div id="modal-payout-schedule" class="app-modal fixed inset-0 bg-black/60 z-50 flex items-end justify-center hidden">
-      <div class="w-full max-w-md bg-white rounded-t-2xl p-5 shadow-2xl space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
-          <div class="flex items-center space-x-2">
-            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-              <i data-lucide="shield-check" class="w-4 h-4"></i>
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-slate-900" data-i18n="settlement_policy_title">Daily Automated Settlement</h3>
-              <p class="text-[11px] text-slate-500" data-i18n="settlement_policy_sub">Direct bank / UPI transfers</p>
-            </div>
-          </div>
-          <button onclick="closeModal('modal-payout-schedule')" class="text-slate-400 hover:text-slate-600 p-1">
-            <i data-lucide="x" class="w-5 h-5"></i>
-          </button>
-        </div>
-
-        <div class="space-y-3 text-xs">
-          <div class="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 space-y-1.5">
-            <div class="flex justify-between items-center">
-              <span class="text-emerald-900 font-bold">Unsettled Balance</span>
-              <span class="text-base font-extrabold text-emerald-700">₹4,890.00</span>
-            </div>
-            <p class="text-[11px] text-emerald-800">14 Orders verified by customer OTP delivery confirmation.</p>
-          </div>
-
-          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-            <div class="flex items-start space-x-2">
-              <i data-lucide="clock" class="w-4 h-4 text-slate-500 shrink-0 mt-0.5"></i>
-              <div>
-                <strong class="text-slate-900 block font-bold">T+1 Settlement Window</strong>
-                <p class="text-slate-600 text-[11px]">Daily batch disbursement is executed every morning at 10:00 AM directly into your registered bank account or UPI ID.</p>
-              </div>
-            </div>
-            <div class="flex items-start space-x-2 pt-1 border-t border-slate-200">
-              <i data-lucide="building" class="w-4 h-4 text-slate-500 shrink-0 mt-0.5"></i>
-              <div>
-                <strong class="text-slate-900 block font-bold">Target Settlement Account</strong>
-                <p class="text-slate-600 text-[11px]">State Bank of India (SBI) • A/C: •••• 4892 (IFSC: SBIN0001423)</p>
+              <!-- Submit CTA -->
+              <div class="pt-2">
+                <button type="button" id="btn-add-to-live-store" onclick="submitLiveStoreItem()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center space-x-2">
+                  <i data-lucide="store" class="w-4 h-4"></i>
+                  <span>Add to Live Store</span>
+                </button>
               </div>
             </div>
           </div>
         </div>
-
-        <button onclick="closeModal('modal-payout-schedule')" class="w-full py-3 bg-slate-900 hover:bg-black text-white font-bold rounded-xl text-xs transition active:scale-95">
-          Understood
-        </button>
       </div>
     </div>
 
@@ -2932,362 +2856,565 @@
     window.PRODUCT_IMAGE_CATALOG = PRODUCT_IMAGE_CATALOG;
     window.getProductImage = getProductImage;
 
-    const masterCatalog = [
+    const MASTER_SKU_DATABASE = [
       {
-        id: "cat_atta_01",
-        name: "Aashirvaad Shudh Chakki Atta",
-        brand: "Aashirvaad",
-        variant: "5 kg",
-        category: "Grocery",
-        unit: "kg",
-        mrp: 260.0,
-        suggested_price: 240.0,
-        image: PRODUCT_IMAGE_CATALOG["atta"]
+            "id": "sku_atta_01",
+            "product_name": "Aashirvaad Shudh Chakki Atta (5 kg)",
+            "brand": "Aashirvaad",
+            "variant": "5 kg",
+            "category": "Grocery",
+            "unit": "5 kg",
+            "mrp": 260.0,
+            "suggested_price": 240.0,
+            "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"
       },
       {
-        id: "cat_atta_02",
-        name: "Aashirvaad Shudh Chakki Atta",
-        brand: "Aashirvaad",
-        variant: "10 kg",
-        category: "Grocery",
-        unit: "kg",
-        mrp: 495.0,
-        suggested_price: 465.0,
-        image: PRODUCT_IMAGE_CATALOG["atta"]
+            "id": "sku_atta_02",
+            "product_name": "Aashirvaad Shudh Chakki Atta (10 kg)",
+            "brand": "Aashirvaad",
+            "variant": "10 kg",
+            "category": "Grocery",
+            "unit": "10 kg",
+            "mrp": 495.0,
+            "suggested_price": 465.0,
+            "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"
       },
       {
-        id: "cat_oil_01",
-        name: "Fortune Sunlite Refined Sunflower Oil",
-        brand: "Fortune",
-        variant: "1 L",
-        category: "Grocery",
-        unit: "litre",
-        mrp: 155.0,
-        suggested_price: 140.0,
-        image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80"
+            "id": "sku_maida_01",
+            "product_name": "Shakti Bhog Premium Maida (1 kg)",
+            "brand": "Shakti Bhog",
+            "variant": "1 kg",
+            "category": "Grocery",
+            "unit": "1 kg",
+            "mrp": 48.0,
+            "suggested_price": 42.0,
+            "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"
       },
       {
-        id: "cat_oil_02",
-        name: "Fortune Sunlite Refined Sunflower Oil",
-        brand: "Fortune",
-        variant: "5 L",
-        category: "Grocery",
-        unit: "litre",
-        mrp: 750.0,
-        suggested_price: 690.0,
-        image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80"
+            "id": "sku_suji_01",
+            "product_name": "Rajdhani Fine Suji / Rava (500 g)",
+            "brand": "Rajdhani",
+            "variant": "500 g",
+            "category": "Grocery",
+            "unit": "500 g",
+            "mrp": 35.0,
+            "suggested_price": 30.0,
+            "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"
       },
       {
-        id: "cat_oil_03",
-        name: "Fortune Kachi Ghani Mustard Oil",
-        brand: "Fortune",
-        variant: "1 L",
-        category: "Grocery",
-        unit: "litre",
-        mrp: 165.0,
-        suggested_price: 145.0,
-        image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80"
+            "id": "sku_besan_01",
+            "product_name": "Fortune Pure Chana Dal Besan (1 kg)",
+            "brand": "Fortune",
+            "variant": "1 kg",
+            "category": "Grocery",
+            "unit": "1 kg",
+            "mrp": 110.0,
+            "suggested_price": 95.0,
+            "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"
       },
       {
-        id: "cat_milk_01",
-        name: "Amul Taaza Homogenised Toned Milk",
-        brand: "Amul",
-        variant: "500 ml",
-        category: "Dairy",
-        unit: "ml",
-        mrp: 28.0,
-        suggested_price: 28.0,
-        image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80"
+            "id": "sku_oil_01",
+            "product_name": "Fortune Kachi Ghani Mustard Oil (1 L)",
+            "brand": "Fortune",
+            "variant": "1 L",
+            "category": "Grocery",
+            "unit": "1 L",
+            "mrp": 165.0,
+            "suggested_price": 145.0,
+            "image_url": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"
       },
       {
-        id: "cat_milk_02",
-        name: "Amul Taaza Homogenised Toned Milk",
-        brand: "Amul",
-        variant: "1 L",
-        category: "Dairy",
-        unit: "litre",
-        mrp: 56.0,
-        suggested_price: 56.0,
-        image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80"
+            "id": "sku_oil_02",
+            "product_name": "Fortune Sunlite Refined Sunflower Oil (1 L)",
+            "brand": "Fortune",
+            "variant": "1 L",
+            "category": "Grocery",
+            "unit": "1 L",
+            "mrp": 155.0,
+            "suggested_price": 140.0,
+            "image_url": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"
       },
       {
-        id: "cat_milk_03",
-        name: "Amul Gold Full Cream Milk",
-        brand: "Amul",
-        variant: "500 ml",
-        category: "Dairy",
-        unit: "ml",
-        mrp: 34.0,
-        suggested_price: 34.0,
-        image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80"
+            "id": "sku_oil_03",
+            "product_name": "Engine Brand Pure Mustard Oil Tin (5 L)",
+            "brand": "Engine",
+            "variant": "5 L",
+            "category": "Grocery",
+            "unit": "5 L",
+            "mrp": 780.0,
+            "suggested_price": 720.0,
+            "image_url": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"
       },
       {
-        id: "cat_milk_04",
-        name: "Amul Gold Full Cream Milk",
-        brand: "Amul",
-        variant: "1 L",
-        category: "Dairy",
-        unit: "litre",
-        mrp: 68.0,
-        suggested_price: 68.0,
-        image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80"
+            "id": "sku_ghee_01",
+            "product_name": "Amul Pure Cow Ghee Tin (1 L)",
+            "brand": "Amul",
+            "variant": "1 L",
+            "category": "Dairy",
+            "unit": "1 L",
+            "mrp": 650.0,
+            "suggested_price": 610.0,
+            "image_url": "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=500&q=80"
       },
       {
-        id: "cat_sugar_01",
-        name: "Madhur Pure & Hygienic Sugar",
-        brand: "Madhur",
-        variant: "1 kg",
-        category: "Grocery",
-        unit: "kg",
-        mrp: 50.0,
-        suggested_price: 45.0,
-        image: PRODUCT_IMAGE_CATALOG["sugar"]
+            "id": "sku_ghee_02",
+            "product_name": "Patanjali Desi Cow Ghee (500 ml)",
+            "brand": "Patanjali",
+            "variant": "500 ml",
+            "category": "Dairy",
+            "unit": "500 ml",
+            "mrp": 340.0,
+            "suggested_price": 315.0,
+            "image_url": "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=500&q=80"
       },
       {
-        id: "cat_sugar_02",
-        name: "Madhur Pure & Hygienic Sugar",
-        brand: "Madhur",
-        variant: "5 kg",
-        category: "Grocery",
-        unit: "kg",
-        mrp: 245.0,
-        suggested_price: 220.0,
-        image: PRODUCT_IMAGE_CATALOG["sugar"]
+            "id": "sku_milk_01",
+            "product_name": "Amul Taaza Toned Fresh Milk (500 ml)",
+            "brand": "Amul",
+            "variant": "500 ml",
+            "category": "Dairy",
+            "unit": "500 ml",
+            "mrp": 28.0,
+            "suggested_price": 28.0,
+            "image_url": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80"
       },
       {
-        id: "cat_salt_01",
-        name: "Tata Salt Vacuum Evaporated Iodised Salt",
-        brand: "Tata",
-        variant: "1 kg",
-        category: "Grocery",
-        unit: "kg",
-        mrp: 28.0,
-        suggested_price: 26.0,
-        image: PRODUCT_IMAGE_CATALOG["salt"]
+            "id": "sku_milk_02",
+            "product_name": "Amul Gold Full Cream Milk (1 L)",
+            "brand": "Amul",
+            "variant": "1 L",
+            "category": "Dairy",
+            "unit": "1 L",
+            "mrp": 68.0,
+            "suggested_price": 68.0,
+            "image_url": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80"
       },
       {
-        id: "cat_tea_01",
-        name: "Tata Tea Gold Leaf",
-        brand: "Tata",
-        variant: "250 g",
-        category: "Beverages",
-        unit: "g",
-        mrp: 140.0,
-        suggested_price: 110.0,
-        image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&q=80"
+            "id": "sku_curd_01",
+            "product_name": "Amul Masti Dahi Pouch (400 g)",
+            "brand": "Amul",
+            "variant": "400 g",
+            "category": "Dairy",
+            "unit": "400 g",
+            "mrp": 35.0,
+            "suggested_price": 35.0,
+            "image_url": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80"
       },
       {
-        id: "cat_tea_02",
-        name: "Tata Tea Gold Leaf",
-        brand: "Tata",
-        variant: "500 g",
-        category: "Beverages",
-        unit: "g",
-        mrp: 275.0,
-        suggested_price: 225.0,
-        image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&q=80"
+            "id": "sku_paneer_01",
+            "product_name": "Amul Fresh Malai Paneer (200 g)",
+            "brand": "Amul",
+            "variant": "200 g",
+            "category": "Dairy",
+            "unit": "200 g",
+            "mrp": 95.0,
+            "suggested_price": 90.0,
+            "image_url": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80"
       },
       {
-        id: "cat_tea_03",
-        name: "Brooke Bond Red Label Tea",
-        brand: "Red Label",
-        variant: "250 g",
-        category: "Beverages",
-        unit: "g",
-        mrp: 130.0,
-        suggested_price: 115.0,
-        image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&q=80"
+            "id": "sku_sugar_01",
+            "product_name": "Pure Refined White Sugar / Cheeni (1 kg)",
+            "brand": "Uttam",
+            "variant": "1 kg",
+            "category": "Grocery",
+            "unit": "1 kg",
+            "mrp": 48.0,
+            "suggested_price": 44.0,
+            "image_url": "https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=500&q=80"
       },
       {
-        id: "cat_tea_04",
-        name: "Brooke Bond Red Label Tea",
-        brand: "Red Label",
-        variant: "500 g",
-        category: "Beverages",
-        unit: "g",
-        mrp: 255.0,
-        suggested_price: 220.0,
-        image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&q=80"
+            "id": "sku_sugar_02",
+            "product_name": "Pure Refined White Sugar / Cheeni (5 kg)",
+            "brand": "Uttam",
+            "variant": "5 kg",
+            "category": "Grocery",
+            "unit": "5 kg",
+            "mrp": 240.0,
+            "suggested_price": 215.0,
+            "image_url": "https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=500&q=80"
       },
       {
-        id: "cat_bisc_01",
-        name: "Parle-G Original Gluco Biscuits",
-        brand: "Parle-G",
-        variant: "250 g",
-        category: "Snacks",
-        unit: "packet",
-        mrp: 25.0,
-        suggested_price: 22.0,
-        image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400&q=80"
+            "id": "sku_jaggery_01",
+            "product_name": "Desi Organic Gur / Jaggery (1 kg)",
+            "brand": "Village Organic",
+            "variant": "1 kg",
+            "category": "Grocery",
+            "unit": "1 kg",
+            "mrp": 65.0,
+            "suggested_price": 55.0,
+            "image_url": "https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=500&q=80"
       },
       {
-        id: "cat_bisc_02",
-        name: "Parle-G Original Gluco Biscuits",
-        brand: "Parle-G",
-        variant: "800 g",
-        category: "Snacks",
-        unit: "packet",
-        mrp: 80.0,
-        suggested_price: 70.0,
-        image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400&q=80"
+            "id": "sku_salt_01",
+            "product_name": "Tata Salt Vacuum Evaporated (1 kg)",
+            "brand": "Tata",
+            "variant": "1 kg",
+            "category": "Grocery",
+            "unit": "1 kg",
+            "mrp": 30.0,
+            "suggested_price": 28.0,
+            "image_url": "https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=500&q=80"
       },
       {
-        id: "cat_bisc_03",
-        name: "Britannia Good Day Butter Cookies",
-        brand: "Britannia",
-        variant: "200 g",
-        category: "Snacks",
-        unit: "packet",
-        mrp: 40.0,
-        suggested_price: 35.0,
-        image: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400&q=80"
+            "id": "sku_salt_02",
+            "product_name": "Catch Sendha Namak / Rock Salt (500 g)",
+            "brand": "Catch",
+            "variant": "500 g",
+            "category": "Grocery",
+            "unit": "500 g",
+            "mrp": 40.0,
+            "suggested_price": 35.0,
+            "image_url": "https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=500&q=80"
       },
       {
-        id: "cat_det_01",
-        name: "Surf Excel Quick Wash Detergent Powder",
-        brand: "Surf Excel",
-        variant: "1 kg",
-        category: "Household",
-        unit: "kg",
-        mrp: 145.0,
-        suggested_price: 130.0,
-        image: PRODUCT_IMAGE_CATALOG["detergent"]
+            "id": "sku_dal_01",
+            "product_name": "Tata Sampann Unpolished Toor Dal (1 kg)",
+            "brand": "Tata Sampann",
+            "variant": "1 kg",
+            "category": "Grocery",
+            "unit": "1 kg",
+            "mrp": 185.0,
+            "suggested_price": 165.0,
+            "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80"
       },
       {
-        id: "cat_det_02",
-        name: "Rin Detergent Bar",
-        brand: "Rin",
-        variant: "250 g",
-        category: "Household",
-        unit: "piece",
-        mrp: 20.0,
-        suggested_price: 18.0,
-        image: PRODUCT_IMAGE_CATALOG["detergent"]
+            "id": "sku_dal_02",
+            "product_name": "Tata Sampann Moong Dal Dhuli (1 kg)",
+            "brand": "Tata Sampann",
+            "variant": "1 kg",
+            "category": "Grocery",
+            "unit": "1 kg",
+            "mrp": 150.0,
+            "suggested_price": 135.0,
+            "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80"
       },
       {
-        id: "cat_soap_01",
-        name: "Dettol Original Bathing Soap",
-        brand: "Dettol",
-        variant: "75 g",
-        category: "Household",
-        unit: "piece",
-        mrp: 38.0,
-        suggested_price: 34.0,
-        image: "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=400&q=80"
+            "id": "sku_dal_03",
+            "product_name": "Rajdhani Desi Chana Dal (1 kg)",
+            "brand": "Rajdhani",
+            "variant": "1 kg",
+            "category": "Grocery",
+            "unit": "1 kg",
+            "mrp": 100.0,
+            "suggested_price": 88.0,
+            "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80"
       },
       {
-        id: "cat_soap_02",
-        name: "Dettol Original Bathing Soap",
-        brand: "Dettol",
-        variant: "125 g",
-        category: "Household",
-        unit: "piece",
-        mrp: 60.0,
-        suggested_price: 52.0,
-        image: "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=400&q=80"
+            "id": "sku_dal_04",
+            "product_name": "Tata Sampann Masoor Dal Malka (1 kg)",
+            "brand": "Tata Sampann",
+            "variant": "1 kg",
+            "category": "Grocery",
+            "unit": "1 kg",
+            "mrp": 115.0,
+            "suggested_price": 105.0,
+            "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80"
       },
       {
-        id: "cat_soap_03",
-        name: "Lifebuoy Total Soap",
-        brand: "Lifebuoy",
-        variant: "125 g",
-        category: "Household",
-        unit: "piece",
-        mrp: 38.0,
-        suggested_price: 35.0,
-        image: "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=400&q=80"
+            "id": "sku_dal_05",
+            "product_name": "Kabuli Chana Premium Desi (1 kg)",
+            "brand": "Fortune",
+            "variant": "1 kg",
+            "category": "Grocery",
+            "unit": "1 kg",
+            "mrp": 160.0,
+            "suggested_price": 145.0,
+            "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80"
       },
       {
-        id: "cat_paste_01",
-        name: "Colgate Strong Teeth Dental Cream",
-        brand: "Colgate",
-        variant: "100 g",
-        category: "Personal Care",
-        unit: "g",
-        mrp: 62.0,
-        suggested_price: 55.0,
-        image: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=400&q=80"
+            "id": "sku_rice_01",
+            "product_name": "India Gate Basmati Rice Rozzana (1 kg)",
+            "brand": "India Gate",
+            "variant": "1 kg",
+            "category": "Grocery",
+            "unit": "1 kg",
+            "mrp": 110.0,
+            "suggested_price": 95.0,
+            "image_url": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80"
       },
       {
-        id: "cat_paste_02",
-        name: "Colgate Strong Teeth Dental Cream",
-        brand: "Colgate",
-        variant: "200 g",
-        category: "Personal Care",
-        unit: "g",
-        mrp: 115.0,
-        suggested_price: 102.0,
-        image: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=400&q=80"
+            "id": "sku_rice_02",
+            "product_name": "Fortune Everyday Basmati Rice (5 kg)",
+            "brand": "Fortune",
+            "variant": "5 kg",
+            "category": "Grocery",
+            "unit": "5 kg",
+            "mrp": 460.0,
+            "suggested_price": 420.0,
+            "image_url": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80"
       },
       {
-        id: "cat_veg_01",
-        name: "Fresh Local Potatoes (Aloo)",
-        brand: "Farm Fresh",
-        variant: "1 kg",
-        category: "Produce",
-        unit: "kg",
-        mrp: 30.0,
-        suggested_price: 25.0,
-        image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&q=80"
+            "id": "sku_rice_03",
+            "product_name": "Kolam Steamed Daily Rice (5 kg)",
+            "brand": "Golden Crop",
+            "variant": "5 kg",
+            "category": "Grocery",
+            "unit": "5 kg",
+            "mrp": 270.0,
+            "suggested_price": 250.0,
+            "image_url": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80"
       },
       {
-        id: "cat_veg_02",
-        name: "Fresh Red Onions (Pyaz)",
-        brand: "Farm Fresh",
-        variant: "1 kg",
-        category: "Produce",
-        unit: "kg",
-        mrp: 40.0,
-        suggested_price: 35.0,
-        image: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&q=80"
+            "id": "sku_spice_01",
+            "product_name": "MDH Deggi Mirch Red Chilli Powder (100 g)",
+            "brand": "MDH",
+            "variant": "100 g",
+            "category": "Grocery",
+            "unit": "100 g",
+            "mrp": 82.0,
+            "suggested_price": 75.0,
+            "image_url": "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=500&q=80"
       },
       {
-        id: "cat_veg_03",
-        name: "Fresh Desi Tomatoes (Tamatar)",
-        brand: "Farm Fresh",
-        variant: "1 kg",
-        category: "Produce",
-        unit: "kg",
-        mrp: 35.0,
-        suggested_price: 30.0,
-        image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&q=80"
+            "id": "sku_spice_02",
+            "product_name": "Catch Pure Haldi / Turmeric Powder (200 g)",
+            "brand": "Catch",
+            "variant": "200 g",
+            "category": "Grocery",
+            "unit": "200 g",
+            "mrp": 55.0,
+            "suggested_price": 48.0,
+            "image_url": "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=500&q=80"
       },
       {
-        id: "cat_dal_01",
-        name: "Desi Toor / Arhar Dal",
-        brand: "Desi Dal",
-        variant: "1 kg",
-        category: "Grocery",
-        unit: "kg",
-        mrp: 155.0,
-        suggested_price: 140.0,
-        image: PRODUCT_IMAGE_CATALOG["dal"]
+            "id": "sku_spice_03",
+            "product_name": "MDH Dhaniya / Coriander Powder (200 g)",
+            "brand": "MDH",
+            "variant": "200 g",
+            "category": "Grocery",
+            "unit": "200 g",
+            "mrp": 52.0,
+            "suggested_price": 46.0,
+            "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80"
       },
       {
-        id: "cat_dal_02",
-        name: "Dhuli Moong Dal Split",
-        brand: "Desi Dal",
-        variant: "1 kg",
-        category: "Grocery",
-        unit: "kg",
-        mrp: 130.0,
-        suggested_price: 118.0,
-        image: PRODUCT_IMAGE_CATALOG["dal"]
+            "id": "sku_spice_04",
+            "product_name": "MDH Authentic Garam Masala (100 g)",
+            "brand": "MDH",
+            "variant": "100 g",
+            "category": "Grocery",
+            "unit": "100 g",
+            "mrp": 86.0,
+            "suggested_price": 78.0,
+            "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80"
       },
       {
-        id: "cat_dal_03",
-        name: "Desi Chana Dal",
-        brand: "Desi Dal",
-        variant: "1 kg",
-        category: "Grocery",
-        unit: "kg",
-        mrp: 100.0,
-        suggested_price: 90.0,
-        image: PRODUCT_IMAGE_CATALOG["dal"]
+            "id": "sku_spice_05",
+            "product_name": "Catch Whole Jeera / Cumin Seeds (100 g)",
+            "brand": "Catch",
+            "variant": "100 g",
+            "category": "Grocery",
+            "unit": "100 g",
+            "mrp": 68.0,
+            "suggested_price": 58.0,
+            "image_url": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80"
+      },
+      {
+            "id": "sku_tea_01",
+            "product_name": "Wagh Bakri Premium CTC Leaf Tea (500 g)",
+            "brand": "Wagh Bakri",
+            "variant": "500 g",
+            "category": "Grocery",
+            "unit": "500 g",
+            "mrp": 270.0,
+            "suggested_price": 245.0,
+            "image_url": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80"
+      },
+      {
+            "id": "sku_tea_02",
+            "product_name": "Tata Tea Gold Strong Leaf (250 g)",
+            "brand": "Tata Tea",
+            "variant": "250 g",
+            "category": "Grocery",
+            "unit": "250 g",
+            "mrp": 160.0,
+            "suggested_price": 145.0,
+            "image_url": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80"
+      },
+      {
+            "id": "sku_bisc_01",
+            "product_name": "Parle-G Glucose Family Biscuit (800 g)",
+            "brand": "Parle",
+            "variant": "800 g",
+            "category": "Snacks",
+            "unit": "800 g",
+            "mrp": 80.0,
+            "suggested_price": 70.0,
+            "image_url": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80"
+      },
+      {
+            "id": "sku_bisc_02",
+            "product_name": "Britannia Marie Gold Biscuit (250 g)",
+            "brand": "Britannia",
+            "variant": "250 g",
+            "category": "Snacks",
+            "unit": "250 g",
+            "mrp": 40.0,
+            "suggested_price": 35.0,
+            "image_url": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80"
+      },
+      {
+            "id": "sku_bisc_03",
+            "product_name": "Britannia Good Day Cashew Cookies (200 g)",
+            "brand": "Britannia",
+            "variant": "200 g",
+            "category": "Snacks",
+            "unit": "200 g",
+            "mrp": 50.0,
+            "suggested_price": 45.0,
+            "image_url": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80"
+      },
+      {
+            "id": "sku_snk_01",
+            "product_name": "Haldiram's Bhujia Sev Namkeen (200 g)",
+            "brand": "Haldiram's",
+            "variant": "200 g",
+            "category": "Snacks",
+            "unit": "200 g",
+            "mrp": 55.0,
+            "suggested_price": 50.0,
+            "image_url": "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=500&q=80"
+      },
+      {
+            "id": "sku_snk_02",
+            "product_name": "Lay's Classic Salted Potato Chips (50 g)",
+            "brand": "Lay's",
+            "variant": "50 g",
+            "category": "Snacks",
+            "unit": "50 g",
+            "mrp": 20.0,
+            "suggested_price": 20.0,
+            "image_url": "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80"
+      },
+      {
+            "id": "sku_det_01",
+            "product_name": "Surf Excel Quick Wash Detergent (1 kg)",
+            "brand": "Surf Excel",
+            "variant": "1 kg",
+            "category": "General Store",
+            "unit": "1 kg",
+            "mrp": 145.0,
+            "suggested_price": 130.0,
+            "image_url": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80"
+      },
+      {
+            "id": "sku_det_02",
+            "product_name": "Ghadi Detergent Powder Pack (1 kg)",
+            "brand": "Ghadi",
+            "variant": "1 kg",
+            "category": "General Store",
+            "unit": "1 kg",
+            "mrp": 72.0,
+            "suggested_price": 65.0,
+            "image_url": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80"
+      },
+      {
+            "id": "sku_det_03",
+            "product_name": "Vim Dishwash Bar Family Pack (3x150 g)",
+            "brand": "Vim",
+            "variant": "3x150 g",
+            "category": "General Store",
+            "unit": "Pack",
+            "mrp": 50.0,
+            "suggested_price": 45.0,
+            "image_url": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80"
+      },
+      {
+            "id": "sku_care_01",
+            "product_name": "Lifebuoy Total Germ Protection Soap (4x100 g)",
+            "brand": "Lifebuoy",
+            "variant": "4x100 g",
+            "category": "General Store",
+            "unit": "Pack",
+            "mrp": 110.0,
+            "suggested_price": 98.0,
+            "image_url": "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80"
+      },
+      {
+            "id": "sku_care_02",
+            "product_name": "Dettol Original Bathing Soap (3x100 g)",
+            "brand": "Dettol",
+            "variant": "3x100 g",
+            "category": "General Store",
+            "unit": "Pack",
+            "mrp": 130.0,
+            "suggested_price": 115.0,
+            "image_url": "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80"
+      },
+      {
+            "id": "sku_care_03",
+            "product_name": "Colgate Strong Teeth Toothpaste (150 g)",
+            "brand": "Colgate",
+            "variant": "150 g",
+            "category": "General Store",
+            "unit": "150 g",
+            "mrp": 98.0,
+            "suggested_price": 88.0,
+            "image_url": "https://images.unsplash.com/photo-1559599101-f09722fb4948?w=500&q=80"
+      },
+      {
+            "id": "sku_care_04",
+            "product_name": "Clinic Plus Strong & Long Shampoo (175 ml)",
+            "brand": "Clinic Plus",
+            "variant": "175 ml",
+            "category": "General Store",
+            "unit": "175 ml",
+            "mrp": 110.0,
+            "suggested_price": 95.0,
+            "image_url": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80"
+      },
+      {
+            "id": "sku_house_01",
+            "product_name": "All Out Mosquito Liquid Vaporizer Refill (45 ml)",
+            "brand": "All Out",
+            "variant": "45 ml",
+            "category": "General Store",
+            "unit": "Refill",
+            "mrp": 85.0,
+            "suggested_price": 78.0,
+            "image_url": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80"
+      },
+      {
+            "id": "sku_house_02",
+            "product_name": "Safety Matches Wax Matchbox (Pack of 10)",
+            "brand": "Homelites",
+            "variant": "Pack of 10",
+            "category": "General Store",
+            "unit": "Pack",
+            "mrp": 20.0,
+            "suggested_price": 20.0,
+            "image_url": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80"
+      },
+      {
+            "id": "sku_house_03",
+            "product_name": "Mangaldeep Sandal Agarbatti (Pack of 50)",
+            "brand": "Mangaldeep",
+            "variant": "Pack of 50",
+            "category": "General Store",
+            "unit": "Pack",
+            "mrp": 40.0,
+            "suggested_price": 35.0,
+            "image_url": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80"
       }
-    ];
+];
+    window.MASTER_SKU_DATABASE = MASTER_SKU_DATABASE;
+    const RURAL_50_STAPLES = MASTER_SKU_DATABASE;
+    window.RURAL_50_STAPLES = RURAL_50_STAPLES;
 
+
+    const masterCatalog = MASTER_SKU_DATABASE.map(s => ({
+      id: s.id,
+      name: s.product_name,
+      brand: s.brand,
+      variant: s.variant,
+      category: s.category,
+      unit: s.unit || s.variant,
+      mrp: s.mrp,
+      suggested_price: s.suggested_price || s.mrp,
+      image: s.image_url
+    }));
     let liveCatalog = [...masterCatalog];
+
 
     // Load extra catalog items from backend asynchronously
     async function loadGlobalCatalog() {
@@ -3321,255 +3448,338 @@
       const container = document.getElementById('master-catalog-results');
       if (!container) return;
       const q = filterText.trim().toLowerCase();
-      const filtered = liveCatalog.filter(item => {
+      const skus = (window.MASTER_SKU_DATABASE && Array.isArray(window.MASTER_SKU_DATABASE)) ? window.MASTER_SKU_DATABASE : MASTER_SKU_DATABASE;
+      const filtered = skus.filter(item => {
         if (!q) return true;
-        return (
-          item.name.toLowerCase().includes(q) ||
-          item.brand.toLowerCase().includes(q) ||
-          item.category.toLowerCase().includes(q) ||
-          item.variant.toLowerCase().includes(q)
-        );
+        const nameMatch = (item.product_name || item.name || '').toLowerCase().includes(q);
+        const brandMatch = (item.brand || '').toLowerCase().includes(q);
+        const catMatch = (item.category || '').toLowerCase().includes(q);
+        const varMatch = (item.variant || item.unit || '').toLowerCase().includes(q);
+        return nameMatch || brandMatch || catMatch || varMatch;
       });
 
       if (filtered.length === 0) {
         container.innerHTML = `
           <div class="p-3 text-center text-slate-400 text-xs">
-            No matching library products found. You can enter details manually below!
+            No matching Master SKUs found in library.
           </div>
         `;
         return;
       }
 
-      container.innerHTML = filtered.map(item => `
-        <div onclick='selectCatalogItem(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="p-2 hover:bg-emerald-100/70 rounded-lg cursor-pointer flex items-center justify-between gap-2.5 transition active:scale-98">
-          <div class="flex items-center space-x-2.5 min-w-0 flex-1">
-            <img src="${item.image}" alt="${item.name}" class="w-10 h-10 shrink-0 rounded-md object-cover border border-emerald-300" style="width: 40px; height: 40px; min-width: 40px; max-width: 40px; min-height: 40px; max-height: 40px; object-fit: cover;">
-            <div class="min-w-0 flex-1">
-              <h5 class="text-xs font-bold text-slate-900 truncate">${item.name}</h5>
-              <div class="flex items-center space-x-1.5 text-[10px] text-slate-500">
-                <span class="font-semibold text-emerald-700">${item.brand}</span>
-                <span>•</span>
-                <span>${item.variant}</span>
-                <span>•</span>
-                <span>${item.category}</span>
+      container.innerHTML = filtered.map(item => {
+        const itemImg = item.image_url || item.image || item.img;
+        const itemName = item.product_name || item.name;
+        const itemPrice = item.suggested_price || item.price || item.mrp;
+        const itemVariant = item.variant || item.unit || "";
+        return `
+          <div onclick='selectCatalogItem(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="p-2 hover:bg-emerald-100/70 rounded-lg cursor-pointer flex items-center justify-between gap-2.5 transition active:scale-98">
+            <div class="flex items-center space-x-2.5 min-w-0 flex-1">
+              <img src="${itemImg}" alt="${itemName}" class="w-10 h-10 shrink-0 rounded-md object-cover border border-emerald-300" style="width: 40px; height: 40px; min-width: 40px; max-width: 40px; min-height: 40px; max-height: 40px; object-fit: cover;">
+              <div class="min-w-0 flex-1">
+                <h5 class="text-xs font-bold text-slate-900 truncate">${itemName}</h5>
+                <div class="flex items-center space-x-1.5 text-[10px] text-slate-500">
+                  <span class="font-semibold text-emerald-700">${item.brand || ''}</span>
+                  <span>•</span>
+                  <span>${itemVariant}</span>
+                  <span>•</span>
+                  <span>${item.category || 'Grocery'}</span>
+                </div>
               </div>
             </div>
+            <div class="text-right shrink-0">
+              <span class="text-xs font-extrabold text-emerald-800 block">₹${Number(itemPrice).toFixed(2)}</span>
+              <span class="text-[9px] text-slate-400 line-through">MRP ₹${Number(item.mrp).toFixed(2)}</span>
+            </div>
           </div>
-          <div class="text-right shrink-0">
-            <span class="text-xs font-extrabold text-emerald-800 block">₹${item.suggested_price.toFixed(2)}</span>
-            <span class="text-[9px] text-slate-400 line-through">MRP ₹${item.mrp.toFixed(2)}</span>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+      if (window.lucide) lucide.createIcons();
     }
 
     function filterMasterCatalog() {
-      const query = document.getElementById('catalog-library-search').value;
+      const query = document.getElementById('catalog-library-search')?.value || '';
       renderMasterCatalog(query);
     }
 
     function selectCatalogItem(item) {
-      document.getElementById('selected-global-catalog-id').value = item.id || "";
-      document.getElementById('new-item-name').value = `${item.name} ${item.variant}`;
-      document.getElementById('new-item-brand').value = item.brand || "";
-      document.getElementById('new-item-variant').value = item.variant || "";
-      document.getElementById('new-item-cat').value = item.category || "Grocery";
-      document.getElementById('new-item-unit').value = item.unit || "kg";
-      document.getElementById('new-item-mrp').value = item.mrp;
-      document.getElementById('new-item-price').value = item.suggested_price || item.mrp;
-      
-      const imgUrlInput = document.getElementById('selected-product-img-url');
-      if (imgUrlInput) imgUrlInput.value = item.image;
-      
+      if (!item) return;
+      const skuId = item.id || "";
+      const itemName = item.product_name || item.name;
+      const itemBrand = item.brand || "";
+      const itemVariant = item.variant || item.unit || "";
+      const itemCategory = item.category || "Grocery";
+      const itemMrp = item.mrp || 0;
+      const itemSuggested = item.suggested_price || item.price || item.mrp;
+      const itemImg = item.image_url || item.image || item.img;
+
+      const placeholder = document.getElementById('no-sku-selected-placeholder');
+      const formFields = document.getElementById('sku-form-fields');
+      if (placeholder) placeholder.classList.add('hidden');
+      if (formFields) formFields.classList.remove('hidden');
+
+      document.getElementById('selected-global-catalog-id').value = skuId;
+      document.getElementById('selected-product-img-url').value = itemImg;
+      document.getElementById('new-item-cat').value = itemCategory;
+      document.getElementById('new-item-unit').value = itemVariant;
+
+      // Locked inputs
+      document.getElementById('new-item-name').value = itemName;
+      document.getElementById('new-item-brand').value = itemBrand;
+      document.getElementById('new-item-mrp').value = itemMrp;
+
+      // Vendor editable inputs
+      document.getElementById('new-item-price').value = itemSuggested;
+      document.getElementById('new-item-stock').value = 25;
+
       const previewImg = document.getElementById('add-item-preview-img');
-      if (previewImg) previewImg.src = item.image;
-      
+      if (previewImg) previewImg.src = itemImg;
+
       const imgTag = document.getElementById('add-item-img-tag');
-      if (imgTag) imgTag.innerText = `${item.name} (${item.variant})`;
+      if (imgTag) imgTag.innerText = itemName;
+
+      const catTag = document.getElementById('add-item-category-unit-tag');
+      if (catTag) catTag.innerText = `${itemCategory} • ${itemVariant} • Fixed MRP ₹${itemMrp}`;
 
       recalculateDiscount();
-      toastSuccess(`Loaded "${item.name}" from library!`);
+      if (window.lucide) lucide.createIcons();
+      toastSuccess(`Loaded "${itemName}" from Master Library!`);
     }
 
-    function updateManualImagePreview(url) {
-      const preview = document.getElementById('add-item-preview-img');
-      if (preview && url) {
-        preview.src = url;
+    function submitLiveStoreItem() {
+      const skuId = document.getElementById('selected-global-catalog-id')?.value;
+      const skus = (window.MASTER_SKU_DATABASE && Array.isArray(window.MASTER_SKU_DATABASE)) ? window.MASTER_SKU_DATABASE : MASTER_SKU_DATABASE;
+      const sku = skus.find(s => s.id === skuId);
+      if (!sku) {
+        toastError(currentLang === 'hi' ? "कृपया पहले लाइब्रेरी से एक सामान चुनें" : "Please select a product from Master SKU Library first");
+        return;
       }
+
+      const price = parseFloat(document.getElementById('new-item-price')?.value) || 0;
+      const stock = parseInt(document.getElementById('new-item-stock')?.value, 10) || 0;
+      const inStock = document.getElementById('new-item-instock')?.checked ?? true;
+
+      if (price <= 0) {
+        toastError(currentLang === 'hi' ? "कृपया मान्य विक्रय मूल्य दर्ज करें" : "Please enter a valid Selling Price (> ₹0)");
+        return;
+      }
+      if (sku.mrp > 0 && price > sku.mrp) {
+        toastError(currentLang === 'hi' ? "विक्रय मूल्य एमआरपी से अधिक नहीं हो सकता" : `Selling Price cannot exceed MRP (₹${sku.mrp})`);
+        return;
+      }
+      if (stock <= 0) {
+        toastError(currentLang === 'hi' ? "कृपया मान्य स्टॉक मात्रा दर्ज करें" : "Please enter a valid Stock Quantity (>= 1)");
+        return;
+      }
+
+      const itemName = sku.product_name || sku.name;
+      const itemImg = sku.image_url || sku.image || sku.img;
+      const itemVariant = sku.variant || sku.unit || "";
+
+      let inventory = getVendorInventory();
+      const existingIdx = inventory.findIndex(item => (item.sku_id === sku.id || item.id === sku.id || ((item.title || item.name || '').toLowerCase() === itemName.toLowerCase())));
+      const productItem = {
+        id: existingIdx >= 0 ? inventory[existingIdx].id : "prod_" + Date.now(),
+        sku_id: sku.id,
+        title: itemName,
+        name: itemName,
+        product_name: itemName,
+        brand: sku.brand || "",
+        variant: itemVariant,
+        category: sku.category || "Grocery",
+        unit: itemVariant,
+        mrp: sku.mrp,
+        price: price,
+        stock: stock,
+        stock_quantity: stock,
+        in_stock: inStock,
+        img: itemImg,
+        image_url: itemImg
+      };
+
+      if (existingIdx >= 0) {
+        inventory[existingIdx] = productItem;
+      } else {
+        inventory.unshift(productItem);
+      }
+
+      saveVendorInventory(inventory);
+      if (typeof renderInventory === 'function') {
+        renderInventory();
+      }
+      closeModal('modal-add-product');
+      toastSuccess(`✓ "${itemName}" added to Live Store at ₹${price.toFixed(2)}!`);
+
+      // Attempt background save to backend
+      try {
+        apiRequest('/api/v1/vendor/products', 'POST', {
+          global_product_id: sku.id,
+          custom_name_en: itemName,
+          custom_name_hi: itemName,
+          category: sku.category || "Grocery",
+          unit: itemVariant,
+          price: price,
+          mrp: sku.mrp,
+          image_url: itemImg,
+          stock_quantity: stock,
+          in_stock: inStock
+        }).catch(() => {});
+      } catch (e) {}
     }
 
     function recalculateDiscount() {
-      const mrp = parseFloat(document.getElementById('new-item-mrp').value) || 0;
-      const price = parseFloat(document.getElementById('new-item-price').value) || 0;
-      const badge = document.getElementById('discount-badge-display');
-      const amt = document.getElementById('savings-amount-text');
-      const pct = document.getElementById('savings-percent-text');
-
+      const mrp = parseFloat(document.getElementById('new-item-mrp')?.value) || 0;
+      const price = parseFloat(document.getElementById('new-item-price')?.value) || 0;
+      const badge = document.getElementById('discount-calc-badge');
+      if (!badge) return;
       if (mrp > 0 && price > 0 && mrp > price) {
-        const discount = Math.max(0, Math.round(((mrp - price) / mrp) * 100));
-        const diff = (mrp - price).toFixed(2);
-        if (badge) {
-          badge.innerText = `${discount}% OFF (Save ₹${diff})`;
-          badge.className = "px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800";
-        }
-        if (amt) amt.innerText = `₹${diff}`;
-        if (pct) pct.innerText = `${discount}% OFF`;
+        const pct = Math.round(((mrp - price) / mrp) * 100);
+        badge.innerText = `✓ ${pct}% Discount below MRP (₹${(mrp - price).toFixed(0)} savings for customer)`;
+        badge.className = "text-[10px] text-emerald-700 font-semibold mt-1 block";
+      } else if (price > mrp && mrp > 0) {
+        badge.innerText = `⚠️ Price cannot exceed MRP!`;
+        badge.className = "text-[10px] text-rose-600 font-semibold mt-1 block";
       } else {
-        if (badge) {
-          badge.innerText = "0% Discount (MRP = Selling Price)";
-          badge.className = "px-2 py-0.5 rounded text-[11px] font-bold bg-slate-200 text-slate-700";
-        }
-        if (amt) amt.innerText = `₹0.00`;
-        if (pct) pct.innerText = `0% OFF`;
+        badge.innerText = `Selling at MRP`;
+        badge.className = "text-[10px] text-slate-500 font-semibold mt-1 block";
       }
     }
+    window.recalculateDiscount = recalculateDiscount;
 
-    // Toggle Product Stock with Real Backend Persistence
-    async function toggleProductStock(checkbox, productId, productName) {
-      const isChecked = checkbox.checked;
-      const parent = checkbox.closest('.product-item');
-      const label = parent ? parent.querySelector('.stock-label') : null;
-
-      try {
-        await apiRequest(`/api/v1/stores/products/${productId}/stock`, 'PATCH', {
-          in_stock: isChecked
-        });
-        if (label) {
-          if (isChecked) {
-            label.innerText = i18n[currentLang]?.in_stock_label || "IN STOCK";
-            label.className = "stock-label text-[10px] font-bold text-emerald-600 block mt-0.5";
-          } else {
-            label.innerText = i18n[currentLang]?.out_of_stock_label || "OUT OF STOCK";
-            label.className = "stock-label text-[10px] font-bold text-rose-500 block mt-0.5";
-          }
-        }
-        toastSuccess(`${productName} is now marked ${isChecked ? "IN STOCK" : "OUT OF STOCK"}`);
-      } catch (err) {
-        console.warn("Stock API call notice:", err);
-        // Maintain UI state
-        if (label) {
-          if (isChecked) {
-            label.innerText = i18n[currentLang]?.in_stock_label || "IN STOCK";
-            label.className = "stock-label text-[10px] font-bold text-emerald-600 block mt-0.5";
-          } else {
-            label.innerText = i18n[currentLang]?.out_of_stock_label || "OUT OF STOCK";
-            label.className = "stock-label text-[10px] font-bold text-rose-500 block mt-0.5";
-          }
-        }
-        toastSuccess(`${productName} is now marked ${isChecked ? "IN STOCK" : "OUT OF STOCK"}`);
-      }
+    function openAddProductModal() {
+      const searchInput = document.getElementById('catalog-library-search');
+      if (searchInput) searchInput.value = "";
+      renderMasterCatalog("");
+      const placeholder = document.getElementById('no-sku-selected-placeholder');
+      const formFields = document.getElementById('sku-form-fields');
+      if (placeholder) placeholder.classList.remove('hidden');
+      if (formFields) formFields.classList.add('hidden');
+      recalculateDiscount();
+      openModal('modal-add-product');
     }
-
-    function filterInventory() {
-      const query = document.getElementById('inventory-search').value.toLowerCase();
-      document.querySelectorAll('.product-item').forEach(item => {
-        const title = (item.getAttribute('data-title') || "").toLowerCase();
-        const cat = (item.getAttribute('data-category') || "").toLowerCase();
-        if (title.includes(query) || cat.includes(query)) {
-          item.classList.remove('hidden');
-        } else {
-          item.classList.add('hidden');
-        }
-      });
-    }
-
-        function handleVendorImageUpload(e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const dataUrl = evt.target.result;
-        const preview = document.getElementById('add-item-preview-img');
-        const urlInput = document.getElementById('selected-product-img-url');
-        const filenameEl = document.getElementById('vendor-upload-filename');
-        if (preview) preview.src = dataUrl;
-        if (urlInput) urlInput.value = dataUrl;
-        if (filenameEl) filenameEl.innerText = file.name;
-        toastSuccess("Custom product image loaded successfully!");
-      };
-      reader.readAsDataURL(file);
-    }
-    window.handleVendorImageUpload = handleVendorImageUpload;
 
     
-    // ===========================================================================
-    // 50 PRE-POPULATED RURAL ESSENTIALS & BULK ONBOARDING LOGIC
-    // ===========================================================================
-    const RURAL_50_STAPLES = [
-      // Atta & Flours
-      { id: "r_atta_01", name: "Aashirvaad Shudh Chakki Atta", brand: "Aashirvaad", variant: "5 kg", price: 240, mrp: 260, category: "Grocery", img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80" },
-      { id: "r_atta_02", name: "Aashirvaad Shudh Chakki Atta", brand: "Aashirvaad", variant: "10 kg", price: 465, mrp: 495, category: "Grocery", img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80" },
-      { id: "r_maida_01", name: "Shakti Bhog Premium Maida", brand: "Shakti Bhog", variant: "1 kg", price: 42, mrp: 48, category: "Grocery", img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80" },
-      { id: "r_suji_01", name: "Rajdhani Fine Suji (Rava)", brand: "Rajdhani", variant: "500 g", price: 30, mrp: 35, category: "Grocery", img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80" },
-      { id: "r_besan_01", name: "Fortune Pure Chana Dal Besan", brand: "Fortune", variant: "1 kg", price: 95, mrp: 110, category: "Grocery", img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80" },
 
-      // Cooking Oils & Ghee
-      { id: "r_oil_01", name: "Fortune Kachi Ghani Mustard Oil", brand: "Fortune", variant: "1 L", price: 145, mrp: 165, category: "Grocery", img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80" },
-      { id: "r_oil_02", name: "Fortune Sunlite Refined Oil", brand: "Fortune", variant: "1 L", price: 140, mrp: 155, category: "Grocery", img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80" },
-      { id: "r_oil_03", name: "Engine Brand Mustard Oil Tin", brand: "Engine", variant: "5 L", price: 720, mrp: 780, category: "Grocery", img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80" },
-      { id: "r_ghee_01", name: "Amul Pure Cow Ghee Tin", brand: "Amul", variant: "1 L", price: 610, mrp: 650, category: "Dairy", img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80" },
+    // Save Product with Strict Transactional Backend Persistence & 48px Geometry
+    async function saveNewProduct() {
+      const name = document.getElementById('new-item-name').value.trim();
+      const brand = document.getElementById('new-item-brand').value.trim();
+      const variant = document.getElementById('new-item-variant').value.trim();
+      const cat = document.getElementById('new-item-cat').value;
+      const unit = document.getElementById('new-item-unit').value;
+      const mrp = parseFloat(document.getElementById('new-item-mrp').value) || 0;
+      const price = parseFloat(document.getElementById('new-item-price').value) || 0;
+      const stock = parseInt(document.getElementById('new-item-stock').value, 10) || 0;
+      const inStock = document.getElementById('new-item-instock').checked;
+      const imgUrl = document.getElementById('selected-product-img-url').value.trim() || "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80";
+      const globalId = document.getElementById('selected-global-catalog-id').value || null;
 
-      // Milk & Dairy
-      { id: "r_milk_01", name: "Amul Taaza Toned Fresh Milk", brand: "Amul", variant: "500 ml", price: 28, mrp: 28, category: "Dairy", img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80" },
-      { id: "r_milk_02", name: "Amul Gold Full Cream Milk", brand: "Amul", variant: "1 L", price: 68, mrp: 68, category: "Dairy", img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80" },
-      { id: "r_curd_01", name: "Amul Masti Dahi Pouch", brand: "Amul", variant: "400 g", price: 35, mrp: 35, category: "Dairy", img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80" },
-      { id: "r_paneer_01", name: "Amul Fresh Malai Paneer", brand: "Amul", variant: "200 g", price: 90, mrp: 95, category: "Dairy", img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80" },
+      if (!name) {
+        toastError(currentLang === 'hi' ? "कृपया सामान का नाम दर्ज करें" : "Please enter Product Name");
+        return;
+      }
+      if (price <= 0) {
+        toastError(currentLang === 'hi' ? "कृपया मान्य विक्रय मूल्य दर्ज करें" : "Please enter valid Selling Price (> ₹0)");
+        return;
+      }
+      if (mrp > 0 && price > mrp) {
+        toastError(currentLang === 'hi' ? "विक्रय मूल्य एमआरपी से अधिक नहीं हो सकता" : "Selling Price cannot exceed MRP");
+        return;
+      }
 
-      // Sugar & Salt
-      { id: "r_sugar_01", name: "Pure Refined White Sugar (Cheeni)", brand: "Uttam", variant: "1 kg", price: 44, mrp: 48, category: "Grocery", img: "https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=500&q=80" },
-      { id: "r_sugar_02", name: "Pure Refined White Sugar (Cheeni)", brand: "Uttam", variant: "5 kg", price: 215, mrp: 240, category: "Grocery", img: "https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=500&q=80" },
-      { id: "r_jaggery_01", name: "Desi Organic Gur / Jaggery", brand: "Village Organic", variant: "1 kg", price: 55, mrp: 65, category: "Grocery", img: "https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=500&q=80" },
-      { id: "r_salt_01", name: "Tata Salt Vacuum Evaporated", brand: "Tata", variant: "1 kg", price: 28, mrp: 30, category: "Grocery", img: "https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=500&q=80" },
-      { id: "r_salt_02", name: "Sendha Namak (Rock Salt)", brand: "Catch", variant: "500 g", price: 35, mrp: 40, category: "Grocery", img: "https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=500&q=80" },
+      const effectiveMrp = mrp > 0 ? mrp : price;
+      const discountPct = (effectiveMrp > price) ? Math.max(0, Math.round(((effectiveMrp - price) / effectiveMrp) * 100)) : 0;
 
-      // Dal & Pulses
-      { id: "r_dal_01", name: "Tata Sampann Unpolished Toor Dal", brand: "Tata Sampann", variant: "1 kg", price: 165, mrp: 185, category: "Grocery", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80" },
-      { id: "r_dal_02", name: "Tata Sampann Moong Dal Dhuli", brand: "Tata Sampann", variant: "1 kg", price: 135, mrp: 150, category: "Grocery", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80" },
-      { id: "r_dal_03", name: "Chana Dal Premium Desi", brand: "Rajdhani", variant: "1 kg", price: 88, mrp: 100, category: "Grocery", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80" },
-      { id: "r_dal_04", name: "Masoor Dal (Malka)", brand: "Tata Sampann", variant: "1 kg", price: 95, mrp: 110, category: "Grocery", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80" },
-      { id: "r_dal_05", name: "Kabuli Chana (White Chickpeas)", brand: "Rajdhani", variant: "1 kg", price: 145, mrp: 160, category: "Grocery", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80" },
-      { id: "r_dal_06", name: "Kala Chana (Brown Chickpeas)", brand: "Rajdhani", variant: "1 kg", price: 82, mrp: 95, category: "Grocery", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80" },
+      const btn = document.getElementById('save-product-submit-btn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="inline-block animate-spin mr-1.5">⏳</span>Saving to Server...`;
+      }
 
-      // Rice & Grains
-      { id: "r_rice_01", name: "India Gate Basmati Rice Rozzana", brand: "India Gate", variant: "1 kg", price: 95, mrp: 115, category: "Grocery", img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80" },
-      { id: "r_rice_02", name: "India Gate Basmati Rice Rozzana", brand: "India Gate", variant: "5 kg", price: 440, mrp: 495, category: "Grocery", img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80" },
-      { id: "r_poha_01", name: "Rajdhani Thick Poha", brand: "Rajdhani", variant: "500 g", price: 34, mrp: 40, category: "Grocery", img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80" },
+      let savedProduct = null;
+      try {
+        const payload = {
+          global_product_id: globalId,
+          custom_name_en: name,
+          custom_name_hi: name,
+          category: cat,
+          unit: variant || unit,
+          price: price,
+          mrp: effectiveMrp,
+          image_url: imgUrl,
+          stock_quantity: stock,
+          in_stock: inStock
+        };
 
-      // Spices & Condiments
-      { id: "r_spice_01", name: "MDH Haldi (Turmeric Powder)", brand: "MDH", variant: "200 g", price: 48, mrp: 54, category: "Grocery", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80" },
-      { id: "r_spice_02", name: "MDH Deggi Mirch (Red Chilli)", brand: "MDH", variant: "100 g", price: 52, mrp: 58, category: "Grocery", img: "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=500&q=80" },
-      { id: "r_spice_03", name: "MDH Dhaniya (Coriander Powder)", brand: "MDH", variant: "200 g", price: 46, mrp: 52, category: "Grocery", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80" },
-      { id: "r_spice_04", name: "MDH Garam Masala", brand: "MDH", variant: "100 g", price: 78, mrp: 86, category: "Grocery", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80" },
-      { id: "r_spice_05", name: "Catch Whole Jeera (Cumin Seeds)", brand: "Catch", variant: "100 g", price: 58, mrp: 68, category: "Grocery", img: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80" },
+        savedProduct = await apiRequest('/api/v1/vendor/products', 'POST', payload);
+      } catch (err) {
+        console.error("Backend product save error:", err);
+        // TRANSACTIONAL INTEGRITY: Never show successful save if the API fails
+        toastError(currentLang === 'hi'
+          ? ("सामान जोड़ने में विफल: " + (err.message || "सर्वर त्रुटि"))
+          : ("Failed to add product: " + (err.message || "Server error. Please retry.")));
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 mr-1.5"></i>Add to Live Store`;
+          lucide.createIcons();
+        }
+        return; // PRESERVES ENTERED DATA IN FORM
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 mr-1.5"></i>Add to Live Store`;
+        }
+      }
 
-      // Tea & Beverages
-      { id: "r_tea_01", name: "Wagh Bakri Premium CTC Leaf Tea", brand: "Wagh Bakri", variant: "500 g", price: 245, mrp: 270, category: "Grocery", img: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80" },
-      { id: "r_tea_02", name: "Tata Tea Gold Strong Leaf", brand: "Tata Tea", variant: "250 g", price: 145, mrp: 160, category: "Grocery", img: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80" },
+      const backendProdId = (savedProduct && savedProduct.id) ? savedProduct.id : ("prod_" + Date.now());
 
-      // Biscuits & Packaged Snacks
-      { id: "r_bisc_01", name: "Parle-G Glucose Family Pack", brand: "Parle", variant: "800 g", price: 70, mrp: 80, category: "Snacks", img: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80" },
-      { id: "r_bisc_02", name: "Britannia Marie Gold Biscuit", brand: "Britannia", variant: "250 g", price: 35, mrp: 40, category: "Snacks", img: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80" },
-      { id: "r_bisc_03", name: "Britannia Good Day Cashew", brand: "Britannia", variant: "200 g", price: 45, mrp: 50, category: "Snacks", img: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80" },
-      { id: "r_snk_01", name: "Haldiram's Bhujia Sev Namkeen", brand: "Haldiram's", variant: "200 g", price: 50, mrp: 55, category: "Snacks", img: "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=500&q=80" },
-      { id: "r_snk_02", name: "Lay's Classic Salted Potato Chips", brand: "Lay's", variant: "50 g", price: 20, mrp: 20, category: "Snacks", img: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80" },
-      { id: "r_snk_03", name: "Kurkure Masala Munch Crisps", brand: "Kurkure", variant: "85 g", price: 20, mrp: 20, category: "Snacks", img: "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=500&q=80" },
+      // Prepend to Live UI Product Cards List with Exact 48px Geometry
+      const list = document.getElementById('inventory-list');
+      const newCard = document.createElement('div');
+      newCard.className = "product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden";
+      newCard.setAttribute('data-id', backendProdId);
+      newCard.setAttribute('data-title', name);
+      newCard.setAttribute('data-category', cat);
+      
+      const discountMarkup = discountPct > 0 
+        ? `<span class="text-[10px] text-slate-400 line-through">₹${effectiveMrp.toFixed(2)}</span>
+           <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">${discountPct}% OFF</span>`
+        : `<span class="text-[10px] text-slate-400 font-semibold">MRP ₹${effectiveMrp.toFixed(2)}</span>`;
 
-      // Laundry & Cleaning
-      { id: "r_det_01", name: "Surf Excel Quick Wash Detergent", brand: "Surf Excel", variant: "1 kg", price: 130, mrp: 145, category: "General Store", img: "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80" },
-      { id: "r_det_02", name: "Ghadi Detergent Powder Pack", brand: "Ghadi", variant: "1 kg", price: 65, mrp: 72, category: "General Store", img: "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80" },
-      { id: "r_det_03", name: "Vim Dishwash Bar Family Pack", brand: "Vim", variant: "3x150 g", price: 45, mrp: 50, category: "General Store", img: "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80" },
+      newCard.innerHTML = `
+        <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
+          <img src="${imgUrl}" alt="${name}" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
+          <div class="min-w-0 flex-1 overflow-hidden">
+            <div class="flex items-center space-x-1 min-w-0">
+              <h4 class="text-xs font-bold text-slate-900 truncate">${name}</h4>
+              ${variant ? `<span class="text-[10px] text-slate-500 font-medium shrink-0">(${variant})</span>` : ''}
+            </div>
+            <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
+              <span class="text-xs font-extrabold text-slate-900">₹${price.toFixed(2)}</span>
+              ${discountMarkup}
+            </div>
+            <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
+              <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">${stock} units</strong></span>
+              <span class="text-slate-300">•</span>
+              <span class="stock-label font-bold ${inStock ? 'text-emerald-600' : 'text-rose-500'} block">
+                ${inStock ? (i18n[currentLang]?.in_stock_label || "IN STOCK") : (i18n[currentLang]?.out_of_stock_label || "OUT OF STOCK")}
+              </span>
+            </div>
+          </div>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
+          <input type="checkbox" ${inStock ? 'checked' : ''} onchange="toggleProductStock(this, '${backendProdId}', '${name.replace(/'/g, "\\'")}')" class="sr-only peer">
+          <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+        </label>
+      `;
 
-      // Personal Care & Household
-      { id: "r_care_01", name: "Lifebuoy Total Germ Protection Soap", brand: "Lifebuoy", variant: "4x100 g", price: 98, mrp: 110, category: "General Store", img: "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80" },
-      { id: "r_care_02", name: "Dettol Original Bathing Soap", brand: "Dettol", variant: "3x100 g", price: 115, mrp: 130, category: "General Store", img: "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80" },
-      { id: "r_care_03", name: "Colgate Strong Teeth Toothpaste", brand: "Colgate", variant: "150 g", price: 88, mrp: 98, category: "General Store", img: "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80" },
-      { id: "r_care_04", name: "Clinic Plus Strong & Long Shampoo", brand: "Clinic Plus", variant: "175 ml", price: 95, mrp: 110, category: "General Store", img: "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80" },
-      { id: "r_house_01", name: "All Out Mosquito Liquid Refill", brand: "All Out", variant: "45 ml", price: 78, mrp: 85, category: "General Store", img: "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80" },
-      { id: "r_house_02", name: "Safety Matches Wax Matchbox", brand: "Homelites", variant: "Pack of 10", price: 20, mrp: 20, category: "General Store", img: "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80" },
-      { id: "r_house_03", name: "Mangaldeep Sandal Agarbatti", brand: "Mangaldeep", variant: "Pack of 50", price: 35, mrp: 40, category: "General Store", img: "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80" }
-    ];
+      list.prepend(newCard);
+      closeModal('modal-add-product');
+      toastSuccess(name + (currentLang === 'hi' ? " इन्वेंटरी में सफलतापूर्वक जोड़ दिया गया!" : " added to live store inventory!"));
+      lucide.createIcons();
+    }
 
-    // Master Catalog UI Handlers
+    // ---------------------------------------------------------------------------
     function openMasterCatalogModal() {
       openModal('modal-master-catalog');
       renderMasterCatalogToggleList();
@@ -3872,6 +4082,8 @@ function openAddProductModal() {
       toastSuccess(name + (currentLang === 'hi' ? " इन्वेंटरी में सफलतापूर्वक जोड़ दिया गया!" : " added to live store inventory!"));
       lucide.createIcons();
     }
+
+    
 
     // ---------------------------------------------------------------------------
     // TAB 3: LEDGER ACTIONS (AUTHENTIC SETTLEMENT)
