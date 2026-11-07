@@ -41,6 +41,8 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <!-- Leaflet Map CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Google Maps JavaScript API (Rural Hybrid Satellite View) -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc&libraries=places,geometry&loading=async" async defer></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 
@@ -78,12 +80,10 @@
     #location-picker-canvas {
       min-height: 220px;
       width: 100%;
-      background-color: #e2e8f0;
-      background-image: 
-        radial-gradient(#94a3b8 1.5px, transparent 1.5px),
-        linear-gradient(to right, rgba(203, 213, 225, 0.4) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(203, 213, 225, 0.4) 1px, transparent 1px);
-      background-size: 24px 24px;
+      background-color: #0f172a;
+    }
+    #location-picker-canvas img {
+      max-width: none !important;
     }
   </style>
 </head>
@@ -1219,7 +1219,7 @@
             </button>
             <div>
               <h3 class="text-xs font-bold text-slate-900" data-i18n="map_picker_title">Select Delivery Location</h3>
-              <p class="text-[10px] text-slate-500">Drag marker or tap map to set doorstep</p>
+              <p class="text-[10px] text-slate-500">Hybrid Satellite View • Drag pin to your doorstep</p>
             </div>
           </div>
           <div class="flex items-center space-x-1.5">
@@ -4980,63 +4980,105 @@ function createProductCardElement(p) {
 
     function openLocationMapPickerModal() {
       openModal('modal-location-map-picker');
-      initLocationMapPicker();
-      setTimeout(() => { if (locationPickerMap) locationPickerMap.invalidateSize(); }, 50);
-      setTimeout(() => { if (locationPickerMap) locationPickerMap.invalidateSize(); }, 150);
-      setTimeout(() => { if (locationPickerMap) locationPickerMap.invalidateSize(); }, 350);
+      // Delay map initialization until container is attached and visible in DOM
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          initLocationMapPicker();
+        }, 120);
+      });
     }
 
     function initLocationMapPicker() {
       const container = document.getElementById('location-picker-canvas');
-      if (!container || typeof L === 'undefined') return;
+      if (!container) return;
 
-      const initLat = selectedPickerLat || activeCustomerAddress.latitude || window.detectedLatitude || 26.2315;
-      const initLng = selectedPickerLng || activeCustomerAddress.longitude || window.detectedLongitude || 85.3610;
+      const initLat = Number(selectedPickerLat || (activeCustomerAddress && activeCustomerAddress.latitude) || window.detectedLatitude || 26.2315);
+      const initLng = Number(selectedPickerLng || (activeCustomerAddress && activeCustomerAddress.longitude) || window.detectedLongitude || 85.3610);
 
       selectedPickerLat = initLat;
       selectedPickerLng = initLng;
 
-      if (!locationPickerMap) {
-        locationPickerMap = L.map('location-picker-canvas', {
-          zoomControl: true,
-          attributionControl: false
-        }).setView([initLat, initLng], 15);
+      if (typeof google === 'undefined' || !google.maps || !google.maps.Map) {
+        console.warn("Google Maps SDK loading, waiting for initialization...");
+        setTimeout(initLocationMapPicker, 150);
+        return;
+      }
+
+      const mapOptions = {
+        center: { lat: initLat, lng: initLng },
+        zoom: 18,
+        mapTypeId: google.maps.MapTypeId.HYBRID,
+        zoomControl: true,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        rotateControl: false,
+        scaleControl: true,
+        gestureHandling: 'greedy'
+      };
+
+      if (!locationPickerMap || typeof locationPickerMap.setCenter !== 'function') {
+        locationPickerMap = new google.maps.Map(container, mapOptions);
         window.locationPickerMap = locationPickerMap;
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19
-        }).addTo(locationPickerMap);
-
-        const customPin = L.divIcon({
-          className: 'custom-pin-icon',
-          html: '<div style="background-color: #059669; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.35);">📍</div>',
-          iconSize: [34, 34],
-          iconAnchor: [17, 34]
-        });
-
-        locationPickerMarker = L.marker([initLat, initLng], {
+        locationPickerMarker = new google.maps.Marker({
+          position: { lat: initLat, lng: initLng },
+          map: locationPickerMap,
           draggable: true,
-          icon: customPin
-        }).addTo(locationPickerMap);
-
-        locationPickerMarker.on('dragend', function (e) {
-          const pos = e.target.getLatLng();
-          selectedPickerLat = pos.lat;
-          selectedPickerLng = pos.lng;
-          updatePickerGeofence(pos.lat, pos.lng);
+          animation: google.maps.Animation.DROP,
+          title: "Drag to pin delivery doorstep"
         });
 
-        locationPickerMap.on('click', function (e) {
-          selectedPickerLat = e.latlng.lat;
-          selectedPickerLng = e.latlng.lng;
-          locationPickerMarker.setLatLng(e.latlng);
-          updatePickerGeofence(e.latlng.lat, e.latlng.lng);
+        locationPickerMarker.addListener('dragend', function (e) {
+          const lat = e.latLng.lat();
+          const lng = e.latLng.lng();
+          selectedPickerLat = lat;
+          selectedPickerLng = lng;
+          updatePickerGeofence(lat, lng);
         });
+
+        locationPickerMap.addListener('click', function (e) {
+          const lat = e.latLng.lat();
+          const lng = e.latLng.lng();
+          selectedPickerLat = lat;
+          selectedPickerLng = lng;
+          if (locationPickerMarker) {
+            locationPickerMarker.setPosition(e.latLng);
+          }
+          updatePickerGeofence(lat, lng);
+        });
+
+        if (window.ResizeObserver && !window._pickerResizeObs) {
+          window._pickerResizeObs = new ResizeObserver(() => {
+            if (locationPickerMap && typeof locationPickerMap.setCenter === 'function') {
+              google.maps.event.trigger(locationPickerMap, 'resize');
+            }
+          });
+          window._pickerResizeObs.observe(container);
+        }
       } else {
-        locationPickerMap.invalidateSize();
-        locationPickerMap.setView([initLat, initLng], 15);
-        if (locationPickerMarker) locationPickerMarker.setLatLng([initLat, initLng]);
+        google.maps.event.trigger(locationPickerMap, 'resize');
+        locationPickerMap.setCenter({ lat: initLat, lng: initLng });
+        locationPickerMap.setZoom(18);
+        locationPickerMap.setMapTypeId(google.maps.MapTypeId.HYBRID);
+        if (locationPickerMarker) {
+          locationPickerMarker.setPosition({ lat: initLat, lng: initLng });
+        }
       }
+
+      // Re-trigger resize event and re-center after parent container layout finishes
+      requestAnimationFrame(() => {
+        if (locationPickerMap && typeof locationPickerMap.setCenter === 'function') {
+          google.maps.event.trigger(locationPickerMap, 'resize');
+          locationPickerMap.setCenter({ lat: initLat, lng: initLng });
+        }
+      });
+      setTimeout(() => {
+        if (locationPickerMap && typeof locationPickerMap.setCenter === 'function') {
+          google.maps.event.trigger(locationPickerMap, 'resize');
+          locationPickerMap.setCenter({ lat: selectedPickerLat, lng: selectedPickerLng });
+        }
+      }, 200);
 
       updatePickerGeofence(initLat, initLng);
     }
@@ -5061,9 +5103,15 @@ function createProductCardElement(p) {
           window.detectedLatitude = lat;
           window.detectedLongitude = lng;
 
-          if (locationPickerMap) {
+          if (locationPickerMap && typeof locationPickerMap.setCenter === 'function') {
+            google.maps.event.trigger(locationPickerMap, 'resize');
+            locationPickerMap.setCenter({ lat: lat, lng: lng });
+            locationPickerMap.setZoom(18);
+            locationPickerMap.setMapTypeId(google.maps.MapTypeId.HYBRID);
+            if (locationPickerMarker) locationPickerMarker.setPosition({ lat: lat, lng: lng });
+          } else if (locationPickerMap && typeof locationPickerMap.setView === 'function') {
             locationPickerMap.invalidateSize();
-            locationPickerMap.setView([lat, lng], 16);
+            locationPickerMap.setView([lat, lng], 18);
             if (locationPickerMarker) locationPickerMarker.setLatLng([lat, lng]);
           }
           updatePickerGeofence(lat, lng);
@@ -5138,9 +5186,15 @@ function createProductCardElement(p) {
       const defLng = activeCustomerAddress.longitude || 85.3610;
       selectedPickerLat = defLat;
       selectedPickerLng = defLng;
-      if (locationPickerMarker && locationPickerMap) {
+      if (locationPickerMarker && locationPickerMap && typeof locationPickerMap.setCenter === 'function') {
+        google.maps.event.trigger(locationPickerMap, 'resize');
+        locationPickerMarker.setPosition({ lat: defLat, lng: defLng });
+        locationPickerMap.setCenter({ lat: defLat, lng: defLng });
+        locationPickerMap.setZoom(18);
+        locationPickerMap.setMapTypeId(google.maps.MapTypeId.HYBRID);
+      } else if (locationPickerMarker && locationPickerMap && typeof locationPickerMap.setView === 'function') {
         locationPickerMarker.setLatLng([defLat, defLng]);
-        locationPickerMap.setView([defLat, defLng], 15);
+        locationPickerMap.setView([defLat, defLng], 18);
       }
       updatePickerGeofence(defLat, defLng);
       toastInfo("Map pin reset to default address.");
