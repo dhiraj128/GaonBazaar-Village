@@ -10,6 +10,9 @@ sync_targets = [
     ('public_web/customer/index.html', 'apps/customer/web/index.html'),
     ('public_web/customer/index.html', 'customer_pwa.html'),
     ('public_web/customer/index.html', 'C:/Users/dhira/OneDrive/Desktop/gh-pages/customer/index.html'),
+    ('public_web/customer/config.js', 'apps/customer/web/config.js'),
+    ('public_web/customer/config.js', 'customer_config.js'),
+    ('public_web/customer/config.js', 'C:/Users/dhira/OneDrive/Desktop/gh-pages/customer/config.js'),
     # Vendor
     ('public_web/vendor/index.html', 'apps/vendor/web/index.html'),
     ('public_web/vendor/index.html', 'vendor_pwa.html'),
