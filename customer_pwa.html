@@ -6504,6 +6504,52 @@ function createProductCardElement(p) {
       renderFaqAccordion();
       lucide.createIcons();
     });
+  
+    // UNIFIED CROSS-APP & WEBSOCKET ORDER PROGRESS SYNCHRONIZATION
+    function initCustomerOrderSync() {
+      // 1. Cross-tab BroadcastChannel listener (Instant real-time sync with Runner app)
+      try {
+        const channel = new BroadcastChannel('gaonbazaar_order_sync');
+        channel.onmessage = (event) => {
+          const msg = event.data;
+          if (msg && (msg.status || msg.action)) {
+            const newStatus = msg.status || (msg.action === 'PICKUP' ? 'OUT_FOR_DELIVERY' : 'DELIVERED');
+            const statusText = document.getElementById('order-status-text');
+            if (statusText) {
+              statusText.innerText = (newStatus === 'OUT_FOR_DELIVERY') ? 'Out for Delivery' : (newStatus === 'DELIVERED' ? 'Delivered' : newStatus);
+            }
+            if (typeof renderVerticalOrderTrackingTimeline === 'function') {
+              renderVerticalOrderTrackingTimeline([], newStatus);
+            }
+            toastInfo(`Order Update: ${newStatus === 'OUT_FOR_DELIVERY' ? 'Rider picked up order and is en route!' : 'Order Delivered!'}`);
+          }
+        };
+      } catch (e) {}
+
+      // 2. Storage event listener (Fallback)
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'gb_last_runner_event' && e.newValue) {
+          try {
+            const msg = JSON.parse(e.newValue);
+            if (msg.status || msg.action) {
+              const newStatus = msg.status || (msg.action === 'PICKUP' ? 'OUT_FOR_DELIVERY' : 'DELIVERED');
+              const statusText = document.getElementById('order-status-text');
+              if (statusText) {
+                statusText.innerText = (newStatus === 'OUT_FOR_DELIVERY') ? 'Out for Delivery' : (newStatus === 'DELIVERED' ? 'Delivered' : newStatus);
+              }
+              if (typeof renderVerticalOrderTrackingTimeline === 'function') {
+                renderVerticalOrderTrackingTimeline([], newStatus);
+              }
+            }
+          } catch (err) {}
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initCustomerOrderSync();
+    });
+
   </script>
 
     <!-- Product Details Modal Overlay -->
