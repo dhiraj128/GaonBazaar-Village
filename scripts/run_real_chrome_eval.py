@@ -314,13 +314,28 @@ async def run_eval_for_viewport(ws, vp):
       const chakkiAtta = productsCatalog.find(p => p.id === 'p1');
       check(chakkiAtta && chakkiAtta.img.includes('1509440159596'), 'Chakki Atta uses verified wheat flour sack URL: ' + chakkiAtta.img);
       const sugar = productsCatalog.find(p => p.id === 'p4');
-      check(sugar && sugar.img.includes('1587132137056'), 'Sugar uses verified sugar bowl URL');
+      check(sugar && sugar.img.includes('1622484212850'), 'Sugar uses verified white sugar crystals URL: ' + (sugar ? sugar.img : 'null'));
       const salt = productsCatalog.find(p => p.id === 'p10');
-      check(salt && salt.img.includes('1626197031507'), 'Salt uses verified salt crystals URL');
+      check(salt && salt.img.includes('1518110925495'), 'Salt uses verified white salt crystals URL: ' + (salt ? salt.img : 'null'));
+      const bhujia = productsCatalog.find(p => p.id === 'p15');
+      check(bhujia && bhujia.img.includes('1599488615731'), 'Bhujia Sev uses verified namkeen/sev snack URL: ' + (bhujia ? bhujia.img : 'null'));
       const det = productsCatalog.find(p => p.id === 'p9');
       check(det && det.img.includes('1583947215259'), 'Detergent uses verified detergent pack URL');
       const dal = productsCatalog.find(p => p.id === 'p7');
       check(dal && dal.img.includes('1596040033229'), 'Toor Dal uses verified pulse legumes URL: ' + (dal ? dal.img : 'not found'));
+
+      // 13b. Product Details Modal & Account Tab UI Clean Verification
+      openProductModal('p1');
+      const prodModal = document.getElementById('modal-product-details');
+      check(prodModal && !prodModal.classList.contains('hidden'), 'Product details modal opened on openProductModal');
+      check(document.getElementById('product-modal-name').textContent.includes('Aashirvaad'), 'Product modal displays exact title');
+      check(document.getElementById('product-modal-price').textContent.includes('215'), 'Product modal displays exact price');
+      closeModal('modal-product-details');
+      check(prodModal.classList.contains('hidden'), 'Product details modal closed cleanly');
+
+      // Verify Account tab has no messy green pill "Order & Refund Help"
+      const allText = document.getElementById('view-account').textContent;
+      check(!allText.includes('Order & Refund Help'), 'Account tab clean: Order & Refund Help pill removed');
 
       // 14. Final switch back to Home and scroll lock check
       switchTab('home');
