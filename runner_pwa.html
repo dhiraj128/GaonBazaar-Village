@@ -737,7 +737,7 @@
                  class="w-full h-44 object-cover">
             <div class="absolute bottom-2.5 left-2.5 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-slate-200 text-[10px] font-bold text-slate-800 flex items-center space-x-1.5 shadow-xs">
               <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-600"></i>
-              <span id="customer-coords-display">Customer Location: 26.2315, 85.3610</span>
+              <span id="customer-coords-display">GPS Verified Drop-off</span>
             </div>
           </div>
 
@@ -1986,6 +1986,37 @@
       if (backBtn) backBtn.classList.add('hidden');
 
       initRunnerWebSocket();
+
+      // Listen for instant customer location pin shared from customer tab
+      if (window.BroadcastChannel) {
+        try {
+          const syncChan = new BroadcastChannel('gaonbazaar_order_sync');
+          syncChan.onmessage = (evt) => {
+            if (evt.data && evt.data.type === 'LOCATION_PIN_SHARED') {
+              const pinMsg = {
+                id: "msg_" + Date.now(),
+                sender_role: "customer",
+                sender_name: "Customer",
+                message_type: "LOCATION_PIN",
+                location_title: evt.data.location_title,
+                latitude: evt.data.latitude,
+                longitude: evt.data.longitude,
+                content: `Exact delivery location: ${evt.data.location_title}`,
+                created_at: new Date().toISOString()
+              };
+              if (Array.isArray(state.orderMessages)) {
+                state.orderMessages.push(pinMsg);
+              } else {
+                state.orderMessages = [pinMsg];
+              }
+              updateCustomerSharedPin(pinMsg);
+              renderRunnerChat();
+              toastSuccess("Customer shared exact doorstep location pin!");
+            }
+          };
+        } catch(e) {}
+      }
+
       if (!pollTimer) {
         pollTimer = setInterval(syncRunnerJobsFromBackend, BACKEND_CONFIG.pollInterval);
       }
@@ -2502,6 +2533,7 @@
     // ---------------------------------------------------------------------------
     // ORDER CHAT & REAL-TIME CUSTOMER PIN SHARING
     // ---------------------------------------------------------------------------
+    window.openRunnerChat = openRunnerOrderChat;
     function openRunnerOrderChat() {
       const mission = state.activeMission || {};
       const nameEl = document.getElementById('chat-customer-name');
@@ -2569,7 +2601,7 @@
       const addrEl = document.getElementById('shared-pin-address');
       const timeEl = document.getElementById('shared-pin-time');
       if (card) card.classList.remove('hidden');
-      if (addrEl) addrEl.innerText = `${state.customerSharedLocation.title} (${pinMsg.latitude.toFixed(4)}, ${pinMsg.longitude.toFixed(4)})`;
+      if (addrEl) addrEl.innerText = state.customerSharedLocation.title;
       if (timeEl) timeEl.innerText = state.customerSharedLocation.time;
     }
 
@@ -2579,33 +2611,45 @@
 
       container.innerHTML = state.orderMessages.map(msg => {
         const isRunner = msg.sender_role === 'runner' || msg.sender_role === 'delivery';
-        const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const timeStr = msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         if (msg.message_type === 'LOCATION_PIN') {
+          const lat = Number(msg.latitude) || 26.2315;
+          const lng = Number(msg.longitude) || 85.3610;
+          const readableAddress = msg.location_title || (msg.content && !msg.content.includes("http") ? msg.content : "Near Primary School, Chaturshi");
+          const mapImgUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=15&size=300x150&markers=color:red%7C${lat},${lng}&key=AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc`;
+          const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving&dir_action=navigate`;
+
           return `
-            <div class="flex flex-col items-start space-y-1">
-              <span class="text-[10px] text-slate-400 font-semibold px-1">${msg.sender_name} • ${timeStr}</span>
-              <div class="max-w-[85%] bg-indigo-50 border border-indigo-200 rounded-2xl rounded-tl-sm p-3 shadow-xs space-y-2">
-                <div class="flex items-center space-x-1.5 text-xs font-bold text-indigo-950">
-                  <i data-lucide="map-pin" class="w-4 h-4 text-indigo-600 shrink-0"></i>
-                  <span>Live Location Pin Shared</span>
+            <div class="flex flex-col items-start space-y-1 w-full">
+              <span class="text-[10px] text-slate-400 font-semibold px-1">${msg.sender_name || 'Customer'} • ${timeStr}</span>
+              <a href="${navUrl}" target="_blank" rel="noopener noreferrer" class="block max-w-[85%] bg-emerald-50 border border-emerald-300 text-emerald-950 p-2.5 rounded-2xl rounded-tl-xs shadow-xs hover:shadow-md transition group no-underline">
+                <div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-emerald-200">
+                  <div class="flex items-center space-x-1.5 text-xs font-bold text-emerald-900">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+                    <span>Customer Shared Exact Pin</span>
+                  </div>
+                  <span class="text-[10px] font-bold text-emerald-700 flex items-center space-x-0.5">
+                    <span>Navigate</span>
+                    <i data-lucide="navigation" class="w-2.5 h-2.5 ml-0.5"></i>
+                  </span>
                 </div>
-                <p class="text-xs text-indigo-900 font-medium">${msg.location_title || msg.content || "Exact Landmark"}</p>
-                <div class="text-[10px] font-mono text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded">
-                  GPS: ${msg.latitude?.toFixed(5)}, ${msg.longitude?.toFixed(5)}
+                <div class="relative overflow-hidden rounded-md border border-slate-200/80 mb-2">
+                  <img src="${mapImgUrl}" alt="Customer Location Google Map" class="rounded-md w-full h-auto block object-cover" loading="lazy" />
                 </div>
-                <button onclick="startNavigation('shared')" class="w-full py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center justify-center space-x-1 shadow-xs transition active:scale-95">
-                  <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
-                  <span>Start Driving to Shared Pin</span>
-                </button>
-              </div>
+                <p class="text-xs font-semibold text-emerald-950 leading-tight">${readableAddress}</p>
+                <div class="flex items-center justify-between pt-1 mt-1 text-[9px] text-emerald-700">
+                  <span class="font-medium">Tap map for turn-by-turn navigation</span>
+                  <span class="font-mono">${timeStr}</span>
+                </div>
+              </a>
             </div>
           `;
         }
 
         return `
           <div class="flex flex-col ${isRunner ? 'items-end' : 'items-start'} space-y-0.5">
-            <span class="text-[9px] text-slate-400 font-medium px-1">${msg.sender_name} • ${timeStr}</span>
+            <span class="text-[9px] text-slate-400 font-medium px-1">${msg.sender_name || (isRunner ? 'Runner' : 'Customer')} • ${timeStr}</span>
             <div class="max-w-[80%] px-3 py-2 rounded-2xl ${isRunner ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-slate-100 text-slate-800 rounded-tl-sm'} text-xs font-medium shadow-2xs">
               ${msg.content}
             </div>
@@ -2613,8 +2657,10 @@
         `;
       }).join('');
 
-      container.scrollTop = container.scrollHeight;
-      lucide.createIcons();
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+      if (window.lucide && typeof lucide.createIcons === 'function') {
+        lucide.createIcons();
+      }
     }
 
     async function sendRunnerChatMessage() {
