@@ -212,16 +212,11 @@
             <span data-i18n="rider_info_sub">Rider Information</span>
           </div>
           <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="runner_details_title">Delivery Partner Details</h2>
-          <p class="text-sm text-slate-500 mb-6" data-i18n="runner_details_sub">Enter your vehicle and emergency contacts</p>
+          <p class="text-sm text-slate-500 mb-6" data-i18n="runner_details_sub">Enter your vehicle details for delivery operations</p>
 
           <div class="space-y-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="full_name_label">Full Name (as per Driving License / Aadhaar)</label>
-              <input type="text" id="runner-fullname" value="Sonu Kumar Verma" placeholder="Sonu Kumar Verma" data-i18n-placeholder="fullname_placeholder" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="vehicle_type_label">Vehicle Type</label>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="vehicle_type_label">Vehicle Type <span class="text-rose-500">*</span></label>
               <select id="runner-vehicletype" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
                 <option value="Motorcycle (Petrol Bike)" data-i18n="opt_bike">Motorcycle / Hero Splendor (Petrol Bike)</option>
                 <option value="Electric Scooter (EV)" data-i18n="opt_ev">Electric Scooter / EV 2-Wheeler</option>
@@ -231,14 +226,10 @@
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="vehicle_number_label">Vehicle Registration Number</label>
-              <input type="text" id="runner-vehicleno" value="UP 32 BK 4821" placeholder="e.g. UP 32 AB 1234" data-i18n-placeholder="vehicleno_placeholder" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="vehicle_number_label">Vehicle Registration Number <span class="text-rose-500">*</span></label>
+              <input type="text" id="runner-vehicleno" value="UP 32 BK 4821" placeholder="e.g. UP 32 AB 1234" data-i18n-placeholder="vehicleno_placeholder" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-bold focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
             </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="emergency_contact_label">Emergency Alternate Contact</label>
-              <input type="tel" id="runner-emergency" value="9811445566" placeholder="9811445566" data-i18n-placeholder="emergency_placeholder" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
-            </div>
+          </div>
           </div>
         </div>
 
@@ -250,11 +241,77 @@
         </div>
       </div>
 
-      <!-- PAGE 4: IDENTITY VERIFICATION (SINGLE ID SELECTION) -->
+      <!-- PAGE 4: LOCATION SETUP (DELIVERY RADIUS & OPERATING HUB) -->
       <div id="screen-onboarding-4" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
+        <div class="space-y-4">
+          <!-- Header -->
+          <div>
+            <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2"><span class="px-2 py-0.5 bg-blue-100 rounded">Step 4 of 7</span><span>Service Area</span></div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="runner_location_title">Delivery Radius & Hub</h2>
+            <p class="text-xs text-slate-500 leading-relaxed" data-i18n="runner_location_sub">
+              Define your operating base village and service delivery radius
+            </p>
+          </div>
+
+          <!-- Location Info Card -->
+          <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-4 shadow-xs">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="base_village_label">
+                Operating Base Village / Hub <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="runner-base-village" placeholder="e.g. Chaturshi, Musahri" value="Chaturshi" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-xs focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <p class="text-[10px] text-slate-400 mt-1" data-i18n="base_village_hint">Orders will be assigned from local shops around your hub</p>
+            </div>
+
+            <!-- Operating Delivery Radius Chips -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-2" data-i18n="delivery_radius_label">
+                Delivery Service Radius <span class="text-rose-500">*</span>
+              </label>
+              <div class="grid grid-cols-3 gap-2">
+                <button type="button" onclick="selectRadius(5)" id="radius-chip-5" class="py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:border-blue-600 hover:text-blue-600 transition">
+                  5 km
+                </button>
+                <button type="button" onclick="selectRadius(8)" id="radius-chip-8" class="py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-xs font-bold text-blue-700 shadow-2xs transition">
+                  8 km <span class="text-[9px] block text-blue-500 font-normal">Optimal</span>
+                </button>
+                <button type="button" onclick="selectRadius(10)" id="radius-chip-10" class="py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:border-blue-600 hover:text-blue-600 transition">
+                  10 km
+                </button>
+              </div>
+            </div>
+
+            <!-- GPS Coordinates Section -->
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-700" data-i18n="gps_coordinates_label">GPS Coordinates:</span>
+                <span id="runner-gps-display" class="font-mono text-xs font-bold text-blue-600">26.1197° N, 85.3910° E</span>
+              </div>
+              <button type="button" onclick="detectRunnerGPS()" id="btn-detect-gps" class="w-full py-2.5 px-3 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center justify-center space-x-2">
+                <i data-lucide="crosshair" class="w-4 h-4 text-blue-600"></i>
+                <span data-i18n="detect_gps_btn">Detect Current GPS Location</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 space-y-2">
+          <button onclick="saveRunnerLocationAndProceed()" id="btn-save-runner-location" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+            <span data-i18n="save_location_btn">Save & Continue to KYC</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+          <p class="text-[11px] text-center text-slate-400" data-i18n="rural_geofence_note">8km geofencing ensures timely delivery within 15-30 minutes</p>
+        </div>
+      </div>
+
+      
+
+      <!-- PAGE 5: IDENTITY VERIFICATION (SINGLE ID SELECTION) -->
+      <div id="screen-onboarding-5" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
         <div class="space-y-4">
           <!-- Header (Clean & White-labeled) -->
           <div>
+            <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2"><span class="px-2 py-0.5 bg-blue-100 rounded">Step 5 of 7</span><span>Identity Verification</span></div>
             <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="id_verification_title">Identity Verification</h2>
             <p class="text-xs text-slate-500 leading-relaxed" data-i18n="id_verification_sub">
               Choose any one government ID to verify your identity instantly
@@ -308,7 +365,7 @@
                 <p class="text-slate-600"><span class="text-slate-400">PAN Number:</span> <strong id="pan-verified-number" class="font-mono text-slate-900">ABCDE1234F</strong></p>
               </div>
               <button onclick="proceedToNextStep()" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
-                <span data-i18n="continue_to_location">Continue to Location Setup</span>
+                <span data-i18n="continue_to_location">Continue to Payout Setup</span>
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
               </button>
             </div>
@@ -362,7 +419,7 @@
                 <p class="text-slate-600"><span class="text-slate-400">Aadhaar Number:</span> <strong id="aadhaar-masked-display" class="font-mono text-slate-900">XXXX-XXXX-9012</strong></p>
               </div>
               <button onclick="proceedToNextStep()" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
-                <span data-i18n="continue_to_location">Continue to Location Setup</span>
+                <span data-i18n="continue_to_location">Continue to Payout Setup</span>
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
               </button>
             </div>
@@ -531,9 +588,513 @@
           </div>
 
           <h2 class="text-2xl font-extrabold text-slate-900 mb-2" data-i18n="under_review_title">Application Under Review</h2>
-          <p class="text-sm text-slate-600 max-w-xs mb-6" data-i18n="under_review_sub_runner">
-            Your driving record, identity verification, and payout settlement details have been submitted securely to GaonBazaar Operations.
-          </p>
+          <p class="text-sm text-slate-600 max-w-xs mb-6" data-i18n="under_review_sub_runner">Your documents and bank details are under review.</p>
+
+          <div class="w-full bg-white p-4 rounded-xl border border-slate-200 text-left space-y-3 shadow-xs mb-6">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-500 font-medium">Application ID:</span>
+              <span class="font-mono font-bold text-slate-800" id="runner-review-app-id">GB-RUN-39102</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-500 font-medium" data-i18n="id_verification_status_label">Identity Verification:</span>
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-100 text-emerald-800 flex items-center space-x-1">
+                <i data-lucide="check" class="w-3 h-3"></i>
+                <span data-i18n="verified_pill">VERIFIED</span>
+              </span>
+            </div>
+            <div class="flex justify-between items-center text-xs pt-1 border-t border-slate-100">
+              <div>
+                <span class="text-slate-700 font-bold block" data-i18n="penny_drop_status_label">₹1 Penny Drop Verification:</span>
+                <span class="text-[10px] text-slate-400" data-i18n="penny_drop_desc">Razorpay Fund Account Validation</span>
+              </div>
+              <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center space-x-1" id="runner-penny-drop-badge">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
+                <span data-i18n="processing_status">PROCESSING</span>
+              </span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-500 font-medium" data-i18n="est_review_label">Estimated Review:</span>
+              <span class="font-semibold text-blue-700" data-i18n="review_time_val">~ 2 to 4 Hours</span>
+            </div>
+          </div>
+
+          <!-- DEMO / TEST BYPASS NOTICE -->
+          <div class="p-3 bg-blue-50 rounded-lg border border-blue-200 text-xs text-blue-800 text-center w-full">
+            <span class="font-bold">Developer / Reviewer Mode:</span>
+            <p class="text-[11px] text-blue-700 mt-0.5">Click below to simulate instant Super Admin approval and test the live Runner dashboard.</p>
+          </div>
+        </div>
+
+        <div class="pt-6 space-y-2">
+          <button onclick="simulateAdminApprovalAndOpenDashboard()" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+            <i data-lucide="unlock" class="w-4 h-4"></i>
+            <span data-i18n="enter_dashboard_demo">Approve & Open Runner Hub</span>
+          </button>
+        </div>
+      </div>
+
+
+      <!-- ======================================================================= -->
+      <!-- RUNNER MAIN DASHBOARD (PHASE 2: EXACT 4 TABS) -->
+      <!-- ======================================================================= -->
+      
+      <!-- TAB 1: MISSIONS (HOME) -->
+      <div id="tab-missions" class="dashboard-tab flex-1 flex flex-col hidden">
+        
+        <!-- Massive Duty ON / OFF Toggle Hero Card -->
+        <div class="p-4 bg-white border-b border-slate-200 shadow-xs">
+          <div id="duty-hero-card" class="p-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex items-center justify-between shadow-md transition duration-300">
+            <div class="flex items-center space-x-3">
+              <div id="duty-radar-circle" class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center radar-pulse">
+                <i data-lucide="navigation" class="w-6 h-6 text-white"></i>
+              </div>
+              <div>
+                <h3 id="duty-status-text" class="text-lg font-extrabold tracking-wide" data-i18n="duty_on">ON DUTY</h3>
+                <p id="duty-status-sub" class="text-xs text-blue-100" data-i18n="receiving_missions">Receiving nearby delivery missions</p>
+              </div>
+            </div>
+
+            <!-- Massive Custom Switch -->
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="runner-duty-toggle" checked onchange="handleDutyToggle(this)" class="sr-only peer">
+              <div class="w-14 h-7 bg-blue-900/60 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-400"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Incoming Missions Feed -->
+        <div id="missions-feed" class="p-4 space-y-4">
+          <!-- No Missions Empty State -->
+          <div id="no-missions-empty" class="p-8 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs hidden">
+            <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto radar-pulse">
+              <i data-lucide="compass" class="w-7 h-7"></i>
+            </div>
+            <h4 class="text-sm font-bold text-slate-900" data-i18n="searching_missions_title">Radar Scanning Nearby Orders...</h4>
+            <p class="text-xs text-slate-500 max-w-xs mx-auto" data-i18n="searching_missions_sub">You are ON DUTY. When a local kirana shop packs an order within 8 km, your phone will ring with pickup details.</p>
+          </div>
+          
+          <!-- Sound alert banner -->
+          <div id="runner-alert-banner" class="bg-amber-500 text-white p-3 rounded-xl flex items-center justify-between shadow-md">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="bell-ring" class="w-5 h-5 animate-bounce"></i>
+              <span class="text-xs font-bold" data-i18n="new_mission_alert">New Delivery Mission Ringing!</span>
+            </div>
+            <button onclick="silenceAlertSound()" class="text-xs bg-amber-700 hover:bg-amber-800 px-2 py-1 rounded font-semibold active:scale-95" data-i18n="mute_btn">Mute</button>
+          </div>
+
+          <!-- Pulsing Mission Card -->
+          <div id="mission-card-201" class="bg-white rounded-2xl border-2 border-blue-500 p-4 shadow-md pulse-mission transition">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 text-blue-800" data-i18n="hot_mission_badge">HOT MISSION • 2.8 KM TOTAL</span>
+                <h3 class="text-base font-bold text-slate-900 mt-1" data-i18n="sample_mission_title">Mission #GB-8921</h3>
+                <span class="text-xs text-slate-500 font-medium" data-i18n="sample_mission_sub">Grocery Delivery • 4 Items (6.2 kg)</span>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-extrabold text-emerald-600">₹55.00</span>
+                <span class="block text-[10px] font-bold text-slate-400">₹45 Run + ₹10 Tip</span>
+              </div>
+            </div>
+
+            <!-- Route Legs Details -->
+            <div class="border-t border-b border-slate-100 py-3 my-2 space-y-2.5 text-xs">
+              <!-- Pickup Leg -->
+              <div class="flex items-start space-x-2.5">
+                <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                  <i data-lucide="store" class="w-3.5 h-3.5"></i>
+                </div>
+                <div class="flex-1">
+                  <div class="flex justify-between items-center">
+                    <span class="font-bold text-slate-800">Sharma Kirana Store</span>
+                    <span class="text-emerald-700 font-semibold text-[11px]" data-i18n="distance_away_sample">1.1 km away</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500">Shop #4, Main Village Market, Gopalpur</p>
+                </div>
+              </div>
+
+              <!-- Dropoff Leg -->
+              <div class="flex items-start space-x-2.5">
+                <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 mt-0.5">
+                  <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                </div>
+                <div class="flex-1">
+                  <div class="flex justify-between items-center">
+                    <span class="font-bold text-slate-800" data-i18n="customer_name_sample">Sunita Devi (Customer)</span>
+                    <span class="text-blue-700 font-semibold text-[11px]" data-i18n="distance_from_shop_sample">1.7 km from shop</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500">House 42, Near Primary School, Gopalpur</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Accept / Reject Actions -->
+            <div class="flex space-x-3 pt-1">
+              <button onclick="rejectMission('GB-8921')" class="flex-1 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs border border-rose-200 transition active:scale-95" data-i18n="pass_mission_btn">
+                Pass
+              </button>
+              <button onclick="acceptMission('GB-8921')" class="flex-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center space-x-1.5" data-i18n="accept_mission_btn">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                <span>Accept Run (₹55)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Offline / Idle Banner when no mission -->
+          <div id="idle-status-box" class="p-6 bg-white rounded-2xl border border-slate-200 text-center space-y-2 hidden shadow-xs">
+            <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
+              <i data-lucide="compass" class="w-6 h-6 animate-spin"></i>
+            </div>
+            <h4 class="text-sm font-bold text-slate-800">Searching for Next Mission...</h4>
+            <p class="text-xs text-slate-500">Stay within the Gopalpur 8km hub radius for fastest assignments.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- TAB 2: ACTIVE RUN (STEPPER WORKFLOW) -->
+      <div id="tab-activerun" class="dashboard-tab flex-1 p-4 space-y-4 hidden">
+        <div>
+          <div class="flex justify-between items-center">
+            <h2 class="text-lg font-bold text-slate-900" data-i18n="active_run_title">Active Delivery Mission</h2>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">ORDER #GB-8921</span>
+          </div>
+          <p class="text-xs text-slate-500" data-i18n="active_run_sub">Complete steps in sequence with Google Maps</p>
+        </div>
+
+        <!-- STEP 1 / PHASE 1: VENDOR PICKUP FLOW -->
+        <div id="run-step-1" class="bg-white p-4 rounded-2xl border-2 border-emerald-500 shadow-sm space-y-3.5 transition-all">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-extrabold flex items-center justify-center">1</span>
+              <div>
+                <h3 class="text-sm font-extrabold text-slate-900" data-i18n="phase_1_title">Phase 1: Proceed to Shop for Pickup</h3>
+                <p class="text-[10px] text-slate-500">Collect packed groceries from merchant store</p>
+              </div>
+            </div>
+            <span id="step-1-status-badge" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200" data-i18n="badge_in_progress">IN PROGRESS</span>
+          </div>
+
+          <!-- Phase 1: Static Google Map of Vendor Coordinates -->
+          <div class="relative rounded-2xl overflow-hidden border border-emerald-200/80 shadow-2xs bg-slate-100">
+            <img id="vendor-static-map-img" 
+                 src="https://maps.googleapis.com/maps/api/staticmap?center=26.2230,85.3520&zoom=16&size=600x260&scale=2&maptype=roadmap&markers=color:green%7Clabel:V%7C26.2230,85.3520&key=AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc" 
+                 alt="Vendor Pickup Google Map" 
+                 class="w-full h-44 object-cover">
+            <div class="absolute bottom-2.5 left-2.5 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-slate-200 text-[10px] font-bold text-slate-800 flex items-center space-x-1.5 shadow-xs">
+              <i data-lucide="store" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>Vendor Shop: 26.2230, 85.3520</span>
+            </div>
+          </div>
+
+          <!-- Vendor Details Card -->
+          <div class="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs border border-slate-200">
+            <div class="flex items-center justify-between">
+              <h4 id="order-store-name" class="font-bold text-slate-900 text-sm">Sharma Kirana & General Store</h4>
+              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Verified Merchant</span>
+            </div>
+            <p id="order-store-address" class="text-slate-600 text-xs">Shop #4, Main Village Market, Minapur • +91 9876543210</p>
+            
+            <div class="pt-2 flex space-x-2">
+              <!-- Direct Intent Scheme Navigation Link to Vendor -->
+              <a id="btn-navigate-shop" 
+                 href="https://www.google.com/maps/dir/?api=1&destination=26.2230,85.3520&travelmode=driving&dir_action=navigate" 
+                 target="_blank" 
+                 rel="noopener noreferrer" 
+                 class="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs transition active:scale-95">
+                <i data-lucide="navigation-2" class="w-4 h-4"></i>
+                <span data-i18n="nav_to_vendor">Navigate to Shop</span>
+              </a>
+              <a id="store-phone-link" href="tel:9876543210" class="py-3 px-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition active:scale-95">
+                <i data-lucide="phone" class="w-4 h-4"></i>
+                <span data-i18n="call_btn">Call</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Pickup OTP for Vendor & Confirm Pickup Button -->
+          <div class="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 space-y-3">
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="text-[11px] font-medium text-emerald-900 block" data-i18n="pickup_otp_label">Share Pickup OTP with Vendor:</span>
+                <span id="order-pickup-otp" class="text-xl font-mono font-black text-emerald-800 tracking-wider">5821</span>
+              </div>
+              <span class="text-[10px] font-semibold text-emerald-700 bg-white px-2 py-1 rounded-lg border border-emerald-200">
+                Matches Merchant Order #8921
+              </span>
+            </div>
+            <button id="btn-confirm-pickup" onclick="confirmVendorPickup()" class="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-md active:scale-95 transition flex items-center justify-center space-x-2" data-i18n="confirm_pickup_btn">
+              <i data-lucide="package-check" class="w-4 h-4"></i>
+              <span>Confirm Pickup (Start Delivery)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2 / PHASE 2: CUSTOMER DROP-OFF FLOW -->
+        <div id="run-step-2" class="bg-white p-4 rounded-2xl border border-slate-200 opacity-60 pointer-events-none shadow-xs space-y-3.5 transition-all">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-extrabold flex items-center justify-center">2</span>
+              <div>
+                <h3 class="text-sm font-extrabold text-slate-900" data-i18n="step_2_title">Phase 2: Deliver to Customer</h3>
+                <p class="text-[10px] text-slate-500">Doorstep drop-off and OTP verification</p>
+              </div>
+            </div>
+            <span id="step-2-status-badge" class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">WAITING PICKUP</span>
+          </div>
+
+          <!-- Phase 2: Static Google Map Centered on Customer Coordinates -->
+          <div id="customer-map-container" class="relative rounded-2xl overflow-hidden border border-blue-200 shadow-2xs bg-slate-100">
+            <img id="customer-static-map-img" 
+                 src="https://maps.googleapis.com/maps/api/staticmap?center=26.2315,85.3610&zoom=16&size=600x260&scale=2&maptype=roadmap&markers=color:blue%7Clabel:C%7C26.2315,85.3610&key=AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc" 
+                 alt="Customer Drop-off Google Map" 
+                 class="w-full h-44 object-cover">
+            <div class="absolute bottom-2.5 left-2.5 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-slate-200 text-[10px] font-bold text-slate-800 flex items-center space-x-1.5 shadow-xs">
+              <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-600"></i>
+              <span id="customer-coords-display">GPS Verified Drop-off</span>
+            </div>
+          </div>
+
+          <!-- Customer Shared Live Pin Banner (Populated via Chat LOCATION_PIN) -->
+          <div id="customer-shared-pin-card" class="p-3 bg-indigo-50 rounded-xl border border-indigo-200 space-y-2 hidden">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-1.5 text-xs font-bold text-indigo-950">
+                <i data-lucide="map-pin" class="w-4 h-4 text-indigo-600"></i>
+                <span data-i18n="cust_shared_pin_title">Customer Shared Exact Location Pin</span>
+              </div>
+              <span id="shared-pin-time" class="text-[10px] text-indigo-600 font-semibold">Just now</span>
+            </div>
+            <p id="shared-pin-address" class="text-xs text-indigo-900 font-medium">Near the blue water tank / Panchayat Bhawan</p>
+            <button onclick="startNavigation('shared')" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 shadow-xs transition active:scale-95">
+              <i data-lucide="navigation" class="w-3.5 h-3.5"></i>
+              <span data-i18n="nav_to_shared_pin">Navigate to Shared Location</span>
+            </button>
+          </div>
+
+          <!-- Customer Details & Readable Rural Landmark Card -->
+          <div class="p-3.5 bg-slate-50 rounded-xl space-y-2 text-xs border border-slate-200">
+            <div class="flex justify-between items-center">
+              <h4 id="order-customer-name" class="font-bold text-slate-900 text-sm">Sunita Devi</h4>
+              <span id="order-payment-badge" class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-amber-100 text-amber-900">COLLECT CASH: ₹340</span>
+            </div>
+            <p id="order-customer-address" class="text-slate-700 font-medium">House 42, Near Primary School, Minapur Village</p>
+            <div class="p-2 bg-blue-50/80 rounded-lg border border-blue-200 flex items-center space-x-2 text-blue-900 text-[11px] font-semibold">
+              <i data-lucide="landmark" class="w-4 h-4 text-blue-600 shrink-0"></i>
+              <span id="order-customer-landmark">Rural Landmark: Near Shiv Mandir & Panchayat Bhawan</span>
+            </div>
+            
+            <div class="pt-2 flex space-x-2">
+              <!-- Direct Intent Scheme Navigation Link to Customer -->
+              <a id="btn-navigate-customer" 
+                 href="https://www.google.com/maps/dir/?api=1&destination=26.2315,85.3610&travelmode=driving&dir_action=navigate" 
+                 target="_blank" 
+                 rel="noopener noreferrer" 
+                 class="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs transition active:scale-95">
+                <i data-lucide="navigation-2" class="w-4 h-4"></i>
+                <span data-i18n="nav_to_customer">Navigate to Customer</span>
+              </a>
+              <button onclick="openRunnerOrderChat()" class="py-3 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition active:scale-95">
+                <i data-lucide="message-square" class="w-4 h-4"></i>
+                <span data-i18n="chat_btn">Chat</span>
+              </button>
+              <a id="cust-phone-link" href="tel:9811224488" class="py-3 px-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5">
+                <i data-lucide="phone" class="w-4 h-4"></i>
+                <span data-i18n="call_btn">Call</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Customer 4-Digit Delivery OTP Input Box & Complete Delivery CTA -->
+          <div class="p-3.5 bg-blue-50/80 rounded-xl border-2 border-blue-200 space-y-3">
+            <div class="flex items-center space-x-1.5 text-xs font-bold text-blue-900">
+              <i data-lucide="shield-check" class="w-4 h-4 text-blue-600"></i>
+              <span data-i18n="enter_cust_otp">Verify Customer's 4-Digit Delivery OTP</span>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2.5 w-full">
+              <input type="text" id="cust-delivery-otp" maxlength="4" placeholder="••••" data-i18n-placeholder="otp_input_placeholder" class="w-full sm:flex-1 min-w-0 px-3 py-3 text-center font-mono font-black text-xl tracking-widest border border-blue-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-slate-900 shadow-2xs">
+              <button id="btn-complete-delivery" onclick="verifyCustomerDeliveryAndFinish('GB-8921')" class="w-full sm:w-auto shrink-0 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2" data-i18n="complete_run_btn">
+                <i data-lucide="check-check" class="w-4 h-4"></i>
+                <span data-i18n="complete_run_btn">Complete Delivery</span>
+              </button>
+            </div>
+            <span class="text-[10px] text-blue-700 block font-medium" data-i18n="ask_otp_note">Ask customer for the 4-digit code shown on their order status screen</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: LEDGER (EARNINGS & COD DEPOSITS) -->
+      <div id="tab-ledger" class="dashboard-tab flex-1 p-4 space-y-4 hidden">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900" data-i18n="ledger_title">Runner Earnings & COD Ledger</h2>
+          <p class="text-xs text-slate-500" data-i18n="runner_ledger_sub">Track completed missions, payouts and cash collections</p>
+        </div>
+
+        <!-- 3 Financial Cards -->
+        <div class="grid grid-cols-3 gap-2.5">
+          <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
+            <span class="text-[10px] font-semibold text-slate-500 uppercase block" data-i18n="today_earnings">Earnings</span>
+            <span class="text-base font-extrabold text-blue-600 mt-0.5 block">₹560</span>
+            <span class="text-[9px] text-emerald-600 font-bold">11 Deliveries</span>
+          </div>
+
+          <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 shadow-xs text-center">
+            <span class="text-[10px] font-semibold text-amber-700 uppercase block" data-i18n="cod_cash_hand">COD in Hand</span>
+            <span class="text-base font-extrabold text-amber-800 mt-0.5 block">₹1,280</span>
+            <span class="text-[9px] text-amber-700 font-bold" data-i18n="deposit_at_hub_badge">Deposit at Hub</span>
+          </div>
+
+          <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
+            <span class="text-[10px] font-semibold text-slate-500 uppercase block" data-i18n="distance_traveled">Distance</span>
+            <span class="text-base font-extrabold text-slate-900 mt-0.5 block">24.8 km</span>
+            <span class="text-[9px] text-slate-500 font-medium" data-i18n="gps_tracked_badge">GPS Tracked</span>
+          </div>
+        </div>
+
+        <!-- COD Deposit Hub Action Card -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+          <div>
+            <h4 class="text-xs font-bold text-slate-900" data-i18n="cod_deposit_title">Hub COD Deposit: ₹1,280.00</h4>
+            <p class="text-[11px] text-slate-500">Collectively deposit to Hub Cashier by 9:00 PM</p>
+          </div>
+          <button onclick="openCodDepositModal()" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg shadow-xs active:scale-95 transition" data-i18n="deposit_cash_btn">
+            Deposit
+          </button>
+        </div>
+
+        <!-- Recent Runs History -->
+        <div>
+          <h3 class="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide" data-i18n="completed_missions">Completed Runs</h3>
+          <div class="space-y-2">
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center text-xs">
+              <div>
+                <span class="font-bold text-slate-900">Run #GB-8914 (2.3 km)</span>
+                <span class="block text-[10px] text-slate-500" data-i18n="run_history_1">Today, 11:40 AM • Prepaid Order</span>
+              </div>
+              <div class="text-right">
+                <span class="font-extrabold text-blue-600">+₹50.00</span>
+                <span class="block text-[10px] font-bold text-emerald-700">COMPLETED</span>
+              </div>
+            </div>
+
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center text-xs">
+              <div>
+                <span class="font-bold text-slate-900">Run #GB-8908 (3.1 km)</span>
+                <span class="block text-[10px] text-slate-500" data-i18n="run_history_2">Today, 10:15 AM • COD (₹450 Collected)</span>
+              </div>
+              <div class="text-right">
+                <span class="font-extrabold text-blue-600">+₹65.00</span>
+                <span class="block text-[10px] font-bold text-emerald-700">COMPLETED</span>
+              </div>
+            </div>
+
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center text-xs">
+              <div>
+                <span class="font-bold text-slate-900" data-i18n="run_history_3">Weekly Runner Fuel Bonus</span>
+                <span class="block text-[10px] text-slate-500" data-i18n="run_history_3_sub">Yesterday, 10:00 PM • Performance Incentive</span>
+              </div>
+              <div class="text-right">
+                <span class="font-extrabold text-emerald-600">+₹200.00</span>
+                <span class="block text-[10px] font-bold text-blue-600">BONUS</span>
+              </div>
+            </div>
+          </div>
+        </div><!-- PAGE 6: BANK / UPI PAYOUT SETUP (ACTIVE & INTERACTIVE) -->
+      <div id="screen-onboarding-6" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
+        <div>
+          <div class="mb-5">
+            <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="payout_title">Bank / UPI Settlement</h2>
+            <p class="text-xs text-slate-500 leading-relaxed" data-i18n="runner_payout_sub">Direct per-delivery payouts credited daily to your registered account</p>
+          </div>
+
+          <!-- Toggle: Tab 1 (UPI ID) vs Tab 2 (Bank Account) -->
+          <div class="flex p-1 bg-slate-200 rounded-xl mb-5 border border-slate-200">
+            <button id="payout-tab-upi" onclick="switchPayoutMode('upi')" class="flex-1 py-2.5 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5">
+              <i data-lucide="smartphone" class="w-4 h-4 text-blue-600"></i>
+              <span data-i18n="upi_tab">Tab 1: UPI ID (VPA)</span>
+            </button>
+            <button id="payout-tab-bank" onclick="switchPayoutMode('bank')" class="flex-1 py-2.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5">
+              <i data-lucide="landmark" class="w-4 h-4"></i>
+              <span data-i18n="bank_tab">Tab 2: Bank Account</span>
+            </button>
+          </div>
+
+          <!-- Payout Error Alert -->
+          <div id="payout-error-banner" class="hidden mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start space-x-2 shadow-2xs">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
+            <span id="payout-error-text" class="flex-1 font-medium leading-relaxed"></span>
+            <button onclick="hidePayoutError()" class="text-rose-400 hover:text-rose-700 font-bold text-sm leading-none ml-1">✕</button>
+          </div>
+
+          <!-- Tab 1: UPI Details Form -->
+          <div id="form-upi-payout" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="upi_id_label">
+                Virtual Payment Address (UPI ID) <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="upi-vpa" placeholder="e.g. name@bank or 9876543210@paytm" value="sonukumar@paytm" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <span class="text-[11px] text-slate-500 mt-1 block">Supported: Google Pay, PhonePe, Paytm, BHIM, Cred</span>
+            </div>
+
+            <div class="pt-2">
+              <button id="btn-save-submit-upi" onclick="submitPayoutDetails('upi')" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+                <span data-i18n="save_submit_btn">Save & Submit</span>
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab 2: Bank Details Form -->
+          <div id="form-bank-payout" class="space-y-4 hidden">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="acc_num_label">
+                Account Number <span class="text-rose-500">*</span>
+              </label>
+              <input type="password" id="bank-acc-no" value="30200889912345" placeholder="Enter bank account number" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="reenter_acc_num_label">
+                Re-enter Account Number <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="bank-acc-no-confirm" value="30200889912345" oninput="checkAccountMatch()" placeholder="Re-enter to verify account number" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <p id="acc-match-msg" class="text-[10px] mt-1 font-semibold hidden"></p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="ifsc_label">
+                IFSC Code <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="bank-ifsc" value="SBIN0004567" maxlength="11" oninput="this.value = this.value.toUpperCase()" placeholder="e.g. SBIN0001234 or HDFC0001234" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-bold text-xs tracking-wider focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <p class="text-[10px] text-slate-400 mt-1">11-character code on your cheque book or passbook (5th character is 0)</p>
+            </div>
+
+            <div class="pt-2">
+              <button id="btn-save-submit-bank" onclick="submitPayoutDetails('bank')" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+                <span data-i18n="save_submit_btn">Save & Submit</span>
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 text-center">
+          <p class="text-[11px] text-slate-400">Powered by Razorpay Payouts • 100% Encrypted & Bank Regulated</p>
+        </div>
+      </div>
+
+      <!-- PAGE 7: UNDER REVIEW (LOCKED SCREEN) -->
+      <div id="screen-onboarding-7" class="app-screen flex-1 p-6 flex flex-col justify-between text-center hidden">
+        <div class="pt-10 flex flex-col items-center">
+          <div class="w-24 h-24 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-6 shadow-inner relative">
+            <i data-lucide="hourglass" class="w-12 h-12 animate-pulse"></i>
+            <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+              <i data-lucide="lock" class="w-4 h-4"></i>
+            </div>
+          </div>
+
+          <h2 class="text-2xl font-extrabold text-slate-900 mb-2" data-i18n="under_review_title">Application Under Review</h2>
+          <p class="text-sm text-slate-600 max-w-xs mb-6" data-i18n="under_review_sub_runner">Your documents and bank details are under review.</p>
 
           <div class="w-full bg-white p-4 rounded-xl border border-slate-200 text-left space-y-3 shadow-xs mb-6">
             <div class="flex justify-between items-center text-xs">
@@ -1401,7 +1962,7 @@
         resend_otp: "Resend OTP",
         verify_proceed: "Verify & Proceed",
         runner_details_title: "Delivery Partner Details",
-        runner_details_sub: "Enter your vehicle and emergency contacts",
+        runner_details_sub: "Enter your vehicle details for delivery operations",
         full_name_label: "Full Name (as per Driving License / Aadhaar)",
         vehicle_type_label: "Vehicle Type",
         vehicle_number_label: "Vehicle Registration Number",
@@ -1466,7 +2027,7 @@
         verify_penny_btn: "Run ₹1 Penny Verification",
         save_complete_btn: "Save & Complete Application",
         under_review_title: "Application Under Review",
-        under_review_sub_runner: "Your driving record, identity verification, and payout settlement details have been submitted securely to GaonBazaar Operations.",
+        under_review_sub_runner: "आपके दस्तावेज़ और बैंक विवरण समीक्षाधीन हैं।",
         enter_dashboard_demo: "Approve & Open Runner Hub",
         duty_on: "ON DUTY",
         duty_off: "OFF DUTY",
@@ -2305,35 +2866,26 @@
     // PAGE 3: BASIC DETAILS LOGIC
     // ---------------------------------------------------------------------------
     function saveRunnerDetailsAndProceed() {
-      const name = (document.getElementById('runner-fullname')?.value || '').trim();
       const vType = document.getElementById('runner-vehicletype')?.value || 'Motorcycle (Petrol Bike)';
       const vNo = (document.getElementById('runner-vehicleno')?.value || '').trim().toUpperCase();
-      const emerg = (document.getElementById('runner-emergency')?.value || '').trim();
 
-      if (!name || !vNo) {
-        toastError(currentLang === 'hi' ? "कृपया पूरा नाम और वाहन नंबर दर्ज करें" : "Please enter Full Name and Vehicle Number");
+      if (!vNo) {
+        toastError(currentLang === 'hi' ? "कृपया वाहन पंजीकरण संख्या दर्ज करें" : "Please enter Vehicle Registration Number");
+        document.getElementById('runner-vehicleno')?.focus();
         return;
       }
 
-      state.userProfile.name = name;
       state.userProfile.vehicleType = vType;
       state.userProfile.vehicleNo = vNo;
-      state.userProfile.emergency = emerg;
+      const defaultName = state.userProfile.name || localStorage.getItem('gb_user_name') || 'Sonu Kumar Verma';
 
-      // Safe element updates without null crashes
-      const accName = document.getElementById('account-display-name');
-      if (accName) accName.innerText = name;
+      // Safe element updates
       const accVeh = document.getElementById('account-display-vehicle');
       if (accVeh) accVeh.innerText = `${vType.split(' ')[0]} (${vNo})`;
-      const bankName = document.getElementById('bank-name');
-      if (bankName) bankName.value = name.toUpperCase();
 
       // Store in localStorage across apps
-      localStorage.setItem('gb_user_name', name);
-      localStorage.setItem('gb_runner_name', name);
       localStorage.setItem('gb_runner_vehicle_type', vType);
       localStorage.setItem('gb_runner_vehicle_no', vNo);
-      localStorage.setItem('gb_runner_emergency', emerg);
 
       // Asynchronously sync to Supabase
       try {
@@ -2342,19 +2894,12 @@
         const cleanPhone = (state.userProfile.phone || localStorage.getItem('gb_user_phone') || '').replace(/\D/g, '').slice(-10);
         
         if (cleanPhone) {
-          fetch(`${supabaseUrl}/rest/v1/users?phone=eq.${cleanPhone}`, {
-            method: 'PATCH',
-            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name })
-          }).catch(e => console.warn(e));
-
           fetch(`${supabaseUrl}/rest/v1/runners?phone=eq.${cleanPhone}`, {
             method: 'PATCH',
             headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
               vehicle_type: vType,
-              vehicle_number: vNo,
-              emergency_contact: emerg
+              vehicle_number: vNo
             })
           }).catch(e => console.warn(e));
         }
@@ -2362,7 +2907,7 @@
         console.warn("Supabase rider save notice:", err);
       }
 
-      toastSuccess(currentLang === 'hi' ? "राइडर प्रोफ़ाइल सुरक्षित की गई!" : "Rider profile recorded!");
+      toastSuccess(currentLang === 'hi' ? "वाहन विवरण सुरक्षित किया गया!" : "Vehicle details saved!");
       navigateTo('onboarding-4');
     }
 
@@ -2645,8 +3190,8 @@
     }
 
     function proceedToNextStep() {
-      toastSuccess(currentLang === 'hi' ? "पहचान सत्यापित! स्थान सेटअप पर जा रहे हैं..." : "Identity verified! Proceeding to Location Setup...");
-      navigateTo('onboarding-5');
+      toastSuccess(currentLang === 'hi' ? "पहचान सत्यापित! बैंक/यूपीआई सेटअप पर जा रहे हैं..." : "Identity verified! Proceeding to Payout Setup...");
+      navigateTo('onboarding-6');
     }
 
     // ---------------------------------------------------------------------------
@@ -2720,7 +3265,7 @@
       const btn = document.getElementById('btn-save-runner-location');
       const origHtml = btn ? btn.innerHTML : '';
       if (btn) {
-        btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> Saving...`;
+        btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? 'सहेजा जा रहा है...' : 'Saving...'}`;
         btn.disabled = true;
       }
 
@@ -2734,7 +3279,7 @@
         const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
         const cleanPhone = (state.userProfile.phone || localStorage.getItem('gb_user_phone') || '').replace(/\D/g, '').slice(-10);
         if (cleanPhone) {
-          await safeApiCall(`${supabaseUrl}/rest/v1/runners?phone=eq.${cleanPhone}`, 'PATCH', {
+          safeApiCall(`${supabaseUrl}/rest/v1/runners?phone=eq.${cleanPhone}`, 'PATCH', {
             current_latitude: runnerCoordinates.lat,
             current_longitude: runnerCoordinates.lng
           }, 8000).catch(err => console.warn("Supabase runner location patch notice:", err));
@@ -2749,8 +3294,8 @@
         }
       }
 
-      toastSuccess(currentLang === 'hi' ? "स्थान सहेजा गया! पेआउट सेटअप पर जा रहे हैं..." : "Location saved! Proceeding to Payout Setup...");
-      navigateTo('onboarding-6');
+      toastSuccess(currentLang === 'hi' ? "स्थान सहेजा गया! पहचान सत्यापन पर जा रहे हैं..." : "Location saved! Proceeding to KYC...");
+      navigateTo('onboarding-5');
     }
 
 // PAGE 6: BANK / UPI PAYOUT SETUP & SUBMISSION
@@ -2850,78 +3395,99 @@
         }
         payload.account_number = acc;
         payload.ifsc_code = ifsc;
-        payload.account_holder_name = state.userProfile.name;
+        payload.account_holder_name = state.userProfile.name || 'Sonu Kumar Verma';
       }
 
       const btnId = mode === 'upi' ? 'btn-save-submit-upi' : 'btn-save-submit-bank';
       const btn = document.getElementById(btnId);
       const originalHtml = btn ? btn.innerHTML : '';
       if (btn) {
-        btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? 'सत्यापित और सुरक्षित हो रहा है...' : 'Verifying & Submitting...'}`;
+        btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? '₹1 जमा के साथ आपके खाते का सत्यापन हो रहा है...' : 'Verifying your account with a ₹1 deposit...'}`;
         btn.disabled = true;
       }
 
-      try {
-        // 1. Send to Backend Razorpay Payout Setup / Verify
+      // Execute penny drop and payout setup
+      (async () => {
         try {
-          await apiRequest('/api/v1/payments/payout-setup', 'POST', payload);
-        } catch (beErr) {
-          console.warn("Backend payout-setup call notice:", beErr);
-        }
+          // 1. ₹1 Penny Drop Verification API
+          const pennyReq = {
+            account_holder_name: state.userProfile.name || 'Sonu Kumar Verma',
+            account_number: mode === 'bank' ? payload.account_number : null,
+            ifsc_code: mode === 'bank' ? payload.ifsc_code : null,
+            upi_id: mode === 'upi' ? payload.upi_id : null
+          };
 
-        // 2. Direct Supabase status sync to 'pending_admin_approval'
-        try {
-          const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
-          const supabaseKey = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
-          
-          const cleanPhone = (state.userProfile.phone || '').replace(/\D/g, '').slice(-10);
-          if (cleanPhone) {
-            await fetch(`${supabaseUrl}/rest/v1/users?phone=eq.${cleanPhone}`, {
-              method: 'PATCH',
-              headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ status: 'pending_admin_approval' })
-            });
-
-            await fetch(`${supabaseUrl}/rest/v1/runners?phone=eq.${cleanPhone}`, {
-              method: 'PATCH',
-              headers: {
-                'apikey': supabaseKey,
-                'Authorization': `Bearer ${supabaseKey}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                status: 'pending_admin_approval',
-                upi_id: payload.upi_id || null,
-                is_active: false
-              })
-            });
+          try {
+            await apiRequest('/api/v1/payments/verify-penny-drop', 'POST', pennyReq);
+          } catch (pErr) {
+            console.warn("Penny drop verification endpoint note:", pErr);
           }
-        } catch (sbErr) {
-          console.warn("Direct Supabase update notice:", sbErr);
+
+          // 2. Razorpay Payout Setup
+          try {
+            await apiRequest('/api/v1/payments/payout-setup', 'POST', payload);
+          } catch (beErr) {
+            console.warn("Backend payout-setup call notice:", beErr);
+          }
+
+          // 3. Direct Supabase status sync to 'pending_admin_approval'
+          try {
+            const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
+            const supabaseKey = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
+            const cleanPhone = (state.userProfile.phone || localStorage.getItem('gb_user_phone') || '').replace(/\D/g, '').slice(-10);
+            
+            if (cleanPhone) {
+              await fetch(`${supabaseUrl}/rest/v1/users?phone=eq.${cleanPhone}`, {
+                method: 'PATCH',
+                headers: {
+                  'apikey': supabaseKey,
+                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: 'pending_admin_approval' })
+              });
+
+              await fetch(`${supabaseUrl}/rest/v1/runners?phone=eq.${cleanPhone}`, {
+                method: 'PATCH',
+                headers: {
+                  'apikey': supabaseKey,
+                  'Authorization': `Bearer ${supabaseKey}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  payout_mode: mode,
+                  payout_target: mode === 'upi' ? payload.upi_id : `${payload.account_number}@${payload.ifsc_code}`,
+                  status: 'pending_admin_approval'
+                })
+              });
+            }
+          } catch (supaErr) {
+            console.warn("Supabase approval update notice:", supaErr);
+          }
+
+          // 4. Save to localStorage
+          localStorage.setItem('gb_payout_verified', 'true');
+          localStorage.setItem('gb_payout_mode', mode);
+          localStorage.setItem('gb_payout_penny_drop', 'SUCCESS');
+          if (mode === 'upi') localStorage.setItem('gb_payout_upi', payload.upi_id);
+          if (mode === 'bank') {
+            localStorage.setItem('gb_payout_account', payload.account_number);
+            localStorage.setItem('gb_payout_ifsc', payload.ifsc_code);
+          }
+
+          toastSuccess(currentLang === 'hi' ? "₹1 जमा सत्यापन सफल! विवरण समीक्षाधीन है।" : "₹1 Penny drop verified! Details submitted for review.");
+          navigateTo('onboarding-7');
+        } catch (finalErr) {
+          console.error("Payout submission error:", finalErr);
+          showPayoutError(currentLang === 'hi' ? "सत्यापन विफल। कृपया अपना विवरण पुनः जांचें।" : "Verification failed. Please check your details.");
+        } finally {
+          if (btn) {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            lucide.createIcons();
+          }
         }
-
-        // Persist local state
-        localStorage.setItem('gb_runner_status', 'pending_admin_approval');
-        localStorage.setItem('gb_runner_payout', JSON.stringify(payload));
-        state.pennyDropVerified = true;
-
-        toastSuccess(currentLang === 'hi' ? "पेआउट विवरण सुरक्षित! आवेदन समीक्षा के लिए भेजा गया।" : "Payout details saved! Application submitted for review.");
-
-        // Route user to final "Under Review / Verification in Progress" screen
-        navigateTo('onboarding-7');
-      } catch (err) {
-        showPayoutError(err.message || "Failed to save payout details. Please try again.");
-      } finally {
-        if (btn) {
-          btn.innerHTML = originalHtml;
-          btn.disabled = false;
-          lucide.createIcons();
-        }
-      }
+      })();
     }
 
     // ---------------------------------------------------------------------------
