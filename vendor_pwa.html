@@ -160,7 +160,7 @@
       <!-- ======================================================================= -->
       
       <!-- PAGE 1: LANGUAGE SELECTION -->
-      <div id="screen-onboarding-1" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
+      <div id="screen-onboarding-1" class="app-screen flex-1 p-6 flex flex-col justify-between hidden" style="display: none;">
         <div class="pt-6 text-center">
           <div class="w-20 h-20 bg-emerald-100 text-emerald-700 rounded-3xl mx-auto flex items-center justify-center shadow-inner mb-5">
             <i data-lucide="store" class="w-10 h-10"></i>
@@ -854,10 +854,10 @@
         <!-- 1. The Smart Search Bar (Voice Integration) -->
         <div class="relative w-full">
           <i data-lucide="search" class="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none"></i>
-          <input type="text" id="inventory-search" oninput="filterInventory(this.value)" placeholder="सामान खोजें या बोलें (आलू, टमाटर, आटा)... / Search or speak item..." class="w-full pl-11 pr-14 py-3.5 rounded-2xl border-2 border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 shadow-sm transition">
+          <input type="text" id="inventory-search" oninput="filterInventory(this.value)" data-i18n-placeholder="search_inventory_placeholder" placeholder="Search or speak item (Potato, Tomato, Atta)..." class="w-full pl-11 pr-14 py-3.5 rounded-2xl border-2 border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 shadow-sm transition">
           
           <!-- Voice Action Microphone Button (Min 48px touch target) -->
-          <button type="button" id="btn-vendor-voice-search" onclick="toggleVendorVoiceSearch()" class="absolute right-1.5 top-1.5 w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 flex items-center justify-center transition active:scale-90 shadow-2xs cursor-pointer" title="बोलकर खोजें / Speak to Search">
+          <button type="button" id="btn-vendor-voice-search" onclick="toggleVendorVoiceSearch()" class="absolute right-1.5 top-1.5 w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 flex items-center justify-center transition active:scale-90 shadow-2xs cursor-pointer" data-i18n-title="speak_to_search_title" title="Speak to Search">
             <i data-lucide="mic" id="vendor-mic-icon" class="w-5 h-5"></i>
           </button>
         </div>
@@ -870,8 +870,8 @@
               <i data-lucide="scan-barcode" class="w-5 h-5 text-white"></i>
             </div>
             <div>
-              <span class="block text-xs font-extrabold tracking-wide">बारकोड स्कैन करें</span>
-              <span class="block text-[10px] text-emerald-100 font-medium">Scan Barcode (FMCG)</span>
+              <span class="block text-xs font-extrabold tracking-wide" data-i18n="action_scan_barcode_title">Scan Barcode</span>
+              <span class="block text-[10px] text-emerald-100 font-medium" data-i18n="action_scan_barcode_sub">Packaged FMCG Goods</span>
             </div>
           </button>
 
@@ -881,8 +881,8 @@
               <i data-lucide="camera" class="w-5 h-5 text-white"></i>
             </div>
             <div>
-              <span class="block text-xs font-extrabold tracking-wide">फोटो खींचे</span>
-              <span class="block text-[10px] text-amber-100 font-medium">Take Photo (Fresh/Loose)</span>
+              <span class="block text-xs font-extrabold tracking-wide" data-i18n="action_take_photo_title">Take Photo</span>
+              <span class="block text-[10px] text-amber-100 font-medium" data-i18n="action_take_photo_sub">Fresh Produce & Loose Items</span>
             </div>
           </button>
         </div>
@@ -891,11 +891,11 @@
         <div class="flex items-center justify-between px-1 text-[11px] font-bold">
           <button type="button" onclick="openCustomPricingModal({ title: '', mrp: 0, price: 0 })" class="text-emerald-700 hover:underline flex items-center space-x-1 cursor-pointer">
             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-            <span>+ नया सामान टाइप करें / Type Item Name</span>
+            <span data-i18n="type_item_name_btn">+ Type Item Name</span>
           </button>
           <button type="button" onclick="openMasterCatalogModal()" class="text-slate-500 hover:text-slate-800 flex items-center space-x-1 cursor-pointer">
             <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
-            <span>कैटलॉग सूची / View Catalog</span>
+            <span data-i18n="view_catalog_btn">View Catalog</span>
           </button>
         </div>
 
@@ -1037,12 +1037,12 @@
           </div>
 
           <!-- Product Card 6: Desi Toor Dal (Yellow Lentils / Dal Photo - NOT FISH!) -->
-          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_dal_01" data-title="Desi Toor / Arhar Dal 1kg" data-category="Grocery">
+          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_dal_01" data-title="Desi Toor Dal 1kg" data-category="Grocery">
             <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
               <img src="https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80" alt="Desi Toor Dal" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
               <div class="min-w-0 flex-1 overflow-hidden">
                 <div class="flex items-center space-x-1 min-w-0">
-                  <h4 class="text-xs font-bold text-slate-900 truncate">Desi Toor / Arhar Dal</h4>
+                  <h4 class="text-xs font-bold text-slate-900 truncate">Desi Toor Dal</h4>
                   <span class="text-[10px] text-slate-500 font-medium shrink-0">(1 kg)</span>
                 </div>
                 <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
@@ -1306,8 +1306,8 @@
               <i data-lucide="scan-barcode" class="w-4 h-4"></i>
             </div>
             <div>
-              <h3 class="text-xs sm:text-sm font-extrabold text-slate-900">बारकोड स्कैनर / Scan Barcode</h3>
-              <p class="text-[10px] text-slate-500">पैकेट पर छपा बारकोड सामने लाएं (Packaged FMCG)</p>
+              <h3 class="text-xs sm:text-sm font-extrabold text-slate-900" data-i18n="scanner_modal_title">Scan Barcode</h3>
+              <p class="text-[10px] text-slate-500" data-i18n="scanner_modal_sub">Align packaged FMCG barcode inside the camera frame</p>
             </div>
           </div>
           <button type="button" onclick="closeBarcodeScannerModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center transition">
@@ -1329,7 +1329,7 @@
             </div>
             <div class="text-center">
               <span id="barcode-scanner-status" class="px-2.5 py-1 rounded-full bg-slate-900/80 text-[10px] font-bold text-emerald-300 border border-emerald-500/40">
-                कैमरा सक्रिय / Ready to Scan
+                <span data-i18n="scanner_status_ready">Camera Ready</span>
               </span>
             </div>
             <div class="flex justify-between text-emerald-400 text-xs font-mono font-bold">
@@ -1340,49 +1340,20 @@
 
         <!-- Manual Barcode Input -->
         <div class="space-y-1.5">
-          <label class="block text-[11px] font-bold text-slate-700">बारकोड नंबर दर्ज करें / Or Enter Barcode Number</label>
+          <label class="block text-[11px] font-bold text-slate-700" data-i18n="enter_barcode_number_label">Or Enter Barcode Number</label>
           <div class="flex space-x-2">
-            <input type="text" id="manual-barcode-input" placeholder="उदा. 8901030383701" class="flex-1 px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600">
-            <button type="button" onclick="submitManualBarcode()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition active:scale-95 cursor-pointer">
-              जाँचें / Verify
-            </button>
+            <input type="text" id="manual-barcode-input" data-i18n-placeholder="barcode_placeholder" placeholder="e.g. 8901030383701" class="flex-1 px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600">
+            <button type="button" onclick="submitManualBarcode()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition active:scale-95 cursor-pointer" data-i18n="verify_barcode_btn">Verify</button>
           </div>
         </div>
 
         <!-- Quick 1-Tap FMCG Test Barcodes (Instant Prototyping) -->
         <div class="space-y-2 pt-1">
-          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">त्वरित बारकोड नमूने / Sample FMCG Barcodes:</span>
-          <div class="grid grid-cols-2 gap-1.5 text-left">
-            <button type="button" onclick="handleBarcodeDetected('8901030383701')" class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
-              <span class="block text-[11px] font-bold text-slate-900 truncate">आशीर्वाद आटा 5kg</span>
-              <span class="block text-[9px] text-slate-500 font-mono">8901030383701 • MRP ₹260</span>
-            </button>
-            <button type="button" onclick="handleBarcodeDetected('8901262010053')" class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
-              <span class="block text-[11px] font-bold text-slate-900 truncate">टाटा नमक 1kg</span>
-              <span class="block text-[9px] text-slate-500 font-mono">8901262010053 • MRP ₹28</span>
-            </button>
-            <button type="button" onclick="handleBarcodeDetected('8901491101836')" class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
-              <span class="block text-[11px] font-bold text-slate-900 truncate">फॉर्च्यून सरसों तेल 1L</span>
-              <span class="block text-[9px] text-slate-500 font-mono">8901491101836 • MRP ₹165</span>
-            </button>
-            <button type="button" onclick="handleBarcodeDetected('8901063012111')" class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
-              <span class="block text-[11px] font-bold text-slate-900 truncate">गुड डे बिस्कुट</span>
-              <span class="block text-[9px] text-slate-500 font-mono">8901063012111 • MRP ₹45</span>
-            </button>
-            <button type="button" onclick="handleBarcodeDetected('8901725181221')" class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
-              <span class="block text-[11px] font-bold text-slate-900 truncate">मैगी नूडल्स 280g</span>
-              <span class="block text-[9px] text-slate-500 font-mono">8901725181221 • MRP ₹56</span>
-            </button>
-            <button type="button" onclick="handleBarcodeDetected('8901030000000')" class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
-              <span class="block text-[11px] font-bold text-slate-900 truncate">पारले-जी बिस्कुट</span>
-              <span class="block text-[9px] text-slate-500 font-mono">8901030000000 • MRP ₹30</span>
-            </button>
-          </div>
+          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block" data-i18n="sample_barcodes_title">Sample FMCG Barcodes:</span>
+          <div id="sample-barcodes-container" class="grid grid-cols-2 gap-1.5 text-left"></div>
         </div>
 
-        <button type="button" onclick="closeBarcodeScannerModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
-          बंद करें / Close
-        </button>
+        <button type="button" onclick="closeBarcodeScannerModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition" data-i18n="close_btn">Close</button>
       </div>
     </div>
 
@@ -1398,8 +1369,8 @@
               <i data-lucide="camera" class="w-4 h-4"></i>
             </div>
             <div>
-              <h3 class="text-xs sm:text-sm font-extrabold text-slate-900">फोटो खींचे / Take Real Photo</h3>
-              <p class="text-[10px] text-slate-500">ताज़ा फल, सब्ज़ी, खुली दाल, मिठाई आदि</p>
+              <h3 class="text-xs sm:text-sm font-extrabold text-slate-900" data-i18n="photo_modal_title">Take Photo</h3>
+              <p class="text-[10px] text-slate-500" data-i18n="photo_modal_sub">Fresh fruits, vegetables, loose dal, sweets</p>
             </div>
           </div>
           <button type="button" onclick="closePhotoCaptureModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center transition">
@@ -1418,65 +1389,46 @@
           <div id="photo-placeholder-icon" class="w-14 h-14 mx-auto rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
             <i data-lucide="camera" class="w-7 h-7"></i>
           </div>
-          <p class="text-xs font-bold text-amber-950" id="photo-status-text">कैमरे से सामान की असली फोटो खींचे</p>
+          <p class="text-xs font-bold text-amber-950" id="photo-status-text" data-i18n="photo_status_prompt">Capture real product photo with camera</p>
           
           <button type="button" onclick="triggerCameraCapture()" class="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center space-x-2 cursor-pointer min-h-[48px]">
             <i data-lucide="aperture" class="w-4 h-4"></i>
-            <span>कैमरा खोलें व फोटो खींचे / Open Camera & Snap</span>
+            <span data-i18n="open_camera_btn">Open Camera & Snap Photo</span>
           </button>
         </div>
 
         <!-- Quick Loose Item Name Chips -->
         <div class="space-y-1.5">
-          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">त्वरित चयन / Quick Fresh Staples:</span>
-          <div class="flex flex-wrap gap-1.5">
-            <button type="button" onclick="selectLooseItemChip('ताज़ा टमाटर (Fresh Tomatoes)', 'Vegetables', '1 kg', 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95">
-              🍅 ताज़ा टमाटर (1 kg)
-            </button>
-            <button type="button" onclick="selectLooseItemChip('देसी आलू (Local Potatoes)', 'Vegetables', '1 kg', 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&q=80')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95">
-              🥔 देसी आलू (1 kg)
-            </button>
-            <button type="button" onclick="selectLooseItemChip('लाल प्याज़ (Red Onions)', 'Vegetables', '1 kg', 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95">
-              🧅 लाल प्याज़ (1 kg)
-            </button>
-            <button type="button" onclick="selectLooseItemChip('खुली अरहर दाल (Loose Toor Dal)', 'Grocery', '1 kg', 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=500&q=80')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95">
-              🌾 अरहर दाल (1 kg)
-            </button>
-            <button type="button" onclick="selectLooseItemChip('देसी गाय का दूध (Fresh Cow Milk)', 'Dairy', '1 L', 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95">
-              🥛 ताज़ा दूध (1 L)
-            </button>
-            <button type="button" onclick="selectLooseItemChip('स्थानीय गुलाब जामुन (Gulab Jamun)', 'Sweets', '1 kg', 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=500&q=80')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95">
-              🍬 देसी मिठाई (1 kg)
-            </button>
-          </div>
+          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block" data-i18n="quick_staples_title">Quick Fresh Staples:</span>
+          <div id="loose-item-chips-container" class="flex flex-wrap gap-1.5"></div>
         </div>
 
         <!-- Item Name & Unit Inputs -->
         <div class="space-y-3">
           <div>
-            <label class="block text-[11px] font-bold text-slate-700 mb-1">सामान का नाम / Item Name *</label>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1" data-i18n="item_name_label">Item Name *</label>
             <input type="text" id="loose-item-name-input" placeholder="उदा. ताज़ा टमाटर या देसी घी" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500">
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-[11px] font-bold text-slate-700 mb-1">इकाई / Unit</label>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1" data-i18n="unit_label">Unit</label>
               <select id="loose-item-unit-input" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 bg-white">
-                <option value="1 kg">1 kg (किलो)</option>
-                <option value="500 g">500 g (आधा किलो)</option>
-                <option value="250 g">250 g (पाव)</option>
-                <option value="1 L">1 L (लीटर)</option>
-                <option value="1 Packet">1 Packet (पैकेट)</option>
-                <option value="1 Piece">1 Piece (पीस / नग)</option>
+                <option value="1 kg" data-i18n="unit_1kg">1 kg</option>
+                <option value="500 g" data-i18n="unit_500g">500 g</option>
+                <option value="250 g" data-i18n="unit_250g">250 g</option>
+                <option value="1 L" data-i18n="unit_1l">1 L</option>
+                <option value="1 Packet" data-i18n="unit_1packet">1 Packet</option>
+                <option value="1 Piece" data-i18n="unit_1piece">1 Piece</option>
               </select>
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-slate-700 mb-1">श्रेणी / Category</label>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1" data-i18n="category_label">Category</label>
               <select id="loose-item-cat-input" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 bg-white">
-                <option value="Vegetables">सब्ज़ियाँ / Vegetables</option>
-                <option value="Grocery">किराना / Grocery</option>
-                <option value="Dairy">डेयरी / Dairy</option>
-                <option value="Sweets">मिठाई / Sweets</option>
-                <option value="Snacks">नमकीन / Snacks</option>
+                <option value="Vegetables" data-i18n="cat_vegetables">Vegetables</option>
+                <option value="Grocery" data-i18n="cat_grocery">Grocery</option>
+                <option value="Dairy" data-i18n="cat_dairy">Dairy</option>
+                <option value="Sweets" data-i18n="cat_sweets">Sweets</option>
+                <option value="Snacks" data-i18n="cat_snacks">Snacks</option>
               </select>
             </div>
           </div>
@@ -1485,7 +1437,7 @@
         <!-- Continue CTA -->
         <div class="pt-2">
           <button type="button" onclick="continueToPricingFromPhoto()" class="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center space-x-2 cursor-pointer min-h-[48px]">
-            <span>मूल्य तय करें / Continue to Pricing</span>
+            <span data-i18n="continue_to_pricing_btn">Set Item Price</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
         </div>
@@ -1504,8 +1456,8 @@
               <i data-lucide="indian-rupee" class="w-4 h-4"></i>
             </div>
             <div>
-              <h3 class="text-xs sm:text-sm font-extrabold text-slate-900">कीमत तय करें / Set Item Price</h3>
-              <p class="text-[10px] text-slate-500">आपकी दुकान, आपकी कीमत (No Locked Prices)</p>
+              <h3 class="text-xs sm:text-sm font-extrabold text-slate-900" data-i18n="pricing_modal_title">Set Item Price</h3>
+              <p class="text-[10px] text-slate-500" data-i18n="pricing_modal_sub">Your shop, your prices (No locked prices)</p>
             </div>
           </div>
           <button type="button" onclick="closeCustomPricingModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center transition">
@@ -1522,7 +1474,7 @@
             </button>
           </div>
           <div class="flex-1 min-w-0 space-y-1">
-            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide">सामान का नाम (बदलाव संभव) / Item Name</label>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide" data-i18n="pricing_item_name_label">Item Name (Editable)</label>
             <input type="text" id="custom-pricing-name" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 bg-white" placeholder="Item Name">
             <div class="flex items-center space-x-1.5 text-[10px] text-slate-500 font-semibold pt-0.5">
               <span id="custom-pricing-cat-tag" class="px-2 py-0.5 bg-slate-200 rounded-md">Grocery</span>
@@ -1538,36 +1490,36 @@
 
         <!-- THE CUSTOM PRICING FORM: 2 Stacked Price Inputs -->
         <div class="p-4 bg-emerald-50/60 rounded-2xl border-2 border-emerald-300 space-y-3.5">
-          <span class="text-xs font-extrabold text-emerald-950 block">मूल्य निर्धारण / Pricing Details</span>
+          <span class="text-xs font-extrabold text-emerald-950 block" data-i18n="pricing_details_title">Pricing Details</span>
 
           <!-- 1. MRP Input -->
           <div class="space-y-1">
-            <label class="block text-xs font-bold text-slate-700">अधिकतम खुदरा मूल्य (MRP) *</label>
+            <label class="block text-xs font-bold text-slate-700" data-i18n="pricing_mrp_label">Maximum Retail Price (MRP) *</label>
             <div class="relative">
               <span class="absolute left-3.5 top-3 text-sm font-bold text-slate-400">₹</span>
-              <input type="number" id="custom-pricing-mrp" step="0.5" min="1" placeholder="उदा. 260" oninput="calculateCustomPricingDiscount()" class="w-full pl-8 pr-3.5 py-3 rounded-xl border-2 border-slate-300 bg-white text-sm font-bold text-slate-900 focus:outline-none focus:border-emerald-600 transition min-h-[48px]">
+              <input type="number" id="custom-pricing-mrp" step="0.5" min="1" placeholder="0.00" oninput="calculateCustomPricingDiscount()" class="w-full pl-8 pr-3.5 py-3 rounded-xl border-2 border-slate-300 bg-white text-sm font-bold text-slate-900 focus:outline-none focus:border-emerald-600 transition min-h-[48px]">
             </div>
           </div>
 
           <!-- 2. Your Selling Price Input -->
           <div class="space-y-1">
-            <label class="block text-xs font-bold text-emerald-950">आपकी बिक्री कीमत (Your Selling Price) *</label>
+            <label class="block text-xs font-bold text-emerald-950" data-i18n="pricing_selling_price_label">Your Selling Price (To Customer) *</label>
             <div class="relative">
               <span class="absolute left-3.5 top-3 text-base font-extrabold text-emerald-700">₹</span>
-              <input type="number" id="custom-pricing-price" step="0.5" min="1" placeholder="उदा. 240" oninput="calculateCustomPricingDiscount()" class="w-full pl-8 pr-3.5 py-3 rounded-xl border-2 border-emerald-500 bg-white text-base font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition shadow-xs min-h-[48px]">
+              <input type="number" id="custom-pricing-price" step="0.5" min="1" placeholder="0.00" oninput="calculateCustomPricingDiscount()" class="w-full pl-8 pr-3.5 py-3 rounded-xl border-2 border-emerald-500 bg-white text-base font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition shadow-xs min-h-[48px]">
             </div>
           </div>
 
           <!-- Dynamic Discount Badge (Green "X% OFF") -->
           <div id="custom-pricing-discount-badge" class="p-2.5 bg-emerald-100/90 border border-emerald-300 rounded-xl text-emerald-900 font-extrabold text-xs flex items-center space-x-2">
             <i data-lucide="tag" class="w-4 h-4 text-emerald-700 shrink-0"></i>
-            <span id="discount-badge-text">8% OFF (₹20 ग्राहक की बचत / Customer Savings)</span>
+            <span id="discount-badge-text">10% OFF (₹20 Customer Savings)</span>
           </div>
 
           <!-- Stock & In-Stock Switch -->
           <div class="grid grid-cols-2 gap-3 pt-1">
             <div>
-              <label class="block text-[11px] font-bold text-slate-700 mb-1">स्टॉक मात्रा / Stock *</label>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1" data-i18n="pricing_stock_label">Stock Quantity *</label>
               <input type="number" id="custom-pricing-stock" min="1" value="25" placeholder="50" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-white">
             </div>
             <div class="flex flex-col justify-end">
@@ -1583,7 +1535,7 @@
         <div class="pt-2">
           <button type="button" id="btn-save-custom-priced-item" onclick="saveCustomPricedItem()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-700/20 text-sm active:scale-98 transition flex items-center justify-center space-x-2 cursor-pointer min-h-[48px]">
             <i data-lucide="check-circle" class="w-5 h-5"></i>
-            <span>दुकान में जोड़ें / Add to Live Store</span>
+            <span data-i18n="add_to_live_store_btn">Add to Live Store</span>
           </button>
         </div>
       </div>
@@ -1911,6 +1863,51 @@
         handover_otp_placeholder: "e.g. 5821",
         runner_otp_hint: "Ask the delivery partner for their secure OTP (Demo OTP: 5821)",
         inventory_title: "Live Catalog & Stock",
+        action_scan_barcode_title: "Scan Barcode",
+        action_scan_barcode_sub: "Packaged FMCG Goods",
+        action_take_photo_title: "Take Photo",
+        action_take_photo_sub: "Fresh Produce & Loose Items",
+        type_item_name_btn: "+ Type Item Name",
+        view_catalog_btn: "View Catalog",
+        search_inventory_placeholder: "Search or speak item (Potato, Tomato, Atta)...",
+        speak_to_search_title: "Speak to Search",
+        scanner_modal_title: "Scan Barcode",
+        scanner_modal_sub: "Align packaged FMCG barcode inside the camera frame",
+        scanner_status_ready: "Camera Ready",
+        enter_barcode_number_label: "Or Enter Barcode Number",
+        barcode_placeholder: "e.g. 8901030383701",
+        verify_barcode_btn: "Verify",
+        sample_barcodes_title: "Sample FMCG Barcodes:",
+        close_btn: "Close",
+        photo_modal_title: "Take Photo",
+        photo_modal_sub: "Fresh fruits, vegetables, loose dal, sweets",
+        photo_status_prompt: "Capture real product photo with camera",
+        open_camera_btn: "Open Camera & Snap Photo",
+        quick_staples_title: "Quick Fresh Staples:",
+        item_name_label: "Item Name *",
+        unit_label: "Unit",
+        category_label: "Category",
+        continue_to_pricing_btn: "Set Item Price",
+        pricing_modal_title: "Set Item Price",
+        pricing_modal_sub: "Your shop, your prices (No locked prices)",
+        pricing_item_name_label: "Item Name (Editable)",
+        pricing_details_title: "Pricing Details",
+        pricing_mrp_label: "Maximum Retail Price (MRP) *",
+        pricing_selling_price_label: "Your Selling Price (To Customer) *",
+        pricing_stock_label: "Stock Quantity *",
+        pricing_instock_label: "Available in Stock",
+        add_to_live_store_btn: "Add to Live Store",
+        cat_vegetables: "Vegetables",
+        cat_grocery: "Grocery",
+        cat_dairy: "Dairy",
+        cat_sweets: "Sweets",
+        cat_snacks: "Snacks",
+        unit_1kg: "1 kg",
+        unit_500g: "500 g",
+        unit_250g: "250 g",
+        unit_1l: "1 L",
+        unit_1packet: "1 Packet",
+        unit_1piece: "1 Piece",
         action_scan_barcode: "Scan Barcode (FMCG)",
         action_take_photo: "Take Photo (Fresh/Loose)",
         inventory_sub: "Instant toggle visible to village customers",
@@ -1918,8 +1915,8 @@
         search_inventory_placeholder: "Search items (Atta, Sugar, Oil, Milk)...",
         in_stock_label: "IN STOCK",
         out_of_stock_label: "OUT OF STOCK",
-        select_item_icon: "Item Icon / Emoji",
-        item_name_label: "Item / Product Name",
+        select_item_icon: "Item Icon (Emoji)",
+        item_name_label: "Item Name",
         item_name_placeholder: "e.g. Sugar 1kg (चीनी)",
         item_price_label: "Price (₹)",
         item_price_placeholder: "45",
@@ -2146,13 +2143,58 @@
         handover_otp_placeholder: "उदा. 5821",
         runner_otp_hint: "डिलीवरी पार्टनर से उनका सुरक्षित OTP पूछें (डेमो: 5821)",
         inventory_title: "लाइव कैटलॉग और स्टॉक",
+        action_scan_barcode_title: "बारकोड स्कैन करें",
+        action_scan_barcode_sub: "पैकेटबंद सामान (FMCG)",
+        action_take_photo_title: "फोटो खींचें",
+        action_take_photo_sub: "ताजा फल, सब्जी व खुले सामान",
+        type_item_name_btn: "+ नया सामान टाइप करें",
+        view_catalog_btn: "कैटलॉग सूची",
+        search_inventory_placeholder: "सामान खोजें या बोलें (आलू, टमाटर, आटा)...",
+        speak_to_search_title: "बोलकर खोजें",
+        scanner_modal_title: "बारकोड स्कैनर",
+        scanner_modal_sub: "पैकेट पर छपे बारकोड को कैमरे के सामने लाएं",
+        scanner_status_ready: "कैमरा सक्रिय",
+        enter_barcode_number_label: "या बारकोड नंबर दर्ज करें",
+        barcode_placeholder: "उदा. 8901030383701",
+        verify_barcode_btn: "जाँचें",
+        sample_barcodes_title: "त्वरित बारकोड नमूने:",
+        close_btn: "बंद करें",
+        photo_modal_title: "फोटो खींचें",
+        photo_modal_sub: "ताज़ा फल, सब्ज़ी, खुली दाल, मिठाई आदि",
+        photo_status_prompt: "कैमरे से सामान की असली फोटो खींचे",
+        open_camera_btn: "कैमरा खोलें व फोटो खींचें",
+        quick_staples_title: "त्वरित ताजा सामान:",
+        item_name_label: "सामान का नाम *",
+        unit_label: "इकाई",
+        category_label: "श्रेणी",
+        continue_to_pricing_btn: "मूल्य तय करें",
+        pricing_modal_title: "कीमत तय करें",
+        pricing_modal_sub: "आपकी दुकान, आपकी कीमत (कोई तय सीमा नहीं)",
+        pricing_item_name_label: "सामान का नाम (बदलाव संभव)",
+        pricing_details_title: "मूल्य निर्धारण",
+        pricing_mrp_label: "अधिकतम खुदरा मूल्य (MRP) *",
+        pricing_selling_price_label: "आपकी बिक्री कीमत (ग्राहक के लिए) *",
+        pricing_stock_label: "स्टॉक मात्रा *",
+        pricing_instock_label: "स्टॉक में उपलब्ध है",
+        add_to_live_store_btn: "दुकान में जोड़ें",
+        cat_vegetables: "सब्ज़ियाँ",
+        cat_grocery: "किराना",
+        cat_dairy: "डेयरी",
+        cat_sweets: "मिठाई",
+        cat_snacks: "नमकीन",
+        unit_1kg: "1 किलो",
+        unit_500g: "500 ग्राम",
+        unit_250g: "250 ग्राम",
+        unit_1l: "1 लीटर",
+        unit_1packet: "1 पैकेट",
+        unit_1piece: "1 पीस",
         inventory_sub: "गांव के ग्राहकों के लिए तत्काल टॉगल",
         add_product_btn: "सामान जोड़ें",
         search_inventory_placeholder: "सामान खोजें (आटा, चीनी, तेल, दूध)...",
         in_stock_label: "स्टॉक में उपलब्ध",
         out_of_stock_label: "स्टॉक समाप्त",
-        select_item_icon: "सामान का आइकन / इमोजी",
-        item_name_label: "सामान / उत्पाद का नाम",
+        select_item_icon: "सामान का आइकन (इमोजी)",
+        item_name_label: "सामान का नाम",
         item_name_placeholder: "उदा. चीनी 1 किग्रा",
         item_price_label: "मूल्य (₹)",
         item_price_placeholder: "45",
@@ -2293,6 +2335,14 @@
         }
       });
 
+      // Update titles using data-i18n-title
+      document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (i18n[lang] && i18n[lang][key]) {
+          el.setAttribute('title', i18n[lang][key]);
+        }
+      });
+
       // Update select dropdown options using data-i18n
       document.querySelectorAll('option[data-i18n]').forEach(opt => {
         const key = opt.getAttribute('data-i18n');
@@ -2301,17 +2351,24 @@
         }
       });
 
+      // Render dynamic localized components
+      if (typeof renderSampleBarcodes === 'function') renderSampleBarcodes();
+      if (typeof renderLooseItemChips === 'function') renderLooseItemChips();
+
       // Update header indicator
       const langLabel = document.getElementById('current-lang-label');
       if (langLabel) {
-        langLabel.innerText = lang === 'en' ? 'हिन्दी' : 'English';
+        langLabel.innerText = lang === 'en' ? 'English' : 'हिन्दी';
       }
       
       const accLang = document.getElementById('account-lang-name');
       if (accLang) {
-        accLang.innerText = lang === 'en' ? 'English (बदलें)' : 'हिन्दी (Switch)';
+        accLang.innerText = lang === 'en' ? 'English' : 'हिन्दी';
       }
+
+      if (window.lucide) lucide.createIcons();
     }
+    window.setLanguage = setLanguage;
 
     function toggleAppLanguage() {
       const nextLang = currentLang === 'en' ? 'hi' : 'en';
@@ -2652,7 +2709,13 @@
     }
 
     function openDashboard(initialTab = 'orders', pushHistory = true) {
-      document.querySelectorAll('.app-screen').forEach(s => s.classList.add('hidden'));
+      // STRICT ROUTING: Hide all onboarding screens
+      document.querySelectorAll('.app-screen').forEach(s => {
+        s.classList.add('hidden');
+        s.style.display = 'none';
+      });
+      const s1 = document.getElementById('screen-onboarding-1');
+      if (s1) { s1.classList.add('hidden'); s1.style.display = 'none'; }
       
       const bottomNav = document.getElementById('bottom-tabs');
       if (bottomNav) bottomNav.classList.remove('hidden');
@@ -2682,7 +2745,20 @@
 
     function switchDashboardTab(tabName, pushHistory = true) {
       state.activeTab = tabName;
-      document.querySelectorAll('.dashboard-tab').forEach(t => t.classList.add('hidden'));
+      state.currentScreen = 'dashboard';
+
+      // STRICT ROUTING: Suppress all onboarding screens (including language selector) on the dashboard
+      document.querySelectorAll('.app-screen').forEach(s => {
+        s.classList.add('hidden');
+        s.style.display = 'none';
+      });
+      const s1 = document.getElementById('screen-onboarding-1');
+      if (s1) { s1.classList.add('hidden'); s1.style.display = 'none'; }
+
+      document.querySelectorAll('.dashboard-tab').forEach(t => {
+        t.classList.add('hidden');
+        t.style.display = 'none';
+      });
       
       const targetTab = document.getElementById('tab-' + tabName);
       if (targetTab) {
@@ -4640,11 +4716,21 @@
       const micIcon = document.getElementById('vendor-mic-icon');
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+      const isHi = (typeof currentLang !== 'undefined' ? currentLang === 'hi' : false) || 
+                   (localStorage.getItem('gaonbazaar_vendor_lang') === 'hi') || 
+                   (window.currentLang === 'hi');
+
       if (!SpeechRecognition) {
-        toastWarning(currentLang === 'hi' 
-          ? "इस ब्राउज़र में आवाज़ पहचान समर्थित नहीं है, कृपया टाइप करें।" 
-          : "Voice recognition not supported in this browser. Please type to search.");
-        if (searchInput) searchInput.focus();
+        const simulatedVoice = prompt(isHi 
+          ? "आवाज़ से सामान का नाम बोलें (उदा. आटा, दूध, तेल):" 
+          : "Speak item name (e.g. Atta, Milk, Oil):", isHi ? "आटा" : "Atta");
+        if (simulatedVoice) {
+          if (searchInput) {
+            searchInput.value = simulatedVoice;
+            filterInventory(simulatedVoice);
+          }
+          toastSuccess(isHi ? `पहचाना गया: "${simulatedVoice}"` : `Voice recognized: "${simulatedVoice}"`);
+        }
         return;
       }
 
@@ -4656,7 +4742,7 @@
       try {
         if (vendorSpeechRecognizer) vendorSpeechRecognizer.abort();
         vendorSpeechRecognizer = new SpeechRecognition();
-        vendorSpeechRecognizer.lang = currentLang === 'hi' ? 'hi-IN' : 'en-IN';
+        vendorSpeechRecognizer.lang = isHi ? 'hi-IN' : 'en-IN';
         vendorSpeechRecognizer.interimResults = false;
         vendorSpeechRecognizer.maxAlternatives = 1;
 
@@ -4665,7 +4751,7 @@
           micBtn.classList.add('bg-rose-100', 'text-rose-700', 'border-rose-400', 'animate-pulse');
           micBtn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
         }
-        toastInfo(currentLang === 'hi' ? "सुन रहे हैं... सामान का नाम बोलिए (उदा. टमाटर, आटा)!" : "Listening... Speak item name (e.g. Tomato, Atta)!");
+        toastInfo(isHi ? "सुन रहे हैं... सामान का नाम बोलिए (उदा. टमाटर, आटा)!" : "Listening... Speak item name (e.g. Tomato, Atta)!");
 
         vendorSpeechRecognizer.onresult = function(e) {
           const transcript = e.results[0][0].transcript.trim();
@@ -4676,42 +4762,15 @@
             filterInventory(transcript);
           }
 
-          toastSuccess(currentLang === 'hi' ? `पहचाना गया: "${transcript}"` : `Voice recognized: "${transcript}"`);
-
-          // Check if zero items matched in active inventory, auto-fill into Custom Pricing Form
-          const activeCards = Array.from(document.querySelectorAll('#inventory-list .product-item:not(.hidden)'));
-          if (activeCards.length === 0) {
-            // Check if matches in master catalog
-            const skus = (window.MASTER_SKU_DATABASE && Array.isArray(window.MASTER_SKU_DATABASE)) ? window.MASTER_SKU_DATABASE : MASTER_SKU_DATABASE;
-            const match = skus.find(s => s.product_name.toLowerCase().includes(transcript.toLowerCase()) || (s.brand || '').toLowerCase().includes(transcript.toLowerCase()));
-            if (match) {
-              openCustomPricingModal({
-                title: match.product_name,
-                brand: match.brand,
-                category: match.category,
-                unit: match.variant || match.unit,
-                mrp: match.mrp,
-                price: match.suggested_price || match.mrp,
-                img: match.image_url
-              });
-            } else {
-              openCustomPricingModal({
-                title: transcript,
-                brand: "",
-                category: "Grocery",
-                unit: "1 kg",
-                mrp: 50,
-                price: 45,
-                img: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80"
-              });
-            }
-          }
+          toastSuccess(isHi ? `पहचाना गया: "${transcript}"` : `Voice recognized: "${transcript}"`);
         };
 
-        vendorSpeechRecognizer.onerror = function(err) {
-          console.warn("Vendor voice error:", err);
+        vendorSpeechRecognizer.onerror = function(e) {
+          console.warn("Speech recognition error:", e.error);
           stopVendorVoiceSearch();
-          toastWarning(currentLang === 'hi' ? "आवाज़ नहीं सुनी गई, कृपया दोबारा बोलें या टाइप करें।" : "Speech not detected. Please speak clearly or type.");
+          if (e.error === 'not-allowed') {
+            toastWarning(isHi ? "माइक्रोफ़ोन की अनुमति नहीं है।" : "Microphone permission denied.");
+          }
         };
 
         vendorSpeechRecognizer.onend = function() {
@@ -4720,11 +4779,34 @@
 
         vendorSpeechRecognizer.start();
       } catch (err) {
-        console.error("Speech start error:", err);
+        console.warn("Speech recognition start failed:", err);
         stopVendorVoiceSearch();
       }
     }
     window.toggleVendorVoiceSearch = toggleVendorVoiceSearch;
+    window.filterInventory = filterInventory;
+
+    // Direct Voice Simulation Hook for automated verification and emulator environments
+    window.simulateVoiceSearch = function(queryText) {
+      const searchInput = document.getElementById('inventory-search');
+      const micBtn = document.getElementById('btn-vendor-voice-search');
+      const isHi = (typeof currentLang !== 'undefined' ? currentLang === 'hi' : false) || 
+                   (localStorage.getItem('gaonbazaar_vendor_lang') === 'hi') || 
+                   (window.currentLang === 'hi');
+
+      if (micBtn) {
+        micBtn.classList.add('bg-rose-100', 'text-rose-700', 'border-rose-400', 'animate-pulse');
+        setTimeout(() => {
+          micBtn.classList.remove('bg-rose-100', 'text-rose-700', 'border-rose-400', 'animate-pulse');
+        }, 300);
+      }
+
+      if (searchInput) {
+        searchInput.value = queryText;
+        filterInventory(queryText);
+      }
+      toastSuccess(isHi ? `पहचाना गया: "${queryText}"` : `Voice recognized: "${queryText}"`);
+    };
 
     function stopVendorVoiceSearch() {
       isVendorListening = false;
@@ -4743,60 +4825,104 @@
 
     const FMCG_BARCODE_LOOKUP = {
       "8901030383701": {
-        title: "Aashirvaad Shudh Chakki Atta (5 kg)",
+        titleEn: "Aashirvaad Shudh Chakki Atta (5 kg)",
+        titleHi: "आशीर्वाद शुद्ध चक्की आटा (5 kg)",
         brand: "Aashirvaad",
         category: "Grocery",
         unit: "5 kg",
-        mrp: 260.0,
-        price: 240.0,
         img: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80"
       },
       "8901262010053": {
-        title: "Tata Salt Vacuum Evaporated (1 kg)",
+        titleEn: "Tata Salt Vacuum Evaporated (1 kg)",
+        titleHi: "टाटा नमक (1 kg)",
         brand: "Tata",
         category: "Grocery",
         unit: "1 kg",
-        mrp: 28.0,
-        price: 26.0,
         img: "https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=500&q=80"
       },
       "8901491101836": {
-        title: "Fortune Kachi Ghani Mustard Oil (1 L)",
+        titleEn: "Fortune Kachi Ghani Mustard Oil (1 L)",
+        titleHi: "फॉर्च्यून कच्ची घानी सरसों तेल (1 L)",
         brand: "Fortune",
         category: "Grocery",
         unit: "1 L",
-        mrp: 165.0,
-        price: 145.0,
         img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"
       },
       "8901063012111": {
-        title: "Britannia Good Day Butter Cookies (200 g)",
+        titleEn: "Britannia Good Day Butter Cookies (200 g)",
+        titleHi: "ब्रिटानिया गुड डे बटर कुकीज (200 g)",
         brand: "Britannia",
         category: "Snacks",
         unit: "200 g",
-        mrp: 45.0,
-        price: 40.0,
         img: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80"
       },
       "8901725181221": {
-        title: "Maggi 2-Minute Masala Noodles (280 g)",
+        titleEn: "Maggi 2-Minute Masala Noodles (280 g)",
+        titleHi: "मैगी 2-मिनट मसाला नूडल्स (280 g)",
         brand: "Nestle",
         category: "Snacks",
         unit: "280 g",
-        mrp: 56.0,
-        price: 52.0,
         img: "https://images.unsplash.com/photo-1612927601601-6638404737ce?w=500&q=80"
       },
       "8901030000000": {
-        title: "Parle-G Gold Glucose Biscuits (250 g)",
+        titleEn: "Parle-G Glucose Biscuits (250 g)",
+        titleHi: "पारले-जी ग्लूकोज बिस्कुट (250 g)",
         brand: "Parle",
         category: "Snacks",
         unit: "250 g",
-        mrp: 30.0,
-        price: 28.0,
-        img: "https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=500&q=80"
+        img: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80"
       }
     };
+
+    const SAMPLE_BARCODES_LIST = [
+      { code: '8901030383701', en: 'Aashirvaad Chakki Atta (5 kg)', hi: 'आशीर्वाद चक्की आटा (5 kg)' },
+      { code: '8901262010053', en: 'Tata Salt (1 kg)', hi: 'टाटा नमक (1 kg)' },
+      { code: '8901491101836', en: 'Fortune Mustard Oil (1 L)', hi: 'फॉर्च्यून सरसों तेल (1 L)' },
+      { code: '8901063012111', en: 'Britannia Good Day (200 g)', hi: 'गुड डे बिस्कुट (200 g)' },
+      { code: '8901725181221', en: 'Maggi Noodles (280 g)', hi: 'मैगी नूडल्स (280 g)' },
+      { code: '8901030000000', en: 'Parle-G Biscuits (250 g)', hi: 'पारले-जी बिस्कुट (250 g)' }
+    ];
+
+    const LOOSE_ITEM_CHIPS = [
+      { en: "Fresh Tomatoes (1 kg)", hi: "ताज़ा टमाटर (1 kg)", cat: "Vegetables", unit: "1 kg", img: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80", icon: "🍅" },
+      { en: "Local Potatoes (1 kg)", hi: "देसी आलू (1 kg)", cat: "Vegetables", unit: "1 kg", img: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&q=80", icon: "🥔" },
+      { en: "Red Onions (1 kg)", hi: "लाल प्याज़ (1 kg)", cat: "Vegetables", unit: "1 kg", img: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80", icon: "🧅" },
+      { en: "Loose Toor Dal (1 kg)", hi: "अरहर दाल (1 kg)", cat: "Grocery", unit: "1 kg", img: "https://images.unsplash.com/photo-1585032226651-759b368d7246?w=500&q=80", icon: "🌾" },
+      { en: "Fresh Cow Milk (1 L)", hi: "ताज़ा गाय का दूध (1 L)", cat: "Dairy", unit: "1 L", img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80", icon: "🥛" },
+      { en: "Gulab Jamun (1 kg)", hi: "देसी गुलाब जामुन (1 kg)", cat: "Sweets", unit: "1 kg", img: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=500&q=80", icon: "🍬" }
+    ];
+
+    function renderSampleBarcodes() {
+      const container = document.getElementById('sample-barcodes-container');
+      if (!container) return;
+      const isHi = (typeof currentLang !== 'undefined' ? currentLang === 'hi' : false) || 
+                   (localStorage.getItem('gaonbazaar_vendor_lang') === 'hi') || 
+                   (window.currentLang === 'hi');
+      container.innerHTML = SAMPLE_BARCODES_LIST.map(item => `
+        <button type="button" onclick="handleBarcodeDetected('${item.code}')" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95 cursor-pointer">
+          <span class="block text-[11px] font-bold text-slate-900 truncate">${isHi ? item.hi : item.en}</span>
+          <span class="block text-[10px] text-emerald-700 font-mono font-semibold">${item.code}</span>
+        </button>
+      `).join('');
+    }
+    window.renderSampleBarcodes = renderSampleBarcodes;
+
+    function renderLooseItemChips() {
+      const container = document.getElementById('loose-item-chips-container');
+      if (!container) return;
+      const isHi = (typeof currentLang !== 'undefined' ? currentLang === 'hi' : false) || 
+                   (localStorage.getItem('gaonbazaar_vendor_lang') === 'hi') || 
+                   (window.currentLang === 'hi');
+      container.innerHTML = LOOSE_ITEM_CHIPS.map(item => {
+        const title = isHi ? item.hi : item.en;
+        return `
+          <button type="button" onclick="selectLooseItemChip('${title.replace(/'/g, "\'")}', '${item.cat}', '${item.unit}', '${item.img}')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95 cursor-pointer">
+            ${item.icon} ${title}
+          </button>
+        `;
+      }).join('');
+    }
+    window.renderLooseItemChips = renderLooseItemChips;
 
     function openBarcodeScannerModal() {
       const modal = document.getElementById('modal-barcode-scanner');
@@ -4850,37 +4976,57 @@
     function handleBarcodeDetected(barcode) {
       closeBarcodeScannerModal();
       const code = String(barcode).trim();
-      
-      // Check FMCG Barcode Database
-      let item = FMCG_BARCODE_LOOKUP[code];
-      if (!item) {
-        // Fallback: match in MASTER_SKU_DATABASE
+      const isHi = (typeof currentLang !== 'undefined' ? currentLang === 'hi' : false) || 
+                   (localStorage.getItem('gaonbazaar_vendor_lang') === 'hi') || 
+                   (window.currentLang === 'hi');
+
+      // Check FMCG Barcode Database (Decoupled: Only Name & Image, No Prices)
+      let rawItem = FMCG_BARCODE_LOOKUP[code];
+      let item = null;
+
+      if (rawItem) {
+        item = {
+          title: isHi ? rawItem.titleHi : rawItem.titleEn,
+          brand: rawItem.brand,
+          category: rawItem.category,
+          unit: rawItem.unit,
+          img: rawItem.img,
+          mrp: '',
+          price: '',
+          stock: ''
+        };
+      } else {
         const skus = (window.MASTER_SKU_DATABASE && Array.isArray(window.MASTER_SKU_DATABASE)) ? window.MASTER_SKU_DATABASE : MASTER_SKU_DATABASE;
         const matchedSku = skus.find(s => (s.id || '').includes(code) || (s.product_name || '').toLowerCase().includes(code.toLowerCase()));
         if (matchedSku) {
           item = {
-            title: matchedSku.product_name,
+            title: isHi ? (matchedSku.product_name_hi || matchedSku.product_name) : matchedSku.product_name,
             brand: matchedSku.brand,
             category: matchedSku.category,
             unit: matchedSku.variant || matchedSku.unit,
-            mrp: matchedSku.mrp,
-            price: matchedSku.suggested_price || matchedSku.mrp,
-            img: matchedSku.image_url
+            img: matchedSku.image_url,
+            mrp: '',
+            price: '',
+            stock: ''
           };
         } else {
           item = {
-            title: `Packaged FMCG Product (${code.slice(-6)})`,
-            brand: "FMCG Brand",
+            title: isHi ? `पैकेटबंद सामान (${code.slice(-6)})` : `Packaged Product (${code.slice(-6)})`,
+            brand: "FMCG",
             category: "Grocery",
             unit: "1 unit",
-            mrp: 100.0,
-            price: 90.0,
-            img: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80"
+            img: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80",
+            mrp: '',
+            price: '',
+            stock: ''
           };
         }
       }
 
-      toastSuccess(currentLang === 'hi' ? `बारकोड मिला: ${item.title}` : `Barcode matched: ${item.title}`);
+      toastSuccess(isHi ? `बारकोड मिला: ${item.title}` : `Barcode matched: ${item.title}`);
+      
+      // DECOUPLED PRICING PIPELINE:
+      // Pass Name and Image, leaving MRP, Price, and Stock COMPLETELY BLANK for vendor manual entry
       openCustomPricingModal(item);
     }
     window.handleBarcodeDetected = handleBarcodeDetected;
@@ -4974,20 +5120,26 @@
       const name = (document.getElementById('loose-item-name-input')?.value || '').trim();
       const unit = document.getElementById('loose-item-unit-input')?.value || '1 kg';
       const cat = document.getElementById('loose-item-cat-input')?.value || 'Vegetables';
+      const isHi = (typeof currentLang !== 'undefined' ? currentLang === 'hi' : false) || 
+                   (localStorage.getItem('gaonbazaar_vendor_lang') === 'hi') || 
+                   (window.currentLang === 'hi');
 
       if (!name) {
-        toastError(currentLang === 'hi' ? "कृपया सामान का नाम दर्ज करें।" : "Please enter the item name.");
+        toastError(isHi ? "कृपया सामान का नाम दर्ज करें।" : "Please enter the item name.");
         document.getElementById('loose-item-name-input')?.focus();
         return;
       }
 
       closePhotoCaptureModal();
+      
+      // Decoupled Pricing: Leave MRP, Selling Price, and Stock completely blank
       openCustomPricingModal({
         title: name,
         category: cat,
         unit: unit,
-        mrp: 40.0,
-        price: 35.0,
+        mrp: '',
+        price: '',
+        stock: '',
         img: currentSnappedPhotoData || "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80"
       });
     }
@@ -4996,8 +5148,9 @@
     // 4. THE CUSTOM PRICING FORM (NO LOCKED SKUS, MRP & SELLING PRICE)
     function openCustomPricingModal(itemData = {}) {
       const name = itemData.title || itemData.name || itemData.product_name || "";
-      const mrp = Number(itemData.mrp) || 0;
-      const price = Number(itemData.price) || Number(itemData.suggested_price) || mrp;
+      const mrp = itemData.mrp !== undefined && itemData.mrp !== null ? String(itemData.mrp).trim() : "";
+      const price = itemData.price !== undefined && itemData.price !== null ? String(itemData.price).trim() : "";
+      const stock = itemData.stock !== undefined && itemData.stock !== null ? String(itemData.stock).trim() : "";
       const cat = itemData.category || "Grocery";
       const unit = itemData.unit || itemData.variant || "1 unit";
       const img = itemData.img || itemData.image_url || "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80";
@@ -5014,29 +5167,27 @@
       const unitTag = document.getElementById('custom-pricing-unit-tag');
 
       if (nameInp) nameInp.value = name;
-      if (mrpInp) mrpInp.value = mrp > 0 ? mrp : (price > 0 ? price : 50);
-      if (priceInp) priceInp.value = price > 0 ? price : 45;
-      if (stockInp) stockInp.value = 25;
+      // STRICT DECOUPLING: MRP, Selling Price, and Stock are left completely blank for the vendor to manually enter
+      if (mrpInp) mrpInp.value = mrp ? mrp : '';
+      if (priceInp) priceInp.value = price ? price : '';
+      if (stockInp) stockInp.value = stock ? stock : '';
       if (instockInp) instockInp.checked = true;
       if (previewImg) previewImg.src = img;
       if (catTag) catTag.innerText = cat;
       if (unitTag) unitTag.innerText = unit;
 
-      const catHidden = document.getElementById('custom-pricing-category');
-      const unitHidden = document.getElementById('custom-pricing-unit');
-      const brandHidden = document.getElementById('custom-pricing-brand');
-      if (catHidden) catHidden.value = cat;
-      if (unitHidden) unitHidden.value = unit;
-      if (brandHidden) brandHidden.value = itemData.brand || "";
-
       calculateCustomPricingDiscount();
 
-      const modal = document.getElementById('modal-custom-pricing');
-      if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-      }
+      openModal('modal-custom-pricing');
       if (window.lucide) lucide.createIcons();
+
+      setTimeout(() => {
+        if (name && mrpInp) {
+          mrpInp.focus();
+        } else if (nameInp) {
+          nameInp.focus();
+        }
+      }, 200);
     }
     window.openCustomPricingModal = openCustomPricingModal;
 
@@ -5069,17 +5220,22 @@
       const badgeText = document.getElementById('discount-badge-text');
 
       if (!badge || !badgeText) return;
+      const isHi = (typeof currentLang !== 'undefined' ? currentLang === 'hi' : false) || 
+                   (localStorage.getItem('gaonbazaar_vendor_lang') === 'hi') || 
+                   (window.currentLang === 'hi');
 
       if (mrp > 0 && price > 0 && mrp > price) {
         const discountPct = Math.round(((mrp - price) / mrp) * 100);
         const savings = (mrp - price).toFixed(0);
-        badgeText.innerText = `${discountPct}% OFF (₹${savings} ग्राहक की बचत / Customer Savings)`;
+        badgeText.innerText = isHi 
+          ? `${discountPct}% छूट (₹${savings} ग्राहक बचत)` 
+          : `${discountPct}% OFF (₹${savings} Customer Savings)`;
         badge.className = "p-2.5 bg-emerald-100 border border-emerald-300 rounded-xl text-emerald-900 font-extrabold text-xs flex items-center space-x-2";
-      } else if (mrp > 0 && price >= mrp) {
-        badgeText.innerText = "MRP पर बिक्री (0% छूट) / Selling at MRP";
-        badge.className = "p-2.5 bg-slate-100 border border-slate-300 rounded-xl text-slate-700 font-bold text-xs flex items-center space-x-2";
+      } else if (mrp > 0 && price > 0 && price >= mrp) {
+        badgeText.innerText = isHi ? "MRP पर बिक्री" : "Standard Price";
+        badge.className = "p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-700 font-bold text-xs flex items-center space-x-2";
       } else {
-        badgeText.innerText = "कीमत दर्ज करें / Enter valid prices";
+        badgeText.innerText = isHi ? "कीमत दर्ज करें" : "Enter Price";
         badge.className = "p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-bold text-xs flex items-center space-x-2";
       }
     }
