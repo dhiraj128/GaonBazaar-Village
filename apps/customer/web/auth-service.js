@@ -56,7 +56,6 @@ export function getOrCreateRecaptchaVerifier() {
     return window.recaptchaVerifier;
   }
 
-  // Ensure recaptcha container exists in the DOM
   let container = document.getElementById('recaptcha-container');
   if (!container) {
     container = document.createElement('div');
@@ -68,12 +67,20 @@ export function getOrCreateRecaptchaVerifier() {
     recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
       size: 'invisible',
       callback: (response) => {
-        console.log("reCAPTCHA verified successfully.");
+        console.log("Invisible reCAPTCHA verified successfully.");
       },
       'expired-callback': () => {
-        console.warn("reCAPTCHA expired, resetting...");
+        console.warn("Invisible reCAPTCHA expired, resetting...");
         resetRecaptcha();
       }
+    });
+
+    // Pre-render on mount to stabilize widget DOM
+    recaptchaVerifier.render().then((widgetId) => {
+      window.recaptchaWidgetId = widgetId;
+      console.log("Invisible reCAPTCHA pre-rendered on mount, widgetId:", widgetId);
+    }).catch(err => {
+      console.warn("reCAPTCHA pre-render notice:", err);
     });
 
     window.recaptchaVerifier = recaptchaVerifier;

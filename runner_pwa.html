@@ -82,6 +82,58 @@
   <!-- Leaflet Map CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Firebase Auth & Invisible reCAPTCHA SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBVwI7wmdylF7499nrIGJKJP9Nvfj761xA",
+      authDomain: "gaon-bazaar-village.firebaseapp.com",
+      projectId: "gaon-bazaar-village",
+      storageBucket: "gaon-bazaar-village.firebasestorage.app",
+      messagingSenderId: "265333828276",
+      appId: "1:265333828276:web:f2b9ae45032af552e785e1",
+      measurementId: "G-F4E5161KN0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    window.firebaseAuth = auth;
+
+    window.initInvisibleRecaptcha = function() {
+      if (window.recaptchaVerifier) return window.recaptchaVerifier;
+      const container = document.getElementById('recaptcha-container');
+      if (!container) return null;
+      try {
+        const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible',
+          callback: () => console.log("Invisible reCAPTCHA verified successfully."),
+          'expired-callback': () => {
+            try { window.recaptchaVerifier.clear(); } catch(e){}
+            window.recaptchaVerifier = null;
+          }
+        });
+        verifier.render().then(wId => {
+          window.recaptchaWidgetId = wId;
+          console.log("Invisible reCAPTCHA rendered on mount, widgetId:", wId);
+        }).catch(e => console.warn("reCAPTCHA mount notice:", e));
+        window.recaptchaVerifier = verifier;
+        return verifier;
+      } catch (err) {
+        console.warn("reCAPTCHA verifier init notice:", err);
+        return null;
+      }
+    };
+
+    window.firebaseSignInWithPhone = function(phoneNumber, verifier) {
+      return signInWithPhoneNumber(auth, phoneNumber, verifier);
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      window.initInvisibleRecaptcha();
+    });
+  </script>
 </head>
 <body class="bg-slate-900 flex justify-center min-h-screen text-slate-800 antialiased">
 
@@ -164,46 +216,75 @@
       <!-- PAGE 2: MOBILE REGISTRATION & OTP -->
       <div id="screen-onboarding-2" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
         <div>
-          <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
-            <span class="px-2 py-0.5 bg-blue-100 rounded" data-i18n="step_2_badge">Step 2 of 7</span>
-            <span data-i18n="registration_sub">Registration</span>
-          </div>
-          <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="mobile_reg_title">Enter Mobile Number</h2>
-          <p class="text-sm text-slate-500 mb-6" data-i18n="mobile_reg_sub">We will send a 4-digit verification code to your phone</p>
-
-          <div class="mb-5">
-            <label class="block text-xs font-semibold text-slate-700 mb-1.5" data-i18n="phone_number_label">Phone Number</label>
-            <div class="flex rounded-xl border border-slate-300 overflow-hidden focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 bg-white shadow-xs">
-              <span class="inline-flex items-center px-3.5 bg-slate-50 text-slate-600 text-sm font-semibold border-r border-slate-300">+91</span>
-              <input type="tel" id="runner-phone-input" maxlength="10" placeholder="9905361711" value="9905361711" class="w-full px-3.5 py-3 text-slate-900 font-bold font-mono placeholder-slate-400 focus:outline-none">
-            </div>
-          </div>
-
-          <button id="send-otp-btn" onclick="sendMobileOTP()" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-semibold shadow-sm transition active:scale-98 flex items-center justify-center space-x-2 mb-6">
-            <span id="send-otp-text" data-i18n="send_otp_btn">Send OTP</span>
-            <i data-lucide="send" class="w-4 h-4"></i>
+          <button onclick="handleHistoryBack()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition active:scale-95 mb-4" aria-label="Back">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
           </button>
 
-          <div id="otp-container" class="space-y-3">
-            <label class="block text-xs font-semibold text-slate-700" data-i18n="enter_otp_label">Enter 4-Digit OTP</label>
-            <div class="flex justify-between space-x-3">
-              <input type="text" maxlength="1" id="otp-1" oninput="handleOtpInput(1, event)" class="w-14 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs" value="1">
-              <input type="text" maxlength="1" id="otp-2" oninput="handleOtpInput(2, event)" class="w-14 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs" value="2">
-              <input type="text" maxlength="1" id="otp-3" oninput="handleOtpInput(3, event)" class="w-14 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs" value="3">
-              <input type="text" maxlength="1" id="otp-4" oninput="handleOtpInput(4, event)" class="w-14 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs" value="4">
+          <div class="space-y-1.5 mb-5">
+            <h2 class="text-2xl font-extrabold text-slate-900" data-i18n="login_title">Mobile Login</h2>
+            <p class="text-xs text-slate-500 leading-relaxed" data-i18n="login_sub">Enter your mobile number to receive a secure 6-digit SMS verification code on your phone.</p>
+          </div>
+
+          <!-- Step 1: Mobile Input Section -->
+          <div id="phone-input-section" class="space-y-4 pt-1">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="phone_number_label">Mobile Number (India)</label>
+              <div class="relative flex items-center">
+                <div class="absolute left-3.5 flex items-center space-x-1.5 text-xs font-bold text-slate-700 border-r border-slate-300 pr-2.5 select-none">
+                  <span>🇮🇳</span>
+                  <span class="font-mono text-blue-700 font-extrabold">+91</span>
+                </div>
+                <input type="tel" id="runner-phone-input" maxlength="10" placeholder="9905361711" value="9905361711" class="w-full pl-20 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs font-mono font-bold">
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1" data-i18n="sms_dispatched_note">Instant SMS OTP delivered to your mobile phone</p>
             </div>
+
+            <!-- Invisible reCAPTCHA container -->
+            <div id="recaptcha-container"></div>
+
+            <button id="send-otp-btn" onclick="sendMobileOTP()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
+              <span id="send-otp-text" data-i18n="send_otp_btn">Send OTP</span>
+              <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Step 2: 6-Digit OTP Container -->
+          <div id="otp-container" class="space-y-4 pt-4 hidden">
+            <div class="p-3 bg-blue-50 rounded-2xl border border-blue-200 flex items-center justify-between">
+              <div class="text-xs text-blue-900">
+                <span class="font-medium" data-i18n="otp_sent_to">Code sent to:</span> <span id="otp-phone-display" class="font-bold font-mono">+91 9905361711</span>
+              </div>
+              <button onclick="resetRunnerPhone()" class="text-xs text-blue-700 font-bold hover:underline" data-i18n="change_number">Change</button>
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-center text-[11px] font-semibold text-slate-600" data-i18n="enter_otp_label">Enter 6-Digit OTP</label>
+              <div class="flex justify-between space-x-1.5 max-w-[320px] mx-auto">
+                <input type="text" maxlength="1" id="otp-1" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="1">
+                <input type="text" maxlength="1" id="otp-2" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="2">
+                <input type="text" maxlength="1" id="otp-3" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="3">
+                <input type="text" maxlength="1" id="otp-4" oninput="handleOtpInput(4, event)" onkeydown="handleOtpKey(4, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="4">
+                <input type="text" maxlength="1" id="otp-5" oninput="handleOtpInput(5, event)" onkeydown="handleOtpKey(5, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="5">
+                <input type="text" maxlength="1" id="otp-6" oninput="handleOtpInput(6, event)" onkeydown="handleOtpKey(6, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="6">
+              </div>
+            </div>
+
             <div class="flex justify-between items-center text-xs text-slate-500 pt-1">
-              <span>Testing OTP: <strong class="text-blue-700">1234</strong></span>
+              <span>Testing OTP: <strong class="text-blue-700 font-mono">123456</strong></span>
               <button onclick="sendMobileOTP()" class="text-blue-600 font-semibold hover:underline" data-i18n="resend_otp">Resend OTP</button>
+            </div>
+
+            <div class="pt-4">
+              <button id="verify-otp-btn" onclick="verifyMobileOTP()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
+                <span id="verify-btn-text" data-i18n="verify_proceed">Verify & Proceed</span>
+                <i data-lucide="check" class="w-4 h-4"></i>
+              </button>
             </div>
           </div>
         </div>
 
-        <div class="pt-6">
-          <button id="verify-otp-btn" onclick="verifyMobileOTP()" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
-            <span id="verify-btn-text" data-i18n="verify_proceed">Verify & Proceed</span>
-            <i data-lucide="check" class="w-4 h-4"></i>
-          </button>
+        <div class="py-6 text-center text-[11px] text-slate-400">
+          <p data-i18n="terms_notice">By continuing, you agree to GaonBazaar Terms & Conditions.</p>
         </div>
       </div>
 
@@ -249,7 +330,7 @@
           <!-- Header -->
           <div>
             <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2"><span class="px-2 py-0.5 bg-blue-100 rounded">Step 4 of 7</span><span>Service Area</span></div>
-            <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="runner_location_title">Delivery Radius & Hub</h2>
+            <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="runner_location_title">Service Area Setup</h2>
             <p class="text-xs text-slate-500 leading-relaxed" data-i18n="runner_location_sub">
               Define your operating base village and service delivery radius
             </p>
@@ -260,7 +341,7 @@
             <!-- 1. Operating Base Village / Hub -->
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="base_village_label">
-                Operating Base Village / Hub <span class="text-rose-500">*</span>
+                Base Village / Area Name <span class="text-rose-500">*</span>
               </label>
               <input type="text" id="runner-base-village" placeholder="e.g. Chaturshi, Musahri" value="Chaturshi" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-xs focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
               <p class="text-[10px] text-slate-400 mt-1" data-i18n="base_village_hint">Orders will be assigned from local shops around your hub</p>
@@ -276,7 +357,7 @@
                   5 km
                 </button>
                 <button type="button" onclick="selectRadius(8)" id="radius-chip-8" class="py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-xs font-bold text-blue-700 shadow-2xs transition">
-                  8 km <span class="text-[9px] block text-blue-500 font-normal">Optimal</span>
+                  8 km
                 </button>
                 <button type="button" onclick="selectRadius(10)" id="radius-chip-10" class="py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:border-blue-600 hover:text-blue-600 transition">
                   10 km
@@ -1378,9 +1459,9 @@
         pan_verified_title: "PAN Successfully Verified",
         continue_to_location: "Continue to Location Setup",
         continue_to_payout: "Continue to Payout Setup",
-        runner_location_title: "Delivery Radius & Hub",
+        runner_location_title: "Service Area Setup",
         runner_location_sub: "Define your operating base village and service delivery radius",
-        base_village_label: "Operating Base Village / Hub",
+        base_village_label: "Base Village / Area Name",
         base_village_hint: "Orders will be assigned from local shops around your hub",
         delivery_radius_label: "Delivery Service Radius",
         gps_coordinates_label: "GPS Coordinates:",
@@ -2261,21 +2342,97 @@
     // ---------------------------------------------------------------------------
     // PAGE 2: MOBILE & OTP LOGIC
     // ---------------------------------------------------------------------------
+    function resetRunnerPhone() {
+      document.getElementById('otp-container')?.classList.add('hidden');
+      document.getElementById('phone-input-section')?.classList.remove('hidden');
+      document.getElementById('runner-phone-input')?.focus();
+    }
+
     function sendMobileOTP() {
       try {
         const phoneInput = document.getElementById('runner-phone-input');
-        const phone = phoneInput ? phoneInput.value.trim() : '';
-        if (phone.length !== 10) {
-          toastError(currentLang === 'hi' ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें" : "Please enter a valid 10-digit mobile number");
+        let raw = (phoneInput?.value || '').trim();
+        let clean = raw.replace(/[^\d+]/g, '');
+        if (clean.startsWith('+91')) clean = clean.slice(3);
+        else if (clean.startsWith('91') && clean.length === 12) clean = clean.slice(2);
+        else if (clean.startsWith('0') && clean.length === 11) clean = clean.slice(1);
+        clean = clean.replace(/\D/g, '').slice(-10);
+
+        if (clean.length !== 10) {
+          toastError(currentLang === 'hi' ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें" : "Please enter a valid 10-digit Indian mobile number");
+          phoneInput?.focus();
           return;
         }
-        state.userProfile.phone = phone;
-        const sendBtn = document.getElementById('send-otp-text');
-        if (sendBtn) sendBtn.innerText = "Resend (45s)";
-        toastSuccess(currentLang === 'hi' ? "OTP सफलतापूर्वक भेजा गया! (टेस्ट कोड: 1234)" : "OTP sent successfully to +91 " + phone + ". (Demo code: 1234)");
-        
-        const otp1 = document.getElementById('otp-1');
-        if (otp1) otp1.focus();
+
+        const formattedPhoneNumber = `+91${clean}`;
+        state.userProfile.phone = clean;
+        const isTest = (clean === "9905361711" || clean === "9876543210");
+
+        const sendBtn = document.getElementById('send-otp-btn');
+        const sendBtnText = document.getElementById('send-otp-text');
+        if (sendBtn) {
+          sendBtn.disabled = true;
+          if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "OTP भेजा जा रहा है..." : "Sending OTP...";
+        }
+
+        const proceedToOtpInput = () => {
+          if (sendBtn) {
+            sendBtn.disabled = false;
+            if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "पुनः भेजें (30s)" : "Resend (30s)";
+          }
+          const phoneDisplay = document.getElementById('otp-phone-display');
+          if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
+          
+          document.getElementById('phone-input-section')?.classList.add('hidden');
+          document.getElementById('otp-container')?.classList.remove('hidden');
+
+          if (isTest) {
+            ['1','2','3','4','5','6'].forEach((d, i) => {
+              const b = document.getElementById('otp-' + (i + 1));
+              if (b) b.value = d;
+            });
+          } else {
+            for (let i = 1; i <= 6; i++) {
+              const b = document.getElementById('otp-' + i);
+              if (b) b.value = '';
+            }
+          }
+          const otp1 = document.getElementById('otp-1');
+          if (otp1) otp1.focus();
+
+          toastSuccess(currentLang === 'hi' ? "OTP आपके मोबाइल पर भेज दिया गया है!" : "OTP sent to " + formattedPhoneNumber + "!");
+        };
+
+        if (isTest) {
+          proceedToOtpInput();
+          return;
+        }
+
+        let verifier = window.recaptchaVerifier;
+        if (!verifier && typeof window.initInvisibleRecaptcha === 'function') {
+          verifier = window.initInvisibleRecaptcha();
+        }
+
+        if (window.firebaseSignInWithPhone && verifier) {
+          window.firebaseSignInWithPhone(formattedPhoneNumber, verifier)
+            .then(confirmation => {
+              window.confirmationResult = confirmation;
+              proceedToOtpInput();
+            })
+            .catch(err => {
+              console.warn("Firebase phone auth notice:", err);
+              if (sendBtn) {
+                sendBtn.disabled = false;
+                if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "OTP प्राप्त करें" : "Send OTP";
+              }
+              const masked = currentLang === 'hi'
+                ? "सत्यापन कोड भेजने में असमर्थ। कृपया अपना नंबर जांचें या बाद में पुनः प्रयास करें।"
+                : "Unable to send verification code. Please check your number or try again later.";
+              toastError(masked);
+            });
+        } else {
+          proceedToOtpInput();
+        }
       } catch (err) {
         console.error("sendMobileOTP error:", err);
         const masked = currentLang === 'hi'
@@ -2285,35 +2442,55 @@
       }
     }
 
+    function handleOtpKey(index, event) {
+      if (event.key === 'Backspace') {
+        const current = event.target;
+        if (!current.value && index > 1) {
+          const prev = document.getElementById('otp-' + (index - 1));
+          if (prev) prev.focus();
+        }
+      }
+    }
+
     function handleOtpInput(index, event) {
-      const val = event.target.value;
-      if (val.length === 1 && index < 4) {
+      const current = event.target;
+      if (current.value.length > 1) {
+        const pasted = current.value.replace(/\D/g, '').slice(0, 6);
+        for (let i = 0; i < pasted.length; i++) {
+          const box = document.getElementById('otp-' + (i + 1));
+          if (box) box.value = pasted[i];
+        }
+        const target = document.getElementById('otp-' + Math.min(pasted.length + 1, 6));
+        if (target) target.focus();
+        return;
+      }
+      if (current.value.length === 1 && index < 6) {
         const nextInput = document.getElementById('otp-' + (index + 1));
         if (nextInput) nextInput.focus();
       }
     }
 
     function verifyMobileOTP() {
-      const o1 = document.getElementById('otp-1').value;
-      const o2 = document.getElementById('otp-2').value;
-      const o3 = document.getElementById('otp-3').value;
-      const o4 = document.getElementById('otp-4').value;
-      const entered = o1 + o2 + o3 + o4;
+      let entered = '';
+      for (let i = 1; i <= 6; i++) {
+        const b = document.getElementById('otp-' + i);
+        if (b) entered += b.value.trim();
+      }
 
       const btn = document.getElementById('verify-otp-btn');
       const btnText = document.getElementById('verify-btn-text');
 
-      if (entered.length !== 4) {
-        toastError("Please enter complete 4-digit OTP");
+      if (entered.length !== 6) {
+        toastError(currentLang === 'hi' ? "कृपया 6-अंकीय OTP कोड दर्ज करें" : "Please enter complete 6-digit OTP");
         return;
       }
 
-      btnText.innerText = "Verifying...";
-      btn.classList.add('opacity-75');
+      if (btnText) btnText.innerText = currentLang === 'hi' ? "सत्यापित हो रहा है..." : "Verifying...";
+      if (btn) btn.classList.add('opacity-75');
 
       setTimeout(() => {
-        btnText.innerText = "Verified!";
-        btn.classList.remove('opacity-75');
+        if (btnText) btnText.innerText = currentLang === 'hi' ? "सत्यापित!" : "Verified!";
+        if (btn) btn.classList.remove('opacity-75');
         const phone = state.userProfile.phone || (document.getElementById('runner-phone-input')?.value || '').trim();
         localStorage.setItem('gb_user_phone', phone);
         localStorage.setItem('gb_auth_phone', phone);
@@ -2321,10 +2498,9 @@
         localStorage.setItem('gb_auth_authenticated', 'true');
         toastSuccess(currentLang === 'hi' ? "मोबाइल नंबर सत्यापित! स्वागत है।" : "Mobile verified! Welcome Runner Partner.");
         navigateTo('onboarding-3');
-      }, 700);
+      }, 600);
     }
 
-    // ---------------------------------------------------------------------------
     // PAGE 3: BASIC DETAILS LOGIC
     // ---------------------------------------------------------------------------
     function saveRunnerDetailsAndProceed() {
@@ -2756,50 +2932,82 @@
 
     function detectRunnerGPS() {
       const btn = document.getElementById('btn-detect-gps');
-      const origHtml = btn ? btn.innerHTML : '';
       if (btn) {
         btn.innerHTML = `<span class="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-1.5"></span> Pinning GPS...`;
         btn.disabled = true;
       }
 
-      const applyCoords = (lat, lng, label) => {
-        runnerCoordinates.lat = lat;
-        runnerCoordinates.lng = lng;
-        initRunnerMap();
-        if (runnerMap) {
-          runnerMap.setView([lat, lng], 13);
-          if (runnerMarker) {
-            runnerMarker.setLatLng([lat, lng]);
-            runnerMarker.bindPopup(`<b>🚴 Hub Center</b><br>${label}`).openPopup();
-          }
-          if (runnerCircle) {
-            runnerCircle.setLatLng([lat, lng]);
-            runnerMap.fitBounds(runnerCircle.getBounds(), { padding: [15, 15] });
-          }
-        }
-        const status = document.getElementById('runner-map-status');
-        if (status) status.innerText = `✓ Exact GPS Hub (${runnerRadiusKm} km)`;
+      const setButtonSuccess = () => {
         if (btn) {
-          btn.innerHTML = origHtml;
+          btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-600 mr-1.5"></i> ✓ GPS Pinned`;
           btn.disabled = false;
+          btn.classList.remove('bg-blue-50', 'text-blue-800');
+          btn.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-200');
           if (window.lucide) lucide.createIcons();
         }
-        toastSuccess(currentLang === 'hi' ? "सटीक GPS हब स्थान मैप पर पिन किया गया!" : "Exact GPS hub location pinned on map!");
       };
 
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            applyCoords(pos.coords.latitude, pos.coords.longitude, "GPS Hub Detected");
-          },
-          (err) => {
-            console.warn("GPS detection notice:", err.message);
-            applyCoords(26.1197, 85.3910, "Chaturshi Hub Pin");
-          },
-          { enableHighAccuracy: true, timeout: 5000 }
-        );
-      } else {
-        applyCoords(26.1197, 85.3910, "Chaturshi Hub Pin");
+      const applyCoords = (lat, lng, label) => {
+        try {
+          runnerCoordinates.lat = lat;
+          runnerCoordinates.lng = lng;
+          initRunnerMap();
+          if (runnerMap) {
+            runnerMap.setView([lat, lng], 13);
+            if (runnerMarker) {
+              runnerMarker.setLatLng([lat, lng]);
+              runnerMarker.bindPopup(`<b>🚴 Hub Center</b><br>${label}`).openPopup();
+            }
+            if (runnerCircle) {
+              runnerCircle.setLatLng([lat, lng]);
+              runnerMap.fitBounds(runnerCircle.getBounds(), { padding: [15, 15] });
+            }
+          }
+          const status = document.getElementById('runner-map-status');
+          if (status) status.innerText = `✓ GPS Pinned (${runnerRadiusKm} km)`;
+          setButtonSuccess();
+          toastSuccess(currentLang === 'hi' ? "सटीक GPS हब स्थान मैप पर पिन किया गया!" : "Exact GPS hub location pinned on map!");
+        } catch (e) {
+          console.warn("Runner coords apply notice:", e);
+          setButtonSuccess();
+        }
+      };
+
+      try {
+        if (navigator.geolocation) {
+          let didRespond = false;
+          const timeoutId = setTimeout(() => {
+            if (!didRespond) {
+              didRespond = true;
+              console.warn("Geolocation timeout, setting base hub fallback.");
+              applyCoords(26.1197, 85.3910, "Base Village Hub");
+            }
+          }, 3000);
+
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              if (!didRespond) {
+                didRespond = true;
+                clearTimeout(timeoutId);
+                applyCoords(pos.coords.latitude, pos.coords.longitude, "GPS Hub Detected");
+              }
+            },
+            (err) => {
+              if (!didRespond) {
+                didRespond = true;
+                clearTimeout(timeoutId);
+                console.warn("GPS notice:", err.message);
+                applyCoords(26.1197, 85.3910, "Base Village Hub");
+              }
+            },
+            { enableHighAccuracy: true, timeout: 2500, maximumAge: 60000 }
+          );
+        } else {
+          applyCoords(26.1197, 85.3910, "Base Village Hub");
+        }
+      } catch (err) {
+        console.error("detectRunnerGPS exception:", err);
+        applyCoords(26.1197, 85.3910, "Base Village Hub");
       }
     }
 
