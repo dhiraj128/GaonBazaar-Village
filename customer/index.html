@@ -447,8 +447,11 @@
               Mobile Number
             </label>
             <div class="relative flex items-center">
-              <span class="absolute left-3.5 text-xs font-bold text-slate-500 border-r border-slate-300 pr-2.5">+91</span>
-              <input type="tel" id="cust-phone-input" maxlength="10" placeholder="9876543210" value="9876543210" class="w-full pl-16 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs">
+              <div class="absolute left-3.5 flex items-center space-x-1.5 text-xs font-bold text-slate-700 border-r border-slate-300 pr-2.5 select-none">
+                <span>🇮🇳</span>
+                <span class="font-mono text-emerald-800 font-extrabold">+91</span>
+              </div>
+              <input type="tel" id="cust-phone-input" maxlength="10" placeholder="9905361711" value="9905361711" class="w-full pl-20 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs font-mono">
             </div>
             <p class="text-[10px] text-slate-400 mt-1" data-i18n="sms_dispatched_note">Instant SMS OTP delivered to your mobile phone</p>
           </div>
