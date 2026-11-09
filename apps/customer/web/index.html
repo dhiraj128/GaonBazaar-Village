@@ -363,10 +363,10 @@
           </p>
         </div>
 
-        <!-- Language Choice Cards -->
+        <!-- Language Choice Cards (Fully Controlled State) -->
         <div class="space-y-3 pt-2">
           <!-- English -->
-          <button onclick="selectLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between transition-all duration-200">
+          <button type="button" onclick="selectLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between transition-all duration-200 shadow-sm active:scale-98">
             <div class="flex items-center space-x-3.5">
               <span class="text-2xl">🇬🇧</span>
               <div class="text-left">
@@ -374,13 +374,13 @@
                 <p class="text-[11px] text-slate-500">Default International</p>
               </div>
             </div>
-            <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold check-icon">
+            <div id="check-icon-en" class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
               <i data-lucide="check" class="w-3.5 h-3.5"></i>
             </div>
           </button>
 
           <!-- Hindi -->
-          <button onclick="selectLanguage('hi')" id="lang-btn-hi" class="w-full p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 flex items-center justify-between transition-all duration-200">
+          <button type="button" onclick="selectLanguage('hi')" id="lang-btn-hi" class="w-full p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 flex items-center justify-between transition-all duration-200 shadow-xs active:scale-98">
             <div class="flex items-center space-x-3.5">
               <span class="text-2xl">🇮🇳</span>
               <div class="text-left">
@@ -388,8 +388,7 @@
                 <p class="text-[11px] text-slate-500">शुद्ध ग्रामीण भाषा</p>
               </div>
             </div>
-            <div class="w-6 h-6 rounded-full bg-transparent text-transparent flex items-center justify-center text-xs font-bold check-icon">
-              <i data-lucide="check" class="w-3.5 h-3.5"></i>
+            <div id="check-icon-hi" class="w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold">
             </div>
           </button>
         </div>
@@ -2198,6 +2197,7 @@
         window.loadMyTickets();
       } else if (modalId === 'modal-faq') {
         window.renderFaqAccordion();
+      if (typeof updateCustomerLangCards === "function") updateCustomerLangCards(lang);
       } else if (modalId === 'modal-edit-profile') {
         window.populateEditProfileInputs();
       } else if (modalId === 'modal-monthly-ration') {
@@ -3353,8 +3353,50 @@
       toastSuccess(currentLang === 'hi' ? "भाषा हिंदी में बदल दी गई है!" : "Language switched to English!");
     }
 
+    function updateCustomerLangCards(lang) {
+      const btnEn = document.getElementById('lang-btn-en');
+      const btnHi = document.getElementById('lang-btn-hi');
+      const checkEn = document.getElementById('check-icon-en');
+      const checkHi = document.getElementById('check-icon-hi');
+
+      if (lang === 'hi') {
+        if (btnHi) {
+          btnHi.className = "w-full p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between transition-all duration-200 shadow-sm active:scale-98";
+        }
+        if (checkHi) {
+          checkHi.className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs";
+          checkHi.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i>';
+        }
+        if (btnEn) {
+          btnEn.className = "w-full p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 flex items-center justify-between transition-all duration-200 shadow-xs active:scale-98";
+        }
+        if (checkEn) {
+          checkEn.className = "w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold";
+          checkEn.innerHTML = '';
+        }
+      } else {
+        if (btnEn) {
+          btnEn.className = "w-full p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between transition-all duration-200 shadow-sm active:scale-98";
+        }
+        if (checkEn) {
+          checkEn.className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs";
+          checkEn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i>';
+        }
+        if (btnHi) {
+          btnHi.className = "w-full p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-slate-300 flex items-center justify-between transition-all duration-200 shadow-xs active:scale-98";
+        }
+        if (checkHi) {
+          checkHi.className = "w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold";
+          checkHi.innerHTML = '';
+        }
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
     function selectLanguage(lang) {
       currentLang = lang;
+      localStorage.setItem('gb_customer_lang', lang);
+      updateCustomerLangCards(lang);
       setAppLanguage(lang);
     }
 

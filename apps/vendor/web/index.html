@@ -64,9 +64,6 @@
       animation: order-pulse 1.8s infinite;
     }
   </style>
-  <!-- Leaflet Map CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <!-- Firebase Auth & Invisible reCAPTCHA SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -172,20 +169,23 @@
           <p class="text-sm text-slate-500 mb-8" data-i18n="select_language_sub">अपनी पसंदीदा भाषा चुनें / Select preferred language to continue</p>
           
           <div class="space-y-4 max-w-xs mx-auto">
-            <button onclick="setLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
+            <button type="button" onclick="setLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
               <div class="flex items-center space-x-3">
                 <span class="text-xl">🇬🇧</span>
                 <span class="text-base font-bold">English</span>
               </div>
-              <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
+              <div id="check-icon-en" class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              </div>
             </button>
 
-            <button onclick="setLanguage('hi')" id="lang-btn-hi" class="w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
+            <button type="button" onclick="setLanguage('hi')" id="lang-btn-hi" class="w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
               <div class="flex items-center space-x-3">
                 <span class="text-xl">🇮🇳</span>
                 <span class="text-base font-bold">हिन्दी (Hindi)</span>
               </div>
-              <i data-lucide="circle" class="w-5 h-5 text-slate-300"></i>
+              <div id="check-icon-hi" class="w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold">
+              </div>
             </button>
           </div>
         </div>
@@ -318,18 +318,38 @@
             <div class="flex items-center space-x-2 text-emerald-600 text-xs font-bold uppercase tracking-wider mb-2"><span class="px-2 py-0.5 bg-emerald-100 rounded">Step 4 of 7</span><span>Store Location</span></div>
             <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="vendor_location_title">Shop Location Setup</h2>
             <p class="text-xs text-slate-500 leading-relaxed" data-i18n="vendor_location_sub">
-              Set your exact shop location and village details to receive local orders.
+              Select your base village or area from the dropdown to receive local orders.
             </p>
           </div>
 
-          <!-- Shop Location Form Card (Mobile-First Vertically Stacked + Visual Map) -->
-          <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3.5 shadow-xs">
-            <!-- 1. Village / Panchayat -->
-            <div>
+          <!-- Shop Location Form Card (Clean Vertically Stacked with Searchable Dropdown) -->
+          <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-4 shadow-xs">
+            <!-- 1. Searchable Base Village / Area Dropdown -->
+            <div class="relative" id="vendor-village-container">
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="village_label">
-                Village / Panchayat Name <span class="text-rose-500">*</span>
+                Base Village / Area Name <span class="text-rose-500">*</span>
               </label>
-              <input type="text" id="vendor-village-name" placeholder="e.g. Chaturshi" value="Chaturshi" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-xs focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+              <div class="relative flex items-center">
+                <i data-lucide="map-pin" class="absolute left-3.5 w-4 h-4 text-emerald-600 pointer-events-none"></i>
+                <input 
+                  type="text" 
+                  id="vendor-village-name" 
+                  autocomplete="off"
+                  placeholder="Type or select village (e.g. Muzaffarpur, Chaturshi)..." 
+                  value="Muzaffarpur" 
+                  oninput="handleVendorVillageSearch(this.value)" 
+                  onfocus="handleVendorVillageSearch(this.value)" 
+                  class="w-full pl-10 pr-9 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-xs focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs transition"
+                >
+                <button type="button" onclick="toggleVendorVillageDropdown()" class="absolute right-3 text-slate-400 hover:text-slate-600 focus:outline-none">
+                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                </button>
+              </div>
+              <!-- Autocomplete Dropdown List -->
+              <div id="vendor-village-dropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto z-50 divide-y divide-slate-100">
+                <!-- Rendered dynamically via JS -->
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1" data-i18n="vendor_hub_hint">Orders from customers in this rural cluster will route to your shop</p>
             </div>
 
             <!-- 2. Pincode -->
@@ -337,7 +357,10 @@
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="pincode_label">
                 Postal Pincode <span class="text-rose-500">*</span>
               </label>
-              <input type="tel" id="vendor-pincode" maxlength="6" placeholder="e.g. 842001" value="842001" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold text-xs focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+              <div class="relative flex items-center">
+                <i data-lucide="hash" class="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                <input type="tel" id="vendor-pincode" maxlength="6" placeholder="e.g. 842001" value="842001" class="w-full pl-10 pr-4 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold text-xs focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+              </div>
             </div>
 
             <!-- 3. Shop Address / Landmark -->
@@ -345,31 +368,10 @@
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="shop_address_label">
                 Shop Address / Landmark <span class="text-rose-500">*</span>
               </label>
-              <input type="text" id="vendor-shop-address" placeholder="e.g. Near Shiv Mandir, Main Road" value="Near Shiv Mandir, Main Road" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-xs focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
-            </div>
-
-            <!-- 4. Interactive Visual Map Component -->
-            <div class="pt-1 space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-800 flex items-center space-x-1">
-                  <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-600"></i>
-                  <span>Visual Shop Location</span>
-                </span>
-                <span id="vendor-map-status" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                  📍 Pin Dropped
-                </span>
+              <div class="relative flex items-center">
+                <i data-lucide="home" class="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                <input type="text" id="vendor-shop-address" placeholder="e.g. Near Shiv Mandir, Main Market" value="Near Shiv Mandir, Main Road" class="w-full pl-10 pr-4 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-xs focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
               </div>
-
-              <!-- Leaflet Map Canvas -->
-              <div class="relative w-full h-44 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-inner">
-                <div id="vendor-location-map" class="w-full h-full"></div>
-              </div>
-
-              <!-- Detect GPS Action -->
-              <button type="button" onclick="detectVendorGPS()" id="btn-detect-vendor-gps" class="w-full py-2.5 px-3 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 active:scale-98">
-                <i data-lucide="crosshair" class="w-4 h-4 text-emerald-600"></i>
-                <span data-i18n="detect_gps_btn">Detect Current GPS Location</span>
-              </button>
             </div>
           </div>
         </div>
@@ -379,11 +381,9 @@
             <span data-i18n="save_location_btn">Save & Continue to KYC</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
-          <p class="text-[11px] text-center text-slate-400" data-i18n="vendor_geofence_note">Accurate GPS ensures delivery runners reach your storefront directly</p>
+          <p class="text-[11px] text-center text-slate-400" data-i18n="vendor_area_note">Cluster-based ordering ensures delivery runners can reach your storefront within minutes</p>
         </div>
       </div>
-
-      
 
       <!-- PAGE 5: IDENTITY VERIFICATION (SINGLE ID SELECTION) -->
       <div id="screen-onboarding-5" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
@@ -2041,22 +2041,50 @@
 
     let currentLang = 'en';
 
+    function updateVendorLangCards(lang) {
+      const btnEn = document.getElementById('lang-btn-en');
+      const btnHi = document.getElementById('lang-btn-hi');
+      const checkEn = document.getElementById('check-icon-en');
+      const checkHi = document.getElementById('check-icon-hi');
+
+      if (lang === 'hi') {
+        if (btnHi) {
+          btnHi.className = "w-full p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
+        }
+        if (checkHi) {
+          checkHi.className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs";
+          checkHi.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i>';
+        }
+        if (btnEn) {
+          btnEn.className = "w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
+        }
+        if (checkEn) {
+          checkEn.className = "w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold";
+          checkEn.innerHTML = '';
+        }
+      } else {
+        if (btnEn) {
+          btnEn.className = "w-full p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
+        }
+        if (checkEn) {
+          checkEn.className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs";
+          checkEn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i>';
+        }
+        if (btnHi) {
+          btnHi.className = "w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
+        }
+        if (checkHi) {
+          checkHi.className = "w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold";
+          checkHi.innerHTML = '';
+        }
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
     function setLanguage(lang) {
       currentLang = lang;
       localStorage.setItem('gaonbazaar_vendor_lang', lang);
-
-      // Update button styling on Page 1
-      const btnEn = document.getElementById('lang-btn-en');
-      const btnHi = document.getElementById('lang-btn-hi');
-      if (btnEn && btnHi) {
-        if (lang === 'en') {
-          btnEn.className = "w-full p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
-          btnHi.className = "w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
-        } else {
-          btnHi.className = "w-full p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
-          btnEn.className = "w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
-        }
-      }
+      updateVendorLangCards(lang);
 
       // Update text using data-i18n attributes
       document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -2410,8 +2438,8 @@
 
         if (screenId === 'onboarding-4') {
           setTimeout(() => {
-            if (typeof initVendorMap === 'function') initVendorMap();
-            if (window.vendorMap) window.vendorMap.invalidateSize();
+            const vInput = document.getElementById('vendor-village-name');
+            if (vInput && !vInput.value) vInput.value = 'Muzaffarpur';
           }, 150);
         }
         
@@ -3045,104 +3073,97 @@
     let vendorMap = null;
     let vendorMarker = null;
 
-    function initVendorMap() {
-      const container = document.getElementById('vendor-location-map');
-      if (!container) return;
-      if (vendorMap) {
-        vendorMap.invalidateSize();
-        return;
+    // ---------------------------------------------------------------------------
+    // RURAL VILLAGES / HUBS AUTOCOMPLETE (MUZAFFARPUR & SURROUNDING CLUSTERS)
+    // ---------------------------------------------------------------------------
+    const RURAL_AREAS_LIST = [
+      "Muzaffarpur",
+      "Chaturshi",
+      "Musahri",
+      "Kanti",
+      "Bochahan",
+      "Saraiya",
+      "Motipur",
+      "Sakra",
+      "Kurhani",
+      "Aurai",
+      "Minapur",
+      "Sahebganj",
+      "Paroo",
+      "Marwan",
+      "Gaighat",
+      "Kudra",
+      "Mohania",
+      "Bhabua",
+      "Darbhanga",
+      "Samastipur",
+      "Hajipur",
+      "Vaishali",
+      "Sitamarhi",
+      "Patna Rural"
+    ];
+
+    function handleVendorVillageSearch(query) {
+      const dropdown = document.getElementById('vendor-village-dropdown');
+      if (!dropdown) return;
+      const q = (query || '').trim().toLowerCase();
+      
+      const filtered = RURAL_AREAS_LIST.filter(area => area.toLowerCase().includes(q));
+      
+      let html = '';
+      if (filtered.length > 0) {
+        filtered.forEach(area => {
+          html += `
+            <div onclick="selectVendorVillage('${area}')" class="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-800 transition">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+                <span>${area}</span>
+              </div>
+              <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">Rural Hub</span>
+            </div>
+          `;
+        });
       }
-      const lat = vendorCoordinates.lat || 26.1205;
-      const lng = vendorCoordinates.lng || 85.3925;
 
-      try {
-        window.vendorMap = vendorMap = L.map('vendor-location-map', {
-          zoomControl: false,
-          attributionControl: false
-        }).setView([lat, lng], 15);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19
-        }).addTo(vendorMap);
-
-        const shopIcon = L.divIcon({
-          className: 'custom-vendor-pin',
-          html: '<div style="background-color:#059669; color:white; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(5,150,105,0.4); border:2px solid white; font-size:16px;">🏪</div>',
-          iconSize: [34, 34],
-          iconAnchor: [17, 34]
-        });
-
-        vendorMarker = L.marker([lat, lng], {
-          icon: shopIcon,
-          draggable: true
-        }).addTo(vendorMap);
-
-        vendorMarker.bindPopup("<b>🏪 Your Shop</b><br>Pin confirmed").openPopup();
-
-        vendorMap.on('click', (e) => {
-          vendorCoordinates.lat = e.latlng.lat;
-          vendorCoordinates.lng = e.latlng.lng;
-          vendorMarker.setLatLng(e.latlng);
-          const status = document.getElementById('vendor-map-status');
-          if (status) status.innerText = "📍 Pin Adjusted";
-        });
-
-        vendorMarker.on('dragend', (e) => {
-          const pos = e.target.getLatLng();
-          vendorCoordinates.lat = pos.lat;
-          vendorCoordinates.lng = pos.lng;
-          const status = document.getElementById('vendor-map-status');
-          if (status) status.innerText = "📍 Pin Adjusted";
-        });
-      } catch (err) {
-        console.warn("Leaflet vendor map init notice:", err);
+      if (q && !filtered.some(a => a.toLowerCase() === q)) {
+        html += `
+          <div onclick="selectVendorVillage('${query.replace(/'/g, "\'")}')" class="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer flex items-center space-x-2 text-xs font-bold text-emerald-700 bg-emerald-50/50">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+            <span>Use "${query}"</span>
+          </div>
+        `;
       }
+
+      dropdown.innerHTML = html;
+      dropdown.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
     }
 
-    function detectVendorGPS() {
-      const btn = document.getElementById('btn-detect-vendor-gps');
-      const origHtml = btn ? btn.innerHTML : '';
-      if (btn) {
-        btn.innerHTML = `<span class="w-3.5 h-3.5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mr-1.5"></span> Pinning GPS...`;
-        btn.disabled = true;
-      }
-
-      const applyCoords = (lat, lng, label) => {
-        vendorCoordinates.lat = lat;
-        vendorCoordinates.lng = lng;
-        initVendorMap();
-        if (vendorMap) {
-          vendorMap.setView([lat, lng], 16);
-          if (vendorMarker) {
-            vendorMarker.setLatLng([lat, lng]);
-            vendorMarker.bindPopup(`<b>🏪 Your Shop</b><br>${label}`).openPopup();
-          }
-        }
-        const status = document.getElementById('vendor-map-status');
-        if (status) status.innerText = "✓ Exact GPS Pinned";
-        if (btn) {
-          btn.innerHTML = origHtml;
-          btn.disabled = false;
-          if (window.lucide) lucide.createIcons();
-        }
-        toastSuccess(currentLang === 'hi' ? "सटीक GPS दुकान स्थान मैप पर पिन किया गया!" : "Exact shop GPS location pinned on map!");
-      };
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            applyCoords(pos.coords.latitude, pos.coords.longitude, "GPS Location Detected");
-          },
-          (err) => {
-            console.warn("GPS detection notice:", err.message);
-            applyCoords(26.1205, 85.3925, "Chaturshi Hub Pin");
-          },
-          { enableHighAccuracy: true, timeout: 5000 }
-        );
+    function toggleVendorVillageDropdown() {
+      const dropdown = document.getElementById('vendor-village-dropdown');
+      if (!dropdown) return;
+      if (dropdown.classList.contains('hidden')) {
+        const val = document.getElementById('vendor-village-name')?.value || '';
+        handleVendorVillageSearch(val);
       } else {
-        applyCoords(26.1205, 85.3925, "Chaturshi Hub Pin");
+        dropdown.classList.add('hidden');
       }
     }
+
+    function selectVendorVillage(villageName) {
+      const input = document.getElementById('vendor-village-name');
+      if (input) input.value = villageName;
+      const dropdown = document.getElementById('vendor-village-dropdown');
+      if (dropdown) dropdown.classList.add('hidden');
+    }
+
+    document.addEventListener('click', (e) => {
+      const container = document.getElementById('vendor-village-container');
+      const dropdown = document.getElementById('vendor-village-dropdown');
+      if (container && dropdown && !container.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
 
     async function saveVendorLocationAndProceed() {
       const address = (document.getElementById('vendor-shop-address')?.value || 'Near Shiv Mandir, Main Road').trim();

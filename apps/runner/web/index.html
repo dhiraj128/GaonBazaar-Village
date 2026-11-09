@@ -79,9 +79,6 @@
       animation: alert-pulse 1.8s infinite;
     }
   </style>
-  <!-- Leaflet Map CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <!-- Firebase Auth & Invisible reCAPTCHA SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -187,20 +184,23 @@
           <p class="text-sm text-slate-500 mb-8" data-i18n="select_language_sub">अपनी पसंदीदा भाषा चुनें / Select preferred language to continue</p>
           
           <div class="space-y-4 max-w-xs mx-auto">
-            <button onclick="setLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-xl border-2 border-blue-600 bg-blue-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
+            <button type="button" onclick="setLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
               <div class="flex items-center space-x-3">
                 <span class="text-xl">🇬🇧</span>
                 <span class="text-base font-bold">English</span>
               </div>
-              <i data-lucide="check-circle-2" class="w-5 h-5 text-blue-600"></i>
+              <div id="check-icon-en" class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              </div>
             </button>
 
-            <button onclick="setLanguage('hi')" id="lang-btn-hi" class="w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
+            <button type="button" onclick="setLanguage('hi')" id="lang-btn-hi" class="w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
               <div class="flex items-center space-x-3">
                 <span class="text-xl">🇮🇳</span>
                 <span class="text-base font-bold">हिन्दी (Hindi)</span>
               </div>
-              <i data-lucide="circle" class="w-5 h-5 text-slate-300"></i>
+              <div id="check-icon-hi" class="w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold">
+              </div>
             </button>
           </div>
         </div>
@@ -332,61 +332,49 @@
             <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2"><span class="px-2 py-0.5 bg-blue-100 rounded">Step 4 of 7</span><span>Service Area</span></div>
             <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="runner_location_title">Service Area Setup</h2>
             <p class="text-xs text-slate-500 leading-relaxed" data-i18n="runner_location_sub">
-              Define your operating base village and service delivery radius
+              Select your base village or operating hub from the searchable dropdown
             </p>
           </div>
 
-          <!-- Location Info Card (Mobile-First Vertically Stacked + Visual Map) -->
+          <!-- Service Area Form Card (Clean Vertically Stacked with Searchable Dropdown) -->
           <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-4 shadow-xs">
-            <!-- 1. Operating Base Village / Hub -->
-            <div>
+            <!-- 1. Searchable Base Village / Area Dropdown -->
+            <div class="relative" id="runner-village-container">
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="base_village_label">
                 Base Village / Area Name <span class="text-rose-500">*</span>
               </label>
-              <input type="text" id="runner-base-village" placeholder="e.g. Chaturshi, Musahri" value="Chaturshi" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-xs focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
-              <p class="text-[10px] text-slate-400 mt-1" data-i18n="base_village_hint">Orders will be assigned from local shops around your hub</p>
+              <div class="relative flex items-center">
+                <i data-lucide="map-pin" class="absolute left-3.5 w-4 h-4 text-blue-600 pointer-events-none"></i>
+                <input 
+                  type="text" 
+                  id="runner-base-village" 
+                  autocomplete="off"
+                  placeholder="Type or select village (e.g. Muzaffarpur, Chaturshi)..." 
+                  value="Muzaffarpur" 
+                  oninput="handleRunnerVillageSearch(this.value)" 
+                  onfocus="handleRunnerVillageSearch(this.value)" 
+                  class="w-full pl-10 pr-9 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-xs focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs transition"
+                >
+                <button type="button" onclick="toggleRunnerVillageDropdown()" class="absolute right-3 text-slate-400 hover:text-slate-600 focus:outline-none">
+                  <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                </button>
+              </div>
+              <!-- Autocomplete Dropdown List -->
+              <div id="runner-village-dropdown" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto z-50 divide-y divide-slate-100">
+                <!-- Rendered dynamically via JS -->
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1" data-i18n="base_village_hint">Orders will be assigned from local shops and farms around your hub</p>
             </div>
 
-            <!-- 2. Operating Delivery Radius Chips -->
+            <!-- 2. Operating Landmark / Hub Details -->
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-2" data-i18n="delivery_radius_label">
-                Delivery Service Radius <span class="text-rose-500">*</span>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="hub_landmark_label">
+                Operating Hub Landmark <span class="text-slate-400 font-normal">(Optional)</span>
               </label>
-              <div class="grid grid-cols-3 gap-2">
-                <button type="button" onclick="selectRadius(5)" id="radius-chip-5" class="py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:border-blue-600 hover:text-blue-600 transition">
-                  5 km
-                </button>
-                <button type="button" onclick="selectRadius(8)" id="radius-chip-8" class="py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-xs font-bold text-blue-700 shadow-2xs transition">
-                  8 km
-                </button>
-                <button type="button" onclick="selectRadius(10)" id="radius-chip-10" class="py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:border-blue-600 hover:text-blue-600 transition">
-                  10 km
-                </button>
+              <div class="relative flex items-center">
+                <i data-lucide="landmark" class="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                <input type="text" id="runner-landmark" placeholder="e.g. Near Market Chowk, Main Bus Stand" value="Near Market Chowk" class="w-full pl-10 pr-4 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-xs focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
               </div>
-            </div>
-
-            <!-- 3. Interactive Visual Map Component -->
-            <div class="pt-1 space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-800 flex items-center space-x-1">
-                  <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-600"></i>
-                  <span>Visual Service Area & Coverage</span>
-                </span>
-                <span id="runner-map-status" class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">
-                  📍 Hub Pin Dropped (8 km)
-                </span>
-              </div>
-
-              <!-- Leaflet Map Canvas -->
-              <div class="relative w-full h-44 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shadow-inner">
-                <div id="runner-location-map" class="w-full h-full"></div>
-              </div>
-
-              <!-- Detect GPS Action -->
-              <button type="button" onclick="detectRunnerGPS()" id="btn-detect-gps" class="w-full py-2.5 px-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-800 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 active:scale-98">
-                <i data-lucide="crosshair" class="w-4 h-4 text-blue-600"></i>
-                <span data-i18n="detect_gps_btn">Detect Current GPS Location</span>
-              </button>
             </div>
           </div>
         </div>
@@ -396,11 +384,9 @@
             <span data-i18n="save_location_btn">Save & Continue to KYC</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
-          <p class="text-[11px] text-center text-slate-400" data-i18n="rural_geofence_note">8km geofencing ensures timely delivery within 15-30 minutes</p>
+          <p class="text-[11px] text-center text-slate-400" data-i18n="rural_geofence_note">Base village cluster setup ensures timely deliveries within 15-30 minutes</p>
         </div>
       </div>
-
-      
 
       <!-- PAGE 5: IDENTITY VERIFICATION (SINGLE ID SELECTION) -->
       <div id="screen-onboarding-5" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
@@ -1840,21 +1826,50 @@
 
     let currentLang = 'en';
 
+    function updateRunnerLangCards(lang) {
+      const btnEn = document.getElementById('lang-btn-en');
+      const btnHi = document.getElementById('lang-btn-hi');
+      const checkEn = document.getElementById('check-icon-en');
+      const checkHi = document.getElementById('check-icon-hi');
+
+      if (lang === 'hi') {
+        if (btnHi) {
+          btnHi.className = "w-full p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
+        }
+        if (checkHi) {
+          checkHi.className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs";
+          checkHi.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i>';
+        }
+        if (btnEn) {
+          btnEn.className = "w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
+        }
+        if (checkEn) {
+          checkEn.className = "w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold";
+          checkEn.innerHTML = '';
+        }
+      } else {
+        if (btnEn) {
+          btnEn.className = "w-full p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
+        }
+        if (checkEn) {
+          checkEn.className = "w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs";
+          checkEn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i>';
+        }
+        if (btnHi) {
+          btnHi.className = "w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
+        }
+        if (checkHi) {
+          checkHi.className = "w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold";
+          checkHi.innerHTML = '';
+        }
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
     function setLanguage(lang) {
       currentLang = lang;
       localStorage.setItem('gaonbazaar_runner_lang', lang);
-
-      const btnEn = document.getElementById('lang-btn-en');
-      const btnHi = document.getElementById('lang-btn-hi');
-      if (btnEn && btnHi) {
-        if (lang === 'en') {
-          btnEn.className = "w-full p-4 rounded-xl border-2 border-blue-600 bg-blue-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
-          btnHi.className = "w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
-        } else {
-          btnHi.className = "w-full p-4 rounded-xl border-2 border-blue-600 bg-blue-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
-          btnEn.className = "w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98";
-        }
-      }
+      updateRunnerLangCards(lang);
 
       // Update text using data-i18n attributes
       document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -2175,8 +2190,8 @@
 
         if (screenId === 'onboarding-4') {
           setTimeout(() => {
-            if (typeof initRunnerMap === 'function') initRunnerMap();
-            if (window.runnerMap) window.runnerMap.invalidateSize();
+            const rInput = document.getElementById('runner-base-village');
+            if (rInput && !rInput.value) rInput.value = 'Muzaffarpur';
           }, 150);
         }
         
@@ -2844,172 +2859,97 @@
     let runnerMarker = null;
     let runnerCircle = null;
 
-    function initRunnerMap() {
-      const container = document.getElementById('runner-location-map');
-      if (!container) return;
-      if (runnerMap) {
-        runnerMap.invalidateSize();
-        return;
+    // ---------------------------------------------------------------------------
+    // RURAL VILLAGES / HUBS AUTOCOMPLETE (MUZAFFARPUR & SURROUNDING CLUSTERS)
+    // ---------------------------------------------------------------------------
+    const RURAL_AREAS_LIST = [
+      "Muzaffarpur",
+      "Chaturshi",
+      "Musahri",
+      "Kanti",
+      "Bochahan",
+      "Saraiya",
+      "Motipur",
+      "Sakra",
+      "Kurhani",
+      "Aurai",
+      "Minapur",
+      "Sahebganj",
+      "Paroo",
+      "Marwan",
+      "Gaighat",
+      "Kudra",
+      "Mohania",
+      "Bhabua",
+      "Darbhanga",
+      "Samastipur",
+      "Hajipur",
+      "Vaishali",
+      "Sitamarhi",
+      "Patna Rural"
+    ];
+
+    function handleRunnerVillageSearch(query) {
+      const dropdown = document.getElementById('runner-village-dropdown');
+      if (!dropdown) return;
+      const q = (query || '').trim().toLowerCase();
+      
+      const filtered = RURAL_AREAS_LIST.filter(area => area.toLowerCase().includes(q));
+      
+      let html = '';
+      if (filtered.length > 0) {
+        filtered.forEach(area => {
+          html += `
+            <div onclick="selectRunnerVillage('${area}')" class="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-800 transition">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
+                <span>${area}</span>
+              </div>
+              <span class="text-[10px] text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded font-bold">Operating Hub</span>
+            </div>
+          `;
+        });
       }
-      const lat = runnerCoordinates.lat || 26.1197;
-      const lng = runnerCoordinates.lng || 85.3910;
 
-      try {
-        window.runnerMap = runnerMap = L.map('runner-location-map', {
-          zoomControl: false,
-          attributionControl: false
-        }).setView([lat, lng], 13);
+      if (q && !filtered.some(a => a.toLowerCase() === q)) {
+        html += `
+          <div onclick="selectRunnerVillage('${query.replace(/'/g, "\'")}')" class="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer flex items-center space-x-2 text-xs font-bold text-blue-700 bg-blue-50/50">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
+            <span>Use "${query}"</span>
+          </div>
+        `;
+      }
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19
-        }).addTo(runnerMap);
+      dropdown.innerHTML = html;
+      dropdown.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
 
-        const hubIcon = L.divIcon({
-          className: 'custom-runner-pin',
-          html: '<div style="background-color:#2563eb; color:white; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(37,99,235,0.4); border:2px solid white; font-size:16px;">🚴</div>',
-          iconSize: [34, 34],
-          iconAnchor: [17, 34]
-        });
-
-        runnerMarker = L.marker([lat, lng], {
-          icon: hubIcon,
-          draggable: true
-        }).addTo(runnerMap);
-
-        runnerMarker.bindPopup("<b>🚴 Hub Center</b><br>Base village").openPopup();
-
-        runnerCircle = L.circle([lat, lng], {
-          radius: (runnerRadiusKm || 8) * 1000,
-          color: '#2563eb',
-          fillColor: '#3b82f6',
-          fillOpacity: 0.15,
-          weight: 2
-        }).addTo(runnerMap);
-
-        runnerMap.on('click', (e) => {
-          runnerCoordinates.lat = e.latlng.lat;
-          runnerCoordinates.lng = e.latlng.lng;
-          runnerMarker.setLatLng(e.latlng);
-          runnerCircle.setLatLng(e.latlng);
-          const status = document.getElementById('runner-map-status');
-          if (status) status.innerText = `📍 Hub Adjusted (${runnerRadiusKm} km)`;
-        });
-
-        runnerMarker.on('dragend', (e) => {
-          const pos = e.target.getLatLng();
-          runnerCoordinates.lat = pos.lat;
-          runnerCoordinates.lng = pos.lng;
-          runnerCircle.setLatLng(pos);
-          const status = document.getElementById('runner-map-status');
-          if (status) status.innerText = `📍 Hub Adjusted (${runnerRadiusKm} km)`;
-        });
-      } catch (err) {
-        console.warn("Leaflet runner map init notice:", err);
+    function toggleRunnerVillageDropdown() {
+      const dropdown = document.getElementById('runner-village-dropdown');
+      if (!dropdown) return;
+      if (dropdown.classList.contains('hidden')) {
+        const val = document.getElementById('runner-base-village')?.value || '';
+        handleRunnerVillageSearch(val);
+      } else {
+        dropdown.classList.add('hidden');
       }
     }
 
-    function selectRadius(km) {
-      runnerRadiusKm = km;
-      [5, 8, 10].forEach(k => {
-        const chip = document.getElementById('radius-chip-' + k);
-        if (chip) {
-          if (k === km) {
-            chip.className = "py-2.5 px-3 rounded-xl border-2 border-blue-600 bg-blue-50 text-xs font-bold text-blue-700 shadow-2xs transition";
-          } else {
-            chip.className = "py-2.5 px-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:border-blue-600 hover:text-blue-600 transition";
-          }
-        }
-      });
-      if (runnerCircle) {
-        runnerCircle.setRadius(km * 1000);
-        if (runnerMap && runnerMarker) {
-          runnerMap.fitBounds(runnerCircle.getBounds(), { padding: [15, 15] });
-        }
-      }
-      const status = document.getElementById('runner-map-status');
-      if (status) status.innerText = `📍 Hub Dropped (${km} km Coverage)`;
+    function selectRunnerVillage(villageName) {
+      const input = document.getElementById('runner-base-village');
+      if (input) input.value = villageName;
+      const dropdown = document.getElementById('runner-village-dropdown');
+      if (dropdown) dropdown.classList.add('hidden');
     }
 
-    function detectRunnerGPS() {
-      const btn = document.getElementById('btn-detect-gps');
-      if (btn) {
-        btn.innerHTML = `<span class="w-3.5 h-3.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-1.5"></span> Pinning GPS...`;
-        btn.disabled = true;
+    document.addEventListener('click', (e) => {
+      const container = document.getElementById('runner-village-container');
+      const dropdown = document.getElementById('runner-village-dropdown');
+      if (container && dropdown && !container.contains(e.target)) {
+        dropdown.classList.add('hidden');
       }
-
-      const setButtonSuccess = () => {
-        if (btn) {
-          btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-600 mr-1.5"></i> ✓ GPS Pinned`;
-          btn.disabled = false;
-          btn.classList.remove('bg-blue-50', 'text-blue-800');
-          btn.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-200');
-          if (window.lucide) lucide.createIcons();
-        }
-      };
-
-      const applyCoords = (lat, lng, label) => {
-        try {
-          runnerCoordinates.lat = lat;
-          runnerCoordinates.lng = lng;
-          initRunnerMap();
-          if (runnerMap) {
-            runnerMap.setView([lat, lng], 13);
-            if (runnerMarker) {
-              runnerMarker.setLatLng([lat, lng]);
-              runnerMarker.bindPopup(`<b>🚴 Hub Center</b><br>${label}`).openPopup();
-            }
-            if (runnerCircle) {
-              runnerCircle.setLatLng([lat, lng]);
-              runnerMap.fitBounds(runnerCircle.getBounds(), { padding: [15, 15] });
-            }
-          }
-          const status = document.getElementById('runner-map-status');
-          if (status) status.innerText = `✓ GPS Pinned (${runnerRadiusKm} km)`;
-          setButtonSuccess();
-          toastSuccess(currentLang === 'hi' ? "सटीक GPS हब स्थान मैप पर पिन किया गया!" : "Exact GPS hub location pinned on map!");
-        } catch (e) {
-          console.warn("Runner coords apply notice:", e);
-          setButtonSuccess();
-        }
-      };
-
-      try {
-        if (navigator.geolocation) {
-          let didRespond = false;
-          const timeoutId = setTimeout(() => {
-            if (!didRespond) {
-              didRespond = true;
-              console.warn("Geolocation timeout, setting base hub fallback.");
-              applyCoords(26.1197, 85.3910, "Base Village Hub");
-            }
-          }, 3000);
-
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              if (!didRespond) {
-                didRespond = true;
-                clearTimeout(timeoutId);
-                applyCoords(pos.coords.latitude, pos.coords.longitude, "GPS Hub Detected");
-              }
-            },
-            (err) => {
-              if (!didRespond) {
-                didRespond = true;
-                clearTimeout(timeoutId);
-                console.warn("GPS notice:", err.message);
-                applyCoords(26.1197, 85.3910, "Base Village Hub");
-              }
-            },
-            { enableHighAccuracy: true, timeout: 2500, maximumAge: 60000 }
-          );
-        } else {
-          applyCoords(26.1197, 85.3910, "Base Village Hub");
-        }
-      } catch (err) {
-        console.error("detectRunnerGPS exception:", err);
-        applyCoords(26.1197, 85.3910, "Base Village Hub");
-      }
-    }
+    });
 
     async function saveRunnerLocationAndProceed() {
       const villageInput = document.getElementById('runner-base-village');
