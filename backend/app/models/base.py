@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import uuid
 from sqlalchemy import (
-    Column, String, Boolean, Float, Integer, ForeignKey, DateTime, Text, Enum, Numeric, TypeDecorator
+    Column, String, Boolean, Float, Integer, ForeignKey, DateTime, Text, Enum, Numeric, TypeDecorator, JSON
 )
 from sqlalchemy.orm import declarative_base, relationship
 
@@ -65,6 +65,12 @@ class User(Base):
     avatar_url = Column(String(500), nullable=True)
     primary_village = Column(String(100), nullable=True)
     primary_panchayat = Column(String(100), nullable=True)
+    kyc_status = Column(String(50), default="unverified")
+    pan_number = Column(String(20), nullable=True)
+    pan_name = Column(String(150), nullable=True)
+    aadhaar_number = Column(String(20), nullable=True)
+    aadhaar_data = Column(JSON, nullable=True)
+    kyc_photo_url = Column(String(500), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

@@ -14,7 +14,7 @@ from app.core.config import settings
 from app.core.ws import ws_manager
 from app.db.session import async_engine, AsyncSessionLocal
 from app.models.base import Base, User, Store, StoreProduct, GlobalCatalogItem, Runner, Address, OrderMessage, Notification, MonthlyRationList, MonthlyRationItem
-from app.api.v1 import auth, addresses, stores, orders, ai, admin, support, payments, notifications, ration_lists
+from app.api.v1 import auth, addresses, stores, orders, ai, admin, support, payments, notifications, ration_lists, kyc
 
 logger = logging.getLogger("gaonbazaar")
 
@@ -58,6 +58,12 @@ async def init_db_and_seed():
         f"{add_col_prefix}avatar_url VARCHAR(500);",
         f"{add_col_prefix}primary_village VARCHAR(100);",
         f"{add_col_prefix}primary_panchayat VARCHAR(100);",
+        f"{add_col_prefix}kyc_status VARCHAR(50) DEFAULT 'unverified';",
+        f"{add_col_prefix}pan_number VARCHAR(20);",
+        f"{add_col_prefix}pan_name VARCHAR(150);",
+        f"{add_col_prefix}aadhaar_number VARCHAR(20);",
+        f"{add_col_prefix}aadhaar_data JSONB;" if is_pg else f"{add_col_prefix}aadhaar_data TEXT;",
+        f"{add_col_prefix}kyc_photo_url VARCHAR(500);",
         f"{add_order_prefix}payment_order_id VARCHAR(100);",
         f"{add_order_prefix}transaction_id VARCHAR(100);",
         f"{add_ticket_prefix}category VARCHAR(50) DEFAULT 'GENERAL_HELP';",
@@ -934,6 +940,7 @@ app.include_router(support.router, prefix=settings.API_V1_STR)
 app.include_router(payments.router, prefix=settings.API_V1_STR)
 app.include_router(notifications.router, prefix=settings.API_V1_STR)
 app.include_router(ration_lists.router, prefix=settings.API_V1_STR)
+app.include_router(kyc.router, prefix=settings.API_V1_STR)
 
 @app.websocket("/ws/orders")
 @app.websocket("/ws/{client_role}")
