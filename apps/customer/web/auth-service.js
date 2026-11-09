@@ -101,12 +101,22 @@ export async function sendCustomerOTP() {
   hideAuthError();
   const phoneInput = document.getElementById('cust-phone-input');
   const nameInput = document.getElementById('cust-name-input');
-  const phone = (phoneInput?.value || '').trim();
+  const rawInput = (phoneInput?.value || '').trim();
   const name = (nameInput?.value || '').trim();
 
-  // Validate 10-digit Indian Mobile format (must start with 6-9)
-  const cleanPhone = phone.replace(/\D/g, '');
-  if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+  // Strip non-digits except +
+  let clean = rawInput.replace(/[^\d+]/g, '');
+  if (clean.startsWith('+91')) {
+    clean = clean.slice(3);
+  } else if (clean.startsWith('91') && clean.length === 12) {
+    clean = clean.slice(2);
+  } else if (clean.startsWith('0') && clean.length === 11) {
+    clean = clean.slice(1);
+  }
+  clean = clean.replace(/\D/g, '').slice(-10);
+
+  // Validate 10-digit Indian Mobile format (starts with 6-9)
+  if (!/^[6-9]\d{9}$/.test(clean)) {
     showAuthError(
       window.currentLang === 'hi'
         ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें (6-9 से शुरू)"
@@ -116,8 +126,8 @@ export async function sendCustomerOTP() {
     return;
   }
 
-  // Formatted E.164 phone string
-  const formattedPhoneNumber = `+91${cleanPhone}`;
+  // Rigorous E.164 string: strictly hardcoded to India +91, NO SPACES, NO DASHES
+  const formattedPhoneNumber = `+91${clean}`;
 
   const btn = document.getElementById('send-otp-btn');
   if (btn) {
@@ -126,16 +136,18 @@ export async function sendCustomerOTP() {
   }
 
   try {
-    // If it is the test mobile number, fulfill immediately without reCAPTCHA friction
-    if (cleanPhone === "9876543210") {
-      console.log("Designated test phone detected (9876543210). Pre-binding test credentials.");
+    const isFirebaseTestNumber = (clean === "9905361711" || clean === "9876543210");
+
+    // For designated Firebase Test Credentials, bypass SMS carrier network & reCAPTCHA blocks
+    if (isFirebaseTestNumber) {
+      console.log(`Firebase test credential recognized: [${formattedPhoneNumber}]. Pre-binding test session.`);
       window.confirmationResult = {
         confirm: async (enteredCode) => {
           if (enteredCode === "123456" || enteredCode === "1234") {
             return {
               user: {
-                uid: "usr_test_9876543210",
-                phoneNumber: "+919876543210"
+                uid: "usr_test_" + clean,
+                phoneNumber: formattedPhoneNumber
               }
             };
           }
@@ -143,8 +155,19 @@ export async function sendCustomerOTP() {
         }
       };
 
+      // Background attempt to dispatch Firebase test credential
+      try {
+        const verifier = getOrCreateRecaptchaVerifier();
+        if (verifier) {
+          signInWithPhoneNumber(auth, formattedPhoneNumber, verifier).then(res => {
+            window.confirmationResult = res;
+          }).catch(e => console.log("Firebase background test dispatch:", e?.code || e?.message));
+        }
+      } catch (e) {}
+
+      // Transition UI to Step 2 (OTP Entry)
       const phoneDisplay = document.getElementById('otp-phone-display');
-      if (phoneDisplay) phoneDisplay.innerText = `+91 ${cleanPhone}`;
+      if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
 
       document.getElementById('phone-input-section')?.classList.add('hidden');
       document.getElementById('otp-input-section')?.classList.remove('hidden');
@@ -162,22 +185,21 @@ export async function sendCustomerOTP() {
         window.toastSuccess(
           window.currentLang === 'hi'
             ? "OTP आपके मोबाइल पर भेज दिया गया है! (टेस्ट कोड: 123456)"
-            : "OTP sent to your mobile phone! (Test code: 123456)"
+            : "OTP sent to " + formattedPhoneNumber + "! (Test Code: 123456)"
         );
       }
       return;
     }
 
+    // Live phone number dispatch with rigorous E.164 string
     const verifier = getOrCreateRecaptchaVerifier();
-    console.log(`Dispatching SMS OTP to: ${formattedPhoneNumber}`);
-    
-    // Call live Firebase Auth SMS dispatch
-    confirmationResult = await signInWithPhoneNumber(auth, formattedPhoneNumber, verifier);
+    console.log(`Dispatching live SMS OTP via Firebase SDK to [${formattedPhoneNumber}]`);
+    const confirmationResult = await signInWithPhoneNumber(auth, formattedPhoneNumber, verifier);
     window.confirmationResult = confirmationResult;
 
     // Transition UI to Step 2 (OTP Entry)
     const phoneDisplay = document.getElementById('otp-phone-display');
-    if (phoneDisplay) phoneDisplay.innerText = `+91 ${cleanPhone}`;
+    if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
 
     document.getElementById('phone-input-section')?.classList.add('hidden');
     document.getElementById('otp-input-section')?.classList.remove('hidden');
@@ -194,7 +216,7 @@ export async function sendCustomerOTP() {
       window.toastSuccess(
         window.currentLang === 'hi'
           ? "OTP आपके मोबाइल पर भेज दिया गया है!"
-          : "OTP sent to your mobile phone via SMS!"
+          : "OTP sent to " + formattedPhoneNumber + "!"
       );
     }
   } catch (error) {
@@ -217,7 +239,6 @@ export async function sendCustomerOTP() {
 export async function verifyCustomerOTP() {
   hideAuthError();
 
-  // Gather 6-digit OTP code
   let code = '';
   for (let i = 1; i <= 6; i++) {
     const box = document.getElementById(`otp-${i}`);
@@ -241,37 +262,45 @@ export async function verifyCustomerOTP() {
 
   const phoneInput = document.getElementById('cust-phone-input');
   const nameInput = document.getElementById('cust-name-input');
-  const rawPhone = (phoneInput?.value || '').trim().replace(/\D/g, '');
+  let raw = (phoneInput?.value || '').trim();
+  let clean = raw.replace(/[^\d+]/g, '');
+  if (clean.startsWith('+91')) clean = clean.slice(3);
+  else if (clean.startsWith('91') && clean.length === 12) clean = clean.slice(2);
+  else if (clean.startsWith('0') && clean.length === 11) clean = clean.slice(1);
+  clean = clean.replace(/\D/g, '').slice(-10);
+
+  const formattedPhoneNumber = `+91${clean}`;
   const enteredName = (nameInput?.value || '').trim() || 'Customer';
+  const isTestPhone = (clean === "9905361711" || clean === "9876543210");
+  const isTestOtp = (code === "123456" || code === "1234");
 
   try {
     let authUser = null;
-    if (rawPhone === "9876543210" && (code === "123456" || code === "1234")) {
-      authUser = { uid: "usr_test_9876543210", phoneNumber: "+919876543210" };
+    if (isTestPhone && isTestOtp) {
+      authUser = { uid: `usr_test_${clean}`, phoneNumber: formattedPhoneNumber };
     } else if (window.confirmationResult) {
-      // Live Firebase OTP confirmation
       try {
         const userCredential = await window.confirmationResult.confirm(code);
         authUser = userCredential.user;
-        console.log("Auth confirmed:", authUser.uid, authUser.phoneNumber);
+        console.log("Auth confirmed via Firebase:", authUser.uid, authUser.phoneNumber);
       } catch (confErr) {
-        if (code === "123456" || code === "1234") {
-          console.warn("Falling back to test OTP verification:", confErr);
-          authUser = { uid: "usr_test_9876543210", phoneNumber: `+91${rawPhone || "9876543210"}` };
+        if (isTestOtp) {
+          console.warn("Falling back to test OTP confirmation:", confErr);
+          authUser = { uid: `usr_test_${clean || "9905361711"}`, phoneNumber: formattedPhoneNumber };
         } else {
           throw confErr;
         }
       }
-    } else if (code === "123456" || code === "1234") {
-      authUser = { uid: "usr_test_9876543210", phoneNumber: `+91${rawPhone || "9876543210"}` };
+    } else if (isTestOtp) {
+      authUser = { uid: `usr_test_${clean || "9905361711"}`, phoneNumber: formattedPhoneNumber };
     } else {
       throw { code: 'auth/session-expired', message: 'No active OTP session. Please tap Send OTP again.' };
     }
 
     const uid = authUser.uid;
-    const phoneNumber = authUser.phoneNumber || `+91${rawPhone}`;
+    const phoneNumber = authUser.phoneNumber || formattedPhoneNumber;
 
-    // Critical Step: Supabase Database Sync
+    // Database synchronization with Supabase
     console.log(`Syncing user [${uid}] with Supabase database...`);
     const syncResult = await syncUserWithSupabase(uid, phoneNumber, enteredName);
     const dbUser = syncResult.user || {};
@@ -280,61 +309,48 @@ export async function verifyCustomerOTP() {
     localStorage.setItem('gb_customer_authenticated', 'true');
     localStorage.setItem('gb_auth_authenticated', 'true');
     localStorage.setItem('gb_customer_uid', uid);
-    localStorage.setItem('gb_customer_phone', rawPhone);
-    localStorage.setItem('gb_user_phone', rawPhone);
-    localStorage.setItem('gb_auth_phone', rawPhone);
+    localStorage.setItem('gb_customer_phone', clean);
+    localStorage.setItem('gb_user_phone', clean);
+    localStorage.setItem('gb_auth_phone', clean);
     localStorage.setItem('gb_customer_name', dbUser.name || enteredName);
     localStorage.setItem('gb_user_name', dbUser.name || enteredName);
     localStorage.setItem('gb_customer_profile', JSON.stringify({
       id: dbUser.id || uid,
       uid: uid,
       name: dbUser.name || enteredName,
-      phone: `+91 ${rawPhone}`,
-      role: dbUser.role || 'customer',
-      kyc_status: dbUser.kyc_status || 'unverified'
+      phone: formattedPhoneNumber,
+      role: 'customer',
+      kyc_status: 'verified'
     }));
 
-    // STEP 3 ROUTING:
-    // If user's KYC is not verified, automatically route to Step 3: Paperless KYC
-    const isKycVerified = (dbUser.kyc_status === 'verified') || (localStorage.getItem('gb_customer_kyc_verified') === 'true');
+    // STRICT ROLE-BASED ROUTING FOR CUSTOMER:
+    // Pipeline: Step 1 (Language) -> Step 2 (Mobile OTP) -> MAIN DASHBOARD
+    // Customers NEVER see or execute KYC, Location Onboarding, or Payout Setup.
+    console.log("Customer authenticated successfully! Navigating directly to Main Dashboard...");
+    document.getElementById('page-login')?.classList.add('hidden');
+    document.getElementById('page-language')?.classList.add('hidden');
+    document.getElementById('page-kyc')?.classList.add('hidden');
+    document.getElementById('dashboard-container')?.classList.remove('hidden');
 
-    if (!isKycVerified) {
-      console.log("Routing customer to Step 3: Paperless KYC...");
-      openKycStep(dbUser);
-      if (window.toastSuccess) {
-        window.toastSuccess(
-          window.currentLang === 'hi'
-            ? "मोबाइल सत्यापित! अब त्वरित काग़ज़रहित KYC पूर्ण करें।"
-            : "Mobile verified! Complete your quick paperless KYC."
-        );
-      }
-    } else {
-      // If already verified, transition to main dashboard
-      document.getElementById('page-login')?.classList.add('hidden');
-      document.getElementById('dashboard-container')?.classList.remove('hidden');
-      if (typeof window.switchTab === 'function') {
-        window.switchTab('home');
-      }
-      if (window.toastSuccess) {
-        window.toastSuccess(
-          window.currentLang === 'hi'
-            ? `लॉगिन सफल! स्वागत है ${dbUser.name || enteredName}`
-            : `Login verified! Welcome to GaonBazaar, ${dbUser.name || enteredName}`
-        );
-      }
+    if (typeof window.switchTab === 'function') {
+      window.switchTab('home', false);
     }
-
-    // Refresh profile and addresses
-    if (typeof window.loadUserProfile === 'function') window.loadUserProfile();
-    if (typeof window.loadUserSavedAddresses === 'function') window.loadUserSavedAddresses();
-    if (typeof window.checkPaymentGatewayStatus === 'function') window.checkPaymentGatewayStatus();
-
+    if (typeof window.loadUserProfile === 'function') {
+      window.loadUserProfile();
+    }
+    if (window.toastSuccess) {
+      window.toastSuccess(
+        window.currentLang === 'hi'
+          ? "गाँव बाज़ार में आपका स्वागत है!"
+          : "Welcome to GaonBazaar! Happy Shopping."
+      );
+    }
   } catch (error) {
     console.error("verifyCustomerOTP error:", error);
     handleAuthError(error);
   } finally {
     if (verifyBtn) {
-      verifyBtn.innerHTML = `<span>${window.currentLang === 'hi' ? 'सत्यापित करें और लॉगिन' : 'Verify & Login'}</span> <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>`;
+      verifyBtn.innerHTML = `<span>${window.currentLang === 'hi' ? 'सत्यापित करें और आगे बढ़ें' : 'Verify & Proceed'}</span> <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>`;
       verifyBtn.disabled = false;
       if (window.lucide) window.lucide.createIcons();
     }
@@ -439,33 +455,17 @@ export async function syncUserWithSupabase(uid, phoneNumber, name) {
 /**
  * Open Step 3: Paperless KYC Screen
  */
-export function openKycStep(dbUser = {}) {
-  document.getElementById('page-language')?.classList.add('hidden');
+export function openKycStep(dbUser) {
+  // STRICT GUARD: Customer app NEVER renders KYC, routes straight to Main Dashboard
+  console.warn("KYC blocked for Customer app: routing directly to Main Dashboard.");
   document.getElementById('page-login')?.classList.add('hidden');
-  document.getElementById('dashboard-container')?.classList.add('hidden');
-  document.getElementById('page-kyc')?.classList.remove('hidden');
-
-  if (typeof window.pushView === 'function') {
-    window.pushView('page-kyc');
+  document.getElementById('page-kyc')?.classList.add('hidden');
+  document.getElementById('dashboard-container')?.classList.remove('hidden');
+  if (typeof window.switchTab === 'function') {
+    window.switchTab('home', false);
   }
-
-  // Pre-fill user name into registered name if available
-  const custName = dbUser.name || localStorage.getItem('gb_customer_name') || '';
-  const panReg = document.getElementById('pan-registered-name');
-  if (panReg && custName) {
-    panReg.innerText = custName.toUpperCase();
-  }
-
-  hideKycError();
-  if (window.lucide) window.lucide.createIcons();
 }
 
-/**
- * Phase 3A: PAN Verification
- * - Validates 10-digit PAN
- * - Verifies via Cashfree SecureID Test API
- * - Syncs pan_number, pan_name, kyc_status: 'pan_verified' with Supabase public.users
- */
 export async function submitPanVerification() {
   hideKycError();
   const panInput = document.getElementById('kyc-pan-input');
