@@ -838,32 +838,65 @@
 
       <!-- TAB 2: INVENTORY (IMPROVED ALIGNMENT & UNIFORM SIZING) -->
       <div id="tab-inventory" class="dashboard-tab flex-1 p-4 space-y-4 hidden">
+        <!-- Header & Live Counter -->
         <div class="flex justify-between items-center flex-wrap gap-2">
           <div>
-            <h2 class="text-lg font-bold text-slate-900" data-i18n="inventory_title">Live Catalog & Stock</h2>
-            <p class="text-xs text-slate-500" data-i18n="inventory_sub">Instant toggle visible to village customers</p>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900" data-i18n="inventory_title">Live Catalog & Stock</h2>
+            <p class="text-[11px] text-slate-500" data-i18n="inventory_sub">Instant toggle visible to village customers</p>
           </div>
-          <div class="flex items-center space-x-1.5 flex-wrap gap-1">
-            <button onclick="openMasterCatalogModal()" class="py-2 px-2.5 bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 rounded-lg text-xs font-bold shadow-2xs active:scale-95 transition flex items-center space-x-1" title="One-tap toggle 50 rural essentials">
-              <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
-              <span>Master Catalog</span>
-            </button>
-            <label class="py-2 px-2.5 bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 rounded-lg text-xs font-bold shadow-2xs active:scale-95 transition flex items-center space-x-1 cursor-pointer" title="Upload inventory via CSV file">
-              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i>
-              <span>Bulk Import (CSV)</span>
-              <input type="file" id="vendor-csv-import-input" accept=".csv,text/csv" class="hidden" onchange="handleVendorCsvImport(event)">
-            </label>
-            <button onclick="openAddProductModal()" class="py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm active:scale-95 transition flex items-center space-x-1">
-              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-              <span data-i18n="add_product_btn">Add Item</span>
-            </button>
+          <div class="flex items-center space-x-1.5">
+            <span id="vendor-live-items-counter" class="px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-extrabold rounded-full border border-emerald-300">
+              32 Items Live
+            </span>
           </div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="relative">
-          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
-          <input type="text" id="inventory-search" oninput="filterInventory()" placeholder="Search items (Atta, Sugar, Oil, Milk)..." data-i18n-placeholder="search_inventory_placeholder" class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 shadow-xs">
+        <!-- 1. The Smart Search Bar (Voice Integration) -->
+        <div class="relative w-full">
+          <i data-lucide="search" class="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none"></i>
+          <input type="text" id="inventory-search" oninput="filterInventory(this.value)" placeholder="सामान खोजें या बोलें (आलू, टमाटर, आटा)... / Search or speak item..." class="w-full pl-11 pr-14 py-3.5 rounded-2xl border-2 border-slate-200 bg-white text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 shadow-sm transition">
+          
+          <!-- Voice Action Microphone Button (Min 48px touch target) -->
+          <button type="button" id="btn-vendor-voice-search" onclick="toggleVendorVoiceSearch()" class="absolute right-1.5 top-1.5 w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 flex items-center justify-center transition active:scale-90 shadow-2xs cursor-pointer" title="बोलकर खोजें / Speak to Search">
+            <i data-lucide="mic" id="vendor-mic-icon" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- 2. The Split Action Buttons (Barcode vs. Loose Items) -->
+        <div class="grid grid-cols-2 gap-3 pt-0.5">
+          <!-- Action 1: "Scan Barcode" (Packaged FMCG) -->
+          <button type="button" onclick="openBarcodeScannerModal()" id="btn-action-scan-barcode" class="p-3.5 bg-gradient-to-br from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-2xl shadow-md shadow-emerald-700/20 flex flex-col items-center justify-center text-center space-y-1.5 transition active:scale-95 min-h-[76px] border border-emerald-500 cursor-pointer">
+            <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+              <i data-lucide="scan-barcode" class="w-5 h-5 text-white"></i>
+            </div>
+            <div>
+              <span class="block text-xs font-extrabold tracking-wide">बारकोड स्कैन करें</span>
+              <span class="block text-[10px] text-emerald-100 font-medium">Scan Barcode (FMCG)</span>
+            </div>
+          </button>
+
+          <!-- Action 2: "Take Photo" (Loose & Fresh Items) -->
+          <button type="button" onclick="openPhotoCaptureModal()" id="btn-action-take-photo" class="p-3.5 bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl shadow-md shadow-amber-600/20 flex flex-col items-center justify-center text-center space-y-1.5 transition active:scale-95 min-h-[76px] border border-amber-400 cursor-pointer">
+            <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+              <i data-lucide="camera" class="w-5 h-5 text-white"></i>
+            </div>
+            <div>
+              <span class="block text-xs font-extrabold tracking-wide">फोटो खींचे</span>
+              <span class="block text-[10px] text-amber-100 font-medium">Take Photo (Fresh/Loose)</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Quick Manual & Catalog Links -->
+        <div class="flex items-center justify-between px-1 text-[11px] font-bold">
+          <button type="button" onclick="openCustomPricingModal({ title: '', mrp: 0, price: 0 })" class="text-emerald-700 hover:underline flex items-center space-x-1 cursor-pointer">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>+ नया सामान टाइप करें / Type Item Name</span>
+          </button>
+          <button type="button" onclick="openMasterCatalogModal()" class="text-slate-500 hover:text-slate-800 flex items-center space-x-1 cursor-pointer">
+            <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+            <span>कैटलॉग सूची / View Catalog</span>
+          </button>
         </div>
 
         <!-- Products List with Uniform Layout & Verified Product Photos (ZERO EMOJIS, FIXED 48px GEOMETRY) -->
@@ -1261,142 +1294,297 @@
     <!-- MODALS -->
     <!-- ========================================================================= -->
     
-    <!-- MODAL 1: ADD PRODUCT (ENTERPRISE CENTRALIZED MASTER CATALOG LIBRARY) -->
-    <div id="modal-add-product" class="app-modal fixed inset-0 bg-black/60 z-50 flex items-end justify-center hidden">
-      <div class="w-full max-w-lg bg-white rounded-t-2xl p-5 shadow-2xl max-h-[92vh] overflow-y-auto">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+    <!-- =================================================================== -->
+    <!-- 1. MODAL: HTML5 BARCODE SCANNER (PACKAGED FMCG GOODS) -->
+    <!-- =================================================================== -->
+    <div id="modal-barcode-scanner" class="app-modal fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center hidden p-0 sm:p-4">
+      <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4 text-left">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
           <div class="flex items-center space-x-2">
-            <button onclick="closeModal('modal-add-product')" class="p-1.5 rounded-full hover:bg-slate-100 text-slate-600">
-              <i data-lucide="arrow-left" class="w-5 h-5"></i>
-            </button>
+            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center">
+              <i data-lucide="scan-barcode" class="w-4 h-4"></i>
+            </div>
             <div>
-              <h3 class="text-base font-bold text-slate-900" data-i18n="add_new_item_title">Add Store Inventory Item</h3>
-              <p class="text-[11px] text-slate-500">Centralized Product Library (Platform Verified Standards)</p>
+              <h3 class="text-xs sm:text-sm font-extrabold text-slate-900">बारकोड स्कैनर / Scan Barcode</h3>
+              <p class="text-[10px] text-slate-500">पैकेट पर छपा बारकोड सामने लाएं (Packaged FMCG)</p>
             </div>
           </div>
-          <button onclick="closeModal('modal-add-product')" class="text-slate-400 hover:text-slate-600 p-1">
-            <i data-lucide="x" class="w-5 h-5"></i>
+          <button type="button" onclick="closeBarcodeScannerModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center transition">
+            <i data-lucide="x" class="w-4 h-4"></i>
           </button>
         </div>
 
-        <div class="py-3.5 space-y-4">
-          <!-- STEP 1: Search Centralized Product Library -->
-          <div class="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200/80 space-y-2.5">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-emerald-950 flex items-center space-x-1.5">
-                <i data-lucide="library" class="w-3.5 h-3.5 text-emerald-600"></i>
-                <span>Step 1: Search Centralized Product Library</span>
+        <!-- Scanner Viewport Frame with Laser Animation -->
+        <div class="relative w-full h-48 bg-slate-950 rounded-2xl overflow-hidden border-2 border-emerald-500 shadow-inner flex items-center justify-center">
+          <video id="barcode-scanner-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+          
+          <!-- Animated Laser Scanning Line -->
+          <div id="barcode-laser-line" class="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-emerald-200 to-emerald-400 shadow-lg shadow-emerald-400 animate-pulse" style="top: 50%;"></div>
+          
+          <!-- Viewfinder Target Crosshairs -->
+          <div class="absolute inset-6 border-2 border-dashed border-emerald-400/60 rounded-xl pointer-events-none flex flex-col justify-between p-2">
+            <div class="flex justify-between text-emerald-400 text-xs font-mono font-bold">
+              <span>┌</span><span>┐</span>
+            </div>
+            <div class="text-center">
+              <span id="barcode-scanner-status" class="px-2.5 py-1 rounded-full bg-slate-900/80 text-[10px] font-bold text-emerald-300 border border-emerald-500/40">
+                कैमरा सक्रिय / Ready to Scan
               </span>
-              <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Locked FMCG Master SKUs</span>
             </div>
-            
+            <div class="flex justify-between text-emerald-400 text-xs font-mono font-bold">
+              <span>└</span><span>┘</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Manual Barcode Input -->
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-bold text-slate-700">बारकोड नंबर दर्ज करें / Or Enter Barcode Number</label>
+          <div class="flex space-x-2">
+            <input type="text" id="manual-barcode-input" placeholder="उदा. 8901030383701" class="flex-1 px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-emerald-600">
+            <button type="button" onclick="submitManualBarcode()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition active:scale-95 cursor-pointer">
+              जाँचें / Verify
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick 1-Tap FMCG Test Barcodes (Instant Prototyping) -->
+        <div class="space-y-2 pt-1">
+          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">त्वरित बारकोड नमूने / Sample FMCG Barcodes:</span>
+          <div class="grid grid-cols-2 gap-1.5 text-left">
+            <button type="button" onclick="handleBarcodeDetected('8901030383701')" class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
+              <span class="block text-[11px] font-bold text-slate-900 truncate">आशीर्वाद आटा 5kg</span>
+              <span class="block text-[9px] text-slate-500 font-mono">8901030383701 • MRP ₹260</span>
+            </button>
+            <button type="button" onclick="handleBarcodeDetected('8901262010053')" class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
+              <span class="block text-[11px] font-bold text-slate-900 truncate">टाटा नमक 1kg</span>
+              <span class="block text-[9px] text-slate-500 font-mono">8901262010053 • MRP ₹28</span>
+            </button>
+            <button type="button" onclick="handleBarcodeDetected('8901491101836')" class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
+              <span class="block text-[11px] font-bold text-slate-900 truncate">फॉर्च्यून सरसों तेल 1L</span>
+              <span class="block text-[9px] text-slate-500 font-mono">8901491101836 • MRP ₹165</span>
+            </button>
+            <button type="button" onclick="handleBarcodeDetected('8901063012111')" class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
+              <span class="block text-[11px] font-bold text-slate-900 truncate">गुड डे बिस्कुट</span>
+              <span class="block text-[9px] text-slate-500 font-mono">8901063012111 • MRP ₹45</span>
+            </button>
+            <button type="button" onclick="handleBarcodeDetected('8901725181221')" class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
+              <span class="block text-[11px] font-bold text-slate-900 truncate">मैगी नूडल्स 280g</span>
+              <span class="block text-[9px] text-slate-500 font-mono">8901725181221 • MRP ₹56</span>
+            </button>
+            <button type="button" onclick="handleBarcodeDetected('8901030000000')" class="p-2 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-left transition active:scale-95">
+              <span class="block text-[11px] font-bold text-slate-900 truncate">पारले-जी बिस्कुट</span>
+              <span class="block text-[9px] text-slate-500 font-mono">8901030000000 • MRP ₹30</span>
+            </button>
+          </div>
+        </div>
+
+        <button type="button" onclick="closeBarcodeScannerModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+          बंद करें / Close
+        </button>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- 2. MODAL: DEVICE CAMERA & PHOTO CAPTURE (UNBARCODED / FRESH ITEMS) -->
+    <!-- =================================================================== -->
+    <div id="modal-take-photo" class="app-modal fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center hidden p-0 sm:p-4">
+      <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4 text-left">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center">
+              <i data-lucide="camera" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h3 class="text-xs sm:text-sm font-extrabold text-slate-900">फोटो खींचे / Take Real Photo</h3>
+              <p class="text-[10px] text-slate-500">ताज़ा फल, सब्ज़ी, खुली दाल, मिठाई आदि</p>
+            </div>
+          </div>
+          <button type="button" onclick="closePhotoCaptureModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center transition">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Hidden Real Device Camera File Input -->
+        <input type="file" id="vendor-camera-file-input" accept="image/*" capture="environment" class="hidden" onchange="handleVendorCameraPhoto(event)">
+
+        <!-- Photo Capture / Preview Box -->
+        <div class="p-4 bg-amber-50/60 rounded-2xl border-2 border-dashed border-amber-300 text-center space-y-3">
+          <div id="photo-preview-container" class="hidden w-28 h-28 mx-auto rounded-2xl overflow-hidden border-2 border-amber-500 shadow-md">
+            <img id="photo-preview-image" src="" alt="Snapped Photo" class="w-full h-full object-cover">
+          </div>
+          <div id="photo-placeholder-icon" class="w-14 h-14 mx-auto rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
+            <i data-lucide="camera" class="w-7 h-7"></i>
+          </div>
+          <p class="text-xs font-bold text-amber-950" id="photo-status-text">कैमरे से सामान की असली फोटो खींचे</p>
+          
+          <button type="button" onclick="triggerCameraCapture()" class="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center space-x-2 cursor-pointer min-h-[48px]">
+            <i data-lucide="aperture" class="w-4 h-4"></i>
+            <span>कैमरा खोलें व फोटो खींचे / Open Camera & Snap</span>
+          </button>
+        </div>
+
+        <!-- Quick Loose Item Name Chips -->
+        <div class="space-y-1.5">
+          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">त्वरित चयन / Quick Fresh Staples:</span>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" onclick="selectLooseItemChip('ताज़ा टमाटर (Fresh Tomatoes)', 'Vegetables', '1 kg', 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95">
+              🍅 ताज़ा टमाटर (1 kg)
+            </button>
+            <button type="button" onclick="selectLooseItemChip('देसी आलू (Local Potatoes)', 'Vegetables', '1 kg', 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&q=80')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95">
+              🥔 देसी आलू (1 kg)
+            </button>
+            <button type="button" onclick="selectLooseItemChip('लाल प्याज़ (Red Onions)', 'Vegetables', '1 kg', 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&q=80')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95">
+              🧅 लाल प्याज़ (1 kg)
+            </button>
+            <button type="button" onclick="selectLooseItemChip('खुली अरहर दाल (Loose Toor Dal)', 'Grocery', '1 kg', 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=500&q=80')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95">
+              🌾 अरहर दाल (1 kg)
+            </button>
+            <button type="button" onclick="selectLooseItemChip('देसी गाय का दूध (Fresh Cow Milk)', 'Dairy', '1 L', 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95">
+              🥛 ताज़ा दूध (1 L)
+            </button>
+            <button type="button" onclick="selectLooseItemChip('स्थानीय गुलाब जामुन (Gulab Jamun)', 'Sweets', '1 kg', 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=500&q=80')" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-100 border border-slate-200 text-[11px] font-bold text-slate-800 transition active:scale-95">
+              🍬 देसी मिठाई (1 kg)
+            </button>
+          </div>
+        </div>
+
+        <!-- Item Name & Unit Inputs -->
+        <div class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 mb-1">सामान का नाम / Item Name *</label>
+            <input type="text" id="loose-item-name-input" placeholder="उदा. ताज़ा टमाटर या देसी घी" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">इकाई / Unit</label>
+              <select id="loose-item-unit-input" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 bg-white">
+                <option value="1 kg">1 kg (किलो)</option>
+                <option value="500 g">500 g (आधा किलो)</option>
+                <option value="250 g">250 g (पाव)</option>
+                <option value="1 L">1 L (लीटर)</option>
+                <option value="1 Packet">1 Packet (पैकेट)</option>
+                <option value="1 Piece">1 Piece (पीस / नग)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">श्रेणी / Category</label>
+              <select id="loose-item-cat-input" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 bg-white">
+                <option value="Vegetables">सब्ज़ियाँ / Vegetables</option>
+                <option value="Grocery">किराना / Grocery</option>
+                <option value="Dairy">डेयरी / Dairy</option>
+                <option value="Sweets">मिठाई / Sweets</option>
+                <option value="Snacks">नमकीन / Snacks</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Continue CTA -->
+        <div class="pt-2">
+          <button type="button" onclick="continueToPricingFromPhoto()" class="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center space-x-2 cursor-pointer min-h-[48px]">
+            <span>मूल्य तय करें / Continue to Pricing</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- 3. MODAL: THE CUSTOM PRICING FORM (NO LOCKED SKUS) -->
+    <!-- =================================================================== -->
+    <div id="modal-custom-pricing" class="app-modal fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center hidden p-0 sm:p-4">
+      <div class="w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl max-h-[92vh] overflow-y-auto space-y-4 text-left">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center">
+              <i data-lucide="indian-rupee" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h3 class="text-xs sm:text-sm font-extrabold text-slate-900">कीमत तय करें / Set Item Price</h3>
+              <p class="text-[10px] text-slate-500">आपकी दुकान, आपकी कीमत (No Locked Prices)</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeCustomPricingModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center transition">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Product Preview Card (100% UNLOCKED & EDITABLE) -->
+        <div class="flex items-start space-x-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 shadow-2xs">
+          <div class="relative w-16 h-16 shrink-0">
+            <img id="custom-pricing-preview-img" src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80" alt="Product Thumbnail" class="w-16 h-16 rounded-xl object-cover border-2 border-emerald-500 shadow-xs">
+            <button type="button" onclick="openPhotoCaptureModal()" class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-xs text-[10px]" title="Change Photo">
+              <i data-lucide="camera" class="w-3 h-3"></i>
+            </button>
+          </div>
+          <div class="flex-1 min-w-0 space-y-1">
+            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide">सामान का नाम (बदलाव संभव) / Item Name</label>
+            <input type="text" id="custom-pricing-name" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 bg-white" placeholder="Item Name">
+            <div class="flex items-center space-x-1.5 text-[10px] text-slate-500 font-semibold pt-0.5">
+              <span id="custom-pricing-cat-tag" class="px-2 py-0.5 bg-slate-200 rounded-md">Grocery</span>
+              <span id="custom-pricing-unit-tag" class="px-2 py-0.5 bg-slate-200 rounded-md">1 kg</span>
+            </div>
+          </div>
+        </div>
+
+        <input type="hidden" id="custom-pricing-id" value="">
+        <input type="hidden" id="custom-pricing-brand" value="">
+        <input type="hidden" id="custom-pricing-category" value="Grocery">
+        <input type="hidden" id="custom-pricing-unit" value="1 kg">
+
+        <!-- THE CUSTOM PRICING FORM: 2 Stacked Price Inputs -->
+        <div class="p-4 bg-emerald-50/60 rounded-2xl border-2 border-emerald-300 space-y-3.5">
+          <span class="text-xs font-extrabold text-emerald-950 block">मूल्य निर्धारण / Pricing Details</span>
+
+          <!-- 1. MRP Input -->
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-slate-700">अधिकतम खुदरा मूल्य (MRP) *</label>
             <div class="relative">
-              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5"></i>
-              <input type="text" id="catalog-library-search" oninput="filterMasterCatalog()" placeholder="Search library (Atta, Oil, Milk, Sugar, Biscuits, Soap, Dal)..." class="w-full pl-8 pr-3 py-2 bg-white text-xs rounded-lg border border-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 placeholder-slate-400 shadow-2xs">
-            </div>
-
-            <!-- Master SKU Results List -->
-            <div id="master-catalog-results" class="max-h-48 overflow-y-auto space-y-1.5 pr-1 pt-1 divide-y divide-emerald-100/60">
-              <!-- Dynamically populated by renderMasterCatalog() -->
-            </div>
-            <p class="text-[10px] text-emerald-800 font-medium">👉 Tap any library SKU above to auto-fill verified product name, photo, brand, and locked MRP.</p>
-          </div>
-
-          <!-- STEP 2: Selected Item Details & Vendor Pricing -->
-          <div id="selected-sku-container" class="space-y-3.5">
-            <div id="no-sku-selected-placeholder" class="p-4 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-center space-y-1">
-              <p class="text-xs font-semibold text-slate-600">No Library Product Selected</p>
-              <p class="text-[11px] text-slate-400">Search and tap an item from the Centralized Library above to set your selling price.</p>
-            </div>
-
-            <div id="sku-form-fields" class="space-y-3 hidden">
-              <!-- Locked Preview Header -->
-              <div class="flex items-start space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-200 shadow-xs">
-                <img id="add-item-preview-img" src="" alt="Product Thumbnail" class="w-16 h-16 shrink-0 rounded-xl object-cover border-2 border-emerald-600 shadow-sm" style="width: 64px; height: 64px; min-width: 64px; max-width: 64px; min-height: 64px; max-height: 64px; object-fit: cover;">
-                <div class="flex-1 min-w-0 space-y-1">
-                  <div class="flex items-center space-x-1.5">
-                    <span id="add-item-img-tag" class="text-xs font-bold text-slate-900 block truncate">Selected SKU</span>
-                  </div>
-                  <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full inline-flex items-center space-x-1">
-                    <i data-lucide="lock" class="w-3 h-3"></i>
-                    <span>Locked Platform Master Photo</span>
-                  </span>
-                  <p class="text-[10px] text-slate-500 font-medium" id="add-item-category-unit-tag">Grocery • 5 kg</p>
-                </div>
-              </div>
-
-              <input type="hidden" id="selected-global-catalog-id" value="">
-              <input type="hidden" id="selected-product-img-url" value="">
-              <input type="hidden" id="new-item-cat" value="Grocery">
-              <input type="hidden" id="new-item-unit" value="unit">
-
-              <!-- Locked Product Name -->
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
-                  <span>Product Name (Locked)</span>
-                  <span class="text-[10px] text-slate-400 flex items-center"><i data-lucide="lock" class="w-3 h-3 mr-0.5"></i> Read-only</span>
-                </label>
-                <input type="text" id="new-item-name" readonly class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 bg-slate-100 text-slate-800 font-bold cursor-not-allowed">
-              </div>
-
-              <!-- Locked Brand & MRP -->
-              <div class="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
-                    <span>Brand (Locked)</span>
-                    <span class="text-[10px] text-slate-400 flex items-center"><i data-lucide="lock" class="w-3 h-3 mr-0.5"></i> Locked</span>
-                  </label>
-                  <input type="text" id="new-item-brand" readonly class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 bg-slate-100 text-slate-700 font-semibold cursor-not-allowed">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
-                    <span>MRP (Locked)</span>
-                    <span class="text-[10px] text-slate-400 flex items-center"><i data-lucide="lock" class="w-3 h-3 mr-0.5"></i> Fixed</span>
-                  </label>
-                  <div class="relative">
-                    <span class="absolute left-3 top-2 text-xs text-slate-400 font-bold">₹</span>
-                    <input type="number" id="new-item-mrp" readonly class="w-full pl-6 pr-3 py-2 text-xs rounded-lg border border-slate-200 bg-slate-100 text-slate-800 font-bold cursor-not-allowed">
-                  </div>
-                </div>
-              </div>
-
-              <!-- Vendor Actionable Inputs: Selling Price & Stock -->
-              <div class="p-3.5 bg-emerald-50/60 rounded-xl border-2 border-emerald-300 space-y-2.5">
-                <span class="text-xs font-bold text-emerald-950 block">Step 2: Enter Your Store Selling Price & Stock</span>
-                <div class="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <label class="block text-xs font-bold text-slate-800 mb-1">
-                      <span>Selling Price (₹) *</span>
-                    </label>
-                    <div class="relative">
-                      <span class="absolute left-3 top-2 text-xs text-emerald-700 font-bold">₹</span>
-                      <input type="number" id="new-item-price" step="0.5" min="1" oninput="recalculateDiscount()" placeholder="e.g. 240" class="w-full pl-6 pr-3 py-2 text-xs rounded-lg border-2 border-emerald-500 font-bold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 shadow-2xs">
-                    </div>
-                    <span id="discount-calc-badge" class="text-[10px] text-emerald-700 font-semibold mt-1 block"></span>
-                  </div>
-                  <div>
-                    <label class="block text-xs font-bold text-slate-800 mb-1">
-                      <span>Stock Quantity *</span>
-                    </label>
-                    <input type="number" id="new-item-stock" min="1" value="25" placeholder="e.g. 50" class="w-full px-3 py-2 text-xs rounded-lg border-2 border-emerald-500 font-bold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600 shadow-2xs">
-                  </div>
-                </div>
-
-                <div class="pt-1 flex items-center space-x-2">
-                  <input type="checkbox" id="new-item-instock" checked class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
-                  <label for="new-item-instock" class="text-xs font-medium text-slate-700">Make immediately Available / In-Stock</label>
-                </div>
-              </div>
-
-              <!-- Submit CTA -->
-              <div class="pt-2">
-                <button type="button" id="btn-add-to-live-store" onclick="submitLiveStoreItem()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center space-x-2">
-                  <i data-lucide="store" class="w-4 h-4"></i>
-                  <span>Add to Live Store</span>
-                </button>
-              </div>
+              <span class="absolute left-3.5 top-3 text-sm font-bold text-slate-400">₹</span>
+              <input type="number" id="custom-pricing-mrp" step="0.5" min="1" placeholder="उदा. 260" oninput="calculateCustomPricingDiscount()" class="w-full pl-8 pr-3.5 py-3 rounded-xl border-2 border-slate-300 bg-white text-sm font-bold text-slate-900 focus:outline-none focus:border-emerald-600 transition min-h-[48px]">
             </div>
           </div>
+
+          <!-- 2. Your Selling Price Input -->
+          <div class="space-y-1">
+            <label class="block text-xs font-bold text-emerald-950">आपकी बिक्री कीमत (Your Selling Price) *</label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-3 text-base font-extrabold text-emerald-700">₹</span>
+              <input type="number" id="custom-pricing-price" step="0.5" min="1" placeholder="उदा. 240" oninput="calculateCustomPricingDiscount()" class="w-full pl-8 pr-3.5 py-3 rounded-xl border-2 border-emerald-500 bg-white text-base font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition shadow-xs min-h-[48px]">
+            </div>
+          </div>
+
+          <!-- Dynamic Discount Badge (Green "X% OFF") -->
+          <div id="custom-pricing-discount-badge" class="p-2.5 bg-emerald-100/90 border border-emerald-300 rounded-xl text-emerald-900 font-extrabold text-xs flex items-center space-x-2">
+            <i data-lucide="tag" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+            <span id="discount-badge-text">8% OFF (₹20 ग्राहक की बचत / Customer Savings)</span>
+          </div>
+
+          <!-- Stock & In-Stock Switch -->
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">स्टॉक मात्रा / Stock *</label>
+              <input type="number" id="custom-pricing-stock" min="1" value="25" placeholder="50" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-white">
+            </div>
+            <div class="flex flex-col justify-end">
+              <label class="flex items-center space-x-2 p-2 bg-white rounded-xl border border-slate-200 cursor-pointer">
+                <input type="checkbox" id="custom-pricing-instock" checked class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+                <span class="text-[11px] font-bold text-slate-800">बिक्री चालू (In-Stock)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit CTA (Min 48px height) -->
+        <div class="pt-2">
+          <button type="button" id="btn-save-custom-priced-item" onclick="saveCustomPricedItem()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-700/20 text-sm active:scale-98 transition flex items-center justify-center space-x-2 cursor-pointer min-h-[48px]">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <span>दुकान में जोड़ें / Add to Live Store</span>
+          </button>
         </div>
       </div>
     </div>
@@ -1723,6 +1911,8 @@
         handover_otp_placeholder: "e.g. 5821",
         runner_otp_hint: "Ask the delivery partner for their secure OTP (Demo OTP: 5821)",
         inventory_title: "Live Catalog & Stock",
+        action_scan_barcode: "Scan Barcode (FMCG)",
+        action_take_photo: "Take Photo (Fresh/Loose)",
         inventory_sub: "Instant toggle visible to village customers",
         add_product_btn: "Add Item",
         search_inventory_placeholder: "Search items (Atta, Sugar, Oil, Milk)...",
@@ -4436,17 +4626,613 @@
     }
     window.recalculateDiscount = recalculateDiscount;
 
-    function openAddProductModal() {
-      const searchInput = document.getElementById('catalog-library-search');
-      if (searchInput) searchInput.value = "";
-      renderMasterCatalog("");
-      const placeholder = document.getElementById('no-sku-selected-placeholder');
-      const formFields = document.getElementById('sku-form-fields');
-      if (placeholder) placeholder.classList.remove('hidden');
-      if (formFields) formFields.classList.add('hidden');
-      recalculateDiscount();
-      openModal('modal-add-product');
+    // =========================================================================
+    // MULTIMODAL INVENTORY CONTROLLER: VOICE, BARCODE & REAL CAMERA PHOTO
+    // =========================================================================
+    var vendorSpeechRecognizer = null;
+    var isVendorListening = false;
+    var currentCustomPricingImg = "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80";
+
+    // 1. SMART SEARCH BAR (VOICE INTEGRATION VIA WEB SPEECH API)
+    function toggleVendorVoiceSearch() {
+      const searchInput = document.getElementById('inventory-search');
+      const micBtn = document.getElementById('btn-vendor-voice-search');
+      const micIcon = document.getElementById('vendor-mic-icon');
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+        toastWarning(currentLang === 'hi' 
+          ? "इस ब्राउज़र में आवाज़ पहचान समर्थित नहीं है, कृपया टाइप करें।" 
+          : "Voice recognition not supported in this browser. Please type to search.");
+        if (searchInput) searchInput.focus();
+        return;
+      }
+
+      if (isVendorListening) {
+        stopVendorVoiceSearch();
+        return;
+      }
+
+      try {
+        if (vendorSpeechRecognizer) vendorSpeechRecognizer.abort();
+        vendorSpeechRecognizer = new SpeechRecognition();
+        vendorSpeechRecognizer.lang = currentLang === 'hi' ? 'hi-IN' : 'en-IN';
+        vendorSpeechRecognizer.interimResults = false;
+        vendorSpeechRecognizer.maxAlternatives = 1;
+
+        isVendorListening = true;
+        if (micBtn) {
+          micBtn.classList.add('bg-rose-100', 'text-rose-700', 'border-rose-400', 'animate-pulse');
+          micBtn.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+        }
+        toastInfo(currentLang === 'hi' ? "सुन रहे हैं... सामान का नाम बोलिए (उदा. टमाटर, आटा)!" : "Listening... Speak item name (e.g. Tomato, Atta)!");
+
+        vendorSpeechRecognizer.onresult = function(e) {
+          const transcript = e.results[0][0].transcript.trim();
+          stopVendorVoiceSearch();
+
+          if (searchInput) {
+            searchInput.value = transcript;
+            filterInventory(transcript);
+          }
+
+          toastSuccess(currentLang === 'hi' ? `पहचाना गया: "${transcript}"` : `Voice recognized: "${transcript}"`);
+
+          // Check if zero items matched in active inventory, auto-fill into Custom Pricing Form
+          const activeCards = Array.from(document.querySelectorAll('#inventory-list .product-item:not(.hidden)'));
+          if (activeCards.length === 0) {
+            // Check if matches in master catalog
+            const skus = (window.MASTER_SKU_DATABASE && Array.isArray(window.MASTER_SKU_DATABASE)) ? window.MASTER_SKU_DATABASE : MASTER_SKU_DATABASE;
+            const match = skus.find(s => s.product_name.toLowerCase().includes(transcript.toLowerCase()) || (s.brand || '').toLowerCase().includes(transcript.toLowerCase()));
+            if (match) {
+              openCustomPricingModal({
+                title: match.product_name,
+                brand: match.brand,
+                category: match.category,
+                unit: match.variant || match.unit,
+                mrp: match.mrp,
+                price: match.suggested_price || match.mrp,
+                img: match.image_url
+              });
+            } else {
+              openCustomPricingModal({
+                title: transcript,
+                brand: "",
+                category: "Grocery",
+                unit: "1 kg",
+                mrp: 50,
+                price: 45,
+                img: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80"
+              });
+            }
+          }
+        };
+
+        vendorSpeechRecognizer.onerror = function(err) {
+          console.warn("Vendor voice error:", err);
+          stopVendorVoiceSearch();
+          toastWarning(currentLang === 'hi' ? "आवाज़ नहीं सुनी गई, कृपया दोबारा बोलें या टाइप करें।" : "Speech not detected. Please speak clearly or type.");
+        };
+
+        vendorSpeechRecognizer.onend = function() {
+          stopVendorVoiceSearch();
+        };
+
+        vendorSpeechRecognizer.start();
+      } catch (err) {
+        console.error("Speech start error:", err);
+        stopVendorVoiceSearch();
+      }
     }
+    window.toggleVendorVoiceSearch = toggleVendorVoiceSearch;
+
+    function stopVendorVoiceSearch() {
+      isVendorListening = false;
+      const micBtn = document.getElementById('btn-vendor-voice-search');
+      if (micBtn) {
+        micBtn.classList.remove('bg-rose-100', 'text-rose-700', 'border-rose-400', 'animate-pulse');
+        micBtn.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+      }
+      if (vendorSpeechRecognizer) {
+        try { vendorSpeechRecognizer.stop(); } catch(e) {}
+      }
+    }
+
+    // 2. THE SPLIT ACTION 1: HTML5 BARCODE SCANNER (PACKAGED FMCG GOODS)
+    var barcodeStream = null;
+
+    const FMCG_BARCODE_LOOKUP = {
+      "8901030383701": {
+        title: "Aashirvaad Shudh Chakki Atta (5 kg)",
+        brand: "Aashirvaad",
+        category: "Grocery",
+        unit: "5 kg",
+        mrp: 260.0,
+        price: 240.0,
+        img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"
+      },
+      "8901262010053": {
+        title: "Tata Salt Vacuum Evaporated (1 kg)",
+        brand: "Tata",
+        category: "Grocery",
+        unit: "1 kg",
+        mrp: 28.0,
+        price: 26.0,
+        img: "https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=500&q=80"
+      },
+      "8901491101836": {
+        title: "Fortune Kachi Ghani Mustard Oil (1 L)",
+        brand: "Fortune",
+        category: "Grocery",
+        unit: "1 L",
+        mrp: 165.0,
+        price: 145.0,
+        img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"
+      },
+      "8901063012111": {
+        title: "Britannia Good Day Butter Cookies (200 g)",
+        brand: "Britannia",
+        category: "Snacks",
+        unit: "200 g",
+        mrp: 45.0,
+        price: 40.0,
+        img: "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80"
+      },
+      "8901725181221": {
+        title: "Maggi 2-Minute Masala Noodles (280 g)",
+        brand: "Nestle",
+        category: "Snacks",
+        unit: "280 g",
+        mrp: 56.0,
+        price: 52.0,
+        img: "https://images.unsplash.com/photo-1612927601601-6638404737ce?w=500&q=80"
+      },
+      "8901030000000": {
+        title: "Parle-G Gold Glucose Biscuits (250 g)",
+        brand: "Parle",
+        category: "Snacks",
+        unit: "250 g",
+        mrp: 30.0,
+        price: 28.0,
+        img: "https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?w=500&q=80"
+      }
+    };
+
+    function openBarcodeScannerModal() {
+      const modal = document.getElementById('modal-barcode-scanner');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      startBarcodeCamera();
+    }
+    window.openBarcodeScannerModal = openBarcodeScannerModal;
+
+    function closeBarcodeScannerModal() {
+      stopBarcodeCamera();
+      const modal = document.getElementById('modal-barcode-scanner');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+    window.closeBarcodeScannerModal = closeBarcodeScannerModal;
+
+    async function startBarcodeCamera() {
+      const video = document.getElementById('barcode-scanner-video');
+      const statusEl = document.getElementById('barcode-scanner-status');
+      if (!video) return;
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          barcodeStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
+          });
+          video.srcObject = barcodeStream;
+          video.classList.remove('hidden');
+          if (statusEl) statusEl.innerText = currentLang === 'hi' ? "कैमरा चालू • बारकोड सामने लाएं" : "Camera Active • Align Barcode";
+        } catch (err) {
+          console.warn("Camera access fallback:", err.message);
+          if (statusEl) statusEl.innerText = currentLang === 'hi' ? "कैमरा अनुकरण • नीचे दिए गए बारकोड पर टैप करें" : "Scanner Ready • Tap sample barcodes below";
+        }
+      }
+    }
+
+    function stopBarcodeCamera() {
+      if (barcodeStream) {
+        barcodeStream.getTracks().forEach(t => t.stop());
+        barcodeStream = null;
+      }
+      const video = document.getElementById('barcode-scanner-video');
+      if (video) video.classList.add('hidden');
+    }
+
+    function handleBarcodeDetected(barcode) {
+      closeBarcodeScannerModal();
+      const code = String(barcode).trim();
+      
+      // Check FMCG Barcode Database
+      let item = FMCG_BARCODE_LOOKUP[code];
+      if (!item) {
+        // Fallback: match in MASTER_SKU_DATABASE
+        const skus = (window.MASTER_SKU_DATABASE && Array.isArray(window.MASTER_SKU_DATABASE)) ? window.MASTER_SKU_DATABASE : MASTER_SKU_DATABASE;
+        const matchedSku = skus.find(s => (s.id || '').includes(code) || (s.product_name || '').toLowerCase().includes(code.toLowerCase()));
+        if (matchedSku) {
+          item = {
+            title: matchedSku.product_name,
+            brand: matchedSku.brand,
+            category: matchedSku.category,
+            unit: matchedSku.variant || matchedSku.unit,
+            mrp: matchedSku.mrp,
+            price: matchedSku.suggested_price || matchedSku.mrp,
+            img: matchedSku.image_url
+          };
+        } else {
+          item = {
+            title: `Packaged FMCG Product (${code.slice(-6)})`,
+            brand: "FMCG Brand",
+            category: "Grocery",
+            unit: "1 unit",
+            mrp: 100.0,
+            price: 90.0,
+            img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"
+          };
+        }
+      }
+
+      toastSuccess(currentLang === 'hi' ? `बारकोड मिला: ${item.title}` : `Barcode matched: ${item.title}`);
+      openCustomPricingModal(item);
+    }
+    window.handleBarcodeDetected = handleBarcodeDetected;
+
+    function submitManualBarcode() {
+      const inp = document.getElementById('manual-barcode-input');
+      const val = (inp ? inp.value : '').trim();
+      if (!val) {
+        toastError(currentLang === 'hi' ? "कृपया बारकोड नंबर दर्ज करें।" : "Please enter a barcode number.");
+        return;
+      }
+      handleBarcodeDetected(val);
+    }
+    window.submitManualBarcode = submitManualBarcode;
+
+    // 3. THE SPLIT ACTION 2: REAL CAMERA PHOTO CAPTURE (LOOSE & FRESH ITEMS)
+    var currentSnappedPhotoData = null;
+
+    function openPhotoCaptureModal() {
+      const modal = document.getElementById('modal-take-photo');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+    window.openPhotoCaptureModal = openPhotoCaptureModal;
+
+    function closePhotoCaptureModal() {
+      const modal = document.getElementById('modal-take-photo');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+    window.closePhotoCaptureModal = closePhotoCaptureModal;
+
+    function triggerCameraCapture() {
+      const input = document.getElementById('vendor-camera-file-input');
+      if (input) input.click();
+    }
+    window.triggerCameraCapture = triggerCameraCapture;
+
+    function handleVendorCameraPhoto(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        currentSnappedPhotoData = e.target.result;
+        const previewContainer = document.getElementById('photo-preview-container');
+        const previewImg = document.getElementById('photo-preview-image');
+        const placeholderIcon = document.getElementById('photo-placeholder-icon');
+        const statusText = document.getElementById('photo-status-text');
+
+        if (previewImg && previewContainer) {
+          previewImg.src = currentSnappedPhotoData;
+          previewContainer.classList.remove('hidden');
+          if (placeholderIcon) placeholderIcon.classList.add('hidden');
+          if (statusText) statusText.innerText = currentLang === 'hi' ? "✓ असली फोटो तैयार है! अब नाम व मूल्य तय करें।" : "✓ Photo captured! Set item name and pricing.";
+        }
+        toastSuccess(currentLang === 'hi' ? "फोटो सफलतापूर्वक ली गई!" : "Photo captured successfully!");
+      };
+      reader.readAsDataURL(file);
+    }
+    window.handleVendorCameraPhoto = handleVendorCameraPhoto;
+
+    function selectLooseItemChip(name, category, unit, defaultImg) {
+      const nameInp = document.getElementById('loose-item-name-input');
+      const unitInp = document.getElementById('loose-item-unit-input');
+      const catInp = document.getElementById('loose-item-cat-input');
+      if (nameInp) nameInp.value = name;
+      if (unitInp) unitInp.value = unit;
+      if (catInp) catInp.value = category;
+
+      if (!currentSnappedPhotoData && defaultImg) {
+        currentSnappedPhotoData = defaultImg;
+        const previewContainer = document.getElementById('photo-preview-container');
+        const previewImg = document.getElementById('photo-preview-image');
+        const placeholderIcon = document.getElementById('photo-placeholder-icon');
+        if (previewImg && previewContainer) {
+          previewImg.src = defaultImg;
+          previewContainer.classList.remove('hidden');
+          if (placeholderIcon) placeholderIcon.classList.add('hidden');
+        }
+      }
+    }
+    window.selectLooseItemChip = selectLooseItemChip;
+
+    function continueToPricingFromPhoto() {
+      const name = (document.getElementById('loose-item-name-input')?.value || '').trim();
+      const unit = document.getElementById('loose-item-unit-input')?.value || '1 kg';
+      const cat = document.getElementById('loose-item-cat-input')?.value || 'Vegetables';
+
+      if (!name) {
+        toastError(currentLang === 'hi' ? "कृपया सामान का नाम दर्ज करें।" : "Please enter the item name.");
+        document.getElementById('loose-item-name-input')?.focus();
+        return;
+      }
+
+      closePhotoCaptureModal();
+      openCustomPricingModal({
+        title: name,
+        category: cat,
+        unit: unit,
+        mrp: 40.0,
+        price: 35.0,
+        img: currentSnappedPhotoData || "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80"
+      });
+    }
+    window.continueToPricingFromPhoto = continueToPricingFromPhoto;
+
+    // 4. THE CUSTOM PRICING FORM (NO LOCKED SKUS, MRP & SELLING PRICE)
+    function openCustomPricingModal(itemData = {}) {
+      const name = itemData.title || itemData.name || itemData.product_name || "";
+      const mrp = Number(itemData.mrp) || 0;
+      const price = Number(itemData.price) || Number(itemData.suggested_price) || mrp;
+      const cat = itemData.category || "Grocery";
+      const unit = itemData.unit || itemData.variant || "1 unit";
+      const img = itemData.img || itemData.image_url || "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80";
+
+      currentCustomPricingImg = img;
+
+      const nameInp = document.getElementById('custom-pricing-name');
+      const mrpInp = document.getElementById('custom-pricing-mrp');
+      const priceInp = document.getElementById('custom-pricing-price');
+      const stockInp = document.getElementById('custom-pricing-stock');
+      const instockInp = document.getElementById('custom-pricing-instock');
+      const previewImg = document.getElementById('custom-pricing-preview-img');
+      const catTag = document.getElementById('custom-pricing-cat-tag');
+      const unitTag = document.getElementById('custom-pricing-unit-tag');
+
+      if (nameInp) nameInp.value = name;
+      if (mrpInp) mrpInp.value = mrp > 0 ? mrp : (price > 0 ? price : 50);
+      if (priceInp) priceInp.value = price > 0 ? price : 45;
+      if (stockInp) stockInp.value = 25;
+      if (instockInp) instockInp.checked = true;
+      if (previewImg) previewImg.src = img;
+      if (catTag) catTag.innerText = cat;
+      if (unitTag) unitTag.innerText = unit;
+
+      const catHidden = document.getElementById('custom-pricing-category');
+      const unitHidden = document.getElementById('custom-pricing-unit');
+      const brandHidden = document.getElementById('custom-pricing-brand');
+      if (catHidden) catHidden.value = cat;
+      if (unitHidden) unitHidden.value = unit;
+      if (brandHidden) brandHidden.value = itemData.brand || "";
+
+      calculateCustomPricingDiscount();
+
+      const modal = document.getElementById('modal-custom-pricing');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+    window.openCustomPricingModal = openCustomPricingModal;
+
+    function closeCustomPricingModal() {
+      const modal = document.getElementById('modal-custom-pricing');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+    window.closeCustomPricingModal = closeCustomPricingModal;
+
+    // Backward compatibility alias for openAddProductModal
+    function openAddProductModal() {
+      openCustomPricingModal({
+        title: "",
+        category: "Grocery",
+        unit: "1 kg",
+        mrp: 60.0,
+        price: 54.0,
+        img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"
+      });
+    }
+    window.openAddProductModal = openAddProductModal;
+
+    function calculateCustomPricingDiscount() {
+      const mrp = parseFloat(document.getElementById('custom-pricing-mrp')?.value) || 0;
+      const price = parseFloat(document.getElementById('custom-pricing-price')?.value) || 0;
+      const badge = document.getElementById('custom-pricing-discount-badge');
+      const badgeText = document.getElementById('discount-badge-text');
+
+      if (!badge || !badgeText) return;
+
+      if (mrp > 0 && price > 0 && mrp > price) {
+        const discountPct = Math.round(((mrp - price) / mrp) * 100);
+        const savings = (mrp - price).toFixed(0);
+        badgeText.innerText = `${discountPct}% OFF (₹${savings} ग्राहक की बचत / Customer Savings)`;
+        badge.className = "p-2.5 bg-emerald-100 border border-emerald-300 rounded-xl text-emerald-900 font-extrabold text-xs flex items-center space-x-2";
+      } else if (mrp > 0 && price >= mrp) {
+        badgeText.innerText = "MRP पर बिक्री (0% छूट) / Selling at MRP";
+        badge.className = "p-2.5 bg-slate-100 border border-slate-300 rounded-xl text-slate-700 font-bold text-xs flex items-center space-x-2";
+      } else {
+        badgeText.innerText = "कीमत दर्ज करें / Enter valid prices";
+        badge.className = "p-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 font-bold text-xs flex items-center space-x-2";
+      }
+    }
+    window.calculateCustomPricingDiscount = calculateCustomPricingDiscount;
+
+    function saveCustomPricedItem() {
+      const name = (document.getElementById('custom-pricing-name')?.value || '').trim();
+      const mrp = parseFloat(document.getElementById('custom-pricing-mrp')?.value) || 0;
+      const price = parseFloat(document.getElementById('custom-pricing-price')?.value) || 0;
+      const stock = parseInt(document.getElementById('custom-pricing-stock')?.value, 10) || 25;
+      const inStock = document.getElementById('custom-pricing-instock')?.checked !== false;
+      const cat = document.getElementById('custom-pricing-category')?.value || 'Grocery';
+      const unit = document.getElementById('custom-pricing-unit')?.value || '1 unit';
+      const brand = document.getElementById('custom-pricing-brand')?.value || '';
+
+      if (!name) {
+        toastError(currentLang === 'hi' ? "कृपया सामान का नाम दर्ज करें।" : "Please enter the item name.");
+        document.getElementById('custom-pricing-name')?.focus();
+        return;
+      }
+      if (price <= 0) {
+        toastError(currentLang === 'hi' ? "कृपया वैध बिक्री मूल्य दर्ज करें (> ₹0)।" : "Please enter a valid selling price (> ₹0).");
+        document.getElementById('custom-pricing-price')?.focus();
+        return;
+      }
+
+      const effectiveMrp = mrp > 0 ? mrp : price;
+      const discountPct = effectiveMrp > price ? Math.round(((effectiveMrp - price) / effectiveMrp) * 100) : 0;
+      const prodId = 'prod_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 4);
+
+      const newItem = {
+        id: prodId,
+        title: name,
+        name: name,
+        brand: brand,
+        category: cat,
+        variant: unit,
+        unit: unit,
+        mrp: effectiveMrp,
+        price: price,
+        discount_pct: discountPct,
+        stock: stock,
+        in_stock: inStock,
+        img: currentCustomPricingImg || "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"
+      };
+
+      let inventory = getVendorInventory();
+      inventory.unshift(newItem);
+      saveVendorInventory(inventory);
+
+      // Prepend to DOM #inventory-list
+      const list = document.getElementById('inventory-list');
+      if (list) {
+        const card = document.createElement('div');
+        card.className = "product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden";
+        card.setAttribute('data-id', prodId);
+        card.setAttribute('data-title', name);
+        card.setAttribute('data-category', cat);
+
+        const discountMarkup = discountPct > 0 
+          ? `<span class="text-[10px] text-slate-400 line-through">₹${effectiveMrp.toFixed(2)}</span>
+             <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">${discountPct}% OFF</span>`
+          : `<span class="text-[10px] text-slate-400 font-semibold">MRP ₹${effectiveMrp.toFixed(2)}</span>`;
+
+        card.innerHTML = `
+          <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
+            <img src="${newItem.img}" alt="${name}" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
+            <div class="min-w-0 flex-1 overflow-hidden">
+              <div class="flex items-center space-x-1 min-w-0">
+                <h4 class="text-xs font-bold text-slate-900 truncate">${name}</h4>
+                <span class="text-[10px] text-slate-500 font-medium shrink-0">(${unit})</span>
+              </div>
+              <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
+                <span class="text-xs font-extrabold text-slate-900">₹${price.toFixed(2)}</span>
+                ${discountMarkup}
+              </div>
+              <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
+                <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">${stock} units</strong></span>
+                <span class="text-slate-300">•</span>
+                <span class="stock-label font-bold text-emerald-600 block">${inStock ? 'IN STOCK' : 'OUT OF STOCK'}</span>
+              </div>
+            </div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
+            <input type="checkbox" ${inStock ? 'checked' : ''} onchange="toggleProductStock(this, '${prodId}', '${name.replace(/'/g, "\'")}')" class="sr-only peer">
+            <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+          </label>
+        `;
+        list.insertBefore(card, list.firstChild);
+      }
+
+      updateLiveItemsCounter();
+      closeCustomPricingModal();
+      toastSuccess(currentLang === 'hi' ? `${name} दुकान में सफलतापूर्वक जोड़ा गया!` : `${name} added to live store!`);
+    }
+    window.saveCustomPricedItem = saveCustomPricedItem;
+
+    function updateLiveItemsCounter() {
+      const counter = document.getElementById('vendor-live-items-counter');
+      if (counter) {
+        const total = document.querySelectorAll('#inventory-list .product-item').length;
+        counter.innerText = `${total} Items Live`;
+      }
+    }
+    window.updateLiveItemsCounter = updateLiveItemsCounter;
+
+    // 5. INVENTORY FILTER / REAL-TIME SEARCH
+    function filterInventory(query = null) {
+      if (query === null) {
+        query = document.getElementById('inventory-search')?.value || '';
+      }
+      const q = query.toLowerCase().trim();
+      const items = document.querySelectorAll('#inventory-list .product-item');
+      let visibleCount = 0;
+
+      items.forEach(card => {
+        const title = (card.getAttribute('data-title') || '').toLowerCase();
+        const cat = (card.getAttribute('data-category') || '').toLowerCase();
+        const text = card.textContent.toLowerCase();
+
+        if (!q || title.includes(q) || cat.includes(q) || text.includes(q)) {
+          card.classList.remove('hidden');
+          card.classList.add('flex');
+          visibleCount++;
+        } else {
+          card.classList.add('hidden');
+          card.classList.remove('flex');
+        }
+      });
+
+      const emptyMsg = document.getElementById('inventory-search-empty-msg');
+      if (visibleCount === 0 && q.length > 0) {
+        if (!emptyMsg) {
+          const emptyDiv = document.createElement('div');
+          emptyDiv.id = 'inventory-search-empty-msg';
+          emptyDiv.className = "p-5 bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl text-center space-y-2";
+          emptyDiv.innerHTML = `
+            <p class="text-xs font-bold text-slate-700">कोई सामान नहीं मिला: "${query}"</p>
+            <p class="text-[11px] text-slate-500">क्या आप इसे अपनी दुकान में नए सामान के रूप में जोड़ना चाहते हैं?</p>
+            <button type="button" onclick="openCustomPricingModal({ title: '${query.replace(/'/g, "\'")}', mrp: 50, price: 45 })" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-xs active:scale-95 inline-flex items-center space-x-1.5">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>+ "${query}" को दुकान में जोड़ें</span>
+            </button>
+          `;
+          document.getElementById('inventory-list')?.appendChild(emptyDiv);
+          if (window.lucide) lucide.createIcons();
+        }
+      } else if (emptyMsg) {
+        emptyMsg.remove();
+      }
+    }
+    window.filterInventory = filterInventory;
+
 
     
 
