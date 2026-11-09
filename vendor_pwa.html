@@ -160,7 +160,7 @@
       <!-- ======================================================================= -->
       
       <!-- PAGE 1: LANGUAGE SELECTION -->
-      <div id="screen-onboarding-1" class="app-screen flex-1 p-6 flex flex-col justify-between hidden" style="display: none;">
+      <div id="screen-onboarding-1" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
         <div class="pt-6 text-center">
           <div class="w-20 h-20 bg-emerald-100 text-emerald-700 rounded-3xl mx-auto flex items-center justify-center shadow-inner mb-5">
             <i data-lucide="store" class="w-10 h-10"></i>
@@ -2666,9 +2666,81 @@
       }
     };
 
+    
+    // ===========================================================================
+    // SECTION ERROR BOUNDARY COMPONENT
+    // Protects functional areas (Dashboard, Orders, Inventory, Ledger, Account)
+    // from crashing the application into a white screen of death.
+    // ===========================================================================
+    class SectionErrorBoundary {
+      static wrap(sectionId, renderFn, sectionTitle = 'Section') {
+        const container = document.getElementById(sectionId);
+        if (!container) return;
+        try {
+          renderFn();
+        } catch (err) {
+          console.error(`[ErrorBoundary] Caught error in ${sectionId} (${sectionTitle}):`, err);
+          SectionErrorBoundary.renderFallback(container, sectionTitle, err);
+        }
+      }
+
+      static renderFallback(container, sectionTitle, err) {
+        if (!container) return;
+        container.classList.remove('hidden');
+        container.style.display = 'block';
+        container.innerHTML = `
+          <div class="section-error-boundary p-6 text-center space-y-3 bg-red-50/90 border border-red-200 rounded-2xl m-4 shadow-sm animate-fade-in">
+            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full mx-auto flex items-center justify-center shadow-xs">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+            </div>
+            <h3 class="text-sm font-bold text-slate-900">Something went wrong loading this section. Please refresh.</h3>
+            <p class="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">
+              ${sectionTitle} encountered an unexpected render issue. You can refresh this section or continue navigating the rest of GaonBazaar.
+            </p>
+            <div class="pt-2 flex items-center justify-center space-x-2">
+              <button onclick="location.reload()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs active:scale-95 transition">
+                Refresh Section
+              </button>
+              <button onclick="switchDashboardTab('orders')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-xs active:scale-95 transition">
+                Go to Orders
+              </button>
+            </div>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+    window.SectionErrorBoundary = SectionErrorBoundary;
+
+    // Global Window Error Boundary
+    window.addEventListener('error', function(event) {
+      console.error('[Global Error Boundary]:', event.error || event.message);
+      const viewport = document.getElementById('main-viewport');
+      if (viewport) {
+        const activeTabs = Array.from(document.querySelectorAll('.dashboard-tab')).filter(t => !t.classList.contains('hidden') && t.style.display !== 'none');
+        const activeScreens = Array.from(document.querySelectorAll('.app-screen')).filter(s => !s.classList.contains('hidden') && s.style.display !== 'none');
+        if (activeTabs.length === 0 && activeScreens.length === 0) {
+          console.warn('[Global Error Boundary] Recovering from empty viewport...');
+          if (state.currentScreen === 'dashboard') {
+            switchDashboardTab(state.activeTab || 'orders', false);
+          } else {
+            navigateTo(state.currentScreen || 'onboarding-1', false);
+          }
+        }
+      }
+    });
+
     function navigateTo(screenId, pushHistory = true) {
-      document.querySelectorAll('.app-screen').forEach(s => s.classList.add('hidden'));
-      document.querySelectorAll('.dashboard-tab').forEach(t => t.classList.add('hidden'));
+      document.querySelectorAll('.app-screen').forEach(s => {
+        s.classList.add('hidden');
+        s.style.display = 'none';
+      });
+      document.querySelectorAll('.dashboard-tab').forEach(t => {
+        t.classList.add('hidden');
+        t.style.display = 'none';
+      });
 
       let target = document.getElementById('screen-' + screenId);
       if (!target) {
@@ -2681,8 +2753,12 @@
 
       if (target) {
         target.classList.remove('hidden');
+        target.style.display = '';
         state.currentScreen = screenId;
-        if (bottomNav) bottomNav.classList.add('hidden');
+        if (bottomNav) {
+          bottomNav.classList.add('hidden');
+          bottomNav.style.display = 'none';
+        }
 
         if (screenId === 'onboarding-4') {
           setTimeout(() => {
@@ -2718,7 +2794,10 @@
       if (s1) { s1.classList.add('hidden'); s1.style.display = 'none'; }
       
       const bottomNav = document.getElementById('bottom-tabs');
-      if (bottomNav) bottomNav.classList.remove('hidden');
+      if (bottomNav) {
+        bottomNav.classList.remove('hidden');
+        bottomNav.style.display = '';
+      }
 
       const backBtn = document.getElementById('nav-back-btn');
       if (backBtn) backBtn.classList.add('hidden');
@@ -2755,14 +2834,22 @@
       const s1 = document.getElementById('screen-onboarding-1');
       if (s1) { s1.classList.add('hidden'); s1.style.display = 'none'; }
 
+      // Hide all tabs
       document.querySelectorAll('.dashboard-tab').forEach(t => {
         t.classList.add('hidden');
         t.style.display = 'none';
       });
+
+      const bottomNav = document.getElementById('bottom-tabs');
+      if (bottomNav) {
+        bottomNav.classList.remove('hidden');
+        bottomNav.style.display = '';
+      }
       
       const targetTab = document.getElementById('tab-' + tabName);
       if (targetTab) {
         targetTab.classList.remove('hidden');
+        targetTab.style.display = '';
       }
 
       document.querySelectorAll('.tab-button').forEach(btn => {
@@ -2775,12 +2862,23 @@
         activeBtn.classList.add('text-emerald-600', 'font-bold');
       }
 
+      // Safeguard tab render cycles inside SectionErrorBoundary
+      SectionErrorBoundary.wrap('tab-' + tabName, () => {
+        if (tabName === 'inventory') {
+          if (typeof renderSampleBarcodes === 'function') renderSampleBarcodes();
+          if (typeof renderLooseItemChips === 'function') renderLooseItemChips();
+        } else if (tabName === 'orders') {
+          if (typeof updateOrdersUIFromData === 'function') updateOrdersUIFromData();
+        }
+        if (window.lucide) lucide.createIcons();
+      }, tabName.charAt(0).toUpperCase() + tabName.slice(1) + ' Section');
+
       if (pushHistory) {
         history.pushState({ screen: 'dashboard', tab: tabName, view: 'dashboard' }, '', '#dashboard-' + tabName);
       }
 
       window.scrollTo(0, 0);
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     window.addEventListener('popstate', (e) => {

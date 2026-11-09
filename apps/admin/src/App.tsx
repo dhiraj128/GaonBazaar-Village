@@ -12,6 +12,7 @@ import { CatalogSettingsView } from './components/CatalogSettingsView';
 import { TicketsView } from './components/TicketsView';
 import { RefundsView } from './components/RefundsView';
 import { AuditLogsView } from './components/AuditLogsView';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 import { adminApi } from './api';
 import type {
@@ -354,6 +355,7 @@ export function App() {
 
         {/* Dynamic View Body */}
         <main className="flex-1 p-6 lg:p-8 mt-16 max-w-7xl w-full mx-auto">
+          <ErrorBoundary key={currentTab} sectionTitle={currentTab}>
           {currentTab === 'dashboard' && (
             <DashboardView
               overview={overview}
@@ -428,6 +430,7 @@ export function App() {
           {currentTab === 'refunds' && <RefundsView />}
 
           {currentTab === 'audit' && <AuditLogsView logs={auditLogs} />}
+          </ErrorBoundary>
         </main>
       </div>
     </div>
