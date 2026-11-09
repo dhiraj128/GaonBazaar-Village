@@ -13,6 +13,9 @@ sync_targets = [
     ('public_web/customer/config.js', 'apps/customer/web/config.js'),
     ('public_web/customer/config.js', 'customer_config.js'),
     ('public_web/customer/config.js', 'C:/Users/dhira/OneDrive/Desktop/gh-pages/customer/config.js'),
+    ('public_web/customer/auth-service.js', 'apps/customer/web/auth-service.js'),
+    ('public_web/customer/auth-service.js', 'customer_auth_service.js'),
+    ('public_web/customer/auth-service.js', 'C:/Users/dhira/OneDrive/Desktop/gh-pages/customer/auth-service.js'),
     # Vendor
     ('public_web/vendor/index.html', 'apps/vendor/web/index.html'),
     ('public_web/vendor/index.html', 'vendor_pwa.html'),
