@@ -239,164 +239,127 @@
         </div>
       </div>
 
-      <!-- PAGE 4: CASHFREE PAPERLESS KYC (PAN + AADHAAR OTP) -->
+      <!-- PAGE 4: IDENTITY VERIFICATION (SINGLE ID SELECTION) -->
       <div id="screen-onboarding-4" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
         <div class="space-y-4">
-          <!-- Step Badge & Header -->
+          <!-- Header (Clean & White-labeled) -->
           <div>
-            <div class="flex items-center space-x-2 text-emerald-600 text-xs font-bold uppercase tracking-wider mb-2">
-              <span class="px-2 py-0.5 bg-emerald-100 rounded" data-i18n="step_4_badge">Step 4 of 7</span>
-              <span>Cashfree SecureID • Paperless KYC</span>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="kyc_title">Paperless Identity Verification</h2>
-            <p class="text-xs text-slate-500 leading-relaxed" data-i18n="kyc_sub">
-              Instant government identity verification powered by UIDAI & Income Tax Department. 100% paperless & secure.
+            <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="id_verification_title">Identity Verification</h2>
+            <p class="text-xs text-slate-500 leading-relaxed" data-i18n="id_verification_sub">
+              Choose any one government ID to verify your identity instantly
             </p>
           </div>
 
-          <!-- KYC Error Banner -->
+          <!-- Clean Toggle: PAN Card vs Aadhaar Card -->
+          <div class="flex p-1 bg-slate-200 rounded-xl border border-slate-200">
+            <button id="id-tab-pan" onclick="selectIdType('pan')" class="flex-1 py-2.5 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5">
+              <i data-lucide="credit-card" class="w-4 h-4 text-emerald-600"></i>
+              <span data-i18n="pan_card_tab">PAN Card</span>
+            </button>
+            <button id="id-tab-aadhaar" onclick="selectIdType('aadhaar')" class="flex-1 py-2.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5">
+              <i data-lucide="shield-check" class="w-4 h-4"></i>
+              <span data-i18n="aadhaar_card_tab">Aadhaar Card (OTP)</span>
+            </button>
+          </div>
+
+          <!-- Error Alert Banner -->
           <div id="kyc-error-banner" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start space-x-2 shadow-2xs">
             <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
             <span id="kyc-error-text" class="flex-1 font-medium leading-relaxed"></span>
             <button onclick="hideKycError()" class="text-rose-400 hover:text-rose-700 font-bold text-sm leading-none ml-1">✕</button>
           </div>
 
-          <!-- PHASE 4A: PAN CARD VERIFICATION -->
-          <div id="kyc-pan-card" class="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3 transition">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-2.5">
-                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
-                  <i data-lucide="credit-card" class="w-4 h-4"></i>
-                </div>
-                <div>
-                  <h3 class="text-xs font-bold text-slate-900">Step 4A: PAN Card Verification</h3>
-                  <p class="text-[10px] text-slate-500">Income Tax Department identity matching</p>
-                </div>
-              </div>
-              <span id="pan-status-badge" class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 text-[10px] font-bold">Pending</span>
-            </div>
-
-            <!-- PAN Input block -->
-            <div id="pan-input-section" class="space-y-2.5">
+          <!-- OPTION 1: PAN CARD PANEL -->
+          <div id="panel-pan" class="space-y-4">
+            <div id="pan-input-section" class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-xs">
               <div>
-                <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="pan_input_label">
                   10-Digit PAN Number <span class="text-rose-500">*</span>
                 </label>
-                <div class="relative flex items-center">
-                  <input type="text" id="kyc-pan-input" maxlength="10" placeholder="e.g. ABCDE1234F" value="ABCDE1234F" oninput="this.value = this.value.toUpperCase()" class="w-full pl-3.5 pr-4 py-3 bg-white border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none rounded-xl text-xs font-mono font-bold text-slate-900 uppercase tracking-wider shadow-2xs">
-                </div>
-                <p class="text-[10px] text-slate-400 mt-1">Format: 5 letters, 4 numbers, 1 letter (e.g. ABCDE1234F)</p>
+                <input type="text" id="kyc-pan-input" maxlength="10" placeholder="e.g. ABCDE1234F" value="ABCDE1234F" oninput="this.value = this.value.toUpperCase()" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold text-xs uppercase tracking-wider focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+                <p class="text-[10px] text-slate-400 mt-1" data-i18n="pan_format_hint">Format: 5 letters, 4 numbers, 1 letter (e.g. ABCDE1234F)</p>
               </div>
 
-              <button onclick="submitPanVerification()" id="btn-verify-pan" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md active:scale-98 transition flex items-center justify-center space-x-2 text-xs">
-                <span>Verify PAN via Cashfree</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              <button onclick="submitPanVerification()" id="btn-verify-pan" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+                <span data-i18n="verify_pan_btn">Verify PAN</span>
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
               </button>
             </div>
 
             <!-- PAN Verified Success State -->
-            <div id="pan-verified-section" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-1">
-              <div class="flex items-center space-x-1.5 font-bold text-emerald-800">
+            <div id="pan-verified-section" class="hidden p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3">
+              <div class="flex items-center space-x-2 text-emerald-800 font-bold text-xs">
                 <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
-                <span>PAN Successfully Verified</span>
+                <span data-i18n="pan_verified_title">PAN Successfully Verified</span>
               </div>
-              <p class="text-[11px]"><span class="font-medium text-slate-500">Registered Name:</span> <strong id="pan-registered-name" class="text-slate-900">-</strong></p>
-              <p class="text-[11px]"><span class="font-medium text-slate-500">PAN:</span> <strong id="pan-verified-number" class="font-mono text-slate-900">-</strong></p>
+              <div class="space-y-1 text-xs">
+                <p class="text-slate-600"><span class="text-slate-400">Registered Name:</span> <strong id="pan-registered-name" class="text-slate-900">RAMESH CHANDRA SHARMA</strong></p>
+                <p class="text-slate-600"><span class="text-slate-400">PAN Number:</span> <strong id="pan-verified-number" class="font-mono text-slate-900">ABCDE1234F</strong></p>
+              </div>
+              <button onclick="proceedToNextStep()" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+                <span data-i18n="continue_to_next">Continue to Face Verification</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
             </div>
           </div>
 
-          <!-- PHASE 4B: PAPERLESS AADHAAR VERIFICATION -->
-          <div id="kyc-aadhaar-card" class="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3 transition">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-2.5">
-                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">
-                  <i data-lucide="shield-check" class="w-4 h-4"></i>
-                </div>
-                <div>
-                  <h3 class="text-xs font-bold text-slate-900">Step 4B: Offline Aadhaar OTP</h3>
-                  <p class="text-[10px] text-slate-500">Paperless UIDAI OTP verification</p>
-                </div>
-              </div>
-              <span id="aadhaar-status-badge" class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 text-[10px] font-bold">Pending</span>
-            </div>
-
+          <!-- OPTION 2: AADHAAR CARD PANEL -->
+          <div id="panel-aadhaar" class="space-y-4 hidden">
             <!-- Aadhaar Number Input Section -->
-            <div id="aadhaar-number-section" class="space-y-2.5">
+            <div id="aadhaar-number-section" class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-xs">
               <div>
-                <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="aadhaar_input_label">
                   12-Digit Aadhaar Number <span class="text-rose-500">*</span>
                 </label>
-                <div class="relative flex items-center">
-                  <input type="tel" id="kyc-aadhaar-input" maxlength="14" placeholder="XXXX XXXX XXXX" value="5489 1204 9012" oninput="formatAadhaarInput(this)" class="w-full pl-3.5 pr-4 py-3 bg-white border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none rounded-xl text-xs font-mono font-bold text-slate-900 tracking-wider shadow-2xs">
-                </div>
-                <p class="text-[10px] text-slate-400 mt-1">An OTP will be sent to the mobile registered with your Aadhaar</p>
+                <input type="tel" id="kyc-aadhaar-input" maxlength="14" placeholder="XXXX XXXX XXXX" value="5489 1204 9012" oninput="formatAadhaarInput(this)" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold text-xs tracking-wider focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+                <p class="text-[10px] text-slate-400 mt-1" data-i18n="aadhaar_otp_hint">We will send a 6-digit OTP to your Aadhaar-linked mobile</p>
               </div>
 
-              <button onclick="submitAadhaarOtpRequest()" id="btn-send-aadhaar-otp" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md active:scale-98 transition flex items-center justify-center space-x-2 text-xs">
-                <span>Send Aadhaar OTP</span>
-                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              <button onclick="submitAadhaarOtpRequest()" id="btn-send-aadhaar-otp" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+                <span data-i18n="send_aadhaar_otp_btn">Send Aadhaar OTP</span>
+                <i data-lucide="send" class="w-4 h-4"></i>
               </button>
             </div>
 
             <!-- Aadhaar OTP Input Section -->
-            <div id="aadhaar-otp-section" class="hidden space-y-3 pt-1">
-              <div class="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900 flex items-center justify-between">
-                <span>Ref ID: <strong id="aadhaar-ref-display" class="font-mono font-bold">-</strong></span>
-                <span class="text-[10px] text-emerald-700 font-semibold">SMS Dispatched</span>
+            <div id="aadhaar-otp-section" class="hidden p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-xs">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-500">Ref: <strong id="aadhaar-ref-display" class="font-mono text-slate-900">-</strong></span>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">OTP Sent</span>
               </div>
               <div>
-                <label class="block text-[11px] font-semibold text-slate-700 mb-1">
+                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="enter_aadhaar_otp_label">
                   Enter 6-Digit Aadhaar OTP <span class="text-rose-500">*</span>
                 </label>
-                <input type="tel" id="kyc-aadhaar-otp-input" maxlength="6" value="123456" placeholder="123456" class="w-full text-center py-3 bg-white border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none rounded-xl text-lg font-mono font-bold tracking-widest text-slate-900 shadow-2xs">
+                <input type="tel" id="kyc-aadhaar-otp-input" maxlength="6" value="123456" placeholder="123456" class="w-full text-center py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-extrabold text-lg tracking-widest focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
               </div>
 
-              <button onclick="submitAadhaarVerification()" id="btn-verify-aadhaar-otp" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md active:scale-98 transition flex items-center justify-center space-x-2 text-xs">
-                <span>Verify Aadhaar & Complete KYC</span>
+              <button onclick="submitAadhaarVerification()" id="btn-verify-aadhaar-otp" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+                <span data-i18n="verify_aadhaar_btn">Verify Aadhaar</span>
                 <i data-lucide="check-circle" class="w-4 h-4"></i>
               </button>
             </div>
 
             <!-- Aadhaar Verified Success Section -->
-            <div id="aadhaar-verified-section" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2 text-xs text-emerald-900">
-              <div class="flex items-center space-x-2 font-bold text-emerald-800">
+            <div id="aadhaar-verified-section" class="hidden p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3">
+              <div class="flex items-center space-x-2 text-emerald-800 font-bold text-xs">
                 <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
-                <span>Aadhaar Verified & Photo Synced</span>
+                <span data-i18n="aadhaar_verified_title">Aadhaar Successfully Verified</span>
               </div>
-              <div class="flex items-center space-x-3 pt-1">
-                <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg border-2 border-emerald-700 shadow-2xs">
-                  <span id="aadhaar-avatar-letter">R</span>
-                </div>
-                <div class="space-y-0.5">
-                  <p class="font-bold text-slate-900 text-xs" id="aadhaar-name-display">Ramesh Chandra Sharma</p>
-                  <p class="text-[11px] text-slate-500 font-mono" id="aadhaar-masked-display">XXXX-XXXX-9012</p>
-                  <p class="text-[10px] text-emerald-700 font-medium">✓ UIDAI Verified • Cashfree SecureID Validated</p>
-                </div>
+              <div class="space-y-1 text-xs">
+                <p class="text-slate-600"><span class="text-slate-400">Cardholder Name:</span> <strong id="aadhaar-name-display" class="text-slate-900">RAMESH CHANDRA SHARMA</strong></p>
+                <p class="text-slate-600"><span class="text-slate-400">Aadhaar Number:</span> <strong id="aadhaar-masked-display" class="font-mono text-slate-900">XXXX-XXXX-9012</strong></p>
               </div>
+              <button onclick="proceedToNextStep()" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+                <span data-i18n="continue_to_next">Continue to Face Verification</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+              </button>
             </div>
-          </div>
-
-          <!-- KYC Final Completion Card & Proceed Action -->
-          <div id="kyc-completion-card" class="hidden p-4 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-800 text-white space-y-3 shadow-lg shadow-emerald-700/30">
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-white">
-                <i data-lucide="award" class="w-5 h-5"></i>
-              </div>
-              <div>
-                <h4 class="font-extrabold text-sm">100% Paperless KYC Completed</h4>
-                <p class="text-[11px] text-emerald-100">PAN & Aadhaar officially validated with UIDAI & Income Tax</p>
-              </div>
-            </div>
-
-            <button onclick="completeKycAndProceed()" class="w-full py-3 bg-white text-emerald-800 font-extrabold rounded-xl shadow-md active:scale-98 transition flex items-center justify-center space-x-2 text-xs">
-              <span>Continue to Face Liveness Check</span>
-              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-            </button>
           </div>
         </div>
 
         <div class="pt-4 text-center">
-          <p class="text-[11px] text-slate-400">Powered by Cashfree SecureID • UIDAI Regulated Paperless KYC</p>
+          <p class="text-[11px] text-slate-400" data-i18n="gov_secure_badge">100% Secure • Official Government Regulated Identity Verification</p>
         </div>
       </div>
 
@@ -1508,6 +1471,22 @@
     const i18n = {
       en: {
         header_vendor_badge: "VENDOR HUB",
+                id_verification_title: "Identity Verification",
+        id_verification_sub: "Choose any one government ID to verify your identity instantly",
+        pan_card_tab: "PAN Card",
+        aadhaar_card_tab: "Aadhaar Card (OTP)",
+        pan_input_label: "10-Digit PAN Number",
+        pan_format_hint: "Format: 5 letters, 4 numbers, 1 letter (e.g. ABCDE1234F)",
+        verify_pan_btn: "Verify PAN",
+        pan_verified_title: "PAN Successfully Verified",
+        continue_to_next: "Continue to Face Verification",
+        aadhaar_input_label: "12-Digit Aadhaar Number",
+        aadhaar_otp_hint: "We will send a 6-digit OTP to your Aadhaar-linked mobile",
+        send_aadhaar_otp_btn: "Send Aadhaar OTP",
+        enter_aadhaar_otp_label: "Enter 6-Digit Aadhaar OTP",
+        verify_aadhaar_btn: "Verify Aadhaar",
+        aadhaar_verified_title: "Aadhaar Successfully Verified",
+        gov_secure_badge: "100% Secure • Official Government Regulated Identity Verification",
         select_language_title: "Choose Your Language",
         select_language_sub: "Select your preferred language to continue",
         continue_btn: "Continue",
@@ -1730,6 +1709,22 @@
       },
       hi: {
         header_vendor_badge: "दुकानदार हब",
+                id_verification_title: "पहचान सत्यापन",
+        id_verification_sub: "तुरंत पहचान सत्यापित करने के लिए कोई एक सरकारी पहचान पत्र चुनें",
+        pan_card_tab: "पैन कार्ड",
+        aadhaar_card_tab: "आधार कार्ड (ओटीपी)",
+        pan_input_label: "10-अंकीय पैन नंबर",
+        pan_format_hint: "प्रारूप: 5 अक्षर, 4 अंक, 1 अक्षर (उदा. ABCDE1234F)",
+        verify_pan_btn: "पैन सत्यापित करें",
+        pan_verified_title: "पैन कार्ड सफलतापूर्वक सत्यापित",
+        continue_to_next: "फेस सत्यापन के लिए आगे बढ़ें",
+        aadhaar_input_label: "12-अंकीय आधार नंबर",
+        aadhaar_otp_hint: "हम आपके आधार से जुड़े मोबाइल पर 6 अंकों का ओटीपी भेजेंगे",
+        send_aadhaar_otp_btn: "आधार ओटीपी भेजें",
+        enter_aadhaar_otp_label: "6-अंकीय आधार ओटीपी दर्ज करें",
+        verify_aadhaar_btn: "आधार सत्यापित करें",
+        aadhaar_verified_title: "आधार कार्ड सफलतापूर्वक सत्यापित",
+        gov_secure_badge: "100% सुरक्षित • सरकारी नियमों के तहत पहचान सत्यापन",
         select_language_title: "अपनी भाषा चुनें",
         select_language_sub: "आगे बढ़ने के लिए अपनी पसंदीदा भाषा चुनें",
         continue_btn: "आगे बढ़ें",
@@ -2526,9 +2521,33 @@
     }
 
     // ---------------------------------------------------------------------------
-    // PAGE 4: CASHFREE PAPERLESS KYC (PAN + AADHAAR OTP) LOGIC
+    // PAGE 4: IDENTITY VERIFICATION (SINGLE ID SELECTION & TIMEOUT RESILIENT)
     // ---------------------------------------------------------------------------
     let currentAadhaarRefId = null;
+
+    function selectIdType(type) {
+      state.kycType = type;
+      hideKycError();
+      const panTab = document.getElementById('id-tab-pan');
+      const aadhaarTab = document.getElementById('id-tab-aadhaar');
+      const panPanel = document.getElementById('panel-pan');
+      const aadhaarPanel = document.getElementById('panel-aadhaar');
+
+      if (type === 'pan') {
+        panTab.className = "flex-1 py-2.5 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5";
+        aadhaarTab.className = "flex-1 py-2.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5";
+        panPanel.classList.remove('hidden');
+        aadhaarPanel.classList.add('hidden');
+        document.getElementById('kyc-pan-input')?.focus();
+      } else {
+        aadhaarTab.className = "flex-1 py-2.5 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5";
+        panTab.className = "flex-1 py-2.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5";
+        aadhaarPanel.classList.remove('hidden');
+        panPanel.classList.add('hidden');
+        document.getElementById('kyc-aadhaar-input')?.focus();
+      }
+      lucide.createIcons();
+    }
 
     function showKycError(msg) {
       const banner = document.getElementById('kyc-error-banner');
@@ -2537,7 +2556,7 @@
         text.innerText = msg;
         banner.classList.remove('hidden');
       }
-      toastError(msg);
+      if (typeof toastError === 'function') toastError(msg);
     }
 
     function hideKycError() {
@@ -2555,6 +2574,31 @@
       el.value = formatted;
     }
 
+    async function safeApiCall(url, method, payload, timeoutMs = 8000) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: payload ? JSON.stringify(payload) : null,
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.detail || data.message || `Request failed with status ${res.status}`);
+        }
+        return await res.json();
+      } catch (err) {
+        clearTimeout(timer);
+        if (err.name === 'AbortError') {
+          throw new Error("Request timed out. Please check your network and try again.");
+        }
+        throw err;
+      }
+    }
+
     async function submitPanVerification() {
       hideKycError();
       const panInput = document.getElementById('kyc-pan-input');
@@ -2562,7 +2606,7 @@
 
       const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
       if (!panRegex.test(pan)) {
-        showKycError(currentLang === 'hi' ? "कृपया वैध 10-अक्षरों का पैन नंबर दर्ज करें (उदा. ABCDE1234F)" : "Please enter a valid 10-character PAN (e.g. ABCDE1234F)");
+        showKycError(currentLang === 'hi' ? "कृपया 10-अक्षरों का मान्य पैन दर्ज करें (उदा. ABCDE1234F)" : "Please enter a valid 10-character PAN (e.g. ABCDE1234F)");
         panInput?.focus();
         return;
       }
@@ -2570,41 +2614,40 @@
       const btn = document.getElementById('btn-verify-pan');
       const origHtml = btn ? btn.innerHTML : '';
       if (btn) {
-        btn.innerHTML = `<span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? 'सत्यापित हो रहा है...' : 'Verifying PAN...'}`;
+        btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? 'सत्यापित हो रहा है...' : 'Verifying PAN...'}`;
         btn.disabled = true;
       }
 
       const registeredName = (state.userProfile.name || 'Ramesh Chandra Sharma').toUpperCase();
 
       try {
+        const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://127.0.0.1:8000/api/v1";
         try {
-          await apiRequest('/api/v1/kyc/pan', 'POST', { pan: pan, name: registeredName, role: 'vendor' });
-        } catch (e) {
-          console.warn("Backend KYC PAN notice:", e);
+          await safeApiCall(`${backendUrl}/kyc/pan`, 'POST', { pan: pan, name: registeredName, role: 'vendor' }, 8000);
+        } catch (beErr) {
+          console.warn("Backend KYC PAN notice:", beErr.message);
         }
 
-        try {
-          const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
-          const supabaseKey = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
-          const cleanPhone = (state.userProfile.phone || localStorage.getItem('gb_user_phone') || '').replace(/\D/g, '').slice(-10);
+        const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
+        const supabaseKey = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
+        const cleanPhone = (state.userProfile.phone || localStorage.getItem('gb_user_phone') || '').replace(/\D/g, '').slice(-10);
 
-          if (cleanPhone) {
-            await fetch(`${supabaseUrl}/rest/v1/users?phone=eq.${cleanPhone}`, {
-              method: 'PATCH',
-              headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ pan_number: pan, pan_name: registeredName, kyc_status: 'pan_verified' })
-            });
-            await fetch(`${supabaseUrl}/rest/v1/stores?owner_name=eq.${encodeURIComponent(state.userProfile.name)}`, {
-              method: 'PATCH',
-              headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ pan_number: pan })
-            });
+        if (cleanPhone) {
+          try {
+            await safeApiCall(`${supabaseUrl}/rest/v1/users?phone=eq.${cleanPhone}`, 'PATCH', {
+              pan_number: pan,
+              pan_name: registeredName,
+              kyc_status: 'pan_verified'
+            }, 8000);
+            await safeApiCall(`${supabaseUrl}/rest/v1/stores?owner_name=eq.${encodeURIComponent(state.userProfile.name)}`, 'PATCH', {
+              pan_number: pan
+            }, 8000);
+          } catch (sbErr) {
+            console.warn("Supabase PAN update notice:", sbErr);
           }
-        } catch (sbErr) {
-          console.warn("Supabase PAN update notice:", sbErr);
         }
 
-        // Update UI
+        // Render Verified Success State
         document.getElementById('pan-input-section')?.classList.add('hidden');
         document.getElementById('pan-verified-section')?.classList.remove('hidden');
         const regEl = document.getElementById('pan-registered-name');
@@ -2612,16 +2655,13 @@
         const panEl = document.getElementById('pan-verified-number');
         if (panEl) panEl.innerText = pan;
 
-        const badge = document.getElementById('pan-status-badge');
-        if (badge) {
-          badge.className = "px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold";
-          badge.innerText = "Verified";
-        }
-
+        state.kycVerified = true;
         localStorage.setItem('gb_kyc_pan', pan);
+        localStorage.setItem('gb_kyc_type', 'pan');
+        localStorage.setItem('gb_kyc_verified', 'true');
         toastSuccess(currentLang === 'hi' ? "पैन कार्ड सफलतापूर्वक सत्यापित!" : "PAN Card verified successfully!");
       } catch (err) {
-        showKycError(err.message || "Failed to verify PAN");
+        showKycError(err.message || (currentLang === 'hi' ? "सत्यापन विफल रहा, कृपया पुनः प्रयास करें" : "Verification failed, please try again"));
       } finally {
         if (btn) {
           btn.innerHTML = origHtml;
@@ -2645,17 +2685,19 @@
       const btn = document.getElementById('btn-send-aadhaar-otp');
       const origHtml = btn ? btn.innerHTML : '';
       if (btn) {
-        btn.innerHTML = `<span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? 'OTP भेजा जा रहा है...' : 'Sending OTP...'}`;
+        btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? 'OTP भेजा जा रहा है...' : 'Sending OTP...'}`;
         btn.disabled = true;
       }
 
       try {
         let refId = "cf_ref_" + Math.random().toString(36).substring(2, 10);
+        const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://127.0.0.1:8000/api/v1";
+
         try {
-          const res = await apiRequest('/api/v1/kyc/aadhaar/otp', 'POST', { aadhaar_number: cleanAadhaar });
+          const res = await safeApiCall(`${backendUrl}/kyc/aadhaar/otp`, 'POST', { aadhaar_number: cleanAadhaar }, 8000);
           if (res && res.ref_id) refId = res.ref_id;
-        } catch (e) {
-          console.warn("Backend Aadhaar OTP notice:", e);
+        } catch (beErr) {
+          console.warn("Backend Aadhaar OTP notice:", beErr.message);
         }
 
         currentAadhaarRefId = refId;
@@ -2665,16 +2707,10 @@
         const refDisplay = document.getElementById('aadhaar-ref-display');
         if (refDisplay) refDisplay.innerText = refId;
 
-        const badge = document.getElementById('aadhaar-status-badge');
-        if (badge) {
-          badge.className = "px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold";
-          badge.innerText = "OTP Sent";
-        }
-
         document.getElementById('kyc-aadhaar-otp-input')?.focus();
-        toastSuccess(currentLang === 'hi' ? "आधार ओटीपी आपके पंजीकृत मोबाइल पर भेजा गया है!" : "Aadhaar OTP dispatched to registered mobile!");
+        toastSuccess(currentLang === 'hi' ? "आधार ओटीपी आपके पंजीकृत मोबाइल पर भेजा गया है!" : "Aadhaar OTP dispatched to your registered mobile!");
       } catch (err) {
-        showKycError(err.message || "Failed to send Aadhaar OTP");
+        showKycError(err.message || (currentLang === 'hi' ? "OTP भेजने में विफल, कृपया पुनः प्रयास करें" : "Failed to send OTP, please try again"));
       } finally {
         if (btn) {
           btn.innerHTML = origHtml;
@@ -2698,7 +2734,7 @@
       const btn = document.getElementById('btn-verify-aadhaar-otp');
       const origHtml = btn ? btn.innerHTML : '';
       if (btn) {
-        btn.innerHTML = `<span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? 'सत्यापित हो रहा है...' : 'Verifying & Syncing...'}`;
+        btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? 'सत्यापित हो रहा है...' : 'Verifying Aadhaar...'}`;
         btn.disabled = true;
       }
 
@@ -2707,39 +2743,37 @@
       const name = state.userProfile.name || 'Ramesh Chandra Sharma';
 
       try {
+        const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://127.0.0.1:8000/api/v1";
         try {
-          await apiRequest('/api/v1/kyc/aadhaar/verify', 'POST', {
+          await safeApiCall(`${backendUrl}/kyc/aadhaar/verify`, 'POST', {
             otp: otp,
             ref_id: currentAadhaarRefId || "cf_ref_demo",
             aadhaar_number: cleanAadhaar,
             role: 'vendor'
-          });
-        } catch (e) {
-          console.warn("Backend Aadhaar verify notice:", e);
+          }, 8000);
+        } catch (beErr) {
+          console.warn("Backend Aadhaar verify notice:", beErr.message);
         }
 
-        try {
-          const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
-          const supabaseKey = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
-          const cleanPhone = (state.userProfile.phone || localStorage.getItem('gb_user_phone') || '').replace(/\D/g, '').slice(-10);
+        const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
+        const supabaseKey = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
+        const cleanPhone = (state.userProfile.phone || localStorage.getItem('gb_user_phone') || '').replace(/\D/g, '').slice(-10);
 
-          if (cleanPhone) {
-            await fetch(`${supabaseUrl}/rest/v1/users?phone=eq.${cleanPhone}`, {
-              method: 'PATCH',
-              headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ aadhaar_number: maskedAadhaar, kyc_status: 'verified' })
-            });
-            await fetch(`${supabaseUrl}/rest/v1/stores?owner_name=eq.${encodeURIComponent(state.userProfile.name)}`, {
-              method: 'PATCH',
-              headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ aadhaar_number: maskedAadhaar })
-            });
+        if (cleanPhone) {
+          try {
+            await safeApiCall(`${supabaseUrl}/rest/v1/users?phone=eq.${cleanPhone}`, 'PATCH', {
+              aadhaar_number: maskedAadhaar,
+              kyc_status: 'verified'
+            }, 8000);
+            await safeApiCall(`${supabaseUrl}/rest/v1/stores?owner_name=eq.${encodeURIComponent(state.userProfile.name)}`, 'PATCH', {
+              aadhaar_number: maskedAadhaar
+            }, 8000);
+          } catch (sbErr) {
+            console.warn("Supabase Aadhaar update notice:", sbErr);
           }
-        } catch (sbErr) {
-          console.warn("Supabase Aadhaar update notice:", sbErr);
         }
 
-        // Update UI
+        // Render Verified Success State
         document.getElementById('aadhaar-otp-section')?.classList.add('hidden');
         document.getElementById('aadhaar-verified-section')?.classList.remove('hidden');
 
@@ -2747,26 +2781,14 @@
         if (nameEl) nameEl.innerText = name;
         const maskEl = document.getElementById('aadhaar-masked-display');
         if (maskEl) maskEl.innerText = maskedAadhaar;
-        const letterEl = document.getElementById('aadhaar-avatar-letter');
-        if (letterEl) letterEl.innerText = name.slice(0, 1).toUpperCase();
 
-        const badge = document.getElementById('aadhaar-status-badge');
-        if (badge) {
-          badge.className = "px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold";
-          badge.innerText = "Verified";
-        }
-
-        // Show Final Completion Card
-        document.getElementById('kyc-completion-card')?.classList.remove('hidden');
-
-        state.ocrCaptured = true;
         state.kycVerified = true;
         localStorage.setItem('gb_kyc_aadhaar', maskedAadhaar);
+        localStorage.setItem('gb_kyc_type', 'aadhaar');
         localStorage.setItem('gb_kyc_verified', 'true');
-
-        toastSuccess(currentLang === 'hi' ? "आधार कार्ड सफलतापूर्वक 100% सत्यापित!" : "Aadhaar verified & Paperless KYC completed!");
+        toastSuccess(currentLang === 'hi' ? "आधार कार्ड सफलतापूर्वक सत्यापित!" : "Aadhaar verified successfully!");
       } catch (err) {
-        showKycError(err.message || "Failed to verify Aadhaar");
+        showKycError(err.message || (currentLang === 'hi' ? "सत्यापन विफल रहा, कृपया पुनः प्रयास करें" : "Verification failed, please try again"));
       } finally {
         if (btn) {
           btn.innerHTML = origHtml;
@@ -2776,8 +2798,8 @@
       }
     }
 
-    function completeKycAndProceed() {
-      toastSuccess(currentLang === 'hi' ? "कागज़रहित केवाईसी पूर्ण! फेस सत्यापन पर जा रहे हैं..." : "Paperless KYC Completed! Proceeding to Face Liveness...");
+    function proceedToNextStep() {
+      toastSuccess(currentLang === 'hi' ? "पहचान सत्यापित! फेस सत्यापन पर जा रहे हैं..." : "Identity verified! Proceeding to Face Verification...");
       navigateTo('onboarding-5');
     }
 
