@@ -297,7 +297,7 @@
                 <p class="text-slate-600"><span class="text-slate-400">PAN Number:</span> <strong id="pan-verified-number" class="font-mono text-slate-900">ABCDE1234F</strong></p>
               </div>
               <button onclick="proceedToNextStep()" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
-                <span data-i18n="continue_to_next">Continue to Face Verification</span>
+                <span data-i18n="continue_to_payout">Continue to Payout Setup</span>
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
               </button>
             </div>
@@ -351,7 +351,7 @@
                 <p class="text-slate-600"><span class="text-slate-400">Aadhaar Number:</span> <strong id="aadhaar-masked-display" class="font-mono text-slate-900">XXXX-XXXX-9012</strong></p>
               </div>
               <button onclick="proceedToNextStep()" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
-                <span data-i18n="continue_to_next">Continue to Face Verification</span>
+                <span data-i18n="continue_to_payout">Continue to Payout Setup</span>
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
               </button>
             </div>
@@ -360,59 +360,6 @@
 
         <div class="pt-4 text-center">
           <p class="text-[11px] text-slate-400" data-i18n="gov_secure_badge">100% Secure • Official Government Regulated Identity Verification</p>
-        </div>
-      </div>
-
-      <!-- PAGE 5: LIVENESS CHECK (OVAL CAMERA CUTOUT) -->
-      <div id="screen-onboarding-5" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
-        <div>
-          <div class="flex items-center space-x-2 text-emerald-600 text-xs font-bold uppercase tracking-wider mb-2">
-            <span class="px-2 py-0.5 bg-emerald-100 rounded" data-i18n="step_5_badge">Step 5 of 7</span>
-            <span data-i18n="liveness_sub_badge">Face Match & Liveness</span>
-          </div>
-          <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="liveness_title">Live Face Verification</h2>
-          <p class="text-sm text-slate-500 mb-4" data-i18n="liveness_sub">Position face inside oval frame and blink</p>
-
-          <!-- Oval Camera Frame -->
-          <div class="relative w-full aspect-[3/4] max-w-[280px] mx-auto bg-black rounded-3xl overflow-hidden shadow-xl border border-slate-700 flex items-center justify-center">
-            <video id="liveness-video" autoplay playsinline muted class="w-full h-full object-cover transform -scale-x-100"></video>
-            <canvas id="liveness-canvas" class="hidden"></canvas>
-
-            <!-- Oval Cutout Guide -->
-            <div class="absolute inset-0 flex flex-col items-center justify-between p-4 pointer-events-none">
-              <span id="liveness-instruction" class="bg-black/70 text-emerald-400 text-xs font-semibold px-3 py-1 rounded-full shadow" data-i18n="blink_instruction">
-                👁️ Blink your eyes to verify
-              </span>
-
-              <div class="w-48 h-64 border-4 border-dashed border-emerald-400 rounded-[50%] shadow-[0_0_20px_rgba(16,185,129,0.3)] animate-pulse"></div>
-
-              <span class="text-[11px] text-white/80 font-medium" data-i18n="keep_face_lit">Keep face well-lit</span>
-            </div>
-
-            <!-- Fallback Face Preview -->
-            <div id="liveness-fallback" class="absolute inset-0 bg-slate-800 flex flex-col items-center justify-center p-4 text-center hidden">
-              <img id="liveness-preview-img" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80" alt="Selfie preview" class="w-36 h-48 object-cover rounded-[50%] border-4 border-emerald-500 shadow-md mb-2">
-              <span class="text-xs text-emerald-400 font-bold" data-i18n="liveness_verified_score">Liveness Verified 99.4%</span>
-            </div>
-          </div>
-
-          <div class="mt-4 flex space-x-2">
-            <button onclick="startLivenessCamera()" class="flex-1 py-2 px-3 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold rounded-lg flex items-center justify-center space-x-1">
-              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-              <span data-i18n="open_selfie_cam">Open Selfie Cam</span>
-            </button>
-            <button id="capture-selfie-btn" onclick="captureLivenessSelfie()" class="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-1 shadow-sm active:scale-95">
-              <i data-lucide="camera" class="w-3.5 h-3.5"></i>
-              <span data-i18n="capture_selfie_btn">Blink & Capture</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="pt-6">
-          <button id="liveness-continue-btn" onclick="navigateTo('onboarding-6')" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2 opacity-50 pointer-events-none">
-            <span data-i18n="continue_btn">Continue</span>
-            <i data-lucide="arrow-right" class="w-4 h-4"></i>
-          </button>
         </div>
       </div>
 
@@ -1479,7 +1426,7 @@
         pan_format_hint: "Format: 5 letters, 4 numbers, 1 letter (e.g. ABCDE1234F)",
         verify_pan_btn: "Verify PAN",
         pan_verified_title: "PAN Successfully Verified",
-        continue_to_next: "Continue to Face Verification",
+        continue_to_payout: "Continue to Payout Setup",
         aadhaar_input_label: "12-Digit Aadhaar Number",
         aadhaar_otp_hint: "We will send a 6-digit OTP to your Aadhaar-linked mobile",
         send_aadhaar_otp_btn: "Send Aadhaar OTP",
@@ -1717,7 +1664,7 @@
         pan_format_hint: "प्रारूप: 5 अक्षर, 4 अंक, 1 अक्षर (उदा. ABCDE1234F)",
         verify_pan_btn: "पैन सत्यापित करें",
         pan_verified_title: "पैन कार्ड सफलतापूर्वक सत्यापित",
-        continue_to_next: "फेस सत्यापन के लिए आगे बढ़ें",
+        continue_to_payout: "पेआउट सेटअप पर आगे बढ़ें",
         aadhaar_input_label: "12-अंकीय आधार नंबर",
         aadhaar_otp_hint: "हम आपके आधार से जुड़े मोबाइल पर 6 अंकों का ओटीपी भेजेंगे",
         send_aadhaar_otp_btn: "आधार ओटीपी भेजें",
@@ -2371,8 +2318,7 @@
       if (state.currentScreen === 'onboarding-2') navigateTo('onboarding-1');
       else if (state.currentScreen === 'onboarding-3') navigateTo('onboarding-2');
       else if (state.currentScreen === 'onboarding-4') navigateTo('onboarding-3');
-      else if (state.currentScreen === 'onboarding-5') navigateTo('onboarding-4');
-      else if (state.currentScreen === 'onboarding-6') navigateTo('onboarding-5');
+      else if (state.currentScreen === 'onboarding-6') navigateTo('onboarding-4');
       else if (window.history.length > 1) window.history.back();
     }
 
@@ -2799,52 +2745,8 @@
     }
 
     function proceedToNextStep() {
-      toastSuccess(currentLang === 'hi' ? "पहचान सत्यापित! फेस सत्यापन पर जा रहे हैं..." : "Identity verified! Proceeding to Face Verification...");
-      navigateTo('onboarding-5');
-    }
-
-    // PAGE 5: LIVENESS CHECK (OVAL CAMERA CUTOUT & BLINK)
-    // ---------------------------------------------------------------------------
-    let livenessStream = null;
-
-    async function startLivenessCamera() {
-      const video = document.getElementById('liveness-video');
-      const fallback = document.getElementById('liveness-fallback');
-      try {
-        livenessStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" },
-          audio: false
-        });
-        if (video) {
-          video.srcObject = livenessStream;
-          fallback.classList.add('hidden');
-        }
-      } catch (err) {
-        console.warn("Selfie camera simulation active:", err);
-        if (fallback) fallback.classList.remove('hidden');
-      }
-    }
-
-    function captureLivenessSelfie() {
-      const instr = document.getElementById('liveness-instruction');
-      const contBtn = document.getElementById('liveness-continue-btn');
-      const fallback = document.getElementById('liveness-fallback');
-
-      instr.innerText = "Analyzing Face & Eye Blink...";
-
-      setTimeout(() => {
-        instr.innerText = "✅ Liveness Verified: 99.4%";
-        instr.classList.replace('text-emerald-400', 'text-white');
-        instr.classList.add('bg-emerald-600');
-
-        if (fallback) fallback.classList.remove('hidden');
-        contBtn.classList.remove('opacity-50', 'pointer-events-none');
-        state.livenessCaptured = true;
-
-        if (livenessStream) livenessStream.getTracks().forEach(t => t.stop());
-
-        toastSuccess("Face Liveness Check Passed!");
-      }, 1300);
+      toastSuccess(currentLang === 'hi' ? "पहचान सत्यापित! पेआउट सेटअप पर जा रहे हैं..." : "Identity verified! Proceeding to Payout Setup...");
+      navigateTo('onboarding-6');
     }
 
     // PAGE 6: BANK / UPI PAYOUT SETUP & SUBMISSION
