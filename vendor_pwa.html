@@ -219,7 +219,6 @@
               </select>
             </div>
           </div>
-          </div>
         </div>
 
         <div class="pt-6">
@@ -2446,19 +2445,27 @@
     // PAGE 2: MOBILE & OTP LOGIC
     // ---------------------------------------------------------------------------
     function sendMobileOTP() {
-      const phoneInput = document.getElementById('vendor-phone-input');
-      const phone = phoneInput ? phoneInput.value.trim() : '';
-      if (phone.length !== 10) {
-        toastError("Please enter a valid 10-digit mobile number");
-        return;
+      try {
+        const phoneInput = document.getElementById('vendor-phone-input');
+        const phone = phoneInput ? phoneInput.value.trim() : '';
+        if (phone.length !== 10) {
+          toastError(currentLang === 'hi' ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें" : "Please enter a valid 10-digit mobile number");
+          return;
+        }
+        state.userProfile.phone = phone;
+        const sendBtn = document.getElementById('send-otp-text');
+        if (sendBtn) sendBtn.innerText = "Resend (45s)";
+        toastSuccess(currentLang === 'hi' ? "OTP सफलतापूर्वक भेजा गया! (टेस्ट कोड: 1234)" : "OTP sent successfully to +91 " + phone + ". (Demo code: 1234)");
+        
+        const otp1 = document.getElementById('otp-1');
+        if (otp1) otp1.focus();
+      } catch (err) {
+        console.error("sendMobileOTP error:", err);
+        const masked = currentLang === 'hi'
+          ? "सत्यापन कोड भेजने में असमर्थ। कृपया अपना नंबर जांचें या बाद में पुनः प्रयास करें।"
+          : "Unable to send verification code. Please check your number or try again later.";
+        toastError(masked);
       }
-      state.userProfile.phone = phone;
-      const sendBtn = document.getElementById('send-otp-text');
-      if (sendBtn) sendBtn.innerText = "Resend (45s)";
-      toastSuccess("OTP sent successfully to +91 " + phone + ". (Demo code: 1234)");
-      
-      const otp1 = document.getElementById('otp-1');
-      if (otp1) otp1.focus();
     }
 
     function handleOtpInput(index, event) {
