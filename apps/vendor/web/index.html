@@ -336,7 +336,7 @@
                   id="vendor-village-name" 
                   autocomplete="off"
                   placeholder="Type or select village (e.g. Muzaffarpur, Chaturshi)..." 
-                  value="Muzaffarpur" 
+                  value="Muzaffarpur / मुज़फ़्फ़रपुर" 
                   oninput="handleVendorVillageSearch(this.value)" 
                   onfocus="handleVendorVillageSearch(this.value)" 
                   class="w-full pl-10 pr-9 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-xs focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs transition"
@@ -2439,7 +2439,7 @@
         if (screenId === 'onboarding-4') {
           setTimeout(() => {
             const vInput = document.getElementById('vendor-village-name');
-            if (vInput && !vInput.value) vInput.value = 'Muzaffarpur';
+            if (vInput && !vInput.value) vInput.value = 'Muzaffarpur / मुज़फ़्फ़रपुर';
           }, 150);
         }
         
@@ -3076,48 +3076,61 @@
     // ---------------------------------------------------------------------------
     // RURAL VILLAGES / HUBS AUTOCOMPLETE (MUZAFFARPUR & SURROUNDING CLUSTERS)
     // ---------------------------------------------------------------------------
-    const RURAL_AREAS_LIST = [
-      "Muzaffarpur",
-      "Chaturshi",
-      "Musahri",
-      "Kanti",
-      "Bochahan",
-      "Saraiya",
-      "Motipur",
-      "Sakra",
-      "Kurhani",
-      "Aurai",
-      "Minapur",
-      "Sahebganj",
-      "Paroo",
-      "Marwan",
-      "Gaighat",
-      "Kudra",
-      "Mohania",
-      "Bhabua",
-      "Darbhanga",
-      "Samastipur",
-      "Hajipur",
-      "Vaishali",
-      "Sitamarhi",
-      "Patna Rural"
+    // ---------------------------------------------------------------------------
+    // COMPREHENSIVE BIHAR RURAL HUBS (STRICTLY ALPHABETICAL & BILINGUAL)
+    // ---------------------------------------------------------------------------
+    const BIHAR_RURAL_HUBS = [
+      { en: "Aurai", hi: "औराई" },
+      { en: "Bhabua", hi: "भभुआ" },
+      { en: "Bochahan", hi: "बोचहां" },
+      { en: "Chaturshi", hi: "चतुरशी" },
+      { en: "Darbhanga", hi: "दरभंगा" },
+      { en: "Gaighat", hi: "गायघाट" },
+      { en: "Hajipur", hi: "हाजीपुर" },
+      { en: "Kanti", hi: "कांटी" },
+      { en: "Kudra", hi: "कुदरा" },
+      { en: "Kurhani", hi: "कुढ़नी" },
+      { en: "Mariyabad", hi: "मरियाबाद" },
+      { en: "Marwan", hi: "मड़वन" },
+      { en: "Minapur", hi: "मीनापुर" },
+      { en: "Mohania", hi: "मोहनिया" },
+      { en: "Motipur", hi: "मोतीपुर" },
+      { en: "Musahri", hi: "मुशहरी" },
+      { en: "Muzaffarpur", hi: "मुज़फ़्फ़रपुर" },
+      { en: "Paroo", hi: "पारू" },
+      { en: "Patna Rural", hi: "पटना ग्रामीण" },
+      { en: "Sahebganj", hi: "साहेबगंज" },
+      { en: "Sakra", hi: "सकरा" },
+      { en: "Samastipur", hi: "समस्तीपुर" },
+      { en: "Saraiya", hi: "सरैया" },
+      { en: "Sitamarhi", hi: "सीतामढ़ी" },
+      { en: "Vaishali", hi: "वैशाली" }
     ];
+
+    // STRICT ALPHABETICAL SORTING (A to Z) by English Name
+    const RURAL_AREAS_LIST = BIHAR_RURAL_HUBS.slice().sort((a, b) => a.en.localeCompare(b.en));
 
     function handleVendorVillageSearch(query) {
       const dropdown = document.getElementById('vendor-village-dropdown');
       if (!dropdown) return;
       const q = (query || '').trim().toLowerCase();
       
-      const filtered = RURAL_AREAS_LIST.filter(area => area.toLowerCase().includes(q));
+      const filtered = RURAL_AREAS_LIST.filter(item => {
+        const combined = `${item.en} / ${item.hi}`.toLowerCase();
+        return item.en.toLowerCase().includes(q) || item.hi.toLowerCase().includes(q) || combined.includes(q);
+      });
       
       let html = '';
       if (filtered.length > 0) {
-        filtered.forEach(area => {
+        filtered.forEach(item => {
+          const displayLabel = `${item.en} / ${item.hi}`;
           html += `
-            <div onclick="selectVendorVillage('${area}')" class="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-800 transition">
+            <div onclick="selectVendorVillage('${displayLabel.replace(/'/g, "\\'")}')" class="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-800 transition">
               <div class="flex items-center space-x-2">
                 <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
-                <span>${area}</span>
+                <span class="font-bold text-slate-900">${item.en}</span>
+                <span class="text-slate-400">/</span>
+                <span class="text-emerald-800 font-medium">${item.hi}</span>
               </div>
               <span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-bold">Rural Hub</span>
             </div>
@@ -3125,9 +3138,9 @@
         });
       }
 
-      if (q && !filtered.some(a => a.toLowerCase() === q)) {
+      if (q && !filtered.some(item => `${item.en} / ${item.hi}`.toLowerCase() === q || item.en.toLowerCase() === q)) {
         html += `
-          <div onclick="selectVendorVillage('${query.replace(/'/g, "\'")}')" class="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer flex items-center space-x-2 text-xs font-bold text-emerald-700 bg-emerald-50/50">
+          <div onclick="selectVendorVillage('${query.replace(/'/g, "\\'")}')" class="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer flex items-center space-x-2 text-xs font-bold text-emerald-700 bg-emerald-50/50">
             <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
             <span>Use "${query}"</span>
           </div>
