@@ -224,9 +224,13 @@ export async function verifyCustomerOTP() {
 
     // Establish persistent customer session in localStorage
     localStorage.setItem('gb_customer_authenticated', 'true');
+    localStorage.setItem('gb_auth_authenticated', 'true');
     localStorage.setItem('gb_customer_uid', uid);
     localStorage.setItem('gb_customer_phone', rawPhone);
+    localStorage.setItem('gb_user_phone', rawPhone);
+    localStorage.setItem('gb_auth_phone', rawPhone);
     localStorage.setItem('gb_customer_name', dbUser.name || enteredName);
+    localStorage.setItem('gb_user_name', dbUser.name || enteredName);
     localStorage.setItem('gb_customer_profile', JSON.stringify({
       id: dbUser.id || uid,
       uid: uid,
@@ -1008,5 +1012,21 @@ window.completeKycAndProceed = completeKycAndProceed;
 window.skipKycAndProceed = skipKycAndProceed;
 window.showKycError = showKycError;
 window.hideKycError = hideKycError;
+
+// Cross-App Auth Persistence Restoration
+try {
+  const savedPhone = localStorage.getItem('gb_user_phone') || localStorage.getItem('gb_auth_phone') || localStorage.getItem('gb_vendor_phone') || localStorage.getItem('gb_runner_phone') || localStorage.getItem('gb_customer_phone');
+  if (savedPhone) {
+    const el = document.getElementById('cust-phone-input');
+    if (el && !el.value) el.value = savedPhone;
+  }
+  const savedName = localStorage.getItem('gb_user_name') || localStorage.getItem('gb_vendor_name') || localStorage.getItem('gb_runner_name') || localStorage.getItem('gb_customer_name');
+  if (savedName) {
+    const el = document.getElementById('cust-name-input');
+    if (el && !el.value) el.value = savedName;
+  }
+} catch (e) {
+  console.warn('Cross-app auth restore notice:', e);
+}
 
 console.log("GaonBazaar Auth & Paperless KYC service initialized successfully.");
