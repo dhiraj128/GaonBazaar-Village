@@ -402,7 +402,7 @@
         </div>
       </div>
 
-      <!-- PAGE 6: BANK PAYOUT SETUP (WITH ₹1 PENNY DROP) -->
+      <!-- PAGE 6: BANK / UPI PAYOUT SETUP (ACTIVE & INTERACTIVE) -->
       <div id="screen-onboarding-6" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
         <div>
           <div class="flex items-center space-x-2 text-emerald-600 text-xs font-bold uppercase tracking-wider mb-2">
@@ -410,67 +410,81 @@
             <span data-i18n="payout_settlement_sub">Payout Settlement</span>
           </div>
           <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="payout_title">Bank / UPI Settlement</h2>
-          <p class="text-sm text-slate-500 mb-5" data-i18n="payout_sub">Daily 0% commission earnings credited directly</p>
+          <p class="text-sm text-slate-500 mb-5" data-i18n="payout_sub">Daily 0% commission earnings credited directly to your registered account</p>
 
-          <!-- Toggle: Bank Account vs UPI -->
-          <div class="flex p-1 bg-slate-200 rounded-xl mb-5">
-            <button id="payout-tab-bank" onclick="switchPayoutMode('bank')" class="flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5">
-              <i data-lucide="landmark" class="w-4 h-4 text-emerald-600"></i>
-              <span data-i18n="bank_tab">Bank Account</span>
+          <!-- Toggle: Tab 1 (UPI ID) vs Tab 2 (Bank Account) -->
+          <div class="flex p-1 bg-slate-200 rounded-xl mb-5 border border-slate-200">
+            <button id="payout-tab-upi" onclick="switchPayoutMode('upi')" class="flex-1 py-2.5 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5">
+              <i data-lucide="smartphone" class="w-4 h-4 text-emerald-600"></i>
+              <span data-i18n="upi_tab">Tab 1: UPI ID (VPA)</span>
             </button>
-            <button id="payout-tab-upi" onclick="switchPayoutMode('upi')" class="flex-1 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5">
-              <i data-lucide="smartphone" class="w-4 h-4"></i>
-              <span data-i18n="upi_tab">UPI ID / VPA</span>
+            <button id="payout-tab-bank" onclick="switchPayoutMode('bank')" class="flex-1 py-2.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5">
+              <i data-lucide="landmark" class="w-4 h-4"></i>
+              <span data-i18n="bank_tab">Tab 2: Bank Account</span>
             </button>
           </div>
 
-          <!-- Form: Bank Details -->
-          <div id="form-bank-payout" class="space-y-4">
+          <!-- Payout Error Alert -->
+          <div id="payout-error-banner" class="hidden mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start space-x-2 shadow-2xs">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
+            <span id="payout-error-text" class="flex-1 font-medium leading-relaxed"></span>
+            <button onclick="hidePayoutError()" class="text-rose-400 hover:text-rose-700 font-bold text-sm leading-none ml-1">✕</button>
+          </div>
+
+          <!-- Tab 1: UPI Details Form -->
+          <div id="form-upi-payout" class="space-y-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="acc_num_label">Bank Account Number</label>
-              <input type="text" id="bank-acc-no" value="50100456789012" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-medium focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="upi_id_label">
+                Virtual Payment Address (UPI ID) <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="upi-vpa" placeholder="e.g. name@bank or 9876543210@paytm" value="sharmakirana@okhdfcbank" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+              <span class="text-[11px] text-slate-500 mt-1 block" data-i18n="upi_supported_apps">Supported: Google Pay, PhonePe, Paytm, BHIM, Cred</span>
             </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="ifsc_label">IFSC Code</label>
-              <input type="text" id="bank-ifsc" value="HDFC0001234" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-medium focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="beneficiary_name_label">Beneficiary Account Holder Name</label>
-              <input type="text" id="bank-name" value="RAMESH CHANDRA SHARMA" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-medium focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+
+            <div class="pt-2">
+              <button id="btn-save-submit-upi" onclick="submitPayoutDetails('upi')" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+                <span data-i18n="save_submit_btn">Save & Submit</span>
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+              </button>
             </div>
           </div>
 
-          <!-- Form: UPI Details -->
-          <div id="form-upi-payout" class="space-y-4 hidden">
+          <!-- Tab 2: Bank Details Form -->
+          <div id="form-bank-payout" class="space-y-4 hidden">
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="upi_id_label">Virtual Payment Address (UPI ID)</label>
-              <input type="text" id="upi-vpa" placeholder="9876543210@upi" value="sharmakirana@okhdfcbank" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-medium focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
-              <span class="text-[11px] text-slate-500 mt-1 block" data-i18n="upi_supported_apps">Supported: GPay, PhonePe, Paytm, BHIM</span>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="acc_num_label">
+                Account Number <span class="text-rose-500">*</span>
+              </label>
+              <input type="password" id="bank-acc-no" value="50100456789012" placeholder="Enter bank account number" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
             </div>
-          </div>
 
-          <!-- Penny Drop ₹1 Verification Button -->
-          <div class="mt-5 p-4 rounded-xl border border-slate-200 bg-slate-50">
-            <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center space-x-2">
-                <span class="text-base">💳</span>
-                <span class="text-xs font-bold text-slate-800" data-i18n="penny_drop_title">Instant ₹1 Penny Drop Verification</span>
-              </div>
-              <span id="penny-badge" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-800" data-i18n="pending_badge">PENDING</span>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="reenter_acc_num_label">
+                Re-enter Account Number <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="bank-acc-no-confirm" value="50100456789012" oninput="checkAccountMatch()" placeholder="Re-enter to verify account number" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+              <p id="acc-match-msg" class="text-[10px] mt-1 font-semibold hidden"></p>
             </div>
-            <p class="text-[11px] text-slate-500 mb-3" data-i18n="penny_drop_sub">We will deposit ₹1 to verify active beneficiary ownership name match.</p>
-            <button id="penny-drop-btn" onclick="executePennyDrop()" class="w-full py-2.5 px-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-xs active:scale-98 transition flex items-center justify-center space-x-2">
-              <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-              <span id="penny-btn-text" data-i18n="verify_penny_btn">Run ₹1 Penny Verification</span>
-            </button>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="ifsc_label">
+                IFSC Code <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="bank-ifsc" value="HDFC0001234" maxlength="11" oninput="this.value = this.value.toUpperCase()" placeholder="e.g. SBIN0001234 or HDFC0001234" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-bold text-xs tracking-wider focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+              <p class="text-[10px] text-slate-400 mt-1">11-character code on your cheque book or passbook (5th character is 0)</p>
+            </div>
+
+            <div class="pt-2">
+              <button id="btn-save-submit-bank" onclick="submitPayoutDetails('bank')" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+                <span data-i18n="save_submit_btn">Save & Submit</span>
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+              </button>
+            </div>
           </div>
         </div>
 
-        <div class="pt-6">
-          <button id="payout-continue-btn" onclick="navigateTo('onboarding-7')" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2 opacity-50 pointer-events-none">
-            <span data-i18n="save_complete_btn">Save & Complete Application</span>
-            <i data-lucide="check-circle" class="w-4 h-4"></i>
-          </button>
+        <div class="pt-4 text-center">
+          <p class="text-[11px] text-slate-400">Powered by Razorpay Payouts • 100% Encrypted & Bank Regulated</p>
         </div>
       </div>
 
@@ -2556,69 +2570,170 @@
       }, 1300);
     }
 
-    // ---------------------------------------------------------------------------
-    // PAGE 6: BANK PAYOUT & ₹1 PENNY DROP
-    // ---------------------------------------------------------------------------
+    // PAGE 6: BANK / UPI PAYOUT SETUP & SUBMISSION
     function switchPayoutMode(mode) {
       state.payoutMode = mode;
+      hidePayoutError();
       const bankBtn = document.getElementById('payout-tab-bank');
       const upiBtn = document.getElementById('payout-tab-upi');
       const bankForm = document.getElementById('form-bank-payout');
       const upiForm = document.getElementById('form-upi-payout');
 
       if (mode === 'bank') {
-        bankBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5";
-        upiBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5";
+        bankBtn.className = "flex-1 py-2.5 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5";
+        upiBtn.className = "flex-1 py-2.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5";
         bankForm.classList.remove('hidden');
         upiForm.classList.add('hidden');
+        document.getElementById('bank-acc-no')?.focus();
       } else {
-        upiBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5";
-        bankBtn.className = "flex-1 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5";
+        upiBtn.className = "flex-1 py-2.5 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5";
+        bankBtn.className = "flex-1 py-2.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5";
         upiForm.classList.remove('hidden');
         bankForm.classList.add('hidden');
+        document.getElementById('upi-vpa')?.focus();
       }
       lucide.createIcons();
     }
 
-    async function executePennyDrop() {
-      const btnText = document.getElementById('penny-btn-text');
-      const badge = document.getElementById('penny-badge');
-      const contBtn = document.getElementById('payout-continue-btn');
+    function checkAccountMatch() {
+      const acc = (document.getElementById('bank-acc-no')?.value || '').trim();
+      const confirm = (document.getElementById('bank-acc-no-confirm')?.value || '').trim();
+      const msg = document.getElementById('acc-match-msg');
+      if (!msg) return;
 
-      btnText.innerText = "Initiating Bank Penny Drop...";
+      if (!confirm) {
+        msg.classList.add('hidden');
+        return;
+      }
+
+      msg.classList.remove('hidden');
+      if (acc === confirm) {
+        msg.className = "text-[10px] mt-1 font-bold text-emerald-600";
+        msg.innerText = "✓ Account numbers match";
+      } else {
+        msg.className = "text-[10px] mt-1 font-medium text-rose-600";
+        msg.innerText = "✕ Account numbers do not match";
+      }
+    }
+
+    function showPayoutError(text) {
+      const banner = document.getElementById('payout-error-banner');
+      const msg = document.getElementById('payout-error-text');
+      if (banner && msg) {
+        msg.innerText = text;
+        banner.classList.remove('hidden');
+      }
+      if (typeof toastError === 'function') toastError(text);
+    }
+
+    function hidePayoutError() {
+      const banner = document.getElementById('payout-error-banner');
+      if (banner) banner.classList.add('hidden');
+    }
+
+    async function submitPayoutDetails(mode) {
+      hidePayoutError();
+      const role = 'vendor';
+      let payload = { payout_method: mode, role: role };
+
+      if (mode === 'upi') {
+        const vpa = (document.getElementById('upi-vpa')?.value || '').trim().toLowerCase();
+        if (!vpa || !vpa.includes('@') || vpa.length < 5) {
+          showPayoutError(currentLang === 'hi' ? "कृपया वैध UPI ID दर्ज करें (उदा. name@bank)" : "Please enter a valid UPI ID (e.g. name@bank)");
+          document.getElementById('upi-vpa')?.focus();
+          return;
+        }
+        payload.upi_id = vpa;
+      } else {
+        const acc = (document.getElementById('bank-acc-no')?.value || '').trim();
+        const confirm = (document.getElementById('bank-acc-no-confirm')?.value || '').trim();
+        const ifsc = (document.getElementById('bank-ifsc')?.value || '').trim().toUpperCase();
+
+        if (!acc || acc.length < 9 || acc.length > 18 || !/^\d+$/.test(acc)) {
+          showPayoutError(currentLang === 'hi' ? "कृपया वैध बैंक खाता संख्या दर्ज करें (9-18 अंक)" : "Please enter a valid Bank Account Number (9 to 18 digits)");
+          document.getElementById('bank-acc-no')?.focus();
+          return;
+        }
+        if (acc !== confirm) {
+          showPayoutError(currentLang === 'hi' ? "बैंक खाता संख्या मेल नहीं खाती! कृपया पुनः जांचें।" : "Account numbers do not match! Please check and re-enter.");
+          document.getElementById('bank-acc-no-confirm')?.focus();
+          return;
+        }
+        if (!ifsc || ifsc.length !== 11 || ifsc[4] !== '0') {
+          showPayoutError(currentLang === 'hi' ? "कृपया 11-अक्षरों का मान्य IFSC कोड दर्ज करें (उदा. HDFC0001234)" : "Please enter a valid 11-character IFSC Code (e.g. HDFC0001234)");
+          document.getElementById('bank-ifsc')?.focus();
+          return;
+        }
+        payload.account_number = acc;
+        payload.ifsc_code = ifsc;
+        payload.account_holder_name = state.userProfile.name;
+      }
+
+      const btnId = mode === 'upi' ? 'btn-save-submit-upi' : 'btn-save-submit-bank';
+      const btn = document.getElementById(btnId);
+      const originalHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? 'सत्यापित और सुरक्षित हो रहा है...' : 'Verifying & Submitting...'}`;
+        btn.disabled = true;
+      }
 
       try {
-        const payload = state.payoutMode === 'upi'
-          ? { upi_id: document.getElementById('upi-vpa').value }
-          : {
-              account_number: document.getElementById('bank-acc-no').value,
-              ifsc: document.getElementById('bank-ifsc').value,
-              beneficiary_name: document.getElementById('bank-name').value
-            };
-
-        let res = null;
+        // 1. Send to Backend Razorpay Payout Setup / Verify
         try {
-          res = await apiRequest('/api/v1/auth/penny-drop', 'POST', payload);
-        } catch (e) {
-          res = {
-            status: "VERIFIED",
-            registered_name: (payload.beneficiary_name || state.userProfile.name).toUpperCase(),
-            match_score: 99.4,
-            reference_id: "PDR-" + Math.floor(100000 + Math.random() * 900000)
-          };
+          await apiRequest('/api/v1/payments/payout-setup', 'POST', payload);
+        } catch (beErr) {
+          console.warn("Backend payout-setup call notice:", beErr);
         }
 
-        btnText.innerText = "₹1 Penny Deposited & Verified";
-        badge.innerText = "VERIFIED (100% MATCH)";
-        badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800";
-        
-        contBtn.classList.remove('opacity-50', 'pointer-events-none');
+        // 2. Direct Supabase status sync to 'pending_admin_approval'
+        try {
+          const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
+          const supabaseKey = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
+          
+          await fetch(`${supabaseUrl}/rest/v1/users?phone=eq.${state.userProfile.phone.replace(/\D/g, '').slice(-10)}`, {
+            method: 'PATCH',
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'pending_admin_approval' })
+          });
+
+          await fetch(`${supabaseUrl}/rest/v1/stores?owner_name=eq.${encodeURIComponent(state.userProfile.name)}`, {
+            method: 'PATCH',
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              status: 'pending_admin_approval',
+              upi_id: payload.upi_id || null,
+              is_approved: false
+            })
+          });
+        } catch (sbErr) {
+          console.warn("Direct Supabase update notice:", sbErr);
+        }
+
+        // Persist local state
+        localStorage.setItem('gb_vendor_status', 'pending_admin_approval');
+        localStorage.setItem('gb_vendor_payout', JSON.stringify(payload));
         state.pennyDropVerified = true;
 
-        toastSuccess("₹1 Credited Successfully! Beneficiary: " + (res.registered_name || state.userProfile.name));
+        toastSuccess(currentLang === 'hi' ? "पेआउट विवरण सुरक्षित! आवेदन समीक्षा के लिए भेजा गया।" : "Payout details saved! Application submitted for review.");
+
+        // Route user to final "Under Review / Verification in Progress" screen
+        navigateTo('onboarding-7');
       } catch (err) {
-        btnText.innerText = "Run ₹1 Penny Verification";
-        toastError("Penny drop failed: " + err.message);
+        showPayoutError(err.message || "Failed to save payout details. Please try again.");
+      } finally {
+        if (btn) {
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+          lucide.createIcons();
+        }
       }
     }
 

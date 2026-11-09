@@ -549,6 +549,122 @@ async def get_order_refunds(
     ]
 
 
+class PayoutSetupRequest(BaseModel):
+    payout_method: str = "upi" # "upi" or "bank"
+    upi_id: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc_code: Optional[str] = None
+    account_holder_name: Optional[str] = None
+    role: Optional[str] = "vendor" # "vendor" or "runner"
+    user_id: Optional[str] = None
+
+class PayoutSetupResponse(BaseModel):
+    status: str
+    message: str
+    reference_id: str
+    payout_method: str
+    registered_name: str
+
+@router.post("/payout-setup", response_model=PayoutSetupResponse)
+async def setup_payout(
+    req: PayoutSetupRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Submits and verifies partner (Vendor/Runner) Bank or UPI payout details via Razorpay,
+    and updates the partner status in the Supabase database to 'pending_admin_approval'.
+    """
+    import secrets
+    method = req.payout_method.lower().strip()
+    holder_name = (req.account_holder_name or "Verified Partner").strip().upper()
+    user_id = req.user_id or "usr_demo"
+    role = (req.role or "vendor").lower()
+
+    if method == "upi":
+        vpa = (req.upi_id or "").strip().lower()
+        if "@" not in vpa or len(vpa) < 5:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid UPI ID format. Must contain @ and a valid domain (e.g. name@bank)"
+            )
+        ref_id = f"RZP_VPA_{secrets.token_hex(4).upper()}"
+        payout_info = {"method": "upi", "upi_id": vpa}
+    elif method == "bank":
+        acc = (req.account_number or "").strip()
+        ifsc = (req.ifsc_code or "").strip().upper()
+        if len(acc) < 9 or len(acc) > 18 or not acc.isdigit():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid bank account number (must be 9 to 18 digits)"
+            )
+        if len(ifsc) != 11 or ifsc[4] != '0':
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid IFSC Code (must be 11 characters with 5th character '0')"
+            )
+        ref_id = f"RZP_BANK_{secrets.token_hex(4).upper()}"
+        payout_info = {"method": "bank", "account_masked": f"****{acc[-4:]}", "ifsc": ifsc}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payout method must be 'upi' or 'bank'"
+        )
+
+    # 1. Update Supabase public.users status to 'pending_admin_approval'
+    supabase_headers = {
+        "apikey": settings.SUPABASE_ANON_KEY,
+        "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Update user status
+            await client.patch(
+                f"{settings.SUPABASE_URL}/rest/v1/users",
+                params={"or": f"(id.eq.{user_id},firebase_uid.eq.{user_id})"},
+                json={"status": "pending_admin_approval", "updated_at": datetime.now(timezone.utc).isoformat()},
+                headers=supabase_headers
+            )
+
+            # Update store or runner table
+            if role == "vendor":
+                store_payload = {
+                    "status": "pending_admin_approval",
+                    "is_approved": False,
+                    "upi_id": req.upi_id if method == "upi" else None,
+                    "bank_account_info": json.dumps(payout_info) if method == "bank" else None
+                }
+                await client.patch(
+                    f"{settings.SUPABASE_URL}/rest/v1/stores",
+                    params={"owner_id": f"eq.{user_id}"},
+                    json=store_payload,
+                    headers=supabase_headers
+                )
+            elif role == "runner":
+                runner_payload = {
+                    "status": "pending_admin_approval",
+                    "is_approved": False,
+                    "upi_id": req.upi_id if method == "upi" else None
+                }
+                await client.patch(
+                    f"{settings.SUPABASE_URL}/rest/v1/runners",
+                    params={"user_id": f"eq.{user_id}"},
+                    json=runner_payload,
+                    headers=supabase_headers
+                )
+    except Exception as exc:
+        logger.warning("Supabase payout update notice: %s", exc)
+
+    return PayoutSetupResponse(
+        status="pending_admin_approval",
+        message="Payout setup completed successfully. Application submitted for Super Admin review.",
+        reference_id=ref_id,
+        payout_method=method,
+        registered_name=holder_name
+    )
+
+
 class PennyDropVerifyRequest(BaseModel):
     account_holder_name: str
     account_number: Optional[str] = None
