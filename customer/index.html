@@ -43,6 +43,8 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <!-- Google Maps JavaScript API (Rural Hybrid Satellite View) -->
   <script src="config.js"></script>
+  <!-- Firebase SMS OTP & Supabase Database Sync Module -->
+  <script type="module" src="auth-service.js"></script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc&libraries=places,geometry&loading=async" async defer></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
@@ -291,60 +293,99 @@
     <!-- ===================================================================== -->
     <!-- 2. LOGIN & OTP VERIFICATION SCREEN -->
     <!-- ===================================================================== -->
-    <section id="page-login" class="hidden flex-1 flex flex-col p-6 justify-between bg-white">
-      <div class="pt-6 space-y-6">
+    <section id="page-login" class="hidden flex-1 flex flex-col p-6 justify-between bg-white overflow-y-auto">
+      <div class="pt-4 space-y-5">
         <button onclick="historyBack()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition active:scale-95" aria-label="Back">
           <i data-lucide="arrow-left" class="w-4 h-4"></i>
         </button>
 
-        <div class="space-y-2">
-          <h2 class="text-2xl font-extrabold text-slate-900" data-i18n="login_title">Enter Mobile Number</h2>
+        <div class="space-y-1.5">
+          <div class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Firebase SMS + Supabase Sync</span>
+          </div>
+          <h2 class="text-2xl font-extrabold text-slate-900" data-i18n="login_title">Mobile Login & Verification</h2>
           <p class="text-xs text-slate-600 leading-relaxed" data-i18n="login_sub">
-            We will send a 4-digit verification code to your phone number for secure login.
+            Enter your mobile number to receive a secure 6-digit SMS verification code on your phone.
           </p>
         </div>
 
-        <!-- Phone Input Block -->
-        <div id="phone-input-section" class="space-y-4 pt-2">
-          <div class="relative flex items-center">
-            <span class="absolute left-3.5 text-xs font-bold text-slate-500 border-r border-slate-300 pr-2.5">+91</span>
-            <input type="tel" id="cust-phone-input" maxlength="10" placeholder="9876543210" class="w-full pl-16 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition">
+        <!-- Auth Error / Notification Banner -->
+        <div id="auth-error-banner" class="hidden p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start space-x-2.5 shadow-2xs">
+          <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
+          <span id="auth-error-text" class="flex-1 font-medium leading-relaxed"></span>
+          <button onclick="hideAuthError()" class="text-rose-400 hover:text-rose-700 font-bold text-sm leading-none ml-1">✕</button>
+        </div>
+
+        <!-- Step 1: Phone and Name Input Block -->
+        <div id="phone-input-section" class="space-y-4 pt-1">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="name_label">
+              Full Name <span class="text-slate-400 font-normal">(for new customers)</span>
+            </label>
+            <div class="relative flex items-center">
+              <i data-lucide="user" class="absolute left-3.5 w-4 h-4 text-slate-400"></i>
+              <input type="text" id="cust-name-input" placeholder="e.g. Ramesh Kumar" class="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-xs font-semibold text-slate-900 transition shadow-2xs">
+            </div>
           </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="phone_label">
+              Mobile Number
+            </label>
+            <div class="relative flex items-center">
+              <span class="absolute left-3.5 text-xs font-bold text-slate-500 border-r border-slate-300 pr-2.5">+91</span>
+              <input type="tel" id="cust-phone-input" maxlength="10" placeholder="9876543210" class="w-full pl-16 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs">
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1">Live SMS OTP dispatched via Firebase Authenticator</p>
+          </div>
+
+          <!-- Invisible reCAPTCHA container for Firebase Auth abuse prevention -->
+          <div id="recaptcha-container"></div>
+
           <button onclick="sendCustomerOTP()" id="send-otp-btn" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
-            <span data-i18n="get_otp_btn">Get OTP</span>
-            <i data-lucide="shield-check" class="w-4 h-4"></i>
+            <span data-i18n="send_otp_btn">Send OTP</span>
+            <i data-lucide="send" class="w-4 h-4"></i>
           </button>
         </div>
 
-        <!-- OTP Boxes Block -->
-        <div id="otp-input-section" class="hidden space-y-5 mt-6">
-          <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between">
+        <!-- Step 2: 6-Digit OTP Boxes Block -->
+        <div id="otp-input-section" class="hidden space-y-5 pt-1">
+          <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-between">
             <div class="text-xs text-emerald-900">
               <span class="font-medium" data-i18n="otp_sent_to">Code sent to:</span> <span id="otp-phone-display" class="font-bold">+91 9876543210</span>
             </div>
             <button onclick="resetCustomerPhone()" class="text-xs text-emerald-700 font-bold hover:underline" data-i18n="change_number">Change</button>
           </div>
 
-          <div class="flex justify-between space-x-2 max-w-[260px] mx-auto">
-            <input type="tel" maxlength="1" id="otp-1" onkeyup="handleOtpInput(this, 'otp-2')" class="w-12 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl">
-            <input type="tel" maxlength="1" id="otp-2" onkeyup="handleOtpInput(this, 'otp-3')" class="w-12 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl">
-            <input type="tel" maxlength="1" id="otp-3" onkeyup="handleOtpInput(this, 'otp-4')" class="w-12 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl">
-            <input type="tel" maxlength="1" id="otp-4" onkeyup="handleOtpInput(this, null)" class="w-12 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl">
+          <div class="space-y-2">
+            <label class="block text-center text-[11px] font-semibold text-slate-600">Enter 6-Digit SMS Verification Code</label>
+            <div class="flex justify-between space-x-1.5 max-w-[320px] mx-auto">
+              <input type="tel" maxlength="1" id="otp-1" onkeyup="handleOtpInput(this, 'otp-2', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-2" onkeyup="handleOtpInput(this, 'otp-3', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-3" onkeyup="handleOtpInput(this, 'otp-4', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-4" onkeyup="handleOtpInput(this, 'otp-5', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-5" onkeyup="handleOtpInput(this, 'otp-6', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-6" onkeyup="handleOtpInput(this, null, event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+            </div>
           </div>
 
-          <div class="flex justify-between items-center text-xs pt-1">
+          <div class="flex justify-between items-center text-xs pt-1 px-1">
             <span class="text-slate-500" data-i18n="didnt_receive">Didn't receive code?</span>
-            <button onclick="resendCustomerOTP()" class="font-bold text-emerald-700 hover:underline" data-i18n="resend_otp">Resend OTP</button>
+            <div>
+              <button onclick="resendCustomerOTP()" id="resend-otp-btn" class="font-bold text-emerald-700 hover:underline" data-i18n="resend_otp">Resend OTP</button>
+              <span id="resend-timer" class="text-slate-400 text-xs hidden">Resend in <span id="resend-countdown" class="font-bold text-slate-600">30</span>s</span>
+            </div>
           </div>
 
           <button onclick="verifyCustomerOTP()" id="verify-otp-btn" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
-            <span data-i18n="verify_proceed_btn">Verify & Proceed</span>
+            <span data-i18n="verify_login_btn">Verify & Login</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
         </div>
       </div>
 
-      <div class="pb-6 text-center text-[11px] text-slate-400">
+      <div class="py-6 text-center text-[11px] text-slate-400">
         <p data-i18n="terms_notice">By continuing, you agree to GaonBazaar Rural Delivery Terms & Privacy Policy.</p>
       </div>
     </section>
@@ -3023,99 +3064,42 @@
     }
 
     // ---------------------------------------------------------------------------
-    // PHASE 11: LOGIN & REAL OTP VERIFICATION (NO FAKE BYPASS)
+    // PHASE 11: FIREBASE SMS OTP AUTHENTICATION & SUPABASE DATABASE SYNC
     // ---------------------------------------------------------------------------
     async function sendCustomerOTP() {
-      const phoneInput = document.getElementById('cust-phone-input');
-      const phone = phoneInput.value.trim();
-      const indianPhoneRegex = /^[6-9]\d{9}$/;
-
-      if (!indianPhoneRegex.test(phone)) {
-        toastError(currentLang === 'hi' ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें (शुरुआत 6-9 से)" : "Please enter a valid 10-digit Indian mobile number");
-        phoneInput.focus();
-        return;
+      if (window.authService && typeof window.authService.sendCustomerOTP === 'function') {
+        return await window.authService.sendCustomerOTP();
       }
-
-      const btn = document.getElementById('send-otp-btn');
-      btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> Sending OTP...`;
-      btn.disabled = true;
-
-      const res = await apiRequest('/api/v1/auth/otp/send', 'POST', { phone: phone, role: 'customer' });
-      btn.innerHTML = `<span>${currentLang === 'hi' ? 'OTP प्राप्त करें' : 'Get OTP'}</span> <i data-lucide="shield-check" class="w-4 h-4 ml-1"></i>`;
-      btn.disabled = false;
-      lucide.createIcons();
-
-      document.getElementById('otp-phone-display').innerText = "+91 " + phone;
-      document.getElementById('phone-input-section').classList.add('hidden');
-      document.getElementById('otp-input-section').classList.remove('hidden');
-      document.getElementById('otp-1').focus();
-
-      toastSuccess(currentLang === 'hi' ? "OTP भेज दिया गया है (परीक्षण कोड: 1234)" : "OTP Sent (Staging Test Code: 1234)");
     }
 
-    function handleOtpInput(current, nextId) {
-      if (current.value.length === 1 && nextId) {
-        document.getElementById(nextId).focus();
+    async function verifyCustomerOTP() {
+      if (window.authService && typeof window.authService.verifyCustomerOTP === 'function') {
+        return await window.authService.verifyCustomerOTP();
+      }
+    }
+
+    function resendCustomerOTP() {
+      if (window.authService && typeof window.authService.resendCustomerOTP === 'function') {
+        return window.authService.resendCustomerOTP();
       }
     }
 
     function resetCustomerPhone() {
-      document.getElementById('otp-input-section').classList.add('hidden');
-      document.getElementById('phone-input-section').classList.remove('hidden');
-      document.getElementById('cust-phone-input').focus();
+      if (window.authService && typeof window.authService.resetCustomerPhone === 'function') {
+        return window.authService.resetCustomerPhone();
+      }
     }
 
-    function resendCustomerOTP() {
-      toastSuccess(currentLang === 'hi' ? "OTP पुनः भेजा गया (परीक्षण कोड: 1234)" : "OTP Resent (Staging Code: 1234)");
+    function handleOtpInput(current, nextId, event) {
+      if (window.authService && typeof window.authService.handleOtpInput === 'function') {
+        return window.authService.handleOtpInput(current, nextId, event);
+      }
     }
 
-    async function verifyCustomerOTP() {
-      const o1 = document.getElementById('otp-1').value.trim();
-      const o2 = document.getElementById('otp-2').value.trim();
-      const o3 = document.getElementById('otp-3').value.trim();
-      const o4 = document.getElementById('otp-4').value.trim();
-      const code = o1 + o2 + o3 + o4;
-      const phone = document.getElementById('cust-phone-input').value.trim();
-
-      if (code.length < 4) {
-        toastError(currentLang === 'hi' ? "कृपया पूरा 4-अंकीय OTP दर्ज करें" : "Please enter the complete 4-digit OTP");
-        return;
+    function hideAuthError() {
+      if (window.authService && typeof window.authService.hideAuthError === 'function') {
+        window.authService.hideAuthError();
       }
-
-      const verifyBtn = document.getElementById('verify-otp-btn');
-      verifyBtn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> Verifying...`;
-      verifyBtn.disabled = true;
-
-      const res = await apiRequest('/api/v1/auth/otp/verify', 'POST', {
-        phone: phone,
-        otp: code,
-        role: 'customer'
-      });
-
-      verifyBtn.innerHTML = `<span>${currentLang === 'hi' ? 'सत्यापित करें' : 'Verify & Proceed'}</span> <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>`;
-      verifyBtn.disabled = false;
-      lucide.createIcons();
-
-      if (res && res.access_token) {
-        setCustomerAuthToken(res.access_token);
-        localStorage.setItem('gb_customer_authenticated', 'true');
-        localStorage.setItem('gb_customer_phone', phone);
-        if (res.user && res.user.name) {
-          localStorage.setItem('gb_customer_name', res.user.name);
-        }
-      } else {
-        toastError(currentLang === 'hi' ? "अमान्य OTP! कृपया पुनः प्रयास करें।" : "Invalid OTP code. Please retry.");
-        return;
-      }
-
-      document.getElementById('page-login').classList.add('hidden');
-      document.getElementById('dashboard-container').classList.remove('hidden');
-      switchTab('home');
-      toastSuccess(currentLang === 'hi' ? "लॉगिन सफल! गांवबाजार में आपका स्वागत है।" : "Login verified! Welcome to GaonBazaar.");
-
-      loadUserProfile();
-        checkPaymentGatewayStatus();
-      loadUserSavedAddresses();
     }
 
     // ---------------------------------------------------------------------------
