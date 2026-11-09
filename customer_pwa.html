@@ -218,6 +218,23 @@
                 </div>
                 <span class="text-base">💳</span>
               </div>
+              <!-- Collapsible 16-Digit Card Form -->
+              <div id="checkout-card-form" class="mt-3 pt-3 border-t border-slate-200 space-y-2.5 hidden">
+                <div>
+                  <label class="block text-[10px] font-semibold text-slate-600 mb-1">Card Number (16 Digits)</label>
+                  <input type="text" id="checkout-card-number" maxlength="19" placeholder="4111 2222 3333 4444" oninput="formatCardNumberInput(this)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[10px] font-semibold text-slate-600 mb-1">Expiry (MM/YY)</label>
+                    <input type="text" id="checkout-card-expiry" maxlength="5" placeholder="12/28" oninput="formatCardExpiryInput(this)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none text-center">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-semibold text-slate-600 mb-1">CVV (3 Digits)</label>
+                    <input type="password" id="checkout-card-cvv" maxlength="3" placeholder="123" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none text-center">
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- 4. Cash on Delivery (COD) -->
@@ -1859,91 +1876,136 @@
           </span>
         </div>
 
-        <!-- Mode Toggle Tabs: UPI vs Bank Account -->
-        <div class="flex p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold">
-          <button type="button" id="vault-tab-upi" onclick="switchVaultTab('upi')" class="flex-1 py-2.5 rounded-lg transition bg-white text-emerald-700 shadow-xs flex items-center justify-center space-x-1.5">
-            <i data-lucide="zap" class="w-3.5 h-3.5 text-emerald-600"></i>
-            <span>UPI ID (VPA)</span>
-          </button>
-          <button type="button" id="vault-tab-bank" onclick="switchVaultTab('bank')" class="flex-1 py-2.5 rounded-lg transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5">
-            <i data-lucide="landmark" class="w-3.5 h-3.5"></i>
-            <span>Bank Account</span>
-          </button>
-        </div>
-
-        <!-- Saved Active Method Badge Preview -->
-        <div id="vault-saved-status-card" class="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-between text-xs">
-          <div class="flex items-center space-x-2">
-            <div class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
-              ✓
+        <!-- Mode Toggle: Strict Vertical Top-to-Bottom List (1. UPI, 2. Bank, 3. Card, 4. COD) -->
+        <div class="space-y-3">
+          <!-- 1. UPI: GPay, PhonePe, Paytm -->
+          <div id="vault-opt-upi" onclick="selectVaultPaymentOption('upi')" class="p-3.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <input type="radio" name="vault_payment_option" id="vault-radio-upi" value="upi" checked class="w-4 h-4 text-emerald-600">
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="font-bold text-slate-900 text-xs">1. Pay via UPI</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Fast & Free</span>
+                  </div>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Google Pay, PhonePe, Paytm, BHIM</p>
+                </div>
+              </div>
+              <span class="text-base">⚡</span>
             </div>
-            <div>
-              <span class="text-[10px] uppercase font-bold text-emerald-800 tracking-wider block">Default Configured</span>
-              <p id="vault-saved-method-desc" class="font-bold text-slate-900 font-mono text-[11px]">9905361711@upi</p>
+            <!-- Intent Brand Chips -->
+            <div class="mt-2 pt-2 border-t border-emerald-200/60 flex items-center space-x-2 text-[10px]">
+              <span class="px-2 py-0.5 bg-white border border-slate-200 rounded-md font-bold text-slate-700 shadow-2xs"><span class="text-blue-600 font-extrabold">G</span>Pay</span>
+              <span class="px-2 py-0.5 bg-white border border-slate-200 rounded-md font-bold text-purple-700 shadow-2xs">Phone<span class="text-purple-600">Pe</span></span>
+              <span class="px-2 py-0.5 bg-white border border-slate-200 rounded-md font-bold text-sky-600 shadow-2xs">Paytm</span>
             </div>
-          </div>
-          <span class="text-[10px] font-bold text-emerald-700 bg-white border border-emerald-300 px-2 py-0.5 rounded-full">Active</span>
-        </div>
-
-        <!-- FORM 1: UPI ID SETUP -->
-        <div id="vault-form-upi" class="space-y-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="vault_upi_label">
-              UPI Virtual Payment Address (VPA) <span class="text-rose-500">*</span>
-            </label>
-            <div class="relative flex items-center">
-              <i data-lucide="at-sign" class="absolute left-3.5 w-4 h-4 text-emerald-600 pointer-events-none"></i>
-              <input 
-                type="text" 
-                id="vault-upi-input" 
-                placeholder="e.g. 9905361711@upi or name@okaxis" 
-                value="9905361711@upi"
-                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl text-xs font-mono font-bold text-slate-900 transition"
-              >
+            <!-- Form 1: UPI ID Setup -->
+            <div id="vault-form-upi" class="mt-3 pt-2 border-t border-slate-200 space-y-2">
+              <label class="block text-[11px] font-semibold text-slate-700">UPI Virtual Payment Address (VPA)</label>
+              <div class="relative flex items-center">
+                <i data-lucide="at-sign" class="absolute left-3 w-3.5 h-3.5 text-emerald-600 pointer-events-none"></i>
+                <input type="text" id="vault-upi-input" placeholder="e.g. 9905361711@upi" value="9905361711@upi" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:border-emerald-600 focus:outline-none">
+              </div>
+              <div class="flex flex-wrap gap-1 text-[9px] pt-0.5">
+                <button type="button" onclick="appendUpiSuffix('@upi')" class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-600 font-mono">@upi</button>
+                <button type="button" onclick="appendUpiSuffix('@okaxis')" class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-600 font-mono">@okaxis</button>
+                <button type="button" onclick="appendUpiSuffix('@okhdfcbank')" class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-600 font-mono">@okhdfcbank</button>
+                <button type="button" onclick="appendUpiSuffix('@paytm')" class="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-slate-600 font-mono">@paytm</button>
+              </div>
             </div>
           </div>
 
-          <!-- Quick UPI Handle Chips -->
-          <div>
-            <span class="text-[10px] font-semibold text-slate-500 block mb-1">Quick Handle Suffix:</span>
-            <div class="flex flex-wrap gap-1.5 text-[10px]">
-              <button type="button" onclick="appendUpiSuffix('@upi')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-mono font-medium">@upi</button>
-              <button type="button" onclick="appendUpiSuffix('@okaxis')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-mono font-medium">@okaxis</button>
-              <button type="button" onclick="appendUpiSuffix('@okhdfcbank')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-mono font-medium">@okhdfcbank</button>
-              <button type="button" onclick="appendUpiSuffix('@paytm')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-mono font-medium">@paytm</button>
-              <button type="button" onclick="appendUpiSuffix('@ybl')" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-mono font-medium">@ybl</button>
+          <!-- 2. Bank Account / Net Banking -->
+          <div id="vault-opt-bank" onclick="selectVaultPaymentOption('bank')" class="p-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <input type="radio" name="vault_payment_option" id="vault-radio-bank" value="bank" class="w-4 h-4 text-emerald-600">
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="font-bold text-slate-900 text-xs">2. Bank Account / Net Banking</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700">Direct</span>
+                  </div>
+                  <p class="text-[10px] text-slate-500 mt-0.5">SBI, HDFC, ICICI, PNB & Grameen Banks</p>
+                </div>
+              </div>
+              <span class="text-base">🏦</span>
+            </div>
+            <!-- Form 2: Bank Account Setup -->
+            <div id="vault-form-bank" class="mt-3 pt-2 border-t border-slate-200 space-y-2 hidden">
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Account Holder Name</label>
+                <input type="text" id="vault-bank-holder" placeholder="Name as per passbook" value="Customer Name" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Bank Account Number</label>
+                <input type="password" id="vault-bank-account" placeholder="Enter bank account number" value="50100482910291" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Confirm Account</label>
+                  <input type="text" id="vault-bank-account-confirm" placeholder="Re-enter number" value="50100482910291" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">IFSC Code</label>
+                  <input type="text" id="vault-bank-ifsc" placeholder="e.g. HDFC0001234" value="HDFC0001234" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono uppercase font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none">
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- FORM 2: BANK ACCOUNT SETUP -->
-        <div id="vault-form-bank" class="space-y-3 hidden">
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">
-              Account Holder Name <span class="text-rose-500">*</span>
-            </label>
-            <input type="text" id="vault-bank-holder" placeholder="Name as per passbook" value="Customer Name" class="w-full px-3.5 py-3 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl text-xs font-bold text-slate-900 transition">
+          <!-- 3. Credit / Debit Card -->
+          <div id="vault-opt-card" onclick="selectVaultPaymentOption('card')" class="p-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <input type="radio" name="vault_payment_option" id="vault-radio-card" value="card" class="w-4 h-4 text-emerald-600">
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="font-bold text-slate-900 text-xs">3. Credit / Debit Card</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700">16-Digit</span>
+                  </div>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Visa, RuPay, Mastercard & Maestro</p>
+                </div>
+              </div>
+              <span class="text-base">💳</span>
+            </div>
+            <!-- Form 3: Card Setup -->
+            <div id="vault-form-card" class="mt-3 pt-2 border-t border-slate-200 space-y-2 hidden">
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Card Number (16 Digits)</label>
+                <input type="text" id="vault-card-number" maxlength="19" placeholder="4111 2222 3333 4444" oninput="formatCardNumberInput(this)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Cardholder Name</label>
+                <input type="text" id="vault-card-holder" placeholder="Name as on card" value="Customer Name" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Expiry (MM/YY)</label>
+                  <input type="text" id="vault-card-expiry" maxlength="5" placeholder="12/28" oninput="formatCardExpiryInput(this)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none text-center">
+                </div>
+                <div>
+                  <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">CVV (3 Digits)</label>
+                  <input type="password" id="vault-card-cvv" maxlength="3" placeholder="123" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none text-center">
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">
-              Bank Account Number <span class="text-rose-500">*</span>
-            </label>
-            <input type="password" id="vault-bank-account" placeholder="Enter bank account number" value="50100482910291" class="w-full px-3.5 py-3 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl text-xs font-mono font-bold text-slate-900 transition">
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">
-              Confirm Account Number <span class="text-rose-500">*</span>
-            </label>
-            <input type="text" id="vault-bank-account-confirm" placeholder="Re-enter bank account number" value="50100482910291" class="w-full px-3.5 py-3 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl text-xs font-mono font-bold text-slate-900 transition">
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">
-              IFSC Code <span class="text-rose-500">*</span>
-            </label>
-            <input type="text" id="vault-bank-ifsc" placeholder="e.g. HDFC0001234" value="HDFC0001234" class="w-full px-3.5 py-3 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl text-xs font-mono uppercase font-bold text-slate-900 transition">
+          <!-- 4. Cash on Delivery (COD) -->
+          <div id="vault-opt-cod" onclick="selectVaultPaymentOption('cod')" class="p-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <input type="radio" name="vault_payment_option" id="vault-radio-cod" value="cod" class="w-4 h-4 text-emerald-600">
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="font-bold text-slate-900 text-xs">4. Cash on Delivery (COD)</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">Cash</span>
+                  </div>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Default to pay cash directly to runner upon delivery</p>
+                </div>
+              </div>
+              <span class="text-base">💵</span>
+            </div>
           </div>
         </div>
 
@@ -6217,67 +6279,51 @@ function createProductCardElement(p) {
     }
 
     function switchVaultTab(tab) {
-      currentVaultTab = tab;
-      const tabUpi = document.getElementById('vault-tab-upi');
-      const tabBank = document.getElementById('vault-tab-bank');
+      selectVaultPaymentOption(tab);
+    }
+
+    function selectVaultPaymentOption(mode) {
+      currentVaultPaymentOption = mode;
+      currentVaultTab = mode;
+      
+      const optUpi = document.getElementById('vault-opt-upi');
+      const optBank = document.getElementById('vault-opt-bank');
+      const optCard = document.getElementById('vault-opt-card');
+      const optCod = document.getElementById('vault-opt-cod');
+
+      const rUpi = document.getElementById('vault-radio-upi');
+      const rBank = document.getElementById('vault-radio-bank');
+      const rCard = document.getElementById('vault-radio-card');
+      const rCod = document.getElementById('vault-radio-cod');
+
       const formUpi = document.getElementById('vault-form-upi');
       const formBank = document.getElementById('vault-form-bank');
+      const formCard = document.getElementById('vault-form-card');
 
-      if (tab === 'upi') {
-        if (tabUpi) tabUpi.className = "flex-1 py-2.5 rounded-lg transition bg-white text-emerald-700 shadow-xs flex items-center justify-center space-x-1.5 font-bold";
-        if (tabBank) tabBank.className = "flex-1 py-2.5 rounded-lg transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5 font-bold";
+      [optUpi, optBank, optCard, optCod].forEach(el => {
+        if (el) el.className = "p-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition";
+      });
+
+      if (formUpi) formUpi.classList.add('hidden');
+      if (formBank) formBank.classList.add('hidden');
+      if (formCard) formCard.classList.add('hidden');
+
+      if (mode === 'upi') {
+        if (optUpi) optUpi.className = "p-3.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition";
+        if (rUpi) rUpi.checked = true;
         if (formUpi) formUpi.classList.remove('hidden');
-        if (formBank) formBank.classList.add('hidden');
-      } else {
-        if (tabBank) tabBank.className = "flex-1 py-2.5 rounded-lg transition bg-white text-emerald-700 shadow-xs flex items-center justify-center space-x-1.5 font-bold";
-        if (tabUpi) tabUpi.className = "flex-1 py-2.5 rounded-lg transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5 font-bold";
+      } else if (mode === 'bank') {
+        if (optBank) optBank.className = "p-3.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition";
+        if (rBank) rBank.checked = true;
         if (formBank) formBank.classList.remove('hidden');
-        if (formUpi) formUpi.classList.add('hidden');
+      } else if (mode === 'card') {
+        if (optCard) optCard.className = "p-3.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition";
+        if (rCard) rCard.checked = true;
+        if (formCard) formCard.classList.remove('hidden');
+      } else if (mode === 'cod') {
+        if (optCod) optCod.className = "p-3.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition";
+        if (rCod) rCod.checked = true;
       }
-      if (window.lucide) lucide.createIcons();
-    }
-
-    function appendUpiSuffix(suffix) {
-      const inp = document.getElementById('vault-upi-input');
-      if (!inp) return;
-      let val = inp.value.trim();
-      if (val.includes('@')) {
-        val = val.split('@')[0];
-      }
-      inp.value = val + suffix;
-    }
-
-    function loadSavedPaymentVaultUI() {
-      const upi = localStorage.getItem('gb_customer_upi_id') || '9905361711@upi';
-      const bankAcc = localStorage.getItem('gb_customer_bank_account') || '';
-      const bankHolder = localStorage.getItem('gb_customer_bank_holder') || '';
-      const bankIfsc = localStorage.getItem('gb_customer_bank_ifsc') || '';
-      const mode = localStorage.getItem('gb_customer_payout_mode') || 'upi';
-
-      const upiInput = document.getElementById('vault-upi-input');
-      if (upiInput) upiInput.value = upi;
-
-      const holderInput = document.getElementById('vault-bank-holder');
-      if (holderInput && bankHolder) holderInput.value = bankHolder;
-
-      const accInput = document.getElementById('vault-bank-account');
-      const accConfirm = document.getElementById('vault-bank-account-confirm');
-      if (accInput && bankAcc) accInput.value = bankAcc;
-      if (accConfirm && bankAcc) accConfirm.value = bankAcc;
-
-      const ifscInput = document.getElementById('vault-bank-ifsc');
-      if (ifscInput && bankIfsc) ifscInput.value = bankIfsc;
-
-      const descEl = document.getElementById('vault-saved-method-desc');
-      if (descEl) {
-        if (mode === 'bank' && bankAcc) {
-          descEl.innerText = `Bank: ••••${bankAcc.slice(-4)} (${bankIfsc || 'Verified'})`;
-        } else {
-          descEl.innerText = upi;
-        }
-      }
-
-      switchVaultTab(mode);
     }
 
     async function saveCustomerPaymentVault() {
@@ -6448,6 +6494,13 @@ function createProductCardElement(p) {
 
     function selectCheckoutModalPayment(mode) {
       selectedCheckoutModalPayment = mode;
+      if (mode === 'CARD') {
+        const cForm = document.getElementById('checkout-card-form');
+        if (cForm) cForm.classList.remove('hidden');
+      } else {
+        const cForm = document.getElementById('checkout-card-form');
+        if (cForm) cForm.classList.add('hidden');
+      }
       
       const upiCard = document.getElementById('checkout-opt-upi');
       const bankCard = document.getElementById('checkout-opt-bank');
