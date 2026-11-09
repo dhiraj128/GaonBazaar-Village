@@ -448,7 +448,7 @@
             </label>
             <div class="relative flex items-center">
               <span class="absolute left-3.5 text-xs font-bold text-slate-500 border-r border-slate-300 pr-2.5">+91</span>
-              <input type="tel" id="cust-phone-input" maxlength="10" placeholder="9876543210" class="w-full pl-16 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs">
+              <input type="tel" id="cust-phone-input" maxlength="10" placeholder="9876543210" value="9876543210" class="w-full pl-16 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs">
             </div>
             <p class="text-[10px] text-slate-400 mt-1" data-i18n="sms_dispatched_note">Instant SMS OTP delivered to your mobile phone</p>
           </div>
@@ -474,12 +474,12 @@
           <div class="space-y-2">
             <label class="block text-center text-[11px] font-semibold text-slate-600">Enter 6-Digit SMS Verification Code</label>
             <div class="flex justify-between space-x-1.5 max-w-[320px] mx-auto">
-              <input type="tel" maxlength="1" id="otp-1" onkeyup="handleOtpInput(this, 'otp-2', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-2" onkeyup="handleOtpInput(this, 'otp-3', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-3" onkeyup="handleOtpInput(this, 'otp-4', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-4" onkeyup="handleOtpInput(this, 'otp-5', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-5" onkeyup="handleOtpInput(this, 'otp-6', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-6" onkeyup="handleOtpInput(this, null, event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-1" value="1" onkeyup="handleOtpInput(this, 'otp-2', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-2" value="2" onkeyup="handleOtpInput(this, 'otp-3', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-3" value="3" onkeyup="handleOtpInput(this, 'otp-4', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-4" value="4" onkeyup="handleOtpInput(this, 'otp-5', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-5" value="5" onkeyup="handleOtpInput(this, 'otp-6', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-6" value="6" onkeyup="handleOtpInput(this, null, event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
             </div>
           </div>
 
