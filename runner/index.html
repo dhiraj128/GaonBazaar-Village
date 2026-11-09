@@ -350,7 +350,7 @@
                   id="runner-base-village" 
                   autocomplete="off"
                   placeholder="Type or select village (e.g. Muzaffarpur, Chaturshi)..." 
-                  value="Muzaffarpur / मुज़फ़्फ़रपुर" 
+                  value="Muzaffarpur" 
                   oninput="handleRunnerVillageSearch(this.value)" 
                   onfocus="handleRunnerVillageSearch(this.value)" 
                   class="w-full pl-10 pr-9 py-3.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-xs focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs transition"
@@ -1868,6 +1868,7 @@
 
     function setLanguage(lang) {
       currentLang = lang;
+      window.currentLang = lang;
       localStorage.setItem('gaonbazaar_runner_lang', lang);
       updateRunnerLangCards(lang);
 
@@ -2900,35 +2901,44 @@
       const dropdown = document.getElementById('runner-village-dropdown');
       if (!dropdown) return;
       const q = (query || '').trim().toLowerCase();
+      const isHindi = (typeof currentLang !== 'undefined' ? currentLang === 'hi' : false) || 
+                      (localStorage.getItem('gaonbazaar_runner_lang') === 'hi') || 
+                      (window.currentLang === 'hi');
+
+      // Strict A-to-Z sorting:
+      const sortedHubs = RURAL_AREAS_LIST.slice().sort((a, b) => {
+        return a.en.localeCompare(b.en);
+      });
       
-      const filtered = RURAL_AREAS_LIST.filter(item => {
-        const combined = `${item.en} / ${item.hi}`.toLowerCase();
-        return item.en.toLowerCase().includes(q) || item.hi.toLowerCase().includes(q) || combined.includes(q);
+      const filtered = sortedHubs.filter(item => {
+        return item.en.toLowerCase().includes(q) || item.hi.toLowerCase().includes(q);
       });
       
       let html = '';
       if (filtered.length > 0) {
         filtered.forEach(item => {
-          const displayLabel = `${item.en} / ${item.hi}`;
+          // Display ONLY the English string OR ONLY the Hindi string based on active language:
+          const singleLabel = isHindi ? item.hi : item.en;
           html += `
-            <div onclick="selectRunnerVillage('${displayLabel.replace(/'/g, "\\'")}')" class="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-800 transition">
+            <div onclick="selectRunnerVillage('${singleLabel.replace(/'/g, "\'")}')" class="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer flex items-center justify-between text-xs font-semibold text-slate-800 transition">
               <div class="flex items-center space-x-2">
                 <i data-lucide="map-pin" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
-                <span class="font-bold text-slate-900">${item.en}</span>
-                <span class="text-slate-400">/</span>
-                <span class="text-blue-800 font-medium">${item.hi}</span>
+                <span class="font-bold text-slate-900 village-label">${singleLabel}</span>
               </div>
-              <span class="text-[10px] text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded font-bold">Operating Hub</span>
+              <span class="text-[10px] text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded font-bold">${isHindi ? 'ऑपरेटिंग हब' : 'Operating Hub'}</span>
             </div>
           `;
         });
       }
 
-      if (q && !filtered.some(item => `${item.en} / ${item.hi}`.toLowerCase() === q || item.en.toLowerCase() === q)) {
+      if (q && !filtered.some(item => (isHindi ? item.hi : item.en).toLowerCase() === q)) {
         html += `
-          <div onclick="selectRunnerVillage('${query.replace(/'/g, "\\'")}')" class="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer flex items-center space-x-2 text-xs font-bold text-blue-700 bg-blue-50/50">
-            <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
-            <span>Use "${query}"</span>
+          <div onclick="selectRunnerVillage('${query.replace(/'/g, "\'")}')" class="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer flex items-center justify-between text-xs font-semibold text-blue-800 border-t border-slate-100 transition">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
+              <span>${isHindi ? 'कस्टम नाम चुनें: ' : 'Use Custom: '} "<strong>${query}</strong>"</span>
+            </div>
+            <span class="text-[10px] text-slate-400">${isHindi ? 'कस्टम' : 'Custom'}</span>
           </div>
         `;
       }
@@ -2937,17 +2947,7 @@
       dropdown.classList.remove('hidden');
       if (window.lucide) lucide.createIcons();
     }
-
-    function toggleRunnerVillageDropdown() {
-      const dropdown = document.getElementById('runner-village-dropdown');
-      if (!dropdown) return;
-      if (dropdown.classList.contains('hidden')) {
-        const val = document.getElementById('runner-base-village')?.value || '';
-        handleRunnerVillageSearch(val);
-      } else {
-        dropdown.classList.add('hidden');
-      }
-    }
+    window.handleRunnerVillageSearch = handleRunnerVillageSearch;
 
     function selectRunnerVillage(villageName) {
       const input = document.getElementById('runner-base-village');

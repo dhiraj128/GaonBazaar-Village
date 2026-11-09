@@ -151,53 +151,90 @@
             </div>
           </div>
 
-          <!-- Payment Option 1: Pay via UPI -->
-          <div id="checkout-opt-upi" onclick="selectCheckoutModalPayment('ONLINE')" class="p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition relative">
-            <div class="flex items-start justify-between">
-              <div class="flex items-center space-x-3">
-                <input type="radio" name="checkout_modal_pm" id="pm-radio-upi" value="ONLINE" checked class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
-                <div>
-                  <div class="flex items-center space-x-2">
-                    <span class="font-bold text-slate-900 text-xs" data-i18n="checkout_pay_upi">Pay via UPI</span>
-                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Free / Save ₹10</span>
+          <!-- Payment Options: STRICT VERTICAL TOP-TO-BOTTOM LIST -->
+          <div class="space-y-3">
+            <!-- 1. UPI: GPay, PhonePe, Paytm, BHIM -->
+            <div id="checkout-opt-upi" onclick="selectCheckoutModalPayment('ONLINE')" class="p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition relative">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center space-x-3">
+                  <input type="radio" name="checkout_modal_pm" id="pm-radio-upi" value="ONLINE" checked class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+                  <div>
+                    <div class="flex items-center space-x-2">
+                      <span class="font-bold text-slate-900 text-xs" data-i18n="checkout_pay_upi">1. Pay via UPI</span>
+                      <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Free / Save ₹10</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-0.5" data-i18n="checkout_pay_upi_desc">Fast & secure instant UPI payment</p>
                   </div>
-                  <p class="text-[10px] text-slate-500 mt-0.5" data-i18n="checkout_pay_upi_desc">Fast & secure instant UPI payment</p>
                 </div>
+                <span class="text-base">⚡</span>
               </div>
-              <span class="text-lg">⚡</span>
+
+              <!-- UPI Intent Brand Chips -->
+              <div class="mt-2.5 pt-2 border-t border-emerald-200/60 flex items-center space-x-2 overflow-x-auto text-[10px]">
+                <span class="px-2 py-0.8 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 shadow-2xs flex items-center space-x-1">
+                  <span class="text-blue-600 font-extrabold">G</span>Pay
+                </span>
+                <span class="px-2 py-0.8 bg-white border border-slate-200 rounded-lg font-bold text-purple-700 shadow-2xs flex items-center space-x-1">
+                  Phone<span class="text-purple-600">Pe</span>
+                </span>
+                <span class="px-2 py-0.8 bg-white border border-slate-200 rounded-lg font-bold text-sky-600 shadow-2xs flex items-center space-x-1">
+                  Paytm
+                </span>
+                <span class="px-2 py-0.8 bg-white border border-slate-200 rounded-lg font-bold text-emerald-700 shadow-2xs flex items-center space-x-1">
+                  BHIM
+                </span>
+              </div>
             </div>
 
-            <!-- UPI Brand Chips -->
-            <div class="mt-3 pt-2.5 border-t border-emerald-200/60 flex items-center space-x-2 overflow-x-auto text-[10px]">
-              <span class="px-2 py-1 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 shadow-2xs flex items-center space-x-1">
-                <span class="text-blue-600 font-extrabold">G</span>Pay
-              </span>
-              <span class="px-2 py-1 bg-white border border-slate-200 rounded-lg font-bold text-purple-700 shadow-2xs flex items-center space-x-1">
-                Phone<span class="text-purple-600">Pe</span>
-              </span>
-              <span class="px-2 py-1 bg-white border border-slate-200 rounded-lg font-bold text-sky-600 shadow-2xs flex items-center space-x-1">
-                Paytm
-              </span>
-              <span class="px-2 py-1 bg-white border border-slate-200 rounded-lg font-bold text-emerald-700 shadow-2xs flex items-center space-x-1">
-                BHIM
-              </span>
-            </div>
-          </div>
-
-          <!-- Payment Option 2: Cash on Delivery (COD) -->
-          <div id="checkout-opt-cod" onclick="selectCheckoutModalPayment('COD')" class="p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition">
-            <div class="flex items-start justify-between">
-              <div class="flex items-center space-x-3">
-                <input type="radio" name="checkout_modal_pm" id="pm-radio-cod" value="COD" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
-                <div>
-                  <div class="flex items-center space-x-2">
-                    <span class="font-bold text-slate-900 text-xs" data-i18n="checkout_pay_cod">Cash on Delivery (COD)</span>
-                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">+₹10 Fee</span>
+            <!-- 2. Bank Account / Net Banking -->
+            <div id="checkout-opt-bank" onclick="selectCheckoutModalPayment('BANK')" class="p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center space-x-3">
+                  <input type="radio" name="checkout_modal_pm" id="pm-radio-bank" value="BANK" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+                  <div>
+                    <div class="flex items-center space-x-2">
+                      <span class="font-bold text-slate-900 text-xs">2. Bank Account / Net Banking</span>
+                      <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Direct Debit</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-0.5">SBI, HDFC, ICICI, PNB & Rural Grameen Banks</p>
                   </div>
-                  <p class="text-[10px] text-slate-500 mt-0.5" data-i18n="checkout_pay_cod_desc">Pay cash directly to runner upon delivery</p>
                 </div>
+                <span class="text-base">🏦</span>
               </div>
-              <span class="text-lg">💵</span>
+            </div>
+
+            <!-- 3. Credit / Debit Card -->
+            <div id="checkout-opt-card" onclick="selectCheckoutModalPayment('CARD')" class="p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center space-x-3">
+                  <input type="radio" name="checkout_modal_pm" id="pm-radio-card" value="CARD" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+                  <div>
+                    <div class="flex items-center space-x-2">
+                      <span class="font-bold text-slate-900 text-xs">3. Credit / Debit Card</span>
+                      <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Visa / RuPay</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-0.5">RuPay, Visa, Mastercard & Maestro cards accepted</p>
+                  </div>
+                </div>
+                <span class="text-base">💳</span>
+              </div>
+            </div>
+
+            <!-- 4. Cash on Delivery (COD) -->
+            <div id="checkout-opt-cod" onclick="selectCheckoutModalPayment('COD')" class="p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center space-x-3">
+                  <input type="radio" name="checkout_modal_pm" id="pm-radio-cod" value="COD" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+                  <div>
+                    <div class="flex items-center space-x-2">
+                      <span class="font-bold text-slate-900 text-xs" data-i18n="checkout_pay_cod">4. Cash on Delivery (COD)</span>
+                      <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">+₹10 Fee</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-0.5" data-i18n="checkout_pay_cod_desc">Pay cash directly to runner upon delivery</p>
+                  </div>
+                </div>
+                <span class="text-base">💵</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1286,7 +1323,7 @@
                 <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wide text-[11px]" data-i18n="saved_addresses_title">Saved Addresses</h4>
                 <p class="text-[10px] text-slate-400">Default doorstep delivery location</p>
               </div>
-              <button onclick="openRuralAddressModal()" class="text-[11px] font-bold text-emerald-700 hover:underline flex items-center space-x-1">
+              <button id="btn-account-add-address" onclick="openRuralAddressModal()" class="text-[11px] font-bold text-emerald-700 hover:underline flex items-center space-x-1">
                 <i data-lucide="plus" class="w-3 h-3"></i>
                 <span data-i18n="add_new_address_btn">Add Address</span>
               </button>
@@ -1615,9 +1652,9 @@
             <p class="text-[11px] font-bold text-emerald-900" data-i18n="gps_detect_header">Detect via Device GPS</p>
             <p id="modal-gps-status" class="text-[10px] text-emerald-700 truncate">High-Accuracy Satellite</p>
           </div>
-          <button type="button" onclick="detectExactGPS(true)" id="modal-gps-btn" class="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] shadow-xs active:scale-95 transition flex items-center space-x-1.5 shrink-0">
-            <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
-            <span id="modal-gps-btn-text" data-i18n="detect_btn">Detect</span>
+          <button type="button" onclick="detectExactGPS(true)" id="modal-gps-btn" class="py-2 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs active:scale-95 transition flex items-center space-x-1.5 shrink-0 min-h-[40px] cursor-pointer">
+            <i data-lucide="crosshair" class="w-4 h-4"></i>
+            <span id="modal-gps-btn-text">Detect GPS Location</span>
           </button>
         </div>
 
@@ -2842,11 +2879,11 @@
     // ===========================================================================
     const IMAGE_CATALOG = {
       // Exact Product Name Mapping
-      "Aashirvaad Shudh Chakki Atta": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
-      "Aashirvaad Atta": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
-      "Atta": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
-      "Chakki Atta": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
-      "Wheat Flour": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+      "Aashirvaad Shudh Chakki Atta": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80",
+      "Aashirvaad Atta": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80",
+      "Atta": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80",
+      "Chakki Atta": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80",
+      "Wheat Flour": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80",
 
       "Kachchi Ghani Mustard Oil": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
       "Fortune Kachi Ghani Mustard Oil": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
@@ -2926,7 +2963,7 @@
       "Tea": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
 
       // ID Mapping
-      "p1": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+      "p1": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80",
       "p2": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
       "p3": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
       "p4": "https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=500&q=80", // White Sugar crystals
@@ -2944,7 +2981,7 @@
       "p16": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
 
       // Backend Catalog IDs
-      "cat_atta": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+      "cat_atta": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80",
       "cat_mustard_oil": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
       "cat_milk": "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80",
       "cat_sugar": "https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=500&q=80",
@@ -2957,7 +2994,7 @@
       "cat_rice": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80",
       "cat_tea": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",
       "cat_biscuits": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=500&q=80",
-      "DEFAULT": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80"
+      "DEFAULT": "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80"
     };
 
     const PRODUCT_IMAGE_CATALOG = IMAGE_CATALOG;
@@ -2968,7 +3005,7 @@
       const catalog = window.PRODUCT_IMAGE_CATALOG || window.IMAGE_CATALOG || IMAGE_CATALOG;
       let url = null;
       if (!item) {
-        url = catalog["Aashirvaad Shudh Chakki Atta"] || 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80';
+        url = catalog["Aashirvaad Shudh Chakki Atta"] || 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80';
       } else if (typeof item === 'string') {
         if (catalog[item]) {
           url = catalog[item];
@@ -3028,7 +3065,7 @@
         category: 'Grocery',
         unit: '5 kg',
         price: 215.00,
-        img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80',
+        img: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80',
         store: 'Sharma Kirana & General Store'
       },
       {
@@ -3184,6 +3221,11 @@
     ];
 
     let cartItems = [];
+    Object.defineProperty(window, 'cartItems', {
+      get: () => cartItems,
+      set: (val) => { cartItems = val; },
+      configurable: true
+    });
     window.productCatalog = productsCatalog;
     window.productsCatalog = productsCatalog;
 
@@ -3698,7 +3740,7 @@
       selectedModalProduct = p;
 
       const name = currentLang === 'hi' ? (p.nameHi || p.nameEn) : (p.nameEn || p.nameHi);
-      const imgUrl = (window.PRODUCT_IMAGE_CATALOG && (window.PRODUCT_IMAGE_CATALOG[p.nameEn] || window.PRODUCT_IMAGE_CATALOG[p.name] || window.PRODUCT_IMAGE_CATALOG[p.id])) || p.img || (typeof getProductImage === 'function' ? getProductImage(p) : 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80');
+      const imgUrl = (window.PRODUCT_IMAGE_CATALOG && (window.PRODUCT_IMAGE_CATALOG[p.nameEn] || window.PRODUCT_IMAGE_CATALOG[p.name] || window.PRODUCT_IMAGE_CATALOG[p.id])) || p.img || (typeof getProductImage === 'function' ? getProductImage(p) : 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80');
       const bustUrl = (imgUrl && !imgUrl.includes('v=')) ? (imgUrl + (imgUrl.includes('?') ? '&' : '?') + "v=" + Date.now()) : imgUrl;
 
       const imgEl = document.getElementById('product-modal-img');
@@ -3743,7 +3785,7 @@ function createProductCardElement(p) {
       card.setAttribute('data-id', p.id);
       card.setAttribute('data-category', p.category);
 
-            let imageUrl = (window.PRODUCT_IMAGE_CATALOG && (window.PRODUCT_IMAGE_CATALOG[p.nameEn] || window.PRODUCT_IMAGE_CATALOG[p.name] || window.PRODUCT_IMAGE_CATALOG[p.id])) || p.img || (typeof getProductImage === 'function' ? getProductImage(p) : 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80');
+            let imageUrl = (window.PRODUCT_IMAGE_CATALOG && (window.PRODUCT_IMAGE_CATALOG[p.nameEn] || window.PRODUCT_IMAGE_CATALOG[p.name] || window.PRODUCT_IMAGE_CATALOG[p.id])) || p.img || (typeof getProductImage === 'function' ? getProductImage(p) : 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80');
       if (imageUrl && !imageUrl.includes('v=')) {
         const sep = imageUrl.includes('?') ? '&' : '?';
         imageUrl += sep + "v=" + new Date().getTime();
@@ -4307,6 +4349,11 @@ function createProductCardElement(p) {
     // PHASE 2, 3, 4, 6 & 7: LIVE TRACKING, SECURE OTP, ADDRESS & CHECKOUT ENGINE
     // ---------------------------------------------------------------------------
     let selectedCheckoutAddressId = null;
+    Object.defineProperty(window, 'selectedCheckoutAddressId', {
+      get: () => selectedCheckoutAddressId,
+      set: (val) => { selectedCheckoutAddressId = val; },
+      configurable: true
+    });
     let isDeliveryOtpRevealed = false;
     let activeTrackingPollTimer = null;
     let gatewayConfig = { online_enabled: false, cod_enabled: true };
@@ -4819,7 +4866,7 @@ function createProductCardElement(p) {
         total_amount: 512.00,
         placed_at: new Date(Date.now() - 3 * 86400000).toISOString(),
         items: [
-          { product_id: 'p1', name_en: 'Aashirvaad Shudh Chakki Atta', name_hi: 'आशीर्वाद शुद्ध चक्की आटा', unit: '5 kg', unit_price: 215, quantity: 1, image_url: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80' },
+          { product_id: 'p1', name_en: 'Aashirvaad Shudh Chakki Atta', name_hi: 'आशीर्वाद शुद्ध चक्की आटा', unit: '5 kg', unit_price: 215, quantity: 1, image_url: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80' },
           { product_id: 'p2', name_en: 'Fortune Kachi Ghani Mustard Oil', name_hi: 'कच्ची घानी शुद्ध सरसों तेल', unit: '1 L', unit_price: 155, quantity: 1, image_url: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80' },
           { product_id: 'p4', name_en: 'Pure Refined White Sugar (Cheeni)', name_hi: 'सफेद रिफाइंड चीनी', unit: '1 kg', unit_price: 44, quantity: 2, image_url: 'https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=500&q=80' }
         ]
@@ -6401,8 +6448,41 @@ function createProductCardElement(p) {
 
     function selectCheckoutModalPayment(mode) {
       selectedCheckoutModalPayment = mode;
+      
+      const upiCard = document.getElementById('checkout-opt-upi');
+      const bankCard = document.getElementById('checkout-opt-bank');
+      const cardCard = document.getElementById('checkout-opt-card');
+      const codCard = document.getElementById('checkout-opt-cod');
+
+      const rUpi = document.getElementById('pm-radio-upi');
+      const rBank = document.getElementById('pm-radio-bank');
+      const rCard = document.getElementById('pm-radio-card');
+      const rCod = document.getElementById('pm-radio-cod');
+
+      [upiCard, bankCard, cardCard, codCard].forEach(el => {
+        if (el) {
+          el.className = "p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative";
+        }
+      });
+
+      if (mode === 'ONLINE' || mode === 'UPI') {
+        if (upiCard) upiCard.className = "p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition relative";
+        if (rUpi) rUpi.checked = true;
+      } else if (mode === 'BANK') {
+        if (bankCard) bankCard.className = "p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition relative";
+        if (rBank) rBank.checked = true;
+      } else if (mode === 'CARD') {
+        if (cardCard) cardCard.className = "p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition relative";
+        if (rCard) rCard.checked = true;
+      } else if (mode === 'COD') {
+        if (codCard) codCard.className = "p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition relative";
+        if (rCod) rCod.checked = true;
+      }
+
       updateCheckoutModalUI();
     }
+    window.selectCheckoutModalPayment = selectCheckoutModalPayment;
+    window.openRuralAddressModal = openRuralAddressModal;
 
     function updateCheckoutModalUI() {
       const itemTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -6439,35 +6519,51 @@ function createProductCardElement(p) {
 
       // Update Radio and card styles
       const upiCard = document.getElementById('checkout-opt-upi');
+      const bankCard = document.getElementById('checkout-opt-bank');
+      const cardCard = document.getElementById('checkout-opt-card');
       const codCard = document.getElementById('checkout-opt-cod');
+
       const upiRadio = document.getElementById('pm-radio-upi');
+      const bankRadio = document.getElementById('pm-radio-bank');
+      const cardRadio = document.getElementById('pm-radio-card');
       const codRadio = document.getElementById('pm-radio-cod');
-      const btn = document.getElementById('btn-checkout-modal-confirm');
+      
       const btnText = document.getElementById('btn-checkout-modal-text');
 
-      if (selectedCheckoutModalPayment === 'ONLINE') {
+      [upiCard, bankCard, cardCard, codCard].forEach(el => {
+        if (el) el.className = "p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative";
+      });
+      [upiRadio, bankRadio, cardRadio, codRadio].forEach(el => {
+        if (el) el.checked = false;
+      });
+
+      if (selectedCheckoutModalPayment === 'ONLINE' || selectedCheckoutModalPayment === 'UPI') {
         if (upiRadio) upiRadio.checked = true;
-        if (codRadio) codRadio.checked = false;
-        if (upiCard) {
-          upiCard.className = 'p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 cursor-pointer transition relative';
-        }
-        if (codCard) {
-          codCard.className = 'p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition';
-        }
+        if (upiCard) upiCard.className = 'p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 cursor-pointer transition relative';
         if (btnText) {
           btnText.innerText = currentLang === 'hi' 
             ? `UPI द्वारा ₹${grandTotal.toFixed(2)} भुगतान करें` 
             : `Pay ₹${grandTotal.toFixed(2)} via UPI`;
         }
-      } else {
-        if (upiRadio) upiRadio.checked = false;
+      } else if (selectedCheckoutModalPayment === 'BANK') {
+        if (bankRadio) bankRadio.checked = true;
+        if (bankCard) bankCard.className = 'p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 cursor-pointer transition relative';
+        if (btnText) {
+          btnText.innerText = currentLang === 'hi' 
+            ? `नेट बैंकिंग द्वारा ₹${grandTotal.toFixed(2)} भुगतान करें` 
+            : `Pay ₹${grandTotal.toFixed(2)} via Net Banking`;
+        }
+      } else if (selectedCheckoutModalPayment === 'CARD') {
+        if (cardRadio) cardRadio.checked = true;
+        if (cardCard) cardCard.className = 'p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 cursor-pointer transition relative';
+        if (btnText) {
+          btnText.innerText = currentLang === 'hi' 
+            ? `कार्ड द्वारा ₹${grandTotal.toFixed(2)} भुगतान करें` 
+            : `Pay ₹${grandTotal.toFixed(2)} via Card`;
+        }
+      } else if (selectedCheckoutModalPayment === 'COD') {
         if (codRadio) codRadio.checked = true;
-        if (upiCard) {
-          upiCard.className = 'p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition';
-        }
-        if (codCard) {
-          codCard.className = 'p-4 rounded-2xl border-2 border-amber-600 bg-amber-50/60 cursor-pointer transition';
-        }
+        if (codCard) codCard.className = 'p-4 rounded-2xl border-2 border-amber-600 bg-amber-50/60 cursor-pointer transition relative';
         if (btnText) {
           btnText.innerText = currentLang === 'hi' 
             ? `COD ऑर्डर की पुष्टि करें (₹${grandTotal.toFixed(2)})` 
