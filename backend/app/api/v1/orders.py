@@ -190,7 +190,7 @@ async def create_order(
         platform_fee=totals["platform_fee"], # Strict ₹3.00
         total_amount=totals["total_amount"],
         payment_method=payment_method,
-        payment_status="PLACED",
+        payment_status="PENDING",
         delivery_otp=delivery_otp,
         placed_at=now,
         cancel_until=cancel_until,
