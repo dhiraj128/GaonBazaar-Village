@@ -38,6 +38,8 @@
 
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- HTML5 QR / Barcode Scanner CDN -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <!-- Toastify CSS & JS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -876,7 +878,7 @@
           </button>
 
           <!-- Action 2: "Take Photo" (Loose & Fresh Items) -->
-          <button type="button" onclick="openPhotoCaptureModal()" id="btn-action-take-photo" class="p-3.5 bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl shadow-md shadow-amber-600/20 flex flex-col items-center justify-center text-center space-y-1.5 transition active:scale-95 min-h-[76px] border border-amber-400 cursor-pointer">
+          <button type="button" onclick="openPhotoCaptureModal(); triggerCameraCapture();" id="btn-action-take-photo" class="p-3.5 bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl shadow-md shadow-amber-600/20 flex flex-col items-center justify-center text-center space-y-1.5 transition active:scale-95 min-h-[76px] border border-amber-400 cursor-pointer">
             <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
               <i data-lucide="camera" class="w-5 h-5 text-white"></i>
             </div>
@@ -1315,8 +1317,9 @@
           </button>
         </div>
 
-        <!-- Scanner Viewport Frame with Laser Animation -->
+        <!-- Scanner Viewport Frame with Real WebRTC Camera / HTML5Qrcode -->
         <div class="relative w-full h-48 bg-slate-950 rounded-2xl overflow-hidden border-2 border-emerald-500 shadow-inner flex items-center justify-center">
+          <div id="barcode-reader-view" class="w-full h-full overflow-hidden"></div>
           <video id="barcode-scanner-video" autoplay playsinline class="w-full h-full object-cover hidden"></video>
           
           <!-- Animated Laser Scanning Line -->
@@ -1391,10 +1394,10 @@
           </div>
           <p class="text-xs font-bold text-amber-950" id="photo-status-text" data-i18n="photo_status_prompt">Capture real product photo with camera</p>
           
-          <button type="button" onclick="triggerCameraCapture()" class="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center space-x-2 cursor-pointer min-h-[48px]">
-            <i data-lucide="aperture" class="w-4 h-4"></i>
+          <label for="vendor-camera-file-input" onclick="triggerCameraCapture()" class="w-full py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center space-x-2 cursor-pointer min-h-[48px]">
+            <i data-lucide="camera" class="w-4 h-4"></i>
             <span data-i18n="open_camera_btn">Open Camera & Snap Photo</span>
-          </button>
+          </label>
         </div>
 
         <!-- Quick Loose Item Name Chips -->
@@ -1767,11 +1770,11 @@
         shop_name_label: "Shop / Business Name",
         shop_category_label: "Store Category",
         emergency_contact_label: "Emergency Alternate Contact",
-        cat_grocery: "Grocery & Kirana (राशन एवं किराना)",
-        cat_dairy: "Dairy & Milk (दूध एवं डेयरी)",
-        cat_veggies: "Vegetables & Fruits (सब्जी एवं फल)",
-        cat_pharmacy: "Pharmacy & Medicines (दवाइयाँ)",
-        cat_electronics: "Mobile & Electronics (इलेक्ट्रॉनिक्स)",
+        cat_grocery: "Grocery & Kirana",
+        cat_dairy: "Dairy & Milk",
+        cat_veggies: "Vegetables & Fruits",
+        cat_pharmacy: "Pharmacy & Medicines",
+        cat_electronics: "Mobile & Electronics",
         cat_personal: "Soap & Personal Care",
         library_search_title: "Centralized Product Library (One-Click Auto-Fill)",
         verified_photos_badge: "Verified Photos & MRP",
@@ -1833,7 +1836,7 @@
         verify_penny_btn: "Run ₹1 Penny Verification",
         save_complete_btn: "Save & Complete Application",
         under_review_title: "Application Under Review",
-        under_review_sub: "आपके दस्तावेज़ और बैंक विवरण समीक्षाधीन हैं।",
+        under_review_sub: "Your documents and bank details are under review.",
         app_id_label: "Application ID:",
         est_review_label: "Estimated Review:",
         review_time_val: "~ 2 to 4 Hours",
@@ -1917,7 +1920,7 @@
         out_of_stock_label: "OUT OF STOCK",
         select_item_icon: "Item Icon (Emoji)",
         item_name_label: "Item Name",
-        item_name_placeholder: "e.g. Sugar 1kg (चीनी)",
+        item_name_placeholder: "e.g. Sugar 1kg or Aashirvaad Atta",
         item_price_label: "Price (₹)",
         item_price_placeholder: "45",
         item_cat_label: "Category",
@@ -2112,7 +2115,7 @@
         penny_drop_sub: "सक्रिय बैंक खाते के सत्यापन हेतु ₹1 तुरंत जमा किया जाएगा।",
         verify_penny_btn: "₹1 सत्यापन चलाएं",
         save_complete_btn: "सुरक्षित करें और पूर्ण करें",
-        under_review_title: "आवेदन समीक्षाधीन है",
+        under_review_title: "आवेदन जांच में है",
         under_review_sub: "आपके दस्तावेज़ एवं बैंक सत्यापन गांवबाज़ार ऑपरेशंस टीम के पास सफलतापूर्वक जमा हो गए हैं।",
         app_id_label: "आवेदन संख्या:",
         est_review_label: "अनुमानित समय:",
@@ -5042,33 +5045,119 @@
     }
     window.closeBarcodeScannerModal = closeBarcodeScannerModal;
 
-    async function startBarcodeCamera() {
-      const video = document.getElementById('barcode-scanner-video');
-      const statusEl = document.getElementById('barcode-scanner-status');
-      if (!video) return;
+    var html5QrCodeScanner = null;
+    var barcodeDetectInterval = null;
 
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    async function startBarcodeCamera() {
+      const statusEl = document.getElementById('barcode-scanner-status');
+      const isHi = (typeof currentLang !== 'undefined' ? currentLang === 'hi' : false) || 
+                   (localStorage.getItem('gaonbazaar_vendor_lang') === 'hi') || 
+                   (window.currentLang === 'hi');
+
+      if (statusEl) statusEl.innerText = isHi ? "कैमरा चालू हो रहा है..." : "Initializing Camera...";
+
+      // Real WebRTC Scanner 1: Html5Qrcode library
+      if (typeof window.Html5Qrcode !== 'undefined') {
+        try {
+          if (html5QrCodeScanner) {
+            try { await html5QrCodeScanner.stop(); } catch(e){}
+            try { html5QrCodeScanner.clear(); } catch(e){}
+          }
+          const readerContainer = document.getElementById('barcode-reader-view');
+          if (readerContainer) {
+            readerContainer.innerHTML = '';
+            readerContainer.classList.remove('hidden');
+          }
+          html5QrCodeScanner = new Html5Qrcode("barcode-reader-view");
+          const config = {
+            fps: 15,
+            qrbox: { width: 250, height: 160 },
+            aspectRatio: 1.333333
+          };
+          await html5QrCodeScanner.start(
+            { facingMode: "environment" },
+            config,
+            (decodedText, decodedResult) => {
+              // Real barcode read! Auto-stop and apply
+              stopBarcodeCamera();
+              handleBarcodeDetected(decodedText);
+            },
+            (errorMessage) => {}
+          );
+          if (statusEl) statusEl.innerText = isHi ? "कैमरा लाइव • बारकोड सामने लाएं" : "Camera Live • Align Barcode";
+          return;
+        } catch (err) {
+          console.warn("Html5Qrcode start notice:", err.message);
+        }
+      }
+
+      // Real WebRTC Scanner 2: getUserMedia stream + native BarcodeDetector API
+      const video = document.getElementById('barcode-scanner-video');
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && video) {
         try {
           barcodeStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 640 }, height: { ideal: 480 } }
           });
           video.srcObject = barcodeStream;
           video.classList.remove('hidden');
-          if (statusEl) statusEl.innerText = currentLang === 'hi' ? "कैमरा चालू • बारकोड सामने लाएं" : "Camera Active • Align Barcode";
-        } catch (err) {
-          console.warn("Camera access fallback:", err.message);
-          if (statusEl) statusEl.innerText = currentLang === 'hi' ? "कैमरा अनुकरण • नीचे दिए गए बारकोड पर टैप करें" : "Scanner Ready • Tap sample barcodes below";
+          await video.play().catch(e => console.warn("Video play notice:", e));
+          if (statusEl) statusEl.innerText = isHi ? "कैमरा लाइव • बारकोड सामने लाएं" : "Camera Live • Align Barcode";
+
+          if ('BarcodeDetector' in window) {
+            try {
+              const formats = await BarcodeDetector.getSupportedFormats();
+              const detector = new BarcodeDetector({ formats: formats.length ? formats : ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'qr_code'] });
+              barcodeDetectInterval = setInterval(async () => {
+                if (!video.videoWidth) return;
+                try {
+                  const barcodes = await detector.detect(video);
+                  if (barcodes && barcodes.length > 0) {
+                    const rawVal = barcodes[0].rawValue;
+                    if (rawVal) {
+                      stopBarcodeCamera();
+                      handleBarcodeDetected(rawVal);
+                    }
+                  }
+                } catch (e) {}
+              }, 300);
+            } catch (detErr) {
+              console.warn("BarcodeDetector setup notice:", detErr);
+            }
+          }
+        } catch (mediaErr) {
+          console.warn("getUserMedia error:", mediaErr.message);
+          if (statusEl) statusEl.innerText = isHi ? "कैमरा अनुमति नहीं मिली • बारकोड टाइप करें" : "Camera access unavailable • Enter Barcode";
         }
       }
     }
 
     function stopBarcodeCamera() {
+      if (barcodeDetectInterval) {
+        clearInterval(barcodeDetectInterval);
+        barcodeDetectInterval = null;
+      }
+      if (html5QrCodeScanner) {
+        try {
+          html5QrCodeScanner.stop().then(() => {
+            try { html5QrCodeScanner.clear(); } catch(e){}
+            html5QrCodeScanner = null;
+          }).catch(e => {
+            html5QrCodeScanner = null;
+          });
+        } catch(e){
+          html5QrCodeScanner = null;
+        }
+      }
       if (barcodeStream) {
         barcodeStream.getTracks().forEach(t => t.stop());
         barcodeStream = null;
       }
       const video = document.getElementById('barcode-scanner-video');
-      if (video) video.classList.add('hidden');
+      if (video) {
+        video.pause();
+        video.srcObject = null;
+        video.classList.add('hidden');
+      }
     }
 
     function handleBarcodeDetected(barcode) {
@@ -5466,20 +5555,39 @@
 
       const emptyMsg = document.getElementById('inventory-search-empty-msg');
       if (visibleCount === 0 && q.length > 0) {
+        const isHi = (typeof currentLang !== 'undefined' ? currentLang === 'hi' : false) || 
+                     (localStorage.getItem('gaonbazaar_vendor_lang') === 'hi') || 
+                     (window.currentLang === 'hi');
+        const notFoundTitle = isHi ? `कोई सामान नहीं मिला: "${query}"` : `No items found matching: "${query}"`;
+        const notFoundSub = isHi ? `अपनी दुकान के लिए यह नया सामान तुरंत जोड़ें` : `Add this as a new custom item to your catalog`;
+        const addBtnText = isHi ? `+ नया सामान जोड़ें ("${query}")` : `+ Add Custom Item ("${query}")`;
+
         if (!emptyMsg) {
           const emptyDiv = document.createElement('div');
           emptyDiv.id = 'inventory-search-empty-msg';
-          emptyDiv.className = "p-5 bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl text-center space-y-2";
+          emptyDiv.className = "p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center space-y-2.5 my-2 shadow-2xs";
           emptyDiv.innerHTML = `
-            <p class="text-xs font-bold text-slate-700">कोई सामान नहीं मिला: "${query}"</p>
-            <p class="text-[11px] text-slate-500">क्या आप इसे अपनी दुकान में नए सामान के रूप में जोड़ना चाहते हैं?</p>
-            <button type="button" onclick="openCustomPricingModal({ title: '${query.replace(/'/g, "\'")}', mrp: 50, price: 45 })" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-xs active:scale-95 inline-flex items-center space-x-1.5">
-              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-              <span>+ "${query}" को दुकान में जोड़ें</span>
+            <div class="w-9 h-9 mx-auto rounded-full bg-slate-100 text-slate-500 flex items-center justify-center">
+              <i data-lucide="search-x" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-slate-800" id="empty-search-title">${notFoundTitle}</p>
+              <p class="text-[11px] text-slate-500 mt-0.5" id="empty-search-sub">${notFoundSub}</p>
+            </div>
+            <button type="button" onclick="openCustomPricingModal({ title: '${query.replace(/'/g, "\'")}', mrp: '', price: '', stock: '' })" class="w-full sm:w-auto px-5 py-3 min-h-[48px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-sm active:scale-98 inline-flex items-center justify-center space-x-2 cursor-pointer">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span id="empty-search-btn-text">${addBtnText}</span>
             </button>
           `;
           document.getElementById('inventory-list')?.appendChild(emptyDiv);
           if (window.lucide) lucide.createIcons();
+        } else {
+          const tEl = document.getElementById('empty-search-title');
+          const sEl = document.getElementById('empty-search-sub');
+          const bEl = document.getElementById('empty-search-btn-text');
+          if (tEl) tEl.innerText = notFoundTitle;
+          if (sEl) sEl.innerText = notFoundSub;
+          if (bEl) bEl.innerText = addBtnText;
         }
       } else if (emptyMsg) {
         emptyMsg.remove();

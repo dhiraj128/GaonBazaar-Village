@@ -911,7 +911,7 @@
 
           <!-- Quick Suggestion Chips -->
           <div class="space-y-1.5 pt-2">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" data-i18n="try_saying">Try Saying / बोल कर देखें:</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" data-i18n="try_saying">Try Saying:</p>
             <div class="flex flex-wrap gap-1.5">
               <button onclick="sendAiPrompt('1 kg doodh add karo')" class="px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold transition active:scale-95">1 kg doodh add karo</button>
               <button onclick="sendAiPrompt('2 kilo atta add karo')" class="px-3 py-1.5 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-semibold transition active:scale-95">2 kilo atta add karo</button>
@@ -1374,7 +1374,7 @@
             </button>
 
             <!-- 2. Payment Settings -->
-            <button onclick="openPaymentSettingsModal()" class="w-full p-3.5 flex items-center justify-between text-slate-700 hover:bg-slate-50 transition">
+            <button id="menu-btn-payment-settings" onclick="openPaymentSettingsModal()" class="w-full p-3.5 flex items-center justify-between text-slate-700 hover:bg-slate-50 transition cursor-pointer">
               <div class="flex items-center space-x-2.5">
                 <i data-lucide="credit-card" class="w-4 h-4 text-emerald-600"></i>
                 <span class="font-semibold" data-i18n="menu_payment">Payment Settings</span>
@@ -3309,7 +3309,7 @@
         checkout_pay_cod_desc: "Pay cash directly to runner upon delivery",
         select_language_title: "Choose Language",
         select_language_sub: "Select your preferred language for grocery shopping and voice assistant.",
-        continue_btn: "Continue / आगे बढ़ें",
+        continue_btn: "Continue",
         login_title: "Mobile Login",
         login_sub: "Enter your mobile number to receive a secure 6-digit SMS verification code on your phone.",
         get_otp_btn: "Get OTP",
@@ -3336,27 +3336,6 @@
         groceries_count_badge: "6 Daily Essentials",
         snacks_count_badge: "4 Popular Snacks",
         bill_cod_fee: "COD Convenience Fee",
-      login_badge: "गाँव बाज़ार सुरक्षित सत्यापन",
-      sms_dispatched_note: "आपके मोबाइल पर त्वरित SMS OTP भेजा जाएगा",
-      kyc_badge: "कैशफ्री सिक्योरआईडी • काग़ज़रहित सत्यापन",
-      kyc_title: "काग़ज़रहित केवाईसी सत्यापन",
-      kyc_sub: "सुरक्षित गाँव डिलीवरी और प्राथमिकता सहायता के लिए त्वरित डिजिटल पहचान सत्यापन।",
-      pan_card_title: "चरण ३A: पैन कार्ड सत्यापन",
-      pan_card_sub: "सरकारी पहचान मिलान",
-      pan_input_label: "10-अंकीय पैन नंबर",
-      verify_pan_btn: "पैन सत्यापित करें",
-      pan_verified_title: "पैन सफलतापूर्वक सत्यापित",
-      aadhaar_card_title: "चरण ३B: आधार कार्ड सत्यापन (OTP)",
-      aadhaar_card_sub: "डिजिटल यूआईडीएआई ओटीपी सत्यापन",
-      aadhaar_input_label: "12-अंकीय आधार नंबर",
-      send_aadhaar_otp_btn: "आधार OTP प्राप्त करें",
-      enter_aadhaar_otp_label: "6-अंकीय आधार OTP दर्ज करें",
-      verify_aadhaar_btn: "आधार सत्यापित करें और पूर्ण करें",
-      aadhaar_verified_title: "आधार सत्यापित एवं फोटो सुरक्षित",
-      kyc_complete_title: "केवाईसी पूर्ण रूप से सफल!",
-      kyc_complete_sub: "सत्यापित ग्रामीण ग्राहक खाता",
-      proceed_to_dashboard_btn: "गाँव बाज़ार में खरीदारी शुरू करें",
-      skip_kyc_btn: "अभी छोड़ें, खाते में बाद में सत्यापित करें",
       login_badge: "GaonBazaar Instant Verification",
       sms_dispatched_note: "Instant SMS OTP delivered to your phone",
       kyc_badge: "Cashfree SecureID • Paperless Verification",
@@ -3386,7 +3365,7 @@
         ai_assistant_sub: "Voice & Smart Cart Shopping Sahayak",
         ai_bot_name: "GaonBazaar Sahayak",
         ai_welcome_msg: "Namaste! 🙏 Speak or type what you need (e.g. '1 kg doodh add karo', '2 kilo atta add karo', or 'Do packet Parle-G'). I will add them directly to your authoritative cart!",
-        try_saying: "Try Saying / बोल कर देखें:",
+        try_saying: "Try Saying:",
         tap_mic_to_speak: "Tap Microphone & Speak",
         ai_listening: "Listening to your voice... Speak now!",
         ai_listening_hint: "Say '1 kilo cheeni', '1 litre doodh', or 'Do packet Parle-G'",
@@ -3664,6 +3643,14 @@
     }
 
     function switchTab(tabName, pushToHistory = true) {
+      const dbgContainer = document.getElementById('dashboard-container');
+      if (dbgContainer && dbgContainer.classList.contains('hidden')) {
+        const pLang = document.getElementById('page-language');
+        const pLogin = document.getElementById('page-login');
+        if (pLang) pLang.classList.add('hidden');
+        if (pLogin) pLogin.classList.add('hidden');
+        dbgContainer.classList.remove('hidden');
+      }
       if (pushToHistory) {
         pushView('tab-' + tabName);
       }
@@ -6247,36 +6234,50 @@ function createProductCardElement(p) {
 
         // Explicit global modal helper proxies
     function openModal(modalId) {
-      if (typeof window.openModal === 'function') {
-        window.openModal(modalId);
-      } else {
-        const m = document.getElementById(modalId);
-        if (m) {
-          m.classList.remove('hidden');
-          m.classList.add('flex');
-        }
+      const m = document.getElementById(modalId);
+      if (m) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
       }
     }
+    window.openModal = openModal;
     window.openModalProxy = openModal;
 
     function closeModal(modalId) {
-      if (typeof window.closeModal === 'function') {
-        window.closeModal(modalId);
-      } else {
-        const m = document.getElementById(modalId);
-        if (m) {
-          m.classList.add('hidden');
-          m.classList.remove('flex');
-        }
+      const m = document.getElementById(modalId);
+      if (m) {
+        m.classList.add('hidden');
+        m.classList.remove('flex');
       }
     }
+    window.closeModal = closeModal;
     window.closeModalProxy = closeModal;
+    window.closeModalProxy = closeModal;
+
+    function loadSavedPaymentVaultUI() {
+      const savedMode = localStorage.getItem('gb_customer_payout_mode') || 'upi';
+      if (typeof selectVaultPaymentOption === 'function') {
+        selectVaultPaymentOption(savedMode);
+      }
+      const savedUpi = localStorage.getItem('gb_customer_upi_id');
+      const upiInput = document.getElementById('vault-upi-input');
+      if (savedUpi && upiInput) {
+        upiInput.value = savedUpi;
+      }
+    }
+    window.loadSavedPaymentVaultUI = loadSavedPaymentVaultUI;
 
     function openPaymentSettingsModal() {
       loadSavedPaymentVaultUI();
-      openModal('modal-payment-settings');
+      const m = document.getElementById('modal-payment-settings');
+      if (m) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+      }
       if (window.lucide) lucide.createIcons();
     }
+    window.openPaymentSettingsModal = openPaymentSettingsModal;
+    window.switchTab = switchTab;
 
     function switchVaultTab(tab) {
       selectVaultPaymentOption(tab);
