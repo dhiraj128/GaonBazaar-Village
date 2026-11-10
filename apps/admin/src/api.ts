@@ -20,6 +20,15 @@ import type {
   AdminRole,
 } from './types';
 
+declare global {
+  interface Window {
+    supabase?: any;
+  }
+}
+
+const SUPABASE_URL = "https://vxewgvrjhjpntfvsmuez.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
+
 const getApiBase = (): string => {
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return 'http://127.0.0.1:8000/api/v1/admin';
@@ -434,7 +443,7 @@ export const adminApi = {
     return apiRequest<any[]>('/refunds');
   },
 
-  // Real-Time WebSocket Listener
+  // Real-Time WebSocket & Supabase Realtime Listener
   connectOperationsWebSocket(
     onMessage: (msg: any) => void,
     onError?: (err: any) => void
@@ -447,6 +456,7 @@ export const adminApi = {
 
     let socket: WebSocket | null = null;
     let isClosedExplicitly = false;
+    let supabaseChannel: any = null;
 
     const connect = () => {
       try {
@@ -472,10 +482,33 @@ export const adminApi = {
 
     connect();
 
+    // Native Supabase Realtime live sync across devices
+    try {
+      if (typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function') {
+        const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseChannel = sbClient
+          .channel('super_admin_live_feed')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload: any) => {
+            onMessage({
+              type: 'ORDER_STATUS_UPDATED',
+              data: payload.new || payload.old || payload,
+            });
+          })
+          .subscribe();
+      }
+    } catch (e) {
+      console.warn('Supabase Realtime subscription notice:', e);
+    }
+
     return () => {
       isClosedExplicitly = true;
       if (socket) {
         socket.close();
+      }
+      if (supabaseChannel) {
+        try {
+          supabaseChannel.unsubscribe();
+        } catch {}
       }
     };
   },

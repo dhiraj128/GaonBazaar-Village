@@ -185,7 +185,7 @@ class CreatePromoRequest(BaseModel):
     max_discount: float = 100.0
     valid_days: int = 30
 
-ADMIN_WHITELISTED_PHONES = {"9800000099", "9800000098"}
+ADMIN_WHITELISTED_PHONES = {"9800000099", "9800000098", "admin@gaonbazaar.in", "admin@gaonbazaar.com", "superadmin@gaonbazaar.in"}
 
 # Dynamic in-memory stores for runtime operational alerts and promo codes
 _ACTIVE_SOS_ALERTS: List[Dict[str, Any]] = []
@@ -219,11 +219,12 @@ async def admin_login(req: AdminLoginRequest, db: AsyncSession = Depends(get_db)
     phone_clean = req.phone.strip()
     credential = (req.secret_key or req.otp or "").strip()
 
-    # 1. Enforce strict Admin Phone Whitelist
-    if phone_clean not in ADMIN_WHITELISTED_PHONES:
+    # 1. Enforce strict Admin Phone/Email Whitelist
+    is_whitelisted = phone_clean in ADMIN_WHITELISTED_PHONES or (phone_clean.lower().endswith("@gaonbazaar.in") and "admin" in phone_clean.lower())
+    if not is_whitelisted:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden: The entered mobile number is not authorized for administrative access"
+            detail="Forbidden: The entered credentials are not authorized for administrative access"
         )
 
     # 2. Check credentials: ADMIN_API_KEY OR authorized staging passcode '123456' / '888888'
@@ -240,7 +241,8 @@ async def admin_login(req: AdminLoginRequest, db: AsyncSession = Depends(get_db)
     # Determine assigned role: phone 9800000098 is Hub Manager, 9800000099 defaults to admin (Super Admin)
     assigned_role = req.role or ("hub_manager" if phone_clean == "9800000098" else "admin")
 
-    res = await db.execute(select(User).where(User.phone == phone_clean))
+    lookup_phone = "9800000099" if "@" in phone_clean else phone_clean
+    res = await db.execute(select(User).where(User.phone == lookup_phone))
     user = res.scalars().first()
     if not user:
         user = User(

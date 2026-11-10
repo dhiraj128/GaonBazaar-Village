@@ -33,7 +33,12 @@ export function LoginView({
       const cleanId = identifier.trim();
       
       // Strict Super Admin RBAC Gate: Only authorized administrative credentials permitted
-      if (cleanId !== '9800000099' && !cleanId.includes('admin')) {
+      const isAllowedAdmin =
+        cleanId === '9800000099' ||
+        cleanId.toLowerCase().includes('admin') ||
+        cleanId.toLowerCase().endsWith('@gaonbazaar.in');
+
+      if (!isAllowedAdmin) {
         adminApi.logout();
         onUnauthorizedRole('customer', cleanId);
         return;
