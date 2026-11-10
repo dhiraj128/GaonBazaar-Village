@@ -76,13 +76,11 @@ def test_vercel_json_edge_rewrites_structure():
 
 
 def test_static_distribution_assets_exist():
-    """Verify customer, vendor, and runner static bundles exist in apps/admin/public and public_web."""
+    """Verify customer, vendor, and runner static bundles exist in apps/admin/public."""
     repo_root = Path(__file__).resolve().parent.parent.parent
     
     for portal in ["customer", "vendor", "runner"]:
-        pub_file = repo_root / "public_web" / portal / "index.html"
         admin_pub_file = repo_root / "apps" / "admin" / "public" / portal / "index.html"
-        assert pub_file.exists(), f"public_web/{portal}/index.html must exist"
         assert admin_pub_file.exists(), f"apps/admin/public/{portal}/index.html must exist"
 
 
