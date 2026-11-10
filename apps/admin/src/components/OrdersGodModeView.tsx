@@ -463,7 +463,7 @@ export const OrdersGodModeView: React.FC<OrdersGodModeViewProps> = ({
               </div>
 
               {/* Power 3: Force Cancel Order */}
-              <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between">
+              <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
                 <div>
                   <h5 className="text-xs font-extrabold text-rose-950">
                     {t.forceCancel}
@@ -477,7 +477,7 @@ export const OrdersGodModeView: React.FC<OrdersGodModeViewProps> = ({
                 <button
                   onClick={handleExecuteCancel}
                   disabled={isGodActionLoading}
-                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
+                  className="w-full sm:w-auto min-h-[44px] px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center shrink-0"
                 >
                   {t.forceCancel}
                 </button>

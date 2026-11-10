@@ -599,27 +599,27 @@ export const KycUsersView: React.FC<KycUsersViewProps> = ({
             </div>
 
             {/* Modal Action Buttons: Approve & Activate vs Reject */}
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between sticky bottom-0">
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between sticky bottom-0">
               <button
                 onClick={() => setShowRejectModal(true)}
                 disabled={isActionSubmitting}
-                className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-300 transition flex items-center space-x-1.5"
+                className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-300 transition flex items-center justify-center space-x-1.5"
               >
                 <XCircle className="w-4 h-4" />
                 <span>{t.rejectApplication}</span>
               </button>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 <button
                   onClick={() => setSelectedDetail(null)}
-                  className="px-4 py-2.5 text-slate-600 hover:text-slate-900 text-xs font-semibold"
+                  className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 text-slate-600 hover:text-slate-900 text-xs font-semibold flex items-center justify-center"
                 >
                   {t.cancel}
                 </button>
                 <button
                   onClick={handleApproveAction}
                   disabled={isActionSubmitting}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center space-x-2"
+                  className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center justify-center space-x-2"
                 >
                   <CheckCircle className="w-4 h-4" />
                   <span>{t.approveAndActivate}</span>

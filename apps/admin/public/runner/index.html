@@ -262,7 +262,7 @@
 
             <div class="space-y-2">
               <label class="block text-center text-[11px] font-semibold text-slate-600" data-i18n="enter_otp_label">Enter 6-Digit OTP</label>
-              <div class="flex justify-between space-x-1.5 max-w-[320px] mx-auto">
+              <div class="flex justify-center items-center gap-1.5 sm:gap-2 max-w-full mx-auto px-1">
                 <input type="text" maxlength="1" id="otp-1" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="1">
                 <input type="text" maxlength="1" id="otp-2" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="2">
                 <input type="text" maxlength="1" id="otp-3" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="3">
@@ -495,7 +495,7 @@
                 <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="enter_aadhaar_otp_label">
                   Enter 6-Digit Aadhaar OTP <span class="text-rose-500">*</span>
                 </label>
-                <input type="tel" id="kyc-aadhaar-otp-input" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="6" value="123456" placeholder="123456" class="w-full text-center py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-extrabold text-lg tracking-widest focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+                <input type="tel" id="kyc-aadhaar-otp-input" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="6" value="123456" placeholder="123456" class="w-full min-h-[48px] h-12 text-center py-3 rounded-xl border-2 border-slate-300 bg-white text-slate-900 font-mono font-extrabold text-xl tracking-widest focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
               </div>
 
               <button onclick="submitAadhaarVerification()" id="btn-verify-aadhaar-otp" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
@@ -823,28 +823,28 @@
           </div>
 
           <!-- Vendor Details Card -->
-          <div class="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs border border-slate-200">
-            <div class="flex items-center justify-between">
-              <h4 id="order-store-name" class="font-bold text-slate-900 text-sm">Sharma Kirana & General Store</h4>
-              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Verified Merchant</span>
+          <div class="p-3.5 bg-slate-50 rounded-xl space-y-2 text-xs border border-slate-200">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h4 id="order-store-name" class="font-bold text-slate-900 text-sm break-words min-w-0">Sharma Kirana & General Store</h4>
+              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded shrink-0 break-words whitespace-normal">Verified Merchant</span>
             </div>
-            <p id="order-store-address" class="text-slate-600 text-xs">Shop #4, Main Village Market, Minapur • +91 9876543210</p>
+            <p id="order-store-address" class="text-slate-600 text-xs break-words whitespace-normal leading-relaxed">Shop #4, Main Village Market, Minapur • +91 9876543210</p>
             
-            <div class="pt-2 grid grid-cols-3 gap-2 w-full">
-              <!-- Direct Intent Scheme Navigation Link to Vendor (66% = 2 cols) -->
+            <div class="pt-2 flex flex-col gap-y-2.5 w-full">
+              <!-- Direct Intent Scheme Navigation Link to Vendor -->
               <a id="btn-navigate-shop" 
                  href="https://www.google.com/maps/dir/?api=1&destination=26.2230,85.3520&travelmode=driving&dir_action=navigate" 
                  target="_blank" 
                  rel="noopener noreferrer" 
-                 class="col-span-2 min-h-[48px] h-12 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs transition active:scale-95 text-center cursor-pointer">
+                 class="w-full min-h-[48px] h-12 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 shadow-xs transition active:scale-98 text-center cursor-pointer">
                 <i data-lucide="navigation-2" class="w-4 h-4 shrink-0"></i>
-                <span data-i18n="nav_to_vendor" class="truncate">Navigate to Shop</span>
+                <span data-i18n="nav_to_vendor" class="whitespace-normal">Navigate to Shop</span>
               </a>
               <a id="store-phone-link" 
                  href="tel:9876543210" 
-                 class="col-span-1 min-h-[48px] h-12 py-2 px-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition active:scale-95 text-center cursor-pointer">
+                 class="w-full min-h-[48px] h-12 py-2.5 px-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 transition active:scale-98 text-center cursor-pointer">
                 <i data-lucide="phone" class="w-4 h-4 shrink-0"></i>
-                <span data-i18n="call_btn" class="truncate">Call</span>
+                <span data-i18n="call_btn" class="whitespace-normal">Call Shop</span>
               </a>
             </div>
           </div>
@@ -909,40 +909,40 @@
           </div>
 
           <!-- Customer Details & Readable Rural Landmark Card -->
-          <div class="p-3.5 bg-slate-50 rounded-xl space-y-2 text-xs border border-slate-200">
-            <div class="flex justify-between items-center">
-              <h4 id="order-customer-name" class="font-bold text-slate-900 text-sm">Sunita Devi</h4>
-              <span id="order-payment-badge" class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-amber-100 text-amber-900">COLLECT CASH: ₹340</span>
+          <div class="p-3.5 bg-slate-50 rounded-xl space-y-2.5 text-xs border border-slate-200">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h4 id="order-customer-name" class="font-bold text-slate-900 text-sm break-words min-w-0">Sunita Devi</h4>
+              <span id="order-payment-badge" class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-amber-100 text-amber-900 shrink-0 break-words whitespace-normal text-center">COLLECT CASH: ₹340</span>
             </div>
-            <p id="order-customer-address" class="text-slate-700 font-medium">House 42, Near Primary School, Minapur Village</p>
-            <div class="p-2 bg-blue-50/80 rounded-lg border border-blue-200 flex items-center space-x-2 text-blue-900 text-[11px] font-semibold">
-              <i data-lucide="landmark" class="w-4 h-4 text-blue-600 shrink-0"></i>
-              <span id="order-customer-landmark">Rural Landmark: Near Shiv Mandir & Panchayat Bhawan</span>
+            <p id="order-customer-address" class="text-slate-700 font-medium break-words whitespace-normal leading-relaxed">House 42, Near Primary School, Minapur Village</p>
+            <div class="p-2.5 bg-blue-50/80 rounded-lg border border-blue-200 flex items-start space-x-2 text-blue-900 text-[11px] font-semibold break-words whitespace-normal">
+              <i data-lucide="landmark" class="w-4 h-4 text-blue-600 shrink-0 mt-0.5"></i>
+              <span id="order-customer-landmark" class="break-words whitespace-normal">Rural Landmark: Near Shiv Mandir & Panchayat Bhawan</span>
             </div>
             
-            <div class="pt-2 grid grid-cols-4 gap-2 w-full">
-              <!-- Direct Intent Scheme Navigation Link to Customer (50% = 2 cols) -->
+            <div class="pt-2 flex flex-col gap-y-3 w-full">
+              <!-- 1. Navigate to Customer (Top) -->
               <a id="btn-navigate-customer" 
                  href="https://www.google.com/maps/dir/?api=1&destination=26.2315,85.3610&travelmode=driving&dir_action=navigate" 
                  target="_blank" 
                  rel="noopener noreferrer" 
-                 class="col-span-2 min-h-[48px] h-12 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs transition active:scale-95 text-center cursor-pointer">
+                 class="w-full min-h-[48px] h-12 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 shadow-xs transition active:scale-98 text-center cursor-pointer">
                 <i data-lucide="navigation-2" class="w-4 h-4 shrink-0"></i>
-                <span data-i18n="nav_to_customer" class="truncate">Navigate to Customer</span>
+                <span data-i18n="nav_to_customer" class="whitespace-normal">Navigate to Customer</span>
               </a>
-              <!-- Chat & Pin Button (25% = 1 col) -->
+              <!-- 2. Chat (Middle) -->
               <button type="button" 
                       onclick="openRunnerOrderChat()" 
-                      class="col-span-1 min-h-[48px] h-12 py-2 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition active:scale-95 text-center cursor-pointer">
+                      class="w-full min-h-[48px] h-12 py-2.5 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 transition active:scale-98 text-center cursor-pointer">
                 <i data-lucide="message-square" class="w-4 h-4 shrink-0"></i>
-                <span data-i18n="chat_btn" class="truncate">Chat & Pin</span>
+                <span data-i18n="chat_btn" class="whitespace-normal">Chat & Live Pin</span>
               </button>
-              <!-- Call Button (25% = 1 col) -->
+              <!-- 3. Call (Bottom) -->
               <a id="cust-phone-link" 
                  href="tel:9811224488" 
-                 class="col-span-1 min-h-[48px] h-12 py-2 px-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition active:scale-95 text-center cursor-pointer">
+                 class="w-full min-h-[48px] h-12 py-2.5 px-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 transition active:scale-98 text-center cursor-pointer">
                 <i data-lucide="phone" class="w-4 h-4 shrink-0"></i>
-                <span data-i18n="call_btn" class="truncate">Call</span>
+                <span data-i18n="call_btn" class="whitespace-normal">Call Customer</span>
               </a>
             </div>
           </div>
@@ -953,9 +953,9 @@
               <i data-lucide="shield-check" class="w-4 h-4 text-blue-600"></i>
               <span data-i18n="enter_cust_otp">Verify Customer's 4-Digit Delivery OTP</span>
             </div>
-            <div class="flex flex-col sm:flex-row gap-2.5 w-full">
-              <input type="text" id="cust-delivery-otp" autocomplete="one-time-code" maxlength="4" placeholder="••••" data-i18n-placeholder="otp_input_placeholder" class="w-full sm:flex-1 min-w-0 px-3 py-3 text-center font-mono font-black text-xl tracking-widest border border-blue-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-slate-900 shadow-2xs">
-              <button id="btn-complete-delivery" onclick="verifyCustomerDeliveryAndFinish('GB-8921')" class="w-full sm:w-auto shrink-0 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2" data-i18n="complete_run_btn">
+            <div class="flex flex-col gap-3 w-full">
+              <input type="text" id="cust-delivery-otp" autocomplete="one-time-code" maxlength="4" placeholder="••••" data-i18n-placeholder="otp_input_placeholder" class="w-full min-h-[52px] h-14 px-4 py-3 text-center font-mono font-black text-2xl tracking-widest border-2 border-blue-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 shadow-sm">
+              <button id="btn-complete-delivery" onclick="verifyCustomerDeliveryAndFinish('GB-8921')" class="w-full min-h-[48px] h-12 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2" data-i18n="complete_run_btn">
                 <i data-lucide="check-check" class="w-4 h-4"></i>
                 <span data-i18n="complete_run_btn">Complete Delivery</span>
               </button>
@@ -1306,7 +1306,7 @@
 
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">Enter Security OTP (Default: 7788)</label>
-            <input type="text" id="payout-security-otp" autocomplete="one-time-code" maxlength="4" placeholder="7788" data-i18n-placeholder="security_otp_placeholder" class="w-full px-3 py-2 text-center text-lg font-mono font-bold tracking-widest rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600">
+            <input type="text" id="payout-security-otp" autocomplete="one-time-code" maxlength="4" placeholder="7788" data-i18n-placeholder="security_otp_placeholder" class="w-full min-h-[48px] h-12 px-3 py-2 text-center text-xl font-mono font-bold tracking-widest rounded-xl border border-slate-300 focus:outline-none focus:border-blue-600">
           </div>
 
           <div>
@@ -1389,14 +1389,14 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
-            <a href="tel:18002007766" onclick="toastInfo('Calling Fleet Desk 1800-200-7766...')" class="py-3 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition">
+          <div class="flex flex-col sm:flex-row gap-3 w-full">
+            <a href="tel:18002007766" onclick="toastInfo('Calling Fleet Desk 1800-200-7766...')" class="w-full sm:flex-1 min-h-[48px] h-12 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition">
               <i data-lucide="phone" class="w-4 h-4"></i>
-              <span data-i18n="call_fleet_desk">Call Fleet Desk</span>
+              <span data-i18n="call_fleet_desk" class="whitespace-normal">Call Fleet Desk</span>
             </a>
-            <a href="https://wa.me/919711002233" target="_blank" onclick="toastInfo('Opening WhatsApp Fleet Support...')" class="py-3 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition">
+            <a href="https://wa.me/919711002233" target="_blank" onclick="toastInfo('Opening WhatsApp Fleet Support...')" class="w-full sm:flex-1 min-h-[48px] h-12 py-3 px-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition">
               <i data-lucide="message-square" class="w-4 h-4"></i>
-              <span data-i18n="whatsapp_chat">WhatsApp Chat</span>
+              <span data-i18n="whatsapp_chat" class="whitespace-normal">WhatsApp Chat</span>
             </a>
           </div>
         </div>

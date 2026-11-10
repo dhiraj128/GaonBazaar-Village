@@ -117,7 +117,7 @@ export function LoginView({
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="9800000099 or admin@gaonbazaar.in"
                   required
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 font-semibold text-slate-800"
+                  className="w-full min-h-[48px] h-12 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 font-semibold text-slate-800 text-sm"
                 />
               </div>
             </div>
@@ -134,7 +134,7 @@ export function LoginView({
                   onChange={(e) => setSecretOrOtp(e.target.value)}
                   placeholder="Passcode 123456 or Master Key"
                   required
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 font-mono text-slate-800"
+                  className="w-full min-h-[48px] h-12 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 font-mono text-slate-800 text-sm"
                 />
               </div>
             </div>
@@ -143,7 +143,7 @@ export function LoginView({
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 text-white font-extrabold rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-xs bg-emerald-600 hover:bg-emerald-700"
+              className="w-full min-h-[48px] h-12 py-3 text-white font-extrabold rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-sm bg-emerald-600 hover:bg-emerald-700 active:scale-98"
             >
               <span>{isLoading ? t.verifying : t.signInBtn}</span>
               <ArrowRight className="w-4 h-4" />
