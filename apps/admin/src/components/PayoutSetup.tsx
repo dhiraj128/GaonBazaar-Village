@@ -33,8 +33,8 @@ export const PayoutSetup: React.FC<PayoutSetupProps> = ({
   const [applicationId] = useState(`GB-${role.toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`);
 
   // Supabase Configuration
-  const SUPABASE_URL = "https://vxewgvrjhjpntfvsmuez.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
+  const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
+  const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
 
   // Validate UPI ID
   const validateUpi = (vpa: string): boolean => {
