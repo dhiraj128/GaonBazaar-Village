@@ -36,6 +36,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
   
+    <!-- Supabase JS Client for Real-time 3-Way Order Routing -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- Toastify Notifications -->
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
@@ -4656,30 +4659,103 @@ function createProductCardElement(p) {
     let orderRunnerMarker = null;
     let orderRoutePolyline = null;
 
+    
+    // ===========================================================================
+    // SUPABASE REALTIME LIVE ORDER TRACKING (CUSTOMER TIMELINE)
+    // ===========================================================================
+    const SUPABASE_URL = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
+    const SUPABASE_ANON_KEY = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
+
+    let supabaseCustomerClient = null;
+    function getSupabaseCustomerClient() {
+      if (!supabaseCustomerClient && window.supabase && typeof window.supabase.createClient === 'function') {
+        supabaseCustomerClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.supabaseClient = supabaseCustomerClient;
+      }
+      return supabaseCustomerClient;
+    }
+
+    function subscribeCustomerOrderTracking(orderId) {
+      const client = getSupabaseCustomerClient();
+      if (!client || !orderId) return;
+
+      if (window.customerOrderChannel) {
+        try { client.removeChannel(window.customerOrderChannel); } catch (e) {}
+      }
+
+      console.log("[Customer Realtime] Subscribing to live updates for order:", orderId);
+      window.customerOrderChannel = client
+        .channel('order-live-' + orderId)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `id=eq.${orderId}`
+        }, (payload) => {
+          const updated = payload.new;
+          if (updated && updated.status) {
+            handleCustomerLiveStatusUpdate(updated.status, updated);
+          }
+        })
+        .subscribe((status) => {
+          console.log("[Customer Realtime] Subscription status for", orderId, ":", status);
+        });
+    }
+
+    function handleCustomerLiveStatusUpdate(status, orderData) {
+      console.log("[Customer Realtime] Live Order Status Changed:", status, orderData);
+
+      const statusText = document.getElementById('order-status-text');
+      if (statusText) statusText.innerText = status;
+
+      // Dynamically advance vertical timeline
+      renderVerticalOrderTrackingTimeline([], status);
+
+      // Toast feedback
+      const labelMap = {
+        'PENDING': 'Order Placed (ऑर्डर दर्ज हुआ)',
+        'PLACED': 'Order Placed (ऑर्डर दर्ज हुआ)',
+        'PREPARING': 'Shop is Packing (दुकानदार सामान पैक कर रहा है)',
+        'ACCEPTED': 'Shop is Packing (दुकानदार सामान पैक कर रहा है)',
+        'READY_FOR_PICKUP': 'Ready for Pickup (पिकअप के लिए तैयार)',
+        'PACKED': 'Ready for Pickup (पिकअप के लिए तैयार)',
+        'RUNNER_ASSIGNED': 'Runner Assigned (डिलीवरी पार्टनर नियुक्त)',
+        'ASSIGNED': 'Runner Assigned (डिलीवरी पार्टनर नियुक्त)',
+        'OUT_FOR_DELIVERY': 'Runner is on the way (रास्ते में है)',
+        'DELIVERED': 'Order Delivered! (सफलतापूर्वक डिलीवर)'
+      };
+
+      if (labelMap[status]) {
+        toastInfo(`Order Status: ${labelMap[status]}`);
+      }
+    }
+
+
     function renderVerticalOrderTrackingTimeline(timeline, currentStatus) {
       const container = document.getElementById('order-tracking-vertical');
       if (!container) return;
 
       const STAGES = [
-        { key: 'PLACED', titleEn: 'Order Placed', titleHi: 'ऑर्डर दर्ज हुआ', descEn: 'Order received by village store', descHi: 'गाँव की दुकान को ऑर्डर प्राप्त हुआ' },
-        { key: 'ACCEPTED', titleEn: 'Store Accepted', titleHi: 'दुकानदार ने स्वीकार किया', descEn: 'Store owner confirmed items', descHi: 'दुकानदार ने सामान की पुष्टि की' },
-        { key: 'PACKED', titleEn: 'Items Packed', titleHi: 'सामान पैक हो गया', descEn: 'Groceries safely bagged', descHi: 'किराना सामान पैक कर दिया गया' },
+        { key: 'PENDING', titleEn: 'Order Placed', titleHi: 'ऑर्डर दर्ज हुआ', descEn: 'Order received by village store', descHi: 'गाँव की दुकान को ऑर्डर प्राप्त हुआ' },
+        { key: 'PREPARING', titleEn: 'Shop is Packing', titleHi: 'सामान पैक हो रहा है', descEn: 'Groceries safely bagged', descHi: 'किराना सामान पैक कर दिया गया' },
         { key: 'READY_FOR_PICKUP', titleEn: 'Ready for Pickup', titleHi: 'पिकअप के लिए तैयार', descEn: 'Awaiting delivery partner arrival', descHi: 'डिलीवरी पार्टनर के आने की प्रतीक्षा' },
-        { key: 'ASSIGNED', titleEn: 'Runner Assigned', titleHi: 'डिलीवरी पार्टनर नियुक्त', descEn: 'Runner allocated for rural transit', descHi: 'डिलीवरी पार्टनर को ऑर्डर सौंपा गया' },
-        { key: 'PICKED_UP', titleEn: 'Order Picked Up', titleHi: 'ऑर्डर पिकअप हुआ', descEn: 'Collected from merchant counter', descHi: 'दुकान से सामान ले लिया गया' },
-        { key: 'OUT_FOR_DELIVERY', titleEn: 'Out for Delivery', titleHi: 'रास्ते में है', descEn: 'Rider en route to your doorstep', descHi: 'डिलीवरी पार्टनर आपके घर की ओर आ रहा है' },
+        { key: 'RUNNER_ASSIGNED', titleEn: 'Runner Assigned', titleHi: 'डिलीवरी पार्टनर नियुक्त', descEn: 'Runner allocated for rural transit', descHi: 'डिलीवरी पार्टनर को ऑर्डर सौंपा गया' },
+        { key: 'OUT_FOR_DELIVERY', titleEn: 'Runner is on the way', titleHi: 'रास्ते में है', descEn: 'Rider en route to your doorstep', descHi: 'डिलीवरी पार्टनर आपके घर की ओर आ रहा है' },
         { key: 'DELIVERED', titleEn: 'Delivered', titleHi: 'सफलतापूर्वक डिलीवर', descEn: 'Handed over at village doorstep', descHi: 'सामान आपके हाथों में सौंप दिया गया' }
       ];
 
       const statusRanks = {
+        'PENDING': 1,
         'PLACED': 1,
+        'PREPARING': 2,
         'ACCEPTED': 2,
-        'PACKED': 3,
-        'READY_FOR_PICKUP': 4,
-        'ASSIGNED': 5,
-        'PICKED_UP': 6,
-        'OUT_FOR_DELIVERY': 7,
-        'DELIVERED': 8,
+        'PACKED': 2,
+        'READY_FOR_PICKUP': 3,
+        'RUNNER_ASSIGNED': 4,
+        'ASSIGNED': 4,
+        'PICKED_UP': 4,
+        'OUT_FOR_DELIVERY': 5,
+        'DELIVERED': 6,
         'CANCELLED': -1,
         'REJECTED': -1
       };
@@ -7124,6 +7200,29 @@ function createProductCardElement(p) {
           }
           isDeliveryOtpRevealed = false;
           syncActiveOrderUI();
+
+          // 3-Way Order Routing: Realtime Supabase Database Sync & Channel Subscription
+          const supa = getSupabaseCustomerClient();
+          if (supa) {
+            try {
+              const custId = localStorage.getItem('gb_user_id') || 'usr_customer_01';
+              const vVillage = (document.getElementById('checkout-village-input')?.value || 'Chaturshi').trim();
+              await supa.from('orders').upsert({
+                id: res.id,
+                order_id: res.id,
+                customer_id: custId,
+                vendor_id: 'usr_vendor_01',
+                delivery_village: vVillage,
+                status: 'PENDING',
+                total_amount: currentCartTotal || 340.0,
+                delivery_otp: res.delivery_otp || '1234',
+                placed_at: new Date().toISOString()
+              });
+            } catch (supaErr) {
+              console.warn("Supabase customer order sync notice:", supaErr);
+            }
+          }
+          subscribeCustomerOrderTracking(res.id);
         }
 
         switchTab('orders');
