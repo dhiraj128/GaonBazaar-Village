@@ -64,7 +64,7 @@ export const ZonesView: React.FC<ZonesViewProps> = ({ settings }) => {
                   Lng: <span className="font-semibold">{loc.lng.toFixed(4)}</span>
                 </div>
                 <div className="mt-2 text-[10px] text-slate-400">
-                  Minapur Block • 30–60 Min SLA
+                  Muzaffarpur Operations • 30–60 Min SLA
                 </div>
               </div>
             ))}

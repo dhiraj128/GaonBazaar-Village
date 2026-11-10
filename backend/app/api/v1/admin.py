@@ -301,7 +301,7 @@ async def get_admin_overview(
         p_at = o.placed_at
         if p_at and p_at.tzinfo is None:
             p_at = p_at.replace(tzinfo=timezone.utc)
-        if p_at and (now - p_at) > timedelta(minutes=45):
+        if p_at and timedelta(minutes=45) < (now - p_at) <= timedelta(hours=12):
             delayed_orders.append(o)
 
     # Rider States: Online, Busy, Idle
@@ -324,7 +324,7 @@ async def get_admin_overview(
     pending_runners = [r for r in runners if not r.is_approved]
 
     return {
-        "pilot_area": f"{settings.PILOT_BLOCK}, {settings.PILOT_DISTRICT}, {settings.PILOT_STATE}",
+        "pilot_area": f"{settings.PILOT_DISTRICT} Operations, {settings.PILOT_STATE}",
         "max_delivery_radius_km": settings.MAX_DELIVERY_RADIUS_KM,
         "platform_fee": settings.PLATFORM_FEE,
         "vendor_commission_pct": settings.DEFAULT_VENDOR_COMMISSION_PCT,
@@ -359,11 +359,14 @@ async def get_critical_exception_alerts(
     """
     now = datetime.now(timezone.utc)
     alerts: List[Dict[str, Any]] = []
-
-    # 1. Orders Delayed > 45 mins
+    # 1. Orders Delayed > 45 mins (Filtered to 12-hour operational window)
+    twelve_hours_ago = now - timedelta(hours=12)
     orders_res = await db.execute(
         select(Order).options(selectinload(Order.store), selectinload(Order.runner))
-        .where(Order.status.notin_(["DELIVERED", "CANCELLED"]))
+        .where(
+            Order.status.notin_(["DELIVERED", "CANCELLED"]),
+            Order.placed_at >= twelve_hours_ago
+        )
     )
     active_orders = orders_res.scalars().all()
 
@@ -376,7 +379,7 @@ async def get_critical_exception_alerts(
         elapsed_mins = int((now - p_at).total_seconds() / 60)
 
         # > 45 mins delayed alert
-        if elapsed_mins > 45:
+        if 45 < elapsed_mins <= 720:
             alerts.append({
                 "id": f"alert_delayed_{o.id}",
                 "type": "ORDER_DELAYED",
@@ -393,7 +396,7 @@ async def get_critical_exception_alerts(
             })
 
         # Store unaccepted orders > 5 mins
-        if o.status == "PLACED" and elapsed_mins >= 5:
+        if o.status == "PLACED" and 5 <= elapsed_mins <= 720:
             alerts.append({
                 "id": f"alert_unaccepted_{o.id}",
                 "type": "STORE_UNACCEPTED",
@@ -417,7 +420,7 @@ async def get_critical_exception_alerts(
 @router.post("/alerts/sos")
 async def trigger_sos_alert(
     runner_id: str,
-    reason: str = "Rider vehicle breakdown near Minapur Chowk",
+    reason: str = "Rider vehicle breakdown near Muzaffarpur Chowk",
     latitude: Optional[float] = 26.1950,
     longitude: Optional[float] = 85.3450,
     db: AsyncSession = Depends(get_db),
@@ -555,7 +558,7 @@ async def get_all_pending_kyc(
             "name": r.full_name,
             "vehicle_type": r.vehicle_type,
             "phone": r.user.phone if r.user else "",
-            "village": "Minapur District Hub",
+            "village": "Muzaffarpur Operations Hub",
             "status": "Pending",
             "created_at": r.created_at.isoformat() if r.created_at else None,
         })
@@ -856,7 +859,7 @@ async def get_active_directory(
             "phone": u.phone,
             "role": u.role,
             "is_active": u.is_active,
-            "village": u.primary_village or (u.store.village if u.store else "Minapur"),
+            "village": u.primary_village or (u.store.village if u.store else "Muzaffarpur"),
             "store_name": u.store.shop_name if u.store else None,
             "runner_vehicle": u.runner.vehicle_type if u.runner else None,
             "orders_count": len(u.orders) if u.orders else 0,
@@ -1004,7 +1007,7 @@ async def get_all_orders(db: AsyncSession = Depends(get_db), _admin: dict = Depe
                 }
                 for it in o.items
             ],
-            "delivery_village": o.delivery_address.village if o.delivery_address else "Minapur",
+            "delivery_village": o.delivery_address.village if o.delivery_address else "Muzaffarpur",
             "elapsed_minutes": elapsed_mins,
             "created_at": p_at.isoformat() if p_at else None,
             "is_cancellable": o.status == "PLACED" and c_until is not None and c_until > now
@@ -1550,9 +1553,9 @@ async def get_demand_heatmaps(
 
     # If no stores yet, fallback to default operational hub
     if not clusters:
-        clusters["zone_minapur_hub"] = {
-            "zone_id": "zone_minapur_hub",
-            "zone_name": "Minapur Rural Hub",
+        clusters["zone_muzaffarpur_hub"] = {
+            "zone_id": "zone_muzaffarpur_hub",
+            "zone_name": "Muzaffarpur Operations Hub",
             "latitude": 26.2230,
             "longitude": 85.3520,
             "radius_meters": 1200,
@@ -2055,10 +2058,9 @@ async def get_platform_settings(_admin: dict = Depends(require_hub_manager_or_su
         "pilot_district": settings.PILOT_DISTRICT,
         "pilot_state": settings.PILOT_STATE,
         "pilot_localities": [
-            {"name": "Chaturshi / Chatursi", "lat": 26.1950, "lng": 85.3450},
-            {"name": "Tubanaghara / Benaghara", "lat": 26.2100, "lng": 85.3550},
-            {"name": "Sivay Patti", "lat": 26.2250, "lng": 85.3600},
-            {"name": "Tulsi Ganj / Bangaon", "lat": 26.1880, "lng": 85.3320}
+            {"name": "Tengari", "pincode": "843128", "lat": 26.1950, "lng": 85.3450},
+            {"name": "Shibai Patti", "pincode": "843128", "lat": 26.2250, "lng": 85.3600},
+            {"name": "Chaturshi", "pincode": "843128", "lat": 26.2100, "lng": 85.3550}
         ],
         "max_delivery_radius_km": settings.MAX_DELIVERY_RADIUS_KM,
         "min_order_value": 99.0,

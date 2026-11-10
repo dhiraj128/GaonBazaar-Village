@@ -185,7 +185,7 @@ export function App() {
 
   const handleLoginSuccess = (user: AdminUser) => {
     // Database enforcement: Check role === 'super_admin' or 'admin'
-    if (user.role !== 'super_admin' && user.role !== 'admin' && user.role !== 'hub_manager') {
+    if (user.role !== 'super_admin' && user.role !== 'admin') {
       adminApi.logout();
       setIsAuthenticated(false);
       setCurrentUser(null);
@@ -213,18 +213,6 @@ export function App() {
     setIsAuthenticated(false);
     setCurrentUser(null);
     setIsUnauthorized(false);
-  };
-
-  const handleRoleChange = (newRole: AdminRole) => {
-    if (!currentUser) return;
-    const updatedUser = { ...currentUser, role: newRole };
-    setCurrentUser(updatedUser);
-    adminApi.login(newRole === 'hub_manager' ? '9800000098' : '9800000099', '123456', newRole)
-      .then((res) => {
-        setCurrentUser(res.user);
-        fetchAllData();
-      })
-      .catch(() => {});
   };
 
   // Module 1 Alert Handlers
@@ -392,7 +380,6 @@ export function App() {
         activeOrdersCount={activeOrdersCount}
         criticalAlertsCount={criticalAlertsCount}
         openTicketsCount={openTicketsCount}
-        userRole={currentUser?.role}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         lang={lang}
@@ -410,7 +397,6 @@ export function App() {
           onRefresh={fetchAllData}
           isLoading={isLoading}
           currentUser={currentUser}
-          onRoleChange={handleRoleChange}
           onLogout={handleLogout}
           alerts={alerts}
           onResolveAlert={handleResolveAlert}
@@ -471,7 +457,6 @@ export function App() {
               <FinancialsLedgerView
                 ledger={settlements}
                 codItems={codReconciliation}
-                userRole={currentUser?.role}
                 onRecordCodDeposit={handleRecordCodDeposit}
                 onDownloadVendorCsv={handleDownloadVendorCsv}
                 onDownloadRunnerCsv={handleDownloadRunnerCsv}
@@ -484,7 +469,6 @@ export function App() {
                 catalog={catalog}
                 settings={settings}
                 promos={promos}
-                userRole={currentUser?.role}
                 onAddCatalogItem={handleAddCatalogItem}
                 onDeleteCatalogItem={handleDeleteCatalogItem}
                 onUpdateSettings={handleUpdateSettings}

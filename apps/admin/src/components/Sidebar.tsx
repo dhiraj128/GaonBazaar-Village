@@ -12,7 +12,6 @@ import {
   ChevronRight,
   RotateCcw,
 } from 'lucide-react';
-import type { AdminRole } from '../types';
 import type { Language } from '../i18n';
 import { translations } from '../i18n';
 
@@ -34,7 +33,6 @@ interface SidebarProps {
   activeOrdersCount: number;
   criticalAlertsCount: number;
   openTicketsCount?: number;
-  userRole?: AdminRole;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   lang: Language;
@@ -47,13 +45,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeOrdersCount,
   criticalAlertsCount,
   openTicketsCount = 0,
-  userRole = 'super_admin',
   isCollapsed,
   onToggleCollapse,
   lang,
 }) => {
   const t = translations[lang];
-  const isHubManager = userRole === 'hub_manager';
 
   const primaryModules = [
     {
@@ -90,18 +86,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'financials' as NavTab,
       label: t.tabFinancials,
-      subtitle: isHubManager ? (lang === 'hi' ? 'सीओडी समाधान' : 'COD Hub Reconciliation') : t.tabFinancialsSub,
+      subtitle: t.tabFinancialsSub,
       icon: CircleDollarSign,
-      badge: isHubManager ? 'COD' : null,
-      badgeColor: 'bg-slate-700 text-slate-200 text-[10px]',
+      badge: null,
     },
     {
       id: 'catalog' as NavTab,
       label: t.tabCatalog,
       subtitle: t.tabCatalogSub,
       icon: Package,
-      badge: isHubManager ? (lang === 'hi' ? 'केवल पठन' : 'Read Only') : null,
-      badgeColor: 'bg-slate-700 text-slate-300 text-[10px]',
+      badge: null,
     },
   ];
 
@@ -124,7 +118,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: t.tabAudit,
       icon: FileText,
       badge: null,
-      restrictedToSuperAdmin: true,
     },
   ];
 
@@ -228,7 +221,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {secondaryModules.map((item) => {
               const Icon = item.icon;
               const isActive = currentTab === item.id;
-              if (item.restrictedToSuperAdmin && isHubManager) return null;
               return (
                 <button
                   key={item.id}
@@ -275,7 +267,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </div>
             <span className="text-[9px] font-mono text-slate-500 font-bold uppercase">
-              v2.4.0
+              v2.5.0
             </span>
           </div>
         ) : (

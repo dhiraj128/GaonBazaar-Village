@@ -46,7 +46,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
     if (!mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
 
-    // Center on Minapur Block Operations Hub, Muzaffarpur, Bihar
+    // Center on Muzaffarpur Operations Hub, Muzaffarpur, Bihar
     const map = L.map(mapContainerRef.current, {
       center: [26.2050, 85.3500],
       zoom: 13,
@@ -68,7 +68,7 @@ export const LiveMapView: React.FC<LiveMapViewProps> = ({
       dashArray: '6, 6',
     })
       .addTo(map)
-      .bindTooltip('8km Rural Delivery Geofence — Minapur Block Hub', {
+      .bindTooltip('8km Rural Delivery Geofence — Muzaffarpur Hub', {
         permanent: false,
         direction: 'center',
       });

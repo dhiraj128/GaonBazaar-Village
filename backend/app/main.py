@@ -218,7 +218,7 @@ async def init_db_and_seed():
                 ),
                 GlobalCatalogItem(
                     id="cat_rice",
-                    name_en="Basmati Rice (Minapur Special)",
+                    name_en="Basmati Rice (Special Premium)",
                     name_hi="बासमती चावल",
                     category="Grocery",
                     default_unit="1 kg",

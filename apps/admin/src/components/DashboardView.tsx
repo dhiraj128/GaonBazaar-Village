@@ -73,7 +73,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Critical SOS / High Urgency Alerts Banner */}
-      {criticalAlerts.length > 0 && (
+      {criticalAlerts.length > 0 ? (
         <div className="bg-rose-50 border-2 border-rose-500 rounded-2xl p-5 shadow-lg animate-in fade-in duration-200">
           <div className="flex items-center justify-between pb-3 border-b border-rose-200">
             <div className="flex items-center space-x-2.5">
@@ -138,6 +138,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
             ))}
           </div>
+        </div>
+      ) : (
+        <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between shadow-xs">
+          <div className="flex items-center space-x-3">
+            <span className="p-2 bg-emerald-600 text-white rounded-xl shadow-xs">
+              <CheckCircle2 className="w-5 h-5" />
+            </span>
+            <div>
+              <h3 className="text-sm font-bold text-emerald-950">
+                Zero Active Alerts - Operations Running Smoothly
+              </h3>
+              <p className="text-xs text-emerald-700">
+                All hyperlocal deliveries on track across Muzaffarpur operations. No active delays.
+              </p>
+            </div>
+          </div>
+          <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full">
+            ALL SYSTEMS NORMAL
+          </span>
         </div>
       )}
 

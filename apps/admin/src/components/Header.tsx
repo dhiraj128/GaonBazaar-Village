@@ -5,14 +5,14 @@ import {
   RefreshCw,
   AlertTriangle,
   Radio,
-  ChevronDown,
   X,
   PhoneCall,
   ExternalLink,
   Languages,
+  ShieldCheck,
 } from 'lucide-react';
 import type { NavTab } from './Sidebar';
-import type { AdminRole, ExceptionAlert, AdminUser } from '../types';
+import type { ExceptionAlert, AdminUser } from '../types';
 import type { Language } from '../i18n';
 import { translations } from '../i18n';
 
@@ -21,7 +21,6 @@ interface HeaderProps {
   onRefresh: () => void;
   isLoading: boolean;
   currentUser: AdminUser | null;
-  onRoleChange: (newRole: AdminRole) => void;
   onLogout: () => void;
   alerts: ExceptionAlert[];
   onResolveAlert: (alertId: string) => void;
@@ -36,7 +35,6 @@ export const Header: React.FC<HeaderProps> = ({
   onRefresh,
   isLoading,
   currentUser,
-  onRoleChange,
   onLogout,
   alerts,
   onResolveAlert,
@@ -47,7 +45,6 @@ export const Header: React.FC<HeaderProps> = ({
   const t = translations[lang];
   const [searchQuery, setSearchQuery] = useState('');
   const [showAlertCenter, setShowAlertCenter] = useState(false);
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
   const getTabTitle = (tab: NavTab) => {
     if (lang === 'hi') {
@@ -143,7 +140,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Right: Actions, Alert Center, Language Switcher, Role Selector, User Profile */}
+      {/* Right: Actions, Alert Center, Language Switcher, Super Admin Profile */}
       <div className="flex items-center space-x-3">
         {/* Language Switcher Pill */}
         <button
@@ -324,62 +321,16 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Role Pill & Switcher */}
-        <div className="relative">
-          <button
-            onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-            className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition border ${
-              currentUser?.role === 'hub_manager'
-                ? 'bg-amber-50 text-amber-800 border-amber-300'
-                : 'bg-emerald-50 text-emerald-800 border-emerald-300'
-            }`}
-            title="Current RBAC Role"
-          >
-            <span>
-              {currentUser?.role === 'hub_manager'
-                ? t.hubManager
-                : t.superAdmin}
-            </span>
-            <ChevronDown className="w-3 h-3 text-slate-500" />
-          </button>
-
-          {showRoleDropdown && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 z-50 py-1 text-xs">
-              <div className="px-3 py-1.5 font-bold text-slate-400 text-[10px] uppercase">
-                {t.selectTier}
-              </div>
-              <button
-                onClick={() => {
-                  onRoleChange('super_admin');
-                  setShowRoleDropdown(false);
-                }}
-                className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-slate-50 ${
-                  currentUser?.role !== 'hub_manager' ? 'font-bold text-emerald-700' : 'text-slate-700'
-                }`}
-              >
-                <span>{t.superAdmin}</span>
-                {currentUser?.role !== 'hub_manager' && <span className="text-emerald-600">✓</span>}
-              </button>
-              <button
-                onClick={() => {
-                  onRoleChange('hub_manager');
-                  setShowRoleDropdown(false);
-                }}
-                className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-slate-50 ${
-                  currentUser?.role === 'hub_manager' ? 'font-bold text-amber-700' : 'text-slate-700'
-                }`}
-              >
-                <span>{t.hubManager}</span>
-                {currentUser?.role === 'hub_manager' && <span className="text-amber-600">✓</span>}
-              </button>
-            </div>
-          )}
+        {/* Dedicated Super Admin Role Badge (No Hub Manager Toggle) */}
+        <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-xs">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+          <span>{t.superAdmin}</span>
         </div>
 
         {/* User Avatar & Logout */}
         <div className="flex items-center space-x-2 pl-2 border-l border-slate-200">
           <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-            {currentUser?.role === 'hub_manager' ? 'HM' : 'SA'}
+            SA
           </div>
           <button
             onClick={onLogout}

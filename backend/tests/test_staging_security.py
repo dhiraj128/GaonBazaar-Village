@@ -82,7 +82,7 @@ async def test_admin_authentication_and_route_protection():
             auth_headers = {"Authorization": f"Bearer {admin_token}"}
             overview_res = await client.get("/api/v1/admin/overview", headers=auth_headers)
             assert overview_res.status_code == 200
-            assert overview_res.json()["pilot_area"] == "Minapur, Muzaffarpur, Bihar"
+            assert overview_res.json()["pilot_area"] == f"{settings.PILOT_DISTRICT} Operations, {settings.PILOT_STATE}"
 
             # 5. Access with X-Admin-Key header also succeeds
             key_headers = {"X-Admin-Key": settings.ADMIN_API_KEY}

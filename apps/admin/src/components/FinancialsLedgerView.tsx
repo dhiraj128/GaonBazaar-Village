@@ -21,7 +21,6 @@ import { translations } from '../i18n';
 interface FinancialsLedgerViewProps {
   ledger: SettlementLedger | null;
   codItems: CodReconciliationItem[];
-  userRole?: AdminRole;
   onRecordCodDeposit: (runnerId: string, amount: number, receiptReference?: string, notes?: string) => Promise<void>;
   onDownloadVendorCsv: () => Promise<void>;
   onDownloadRunnerCsv: () => Promise<void>;
@@ -31,21 +30,19 @@ interface FinancialsLedgerViewProps {
 export const FinancialsLedgerView: React.FC<FinancialsLedgerViewProps> = ({
   ledger,
   codItems,
-  userRole = 'super_admin',
   onRecordCodDeposit,
   onDownloadVendorCsv,
   onDownloadRunnerCsv,
   lang = 'en',
 }) => {
   const t = translations[lang];
-  const isHubManager = userRole === 'hub_manager';
   const [activeTab, setActiveTab] = useState<'cod' | 'vendors' | 'runners'>('cod');
 
   // COD Deposit Modal State
   const [selectedCodRunner, setSelectedCodRunner] = useState<CodReconciliationItem | null>(null);
   const [depositAmountInput, setDepositAmountInput] = useState<number>(0);
   const [receiptRefInput, setReceiptRefInput] = useState<string>('');
-  const [depositNotes, setDepositNotes] = useState<string>('Cash received and reconciled at Minapur Hub');
+  const [depositNotes, setDepositNotes] = useState<string>('Cash received and reconciled at Muzaffarpur Operations Hub');
   const [isDepositSubmitting, setIsDepositSubmitting] = useState<boolean>(false);
 
   const handleOpenDepositModal = (item: CodReconciliationItem) => {
@@ -283,24 +280,13 @@ export const FinancialsLedgerView: React.FC<FinancialsLedgerViewProps> = ({
               </p>
             </div>
 
-            {isHubManager ? (
-              <div className="flex items-center gap-1.5 text-xs text-amber-800 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
-                <Lock className="w-4 h-4 text-amber-600" />
-                <span>
-                  {lang === 'hi'
-                    ? 'थोक भुगतान निर्यात करने के लिए सुपर एडमिन विशेषाधिकार आवश्यक'
-                    : 'Super Admin privilege required to export bulk payouts'}
-                </span>
-              </div>
-            ) : (
-              <button
-                onClick={onDownloadVendorCsv}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs shadow-sm flex items-center space-x-2 transition"
-              >
-                <Download className="w-4 h-4" />
-                <span>{t.exportVendorCsv}</span>
-              </button>
-            )}
+            <button
+              onClick={onDownloadVendorCsv}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs shadow-sm flex items-center space-x-2 transition"
+            >
+              <Download className="w-4 h-4" />
+              <span>{t.exportVendorCsv}</span>
+            </button>
           </div>
 
           <div className="overflow-x-auto">
@@ -351,24 +337,13 @@ export const FinancialsLedgerView: React.FC<FinancialsLedgerViewProps> = ({
               </p>
             </div>
 
-            {isHubManager ? (
-              <div className="flex items-center gap-1.5 text-xs text-amber-800 bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-200">
-                <Lock className="w-4 h-4 text-amber-600" />
-                <span>
-                  {lang === 'hi'
-                    ? 'थोक भुगतान निर्यात करने के लिए सुपर एडमिन विशेषाधिकार आवश्यक'
-                    : 'Super Admin privilege required to export bulk payouts'}
-                </span>
-              </div>
-            ) : (
-              <button
-                onClick={onDownloadRunnerCsv}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs shadow-sm flex items-center space-x-2 transition"
-              >
-                <Download className="w-4 h-4" />
-                <span>{t.exportRunnerCsv}</span>
-              </button>
-            )}
+            <button
+              onClick={onDownloadRunnerCsv}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs shadow-sm flex items-center space-x-2 transition"
+            >
+              <Download className="w-4 h-4" />
+              <span>{t.exportRunnerCsv}</span>
+            </button>
           </div>
 
           <div className="overflow-x-auto">

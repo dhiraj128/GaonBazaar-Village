@@ -145,7 +145,7 @@ export const VendorsView: React.FC<VendorsViewProps> = ({ stores, onApprove, onR
                 <MapPin className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="font-bold text-slate-700">{store.village}</div>
-                  <div className="text-[11px] text-slate-500">{store.landmark || 'Minapur Block'}</div>
+                  <div className="text-[11px] text-slate-500">{store.landmark || 'Muzaffarpur Operations'}</div>
                   <div className="text-[10px] text-slate-400 font-mono">
                     {store.latitude.toFixed(4)}, {store.longitude.toFixed(4)}
                   </div>

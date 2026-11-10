@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, UserCheck, KeyRound, ArrowRight, ShieldAlert } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Lock } from 'lucide-react';
 import { adminApi } from '../api';
-import type { AdminRole, AdminUser } from '../types';
+import type { AdminUser } from '../types';
 import type { Language } from '../i18n';
 import { translations } from '../i18n';
 
@@ -21,7 +21,6 @@ export function LoginView({
   const t = translations[lang];
   const [identifier, setIdentifier] = useState('9800000099');
   const [secretOrOtp, setSecretOrOtp] = useState('123456');
-  const [selectedRole, setSelectedRole] = useState<AdminRole>('super_admin');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,16 +32,16 @@ export function LoginView({
     try {
       const cleanId = identifier.trim();
       
-      // Immediate RBAC Gate: Only authorized administrative credentials permitted
-      if (cleanId !== '9800000099' && cleanId !== '9800000098' && !cleanId.includes('admin')) {
+      // Strict Super Admin RBAC Gate: Only authorized administrative credentials permitted
+      if (cleanId !== '9800000099' && !cleanId.includes('admin')) {
         adminApi.logout();
         onUnauthorizedRole('customer', cleanId);
         return;
       }
 
-      const result = await adminApi.login(cleanId, secretOrOtp, selectedRole);
+      const result = await adminApi.login(cleanId, secretOrOtp, 'super_admin');
 
-      // Strict RBAC Enforcement: Only 'super_admin' (or 'admin') allowed
+      // Strict RBAC Enforcement: Only 'super_admin' or 'admin' allowed
       const role = result.user?.role;
       if (role !== 'super_admin' && role !== 'admin') {
         adminApi.logout();
@@ -53,7 +52,6 @@ export function LoginView({
       onLoginSuccess(result.user);
     } catch (err: any) {
       const msg = err?.message || 'Authentication failed. Please verify admin credentials.';
-      // Check if unauthorized error indicates non-admin role
       if (
         msg.toLowerCase().includes('forbidden') ||
         msg.toLowerCase().includes('access denied') ||
@@ -67,17 +65,6 @@ export function LoginView({
       }
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const setTierQuick = (role: AdminRole) => {
-    setSelectedRole(role);
-    if (role === 'hub_manager') {
-      setIdentifier('9800000098');
-      setSecretOrOtp('123456');
-    } else {
-      setIdentifier('9800000099');
-      setSecretOrOtp('123456');
     }
   };
 
@@ -104,39 +91,8 @@ export function LoginView({
           </p>
         </div>
 
-        {/* Form Body */}
+        {/* Form Body - Single View Super Admin Login */}
         <div className="p-6 space-y-5">
-          {/* Quick Role Selection Tabs */}
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-              {t.selectTier}
-            </label>
-            <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => setTierQuick('super_admin')}
-                className={`py-2 px-3 rounded-lg transition ${
-                  selectedRole !== 'hub_manager'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {t.superAdmin}
-              </button>
-              <button
-                type="button"
-                onClick={() => setTierQuick('hub_manager')}
-                className={`py-2 px-3 rounded-lg transition ${
-                  selectedRole === 'hub_manager'
-                    ? 'bg-amber-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {t.hubManager}
-              </button>
-            </div>
-          </div>
-
           {error && (
             <div className="p-3 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs">
               <strong>{t.errorTitle}</strong> {error}
@@ -182,11 +138,7 @@ export function LoginView({
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 text-white font-extrabold rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-xs ${
-                selectedRole === 'hub_manager'
-                  ? 'bg-amber-600 hover:bg-amber-700'
-                  : 'bg-emerald-600 hover:bg-emerald-700'
-              }`}
+              className="w-full py-3 text-white font-extrabold rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-xs bg-emerald-600 hover:bg-emerald-700"
             >
               <span>{isLoading ? t.verifying : t.signInBtn}</span>
               <ArrowRight className="w-4 h-4" />

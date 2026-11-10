@@ -247,7 +247,7 @@ export const OrdersGodModeView: React.FC<OrdersGodModeViewProps> = ({
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="font-bold text-slate-900">{order.customer_name || 'Customer'}</div>
-                      <div className="text-[11px] text-slate-500">{order.delivery_village || 'Minapur'}</div>
+                      <div className="text-[11px] text-slate-500">{order.delivery_village || 'Muzaffarpur'}</div>
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="font-bold text-slate-800">{order.store_name}</div>

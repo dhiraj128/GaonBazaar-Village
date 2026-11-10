@@ -343,7 +343,7 @@ export const KycUsersView: React.FC<KycUsersViewProps> = ({
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-600">
-                      {user.village || 'Minapur Pilot Area'}
+                      {user.village || 'Muzaffarpur Operations Area'}
                     </td>
                     <td className="px-6 py-4 font-bold text-slate-800">
                       {user.orders_count}

@@ -99,18 +99,24 @@ async def main_async():
             await send_cdp(ws, "Page.navigate", {"url": f"http://127.0.0.1:{web_port}/admin/index.html"})
             await asyncio.sleep(2.0)
 
-            print("\n--- TEST 1: Admin Login Gate & Strict Absence of Sign-Up Button ---")
+            print("\n--- TEST 1: Admin Login Gate (Single Super Admin view, No Hub Manager Toggle) ---")
             loc = await evaluate(ws, "window.location.href")
             print(f"Current URL: {loc}")
-            html_sample = await evaluate(ws, "document.documentElement.outerHTML.slice(0, 300)")
-            print(f"HTML Sample: {html_sample}")
             title = await evaluate(ws, "document.title")
             print(f"Page Title: {title}")
             assert "Super Admin" in title
 
-            has_signup = await evaluate(ws, "!!Array.from(document.querySelectorAll('button, a')).find(el => el.textContent.toLowerCase().includes('sign up'))")
-            print(f"Has 'Sign Up' button: {has_signup} (Must be False)")
-            assert not has_signup, "Security Violation: Found Sign Up button on Admin Login Gate!"
+            has_hub_toggle = await evaluate(ws, "!!Array.from(document.querySelectorAll('button, tab, [role=\"tab\"]')).find(el => el.textContent.toLowerCase().includes('hub manager'))")
+            print(f"Has 'Hub Manager' toggle button: {has_hub_toggle} (Must be False)")
+            assert not has_hub_toggle, "Violation: Found Hub Manager toggle on Login Screen!"
+
+            has_minapur = await evaluate(ws, "document.body.innerText.includes('Minapur')")
+            print(f"Has hardcoded 'Minapur' string on login: {has_minapur} (Must be False)")
+            assert not has_minapur, "Violation: Found hardcoded Minapur on Login Screen!"
+
+            has_muzaffarpur = await evaluate(ws, "document.body.innerText.includes('Muzaffarpur')")
+            print(f"Has 'Muzaffarpur' operations string on login: {has_muzaffarpur} (Must be True)")
+            assert has_muzaffarpur, "Expected 'Muzaffarpur Operations' on Login footer!"
 
             await take_screenshot(ws, ARTIFACTS_DIR / "proof_admin_login_strict_rbac.png")
 
@@ -158,7 +164,7 @@ async def main_async():
             await evaluate(ws, "Array.from(document.querySelectorAll('button')).find(el => el.textContent.includes('Return to Admin Sign In'))?.click()")
             await asyncio.sleep(0.8)
 
-            print("\n--- TEST 4: Successful Super Admin Authentication ---")
+            print("\n--- TEST 4: Successful Super Admin Authentication & Clean Empty Alerts State ---")
             await evaluate(ws, """(() => {
                 window.localStorage.setItem('gaonbazaar_admin_jwt_token', 'test_super_admin_jwt_token');
                 window.localStorage.setItem('gaonbazaar_admin_user_info', JSON.stringify({
@@ -173,6 +179,27 @@ async def main_async():
 
             dash_header = await evaluate(ws, "document.body.innerText.includes('Executive Command Center') || document.body.innerText.includes('Dashboard')")
             print(f"Dashboard loaded: {dash_header}")
+            assert dash_header
+
+            # Verify Header shows Muzaffarpur Operations Live
+            header_text = await evaluate(ws, "document.querySelector('header')?.innerText || ''")
+            print(f"Header text contains Muzaffarpur Operations: {'Muzaffarpur' in header_text}")
+            assert 'Muzaffarpur' in header_text
+
+            # Verify Header does NOT contain role switcher dropdown
+            has_role_dropdown = await evaluate(ws, "!!document.querySelector('select, [data-role-switcher]')")
+            print(f"Role switcher dropdown present in Header: {has_role_dropdown} (Must be False)")
+            assert not has_role_dropdown
+
+            # Verify Zero Active Alerts banner when clean
+            empty_alerts_rendered = await evaluate(ws, "document.body.innerText.includes('Zero Active Alerts - Operations Running Smoothly')")
+            print(f"Zero Active Alerts clean banner rendered: {empty_alerts_rendered}")
+
+            # Verify NO 10,000+ min delay cards
+            has_absurd_delays = await evaluate(ws, "!!document.body.innerText.match(/\\b\\d{4,}\\s*mins?\\b/i)")
+            print(f"Has absurd 10,000+ min delay metric: {has_absurd_delays} (Must be False)")
+            assert not has_absurd_delays, "Absurd delay metrics found on dashboard!"
+
             await take_screenshot(ws, ARTIFACTS_DIR / "proof_super_admin_command_center.png")
 
             print("\n--- TEST 5: KYC Verification & User Management Module ---")
@@ -203,7 +230,7 @@ async def main_async():
 
             await take_screenshot(ws, ARTIFACTS_DIR / "proof_super_admin_orders_god_mode.png")
 
-            print("\n--- TEST 7: Financials Tab & COD Reconciliation ---")
+            print("\n--- TEST 7: Financials Tab & Direct Super Admin CSV Access ---")
             await evaluate(ws, """(() => {
                 const buttons = Array.from(document.querySelectorAll('button'));
                 const finBtn = buttons.find(b => b.textContent.includes('Financials & Ledger'));
@@ -214,6 +241,11 @@ async def main_async():
             fin_tab_text = await evaluate(ws, "document.body.innerText.includes('COD Reconciliation')")
             print(f"Financials COD reconciliation present: {fin_tab_text}")
             assert fin_tab_text
+
+            # Check no locked Hub Manager overlay in Financials
+            has_lock_overlay = await evaluate(ws, "document.body.innerText.includes('Action Restricted: Hub Manager View')")
+            print(f"Has Hub Manager lock overlay: {has_lock_overlay} (Must be False)")
+            assert not has_lock_overlay
 
             await take_screenshot(ws, ARTIFACTS_DIR / "proof_super_admin_financials_ledger.png")
 

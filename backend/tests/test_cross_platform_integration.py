@@ -230,6 +230,6 @@ async def test_full_cross_platform_lifecycle():
         admin_overview_res = await client.get("/api/v1/admin/overview", headers=adm_headers)
         assert admin_overview_res.status_code == 200
         overview = admin_overview_res.json()
-        assert "Minapur" in overview["pilot_area"]
+        assert "Muzaffarpur" in overview["pilot_area"]
         assert overview["max_delivery_radius_km"] == 8.0
         assert overview["vendor_commission_pct"] == 0.0
