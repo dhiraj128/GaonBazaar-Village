@@ -9,9 +9,12 @@ import {
   X,
   PhoneCall,
   ExternalLink,
+  Languages,
 } from 'lucide-react';
 import type { NavTab } from './Sidebar';
 import type { AdminRole, ExceptionAlert, AdminUser } from '../types';
+import type { Language } from '../i18n';
+import { translations } from '../i18n';
 
 interface HeaderProps {
   currentTab: NavTab;
@@ -24,6 +27,8 @@ interface HeaderProps {
   onResolveAlert: (alertId: string) => void;
   onSearchSelect?: (result: any) => void;
   isSidebarCollapsed: boolean;
+  lang: Language;
+  onToggleLang: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -36,12 +41,39 @@ export const Header: React.FC<HeaderProps> = ({
   alerts,
   onResolveAlert,
   isSidebarCollapsed,
+  lang,
+  onToggleLang,
 }) => {
+  const t = translations[lang];
   const [searchQuery, setSearchQuery] = useState('');
   const [showAlertCenter, setShowAlertCenter] = useState(false);
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
   const getTabTitle = (tab: NavTab) => {
+    if (lang === 'hi') {
+      switch (tab) {
+        case 'dashboard':
+          return 'कार्यकारी नियंत्रण केंद्र एवं रियल-टाइम पल्स';
+        case 'users':
+          return 'केवाईसी गेटकीपर एवं उपयोगकर्ता निर्देशिका';
+        case 'orders':
+          return 'लाइव हाइपरलोकल ऑर्डर फीड एवं गॉड मोड';
+        case 'map':
+          return 'लाइव संचालन मानचित्र एवं फ्लीट ट्रैकिंग';
+        case 'financials':
+          return 'निपटान, हब सीओडी एवं कॉर्पोरेट पेआउट';
+        case 'catalog':
+          return 'मास्टर उत्पाद कैटलॉग एवं मूल्य निर्धारण इंजन';
+        case 'tickets':
+          return 'ग्रामीण सहायता एवं विवाद समाधान';
+        case 'refunds':
+          return 'गेटवे रिफंड एवं प्रतिस्थापन ऑडिट';
+        case 'audit':
+          return 'अपरिवर्तनीय प्लेटफॉर्म ऑडिट ट्रेल';
+        default:
+          return 'गांवबाज़ार संचालन';
+      }
+    }
     switch (tab) {
       case 'dashboard':
         return 'Executive Command Center & Real-Time Pulse';
@@ -82,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
           <h1 className="text-sm font-bold text-slate-800">{getTabTitle(currentTab)}</h1>
           <span className="text-[11px] text-slate-500 flex items-center gap-1.5 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            Minapur Pilot District Live
+            {t.pilotArea}
           </span>
         </div>
 
@@ -93,7 +125,11 @@ export const Header: React.FC<HeaderProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Global search by Order ID, Phone (+91), or Partner name..."
+            placeholder={
+              lang === 'hi'
+                ? 'ऑर्डर आईडी, फ़ोन (+91), या नाम से खोजें...'
+                : 'Global search by Order ID, Phone (+91), or Partner name...'
+            }
             className="w-full bg-slate-100 hover:bg-slate-50 focus:bg-white text-xs pl-9 pr-8 py-2 rounded-lg border border-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-slate-800 placeholder-slate-400 transition"
           />
           {searchQuery && (
@@ -107,17 +143,27 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Right: Actions, Alert Center, Role Selector, User Profile */}
+      {/* Right: Actions, Alert Center, Language Switcher, Role Selector, User Profile */}
       <div className="flex items-center space-x-3">
+        {/* Language Switcher Pill */}
+        <button
+          onClick={onToggleLang}
+          className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition border border-emerald-300"
+          title="Switch Language / भाषा बदलें"
+        >
+          <Languages className="w-3.5 h-3.5 text-emerald-700" />
+          <span>{lang === 'en' ? 'हिंदी' : 'English'}</span>
+        </button>
+
         {/* Sync Button */}
         <button
           onClick={onRefresh}
           disabled={isLoading}
           className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition border border-slate-200"
-          title="Sync Real-Time Data"
+          title={lang === 'hi' ? 'रीयल-टाइम डेटा सिंक करें' : 'Sync Real-Time Data'}
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-emerald-600' : ''}`} />
-          <span className="hidden md:inline">Sync</span>
+          <span className="hidden md:inline">{isLoading ? t.syncing : t.sync}</span>
         </button>
 
         {/* Ringing Bell Live Alert Center */}
@@ -129,7 +175,7 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'bg-rose-50 text-rose-600 border-rose-200 animate-bounce'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200'
             }`}
-            title="Live Alert Center (SOS / Delay / Exceptions)"
+            title={lang === 'hi' ? 'लाइव अलर्ट केंद्र' : 'Live Alert Center'}
           >
             <Bell className="w-4 h-4" />
             {alerts.length > 0 && (
@@ -149,7 +195,9 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="bg-slate-900 px-4 py-3 flex items-center justify-between text-white">
                 <div className="flex items-center space-x-2">
                   <Radio className="w-4 h-4 text-rose-500 animate-pulse" />
-                  <span className="font-bold text-xs">Live Exception Alerts ({alerts.length})</span>
+                  <span className="font-bold text-xs">
+                    {lang === 'hi' ? `लाइव अपवाद अलर्ट (${alerts.length})` : `Live Exception Alerts (${alerts.length})`}
+                  </span>
                 </div>
                 <button
                   onClick={() => setShowAlertCenter(false)}
@@ -163,7 +211,9 @@ export const Header: React.FC<HeaderProps> = ({
                 {alerts.length === 0 ? (
                   <div className="p-6 text-center text-slate-400 text-xs">
                     <AlertTriangle className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-60" />
-                    All operational systems normal. Zero active exceptions.
+                    {lang === 'hi'
+                      ? 'सभी परिचालन प्रणालियां सामान्य हैं। शून्य सक्रिय अपवाद।'
+                      : 'All operational systems normal. Zero active exceptions.'}
                   </div>
                 ) : (
                   alerts.map((item) => (
@@ -195,7 +245,11 @@ export const Header: React.FC<HeaderProps> = ({
                           </span>
                         </div>
                         <span className="text-[10px] text-slate-400 whitespace-nowrap">
-                          {item.elapsed_minutes ? `${item.elapsed_minutes}m ago` : 'Live'}
+                          {item.elapsed_minutes
+                            ? `${item.elapsed_minutes}${lang === 'hi' ? ' मिनट पूर्व' : 'm ago'}`
+                            : lang === 'hi'
+                            ? 'लाइव'
+                            : 'Live'}
                         </span>
                       </div>
                       <p className="text-xs text-slate-600 mt-1 leading-snug">
@@ -208,17 +262,21 @@ export const Header: React.FC<HeaderProps> = ({
                             <button
                               onClick={() => {
                                 onResolveAlert(item.id);
-                                window.alert(`Emergency support team dispatched for rider ${item.runner_name || ''}!`);
+                                window.alert(
+                                  lang === 'hi'
+                                    ? `राइडर ${item.runner_name || ''} के लिए आपातकालीन टीम भेजी गई!`
+                                    : `Emergency support team dispatched for rider ${item.runner_name || ''}!`
+                                );
                               }}
                               className="px-2 py-1 text-[10px] font-bold bg-rose-600 hover:bg-rose-700 text-white rounded shadow-xs"
                             >
-                              Dispatch Support
+                              {lang === 'hi' ? 'सहायता भेजें' : 'Dispatch Support'}
                             </button>
                             <button
-                              onClick={() => window.alert(`Calling rider emergency contact...`)}
+                              onClick={() => window.alert(lang === 'hi' ? 'आपातकालीन कॉल की जा रही है...' : 'Calling rider emergency contact...')}
                               className="px-2 py-1 text-[10px] font-bold bg-slate-800 hover:bg-slate-900 text-white rounded flex items-center gap-1"
                             >
-                              <PhoneCall className="w-3 h-3" /> Call
+                              <PhoneCall className="w-3 h-3" /> {lang === 'hi' ? 'कॉल करें' : 'Call'}
                             </button>
                           </div>
                         ) : item.type === 'ORDER_DELAYED' ? (
@@ -226,11 +284,15 @@ export const Header: React.FC<HeaderProps> = ({
                             <button
                               onClick={() => {
                                 onResolveAlert(item.id);
-                                window.alert(`Rerouting runner for order ${item.order_id}!`);
+                                window.alert(
+                                  lang === 'hi'
+                                    ? `ऑर्डर ${item.order_id} के लिए रनर बदला गया!`
+                                    : `Rerouting runner for order ${item.order_id}!`
+                                );
                               }}
                               className="px-2 py-1 text-[10px] font-bold bg-amber-600 hover:bg-amber-700 text-white rounded"
                             >
-                              Reroute Runner
+                              {lang === 'hi' ? 'रनर बदलें' : 'Reroute Runner'}
                             </button>
                           </div>
                         ) : (
@@ -238,11 +300,11 @@ export const Header: React.FC<HeaderProps> = ({
                             <button
                               onClick={() => {
                                 onResolveAlert(item.id);
-                                window.alert(`Store alerted via priority call!`);
+                                window.alert(lang === 'hi' ? 'दुकानदार को कॉल किया गया!' : 'Store alerted via priority call!');
                               }}
                               className="px-2 py-1 text-[10px] font-bold bg-slate-800 hover:bg-slate-900 text-white rounded"
                             >
-                              Call Store
+                              {lang === 'hi' ? 'दुकानदार को कॉल करें' : 'Call Store'}
                             </button>
                           </div>
                         )}
@@ -251,7 +313,7 @@ export const Header: React.FC<HeaderProps> = ({
                           onClick={() => onResolveAlert(item.id)}
                           className="text-[10px] text-slate-500 hover:text-slate-800 font-medium underline"
                         >
-                          Dismiss
+                          {lang === 'hi' ? 'खारिज करें' : 'Dismiss'}
                         </button>
                       </div>
                     </div>
@@ -271,16 +333,20 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'bg-amber-50 text-amber-800 border-amber-300'
                 : 'bg-emerald-50 text-emerald-800 border-emerald-300'
             }`}
-            title="Current RBAC Role (Click to switch view)"
+            title="Current RBAC Role"
           >
-            <span>{currentUser?.role === 'hub_manager' ? 'Hub Manager' : 'Super Admin'}</span>
+            <span>
+              {currentUser?.role === 'hub_manager'
+                ? t.hubManager
+                : t.superAdmin}
+            </span>
             <ChevronDown className="w-3 h-3 text-slate-500" />
           </button>
 
           {showRoleDropdown && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 z-50 py-1 text-xs">
               <div className="px-3 py-1.5 font-bold text-slate-400 text-[10px] uppercase">
-                Switch Admin Tier
+                {t.selectTier}
               </div>
               <button
                 onClick={() => {
@@ -291,7 +357,7 @@ export const Header: React.FC<HeaderProps> = ({
                   currentUser?.role !== 'hub_manager' ? 'font-bold text-emerald-700' : 'text-slate-700'
                 }`}
               >
-                <span>Super Admin (Full Access)</span>
+                <span>{t.superAdmin}</span>
                 {currentUser?.role !== 'hub_manager' && <span className="text-emerald-600">✓</span>}
               </button>
               <button
@@ -303,7 +369,7 @@ export const Header: React.FC<HeaderProps> = ({
                   currentUser?.role === 'hub_manager' ? 'font-bold text-amber-700' : 'text-slate-700'
                 }`}
               >
-                <span>Hub Manager (Restricted)</span>
+                <span>{t.hubManager}</span>
                 {currentUser?.role === 'hub_manager' && <span className="text-amber-600">✓</span>}
               </button>
             </div>
@@ -318,9 +384,9 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onLogout}
             className="px-2.5 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-md border border-rose-200 transition"
-            title="Sign Out"
+            title={t.logout}
           >
-            लॉग आउट
+            {t.logout}
           </button>
         </div>
       </div>

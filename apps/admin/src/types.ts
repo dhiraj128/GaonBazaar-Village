@@ -67,7 +67,8 @@ export interface PendingKycApplicant {
   vehicle_type?: string;
   phone: string;
   village: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  pincode?: string;
+  status: 'Pending' | 'Approved' | 'Rejected' | 'PENDING' | 'ACTIVE';
   created_at?: string;
 }
 

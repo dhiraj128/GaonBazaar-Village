@@ -13,6 +13,8 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import type { AdminRole } from '../types';
+import type { Language } from '../i18n';
+import { translations } from '../i18n';
 
 export type NavTab =
   | 'dashboard'
@@ -35,6 +37,7 @@ interface SidebarProps {
   userRole?: AdminRole;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  lang: Language;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -47,55 +50,57 @@ export const Sidebar: React.FC<SidebarProps> = ({
   userRole = 'super_admin',
   isCollapsed,
   onToggleCollapse,
+  lang,
 }) => {
+  const t = translations[lang];
   const isHubManager = userRole === 'hub_manager';
 
   const primaryModules = [
     {
       id: 'dashboard' as NavTab,
-      label: 'Dashboard',
-      subtitle: 'Overview & Critical Alerts',
+      label: t.tabDashboard,
+      subtitle: t.tabDashboardSub,
       icon: LayoutDashboard,
       badge: criticalAlertsCount > 0 ? `${criticalAlertsCount} SOS` : null,
       badgeColor: 'bg-rose-500 text-white animate-pulse',
     },
     {
       id: 'users' as NavTab,
-      label: 'Users & KYC',
-      subtitle: 'Pending Approvals & Directory',
+      label: t.tabUsers,
+      subtitle: t.tabUsersSub,
       icon: ShieldCheck,
-      badge: pendingKycCount > 0 ? `${pendingKycCount} New` : null,
+      badge: pendingKycCount > 0 ? `${pendingKycCount}` : null,
       badgeColor: 'bg-amber-500 text-white',
     },
     {
       id: 'orders' as NavTab,
-      label: 'Orders (God Mode)',
-      subtitle: 'Real-Time WebSocket Feed',
+      label: t.tabOrders,
+      subtitle: t.tabOrdersSub,
       icon: ShoppingBag,
       badge: activeOrdersCount > 0 ? `${activeOrdersCount}` : null,
       badgeColor: 'bg-emerald-600 text-white',
     },
     {
       id: 'map' as NavTab,
-      label: 'Live Operations Map',
-      subtitle: 'Rider GPS & Heatmaps',
+      label: t.tabMap,
+      subtitle: t.tabMapSub,
       icon: MapPin,
       badge: null,
     },
     {
       id: 'financials' as NavTab,
-      label: 'Financials & Ledger',
-      subtitle: isHubManager ? 'COD Hub Reconciliation' : 'COD & Batch Payouts CSV',
+      label: t.tabFinancials,
+      subtitle: isHubManager ? (lang === 'hi' ? 'सीओडी समाधान' : 'COD Hub Reconciliation') : t.tabFinancialsSub,
       icon: CircleDollarSign,
-      badge: isHubManager ? 'COD Only' : null,
+      badge: isHubManager ? 'COD' : null,
       badgeColor: 'bg-slate-700 text-slate-200 text-[10px]',
     },
     {
       id: 'catalog' as NavTab,
-      label: 'Catalog & Settings',
-      subtitle: 'Master MRP & Pricing Rules',
+      label: t.tabCatalog,
+      subtitle: t.tabCatalogSub,
       icon: Package,
-      badge: isHubManager ? 'Read Only' : null,
+      badge: isHubManager ? (lang === 'hi' ? 'केवल पठन' : 'Read Only') : null,
       badgeColor: 'bg-slate-700 text-slate-300 text-[10px]',
     },
   ];
@@ -103,20 +108,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const secondaryModules = [
     {
       id: 'tickets' as NavTab,
-      label: 'Support Tickets',
+      label: t.tabTickets,
       icon: Headphones,
       badge: openTicketsCount > 0 ? `${openTicketsCount}` : null,
       badgeColor: 'bg-rose-500 text-white',
     },
     {
       id: 'refunds' as NavTab,
-      label: 'Refunds Ledger',
+      label: t.tabRefunds,
       icon: RotateCcw,
       badge: null,
     },
     {
       id: 'audit' as NavTab,
-      label: 'Security Audit Logs',
+      label: t.tabAudit,
       icon: FileText,
       badge: null,
       restrictedToSuperAdmin: true,
@@ -139,10 +144,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <div>
                 <span className="font-extrabold text-sm tracking-wide text-white block">
-                  गांवबाज़ार
+                  {t.brand}
                 </span>
                 <span className="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase block">
-                  Super Admin Panel
+                  {t.panelName}
                 </span>
               </div>
             </div>
@@ -166,7 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="px-3 py-3">
           {!isCollapsed && (
             <p className="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              Core Modules
+              {lang === 'hi' ? 'मुख्य मॉड्यूल' : 'Core Modules'}
             </p>
           )}
           <nav className="space-y-1">
@@ -198,7 +203,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       {item.badge && (
                         <span
                           className={`ml-2 px-1.5 py-0.5 text-[10px] font-bold rounded-full ${
-                            item.badgeColor || 'bg-slate-800 text-white'
+                            item.badgeColor || 'bg-slate-800 text-slate-300'
                           }`}
                         >
                           {item.badge}
@@ -210,18 +215,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
               );
             })}
           </nav>
+        </div>
 
-          {/* Secondary Operational Modules */}
+        {/* Secondary Modules */}
+        <div className="px-3 py-2 border-t border-slate-800/80">
           {!isCollapsed && (
-            <p className="px-3 mt-4 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-              Operations & Audit
+            <p className="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              {lang === 'hi' ? 'सहायक नियंत्रण' : 'Secondary Controls'}
             </p>
           )}
-          <nav className="space-y-1 mt-1">
+          <nav className="space-y-1">
             {secondaryModules.map((item) => {
-              if (item.restrictedToSuperAdmin && isHubManager) return null;
               const Icon = item.icon;
               const isActive = currentTab === item.id;
+              if (item.restrictedToSuperAdmin && isHubManager) return null;
               return (
                 <button
                   key={item.id}
@@ -231,18 +238,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     isCollapsed ? 'justify-center p-3' : 'px-3 py-2 space-x-3'
                   } ${
                     isActive
-                      ? 'bg-emerald-600 text-white shadow'
-                      : 'text-slate-400 hover:bg-slate-800/70 hover:text-white'
+                      ? 'bg-emerald-600 text-white shadow-md'
+                      : 'text-slate-400 hover:bg-slate-800/80 hover:text-slate-200'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                  <Icon className="w-4 h-4 shrink-0" />
                   {!isCollapsed && (
                     <div className="flex-1 flex items-center justify-between min-w-0">
                       <span className="truncate">{item.label}</span>
                       {item.badge && (
                         <span
                           className={`ml-2 px-1.5 py-0.5 text-[10px] font-bold rounded-full ${
-                            item.badgeColor || 'bg-slate-800 text-white'
+                            item.badgeColor || 'bg-slate-800 text-slate-300'
                           }`}
                         >
                           {item.badge}
@@ -257,25 +264,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      {/* Role Footer */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/60">
+      {/* Footer System Status */}
+      <div className="p-3 border-t border-slate-800">
         {!isCollapsed ? (
-          <div className="flex items-center space-x-2.5">
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs text-white ${isHubManager ? 'bg-amber-600' : 'bg-emerald-600'}`}>
-              {isHubManager ? 'HM' : 'SA'}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-bold text-white truncate">
-                {isHubManager ? 'Hub Manager' : 'Super Admin'}
-              </div>
-              <div className="text-[10px] text-slate-400 truncate">
-                Minapur Central Hub
+          <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800/60 flex items-center justify-between text-xs">
+            <div className="flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="text-[11px] font-bold text-slate-300">
+                {lang === 'hi' ? 'सिस्टम ऑनलाइन' : 'System Online'}
               </div>
             </div>
+            <span className="text-[9px] font-mono text-slate-500 font-bold uppercase">
+              v2.4.0
+            </span>
           </div>
         ) : (
-          <div className={`w-7 h-7 mx-auto rounded-full flex items-center justify-center font-bold text-xs text-white ${isHubManager ? 'bg-amber-600' : 'bg-emerald-600'}`}>
-            {isHubManager ? 'HM' : 'SA'}
+          <div className="flex justify-center">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" title="System Online" />
           </div>
         )}
       </div>

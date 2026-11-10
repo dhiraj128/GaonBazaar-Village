@@ -3,6 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import type { NavTab } from './components/Sidebar';
 import { Header } from './components/Header';
 import { LoginView } from './components/LoginView';
+import { UnauthorizedScreen } from './components/UnauthorizedScreen';
 import { DashboardView } from './components/DashboardView';
 import { KycUsersView } from './components/KycUsersView';
 import { OrdersGodModeView } from './components/OrdersGodModeView';
@@ -15,6 +16,7 @@ import { AuditLogsView } from './components/AuditLogsView';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 import { adminApi } from './api';
+import type { Language } from './i18n';
 import type {
   AdminOverview,
   ExceptionAlert,
@@ -29,7 +31,6 @@ import type {
   CatalogItem,
   PromoCodeItem,
   PlatformSettings,
-  CustomerItem,
   SupportTicketItem,
   AuditLogItem,
   AdminUser,
@@ -37,11 +38,24 @@ import type {
 } from './types';
 
 export function App() {
+  const [lang, setLang] = useState<Language>(() => {
+    try {
+      return (localStorage.getItem('gaonbazaar_admin_lang') as Language) || 'en';
+    } catch {
+      return 'en';
+    }
+  });
+
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => adminApi.isAuthenticated());
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(() => adminApi.getCurrentUser());
   const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Unauthorized Gatekeeper State
+  const [isUnauthorized, setIsUnauthorized] = useState<boolean>(false);
+  const [unauthorizedRole, setUnauthorizedRole] = useState<string>('customer');
+  const [unauthorizedPhone, setUnauthorizedPhone] = useState<string>('');
 
   // Core Data States
   const [overview, setOverview] = useState<AdminOverview | null>(null);
@@ -59,6 +73,16 @@ export function App() {
   const [promos, setPromos] = useState<PromoCodeItem[]>([]);
   const [tickets, setTickets] = useState<SupportTicketItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
+
+  const handleToggleLang = () => {
+    setLang((prev) => {
+      const next: Language = prev === 'en' ? 'hi' : 'en';
+      try {
+        localStorage.setItem('gaonbazaar_admin_lang', next);
+      } catch {}
+      return next;
+    });
+  };
 
   const fetchAllData = useCallback(async () => {
     if (!adminApi.isAuthenticated()) return;
@@ -129,7 +153,6 @@ export function App() {
     const cleanupWs = adminApi.connectOperationsWebSocket(
       (event) => {
         if (event.type === 'ORDER_STATUS_UPDATED' || event.type === 'ORDER_CANCELLED') {
-          // Refresh orders feed & overview
           adminApi.getOrders().then(setOrders).catch(() => {});
           adminApi.getOverview().then(setOverview).catch(() => {});
         } else if (event.type === 'RIDER_LOCATION') {
@@ -152,7 +175,6 @@ export function App() {
       }
     );
 
-    // Periodic 15-second sync timer
     const interval = setInterval(fetchAllData, 15000);
 
     return () => {
@@ -162,14 +184,35 @@ export function App() {
   }, [isAuthenticated, fetchAllData]);
 
   const handleLoginSuccess = (user: AdminUser) => {
+    // Database enforcement: Check role === 'super_admin' or 'admin'
+    if (user.role !== 'super_admin' && user.role !== 'admin' && user.role !== 'hub_manager') {
+      adminApi.logout();
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setUnauthorizedRole(user.role || 'customer');
+      setUnauthorizedPhone(user.phone || '');
+      setIsUnauthorized(true);
+      return;
+    }
     setCurrentUser(user);
     setIsAuthenticated(true);
+    setIsUnauthorized(false);
+  };
+
+  const handleUnauthorizedRole = (role: string, phone: string) => {
+    adminApi.logout();
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setUnauthorizedRole(role);
+    setUnauthorizedPhone(phone);
+    setIsUnauthorized(true);
   };
 
   const handleLogout = () => {
     adminApi.logout();
     setIsAuthenticated(false);
     setCurrentUser(null);
+    setIsUnauthorized(false);
   };
 
   const handleRoleChange = (newRole: AdminRole) => {
@@ -307,8 +350,28 @@ export function App() {
     await fetchAllData();
   };
 
+  // 1. Unauthorized Screen Guard (Requirement 2)
+  if (isUnauthorized) {
+    return (
+      <UnauthorizedScreen
+        lang={lang}
+        onReturnToLogin={() => setIsUnauthorized(false)}
+        detectedRole={unauthorizedRole}
+        userPhone={unauthorizedPhone}
+      />
+    );
+  }
+
+  // 2. Unauthenticated Login Gate
   if (!isAuthenticated) {
-    return <LoginView onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <LoginView
+        onLoginSuccess={handleLoginSuccess}
+        onUnauthorizedRole={handleUnauthorizedRole}
+        lang={lang}
+        onToggleLang={handleToggleLang}
+      />
+    );
   }
 
   const activeOrdersCount = orders.filter(
@@ -332,6 +395,7 @@ export function App() {
         userRole={currentUser?.role}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        lang={lang}
       />
 
       {/* Main Content Area (Right, Dynamic) */}
@@ -351,85 +415,90 @@ export function App() {
           alerts={alerts}
           onResolveAlert={handleResolveAlert}
           isSidebarCollapsed={isSidebarCollapsed}
+          lang={lang}
+          onToggleLang={handleToggleLang}
         />
 
         {/* Dynamic View Body */}
         <main className="flex-1 p-6 lg:p-8 mt-16 max-w-7xl w-full mx-auto">
           <ErrorBoundary key={currentTab} sectionTitle={currentTab}>
-          {currentTab === 'dashboard' && (
-            <DashboardView
-              overview={overview}
-              alerts={alerts}
-              trends={trends}
-              onNavigate={setCurrentTab}
-              onResolveAlert={handleResolveAlert}
-            />
-          )}
+            {currentTab === 'dashboard' && (
+              <DashboardView
+                overview={overview}
+                alerts={alerts}
+                trends={trends}
+                onNavigate={setCurrentTab}
+                onResolveAlert={handleResolveAlert}
+              />
+            )}
 
-          {currentTab === 'users' && (
-            <KycUsersView
-              pendingApplicants={pendingKyc}
-              directoryUsers={directoryUsers}
-              onOpenSideBySide={handleOpenSideBySide}
-              onApprove={handleApproveKyc}
-              onReject={handleRejectKyc}
-              onToggleUserStatus={handleToggleUserStatus}
-            />
-          )}
+            {currentTab === 'users' && (
+              <KycUsersView
+                pendingApplicants={pendingKyc}
+                directoryUsers={directoryUsers}
+                onOpenSideBySide={handleOpenSideBySide}
+                onApprove={handleApproveKyc}
+                onReject={handleRejectKyc}
+                onToggleUserStatus={handleToggleUserStatus}
+                lang={lang}
+              />
+            )}
 
-          {currentTab === 'orders' && (
-            <OrdersGodModeView
-              orders={orders}
-              riders={riders}
-              onUpdateStatus={handleUpdateOrderStatus}
-              onGodModeCancel={handleGodModeCancel}
-              onGodModeRefund={handleGodModeRefund}
-              onGodModeReassignRunner={handleGodModeReassignRunner}
-              onGodModeOverrideStock={handleGodModeOverrideStock}
-            />
-          )}
+            {currentTab === 'orders' && (
+              <OrdersGodModeView
+                orders={orders}
+                riders={riders}
+                onUpdateStatus={handleUpdateOrderStatus}
+                onGodModeCancel={handleGodModeCancel}
+                onGodModeRefund={handleGodModeRefund}
+                onGodModeReassignRunner={handleGodModeReassignRunner}
+                onGodModeOverrideStock={handleGodModeOverrideStock}
+                lang={lang}
+              />
+            )}
 
-          {currentTab === 'map' && (
-            <LiveMapView
-              riders={riders}
-              heatmaps={heatmaps}
-              onPingRider={handlePingRider}
-              onNotifyRedZone={handleNotifyRedZone}
-              onRefresh={fetchAllData}
-            />
-          )}
+            {currentTab === 'map' && (
+              <LiveMapView
+                riders={riders}
+                heatmaps={heatmaps}
+                onPingRider={handlePingRider}
+                onNotifyRedZone={handleNotifyRedZone}
+                onRefresh={fetchAllData}
+              />
+            )}
 
-          {currentTab === 'financials' && (
-            <FinancialsLedgerView
-              ledger={settlements}
-              codItems={codReconciliation}
-              userRole={currentUser?.role}
-              onRecordCodDeposit={handleRecordCodDeposit}
-              onDownloadVendorCsv={handleDownloadVendorCsv}
-              onDownloadRunnerCsv={handleDownloadRunnerCsv}
-            />
-          )}
+            {currentTab === 'financials' && (
+              <FinancialsLedgerView
+                ledger={settlements}
+                codItems={codReconciliation}
+                userRole={currentUser?.role}
+                onRecordCodDeposit={handleRecordCodDeposit}
+                onDownloadVendorCsv={handleDownloadVendorCsv}
+                onDownloadRunnerCsv={handleDownloadRunnerCsv}
+                lang={lang}
+              />
+            )}
 
-          {currentTab === 'catalog' && (
-            <CatalogSettingsView
-              catalog={catalog}
-              settings={settings}
-              promos={promos}
-              userRole={currentUser?.role}
-              onAddCatalogItem={handleAddCatalogItem}
-              onDeleteCatalogItem={handleDeleteCatalogItem}
-              onUpdateSettings={handleUpdateSettings}
-              onCreatePromo={handleCreatePromo}
-            />
-          )}
+            {currentTab === 'catalog' && (
+              <CatalogSettingsView
+                catalog={catalog}
+                settings={settings}
+                promos={promos}
+                userRole={currentUser?.role}
+                onAddCatalogItem={handleAddCatalogItem}
+                onDeleteCatalogItem={handleDeleteCatalogItem}
+                onUpdateSettings={handleUpdateSettings}
+                onCreatePromo={handleCreatePromo}
+              />
+            )}
 
-          {currentTab === 'tickets' && (
-            <TicketsView tickets={tickets} onUpdateStatus={handleUpdateTicketStatus} />
-          )}
+            {currentTab === 'tickets' && (
+              <TicketsView tickets={tickets} onUpdateStatus={handleUpdateTicketStatus} />
+            )}
 
-          {currentTab === 'refunds' && <RefundsView />}
+            {currentTab === 'refunds' && <RefundsView />}
 
-          {currentTab === 'audit' && <AuditLogsView logs={auditLogs} />}
+            {currentTab === 'audit' && <AuditLogsView logs={auditLogs} />}
           </ErrorBoundary>
         </main>
       </div>
