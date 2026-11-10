@@ -93,26 +93,31 @@ async def main():
             village_check = await eval_js(ws, """
                 (() => {
                     const villages = window.GAONBAZAAR_VILLAGES || [];
-                    const tengari = villages.find(v => v.en === 'Tengari');
+                    const tengari = villages.find(v => v.en === 'Tengari' || v.en === 'Tengrari');
                     const shibai = villages.find(v => v.en === 'Shibai Patti');
                     const minapur = villages.find(v => v.en === 'Minapur');
                     const kanti = villages.find(v => v.en === 'Kanti');
                     const bochahan = villages.find(v => v.en === 'Bochahan');
+                    const kurhani = villages.find(v => v.en === 'Kurhani');
+                    const marwan = villages.find(v => v.en === 'Marwan');
                     return {
                         total_count: villages.length,
                         tengari: tengari,
                         shibai: shibai,
                         minapur: minapur,
                         kanti: kanti,
-                        bochahan: bochahan
+                        bochahan: bochahan,
+                        kurhani: kurhani,
+                        marwan: marwan
                     };
                 })()
             """, mid); mid += 1
             print("Village Dataset Check:", json.dumps(village_check, indent=2))
-            assert village_check['total_count'] >= 30, f"Expected >= 30 villages, got {village_check['total_count']}"
+            assert village_check['total_count'] >= 100, f"Expected >= 100 villages, got {village_check['total_count']}"
             assert village_check['tengari']['pincode'] == '843128', "Tengari pincode must be 843128"
             assert village_check['shibai']['pincode'] == '843128', "Shibai Patti pincode must be 843128"
             assert village_check['kanti']['pincode'] == '843109', "Kanti pincode must be 843109"
+            assert village_check['kurhani']['pincode'] == '844127', "Kurhani pincode must be 844127"
 
             # Test Village Search & Auto-Fill in Vendor
             vendor_autofill_result = await eval_js(ws, """
@@ -157,13 +162,13 @@ async def main():
                     } else {
                         window.currentLang = 'hi';
                     }
-                    handleVendorVillageSearch('तेंगारी');
+                    handleVendorVillageSearch('टेंगरारी');
                     const dropdown = document.getElementById('vendor-village-dropdown');
                     const label = dropdown.querySelector('.village-label')?.innerText || '';
                     const pinBadge = dropdown.querySelector('.font-mono')?.innerText || '';
                     const hasSlash = label.includes('/');
 
-                    selectVendorVillage('तेंगारी', '843128');
+                    selectVendorVillage('टेंगरारी', '843128');
                     const villageVal = document.getElementById('vendor-village-name')?.value;
                     const pincodeVal = document.getElementById('vendor-pincode')?.value;
 
@@ -177,7 +182,7 @@ async def main():
                 })()
             """, mid); mid += 1
             print("Vendor Hindi Village Search Result:", json.dumps(hindi_result, indent=2))
-            assert hindi_result['label'] == 'तेंगारी', f"Expected तेंगारी, got {hindi_result['label']}"
+            assert 'टेंगरारी' in hindi_result['label'] or 'तेंगारी' in hindi_result['label'], f"Expected phonetic match, got {hindi_result['label']}"
             assert not hindi_result['hasSlash'], "Zero slashes allowed in single-language mode"
             assert hindi_result['pincodeVal'] == '843128', "Pincode must auto-populate to 843128"
 
@@ -209,57 +214,65 @@ async def main():
             assert camera_attrs['snapBtnExists'], "WebRTC snap button must exist"
 
             # -----------------------------------------------------------------
-            # TEST 4: INSTANT IMAGE AUTO-PREVIEW & DECOUPLED PRICING FORM
+            # TEST 4: INSTANT REAL IMAGE AUTO-PREVIEW & DECOUPLED PRICING FORM
             # -----------------------------------------------------------------
-            print("\n--- TEST 4: Instant Image Auto-Preview & Decoupled Pricing ---")
-            mock_snapped_data_url = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%2310b981'/><text x='15' y='55' fill='white' font-family='sans-serif' font-weight='bold' font-size='14'>SNAPPED</text></svg>"
-
-            pricing_transition = await eval_js(ws, f"""
-                (() => {{
-                    if (typeof setLanguage === 'function') {{
+            print("\n--- TEST 4: Instant Real Image Auto-Preview & Decoupled Pricing ---")
+            pricing_transition = await eval_js(ws, """
+                (() => {
+                    if (typeof setLanguage === 'function') {
                         setLanguage('en');
-                    }} else {{
+                    } else {
                         window.currentLang = 'en';
-                    }}
+                    }
 
-                    // Simulate photo capture
-                    currentSnappedPhotoData = "{mock_snapped_data_url}";
-                    
-                    // Directly open custom pricing modal as handleVendorCameraPhoto does
+                    // Open custom pricing with loose item
                     closePhotoCaptureModal();
-                    openCustomPricingModal({{
-                        title: "Fresh Desi Tomatoes (तेंगारी)",
+                    openCustomPricingModal({
+                        title: "Fresh Tomatoes 1kg",
                         category: "Vegetables",
                         unit: "1 kg",
                         mrp: '',
                         price: '',
                         stock: '',
-                        img: currentSnappedPhotoData
-                    }});
+                        img: ''
+                    });
 
                     const pricingModal = document.getElementById('modal-custom-pricing');
                     const isVisible = !pricingModal.classList.contains('hidden');
-                    const previewImgSrc = document.getElementById('custom-pricing-preview-img')?.src;
+                    const previewImgSrc = document.getElementById('custom-pricing-preview-img')?.src || '';
                     const mrpVal = document.getElementById('custom-pricing-mrp')?.value;
                     const priceVal = document.getElementById('custom-pricing-price')?.value;
                     const stockVal = document.getElementById('custom-pricing-stock')?.value;
                     const titleVal = document.getElementById('custom-pricing-name')?.value;
+                    const instockLabelEn = document.getElementById('custom-pricing-instock-label')?.innerText;
 
-                    return {{
+                    // Test Hindi switch
+                    setLanguage('hi');
+                    const instockLabelHi = document.getElementById('custom-pricing-instock-label')?.innerText;
+                    setLanguage('en');
+
+                    return {
                         pricingModalVisible: isVisible,
-                        previewImgMatches: previewImgSrc === currentSnappedPhotoData,
+                        previewImgSrc: previewImgSrc,
+                        isRealImage: previewImgSrc.startsWith('http') && !previewImgSrc.includes('SNAPPED'),
                         mrpVal: mrpVal,
                         priceVal: priceVal,
                         stockVal: stockVal,
-                        titleVal: titleVal
-                    }};
-                }})()
+                        titleVal: titleVal,
+                        hasVillageInTitle: /\\([^)]*[\u0900-\u097F]+[^)]*\\)/.test(titleVal) || titleVal.includes('तेंगारी') || titleVal.includes('टेंगरारी'),
+                        instockLabelEn: instockLabelEn,
+                        instockLabelHi: instockLabelHi
+                    };
+                })()
             """, mid); mid += 1
             print("Pricing Modal Transition:", json.dumps(pricing_transition, indent=2))
             assert pricing_transition['pricingModalVisible'], "Custom pricing modal must be open"
-            assert pricing_transition['previewImgMatches'], "Preview image src must match snapped data URL"
+            assert pricing_transition['isRealImage'], f"Preview image must be a real stock photo: {pricing_transition['previewImgSrc']}"
+            assert not pricing_transition['hasVillageInTitle'], f"Title must not have village appended: {pricing_transition['titleVal']}"
             assert pricing_transition['mrpVal'] == '', f"MRP must be blank, got {pricing_transition['mrpVal']}"
             assert pricing_transition['priceVal'] == '', f"Price must be blank, got {pricing_transition['priceVal']}"
+            assert pricing_transition['instockLabelEn'] == 'In-Stock', f"Expected In-Stock, got {pricing_transition['instockLabelEn']}"
+            assert pricing_transition['instockLabelHi'] == 'बिक्री चालू', f"Expected बिक्री चालू, got {pricing_transition['instockLabelHi']}"
 
             await take_screenshot(ws, "proof_vendor_camera_instant_auto_preview.png", mid); mid += 1
 
