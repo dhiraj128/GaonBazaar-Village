@@ -47,7 +47,10 @@ class OrderTimelineDetail(BaseModel):
 
 class OrderResponse(BaseModel):
     id: str
+    order_id: Optional[str] = None
     customer_id: str
+    vendor_id: Optional[str] = None
+    delivery_village: Optional[str] = None
     customer_name: Optional[str] = None
     customer_phone: Optional[str] = None
     store_id: str

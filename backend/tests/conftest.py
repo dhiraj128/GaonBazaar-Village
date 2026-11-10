@@ -15,6 +15,8 @@ async def init_test_db():
     async with app.router.lifespan_context(app):
         yield
 
+    await async_engine.dispose()
+
 @pytest.fixture
 def admin_headers():
     return {"X-Admin-Key": settings.ADMIN_API_KEY}

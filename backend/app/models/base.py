@@ -186,9 +186,12 @@ class Order(Base):
     __tablename__ = "orders"
     
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    customer_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    order_id = Column(String(36), default=generate_uuid, index=True)
+    customer_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
     store_id = Column(String(36), ForeignKey("stores.id"), nullable=False)
-    runner_id = Column(String(36), ForeignKey("runners.id"), nullable=True)
+    vendor_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    runner_id = Column(String(36), ForeignKey("runners.id"), nullable=True, index=True)
+    delivery_village = Column(String(100), nullable=True, index=True)
     delivery_address_id = Column(String(36), ForeignKey("addresses.id"), nullable=False)
     
     # Status: PLACED -> ACCEPTED -> PACKED -> RUNNER_ASSIGNED -> PICKED_UP -> OUT_FOR_DELIVERY -> DELIVERED (or CANCELLED)

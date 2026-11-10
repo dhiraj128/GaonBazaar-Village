@@ -41,6 +41,9 @@
   <!-- HTML5 QR / Barcode Scanner CDN -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
+    <!-- Supabase JS Client for Real-time 3-Way Order Routing -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- Toastify CSS & JS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
@@ -3850,6 +3853,107 @@
     }
 
     // ---------------------------------------------------------------------------
+    
+    // ===========================================================================
+    // SUPABASE REALTIME 3-WAY ORDER ROUTING (VENDOR PIPELINE)
+    // ===========================================================================
+    const SUPABASE_URL = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
+    const SUPABASE_ANON_KEY = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
+
+    let supabaseVendorClient = null;
+    function getSupabaseVendorClient() {
+      if (!supabaseVendorClient && window.supabase && typeof window.supabase.createClient === 'function') {
+        supabaseVendorClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.supabaseClient = supabaseVendorClient;
+      }
+      return supabaseVendorClient;
+    }
+
+    function setupVendorRealtimeOrders() {
+      const client = getSupabaseVendorClient();
+      if (!client) return;
+
+      const vendorId = state.userProfile?.id || localStorage.getItem('gb_user_id') || 'usr_vendor_01';
+
+      if (window.vendorRealtimeChannel) {
+        try { client.removeChannel(window.vendorRealtimeChannel); } catch (e) {}
+      }
+
+      window.vendorRealtimeChannel = client
+        .channel('vendor-orders-' + vendorId)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `vendor_id=eq.${vendorId}`
+        }, (payload) => {
+          handleVendorRealtimeOrder(payload);
+        })
+        .subscribe((status) => {
+          console.log("[Supabase Realtime] Vendor orders subscription status:", status);
+        });
+    }
+
+    function handleVendorRealtimeOrder(payload) {
+      const order = payload.new || {};
+      if (!order || !order.id) return;
+
+      const st = (order.status || '').toUpperCase();
+      console.log("[Vendor Realtime] Incoming order event:", payload.eventType, order.id, st);
+
+      if (st === 'PENDING' || st === 'PLACED') {
+        // Continuous Web Audio chime until vendor acts
+        startOrderAlertRingtone();
+        const banner = document.getElementById('sound-alert-banner');
+        if (banner) banner.classList.remove('hidden');
+
+        const empty = document.getElementById('new-orders-empty');
+        if (empty) empty.classList.add('hidden');
+
+        const card = document.getElementById('order-card-101');
+        if (card) {
+          card.classList.remove('hidden');
+          card.classList.add('pulse-order');
+          card.dataset.orderId = order.id;
+
+          const titleEl = card.querySelector('[data-i18n="order_gb8921_title"]') || card.querySelector('h3');
+          if (titleEl) titleEl.innerText = `Order #${(order.order_id || order.id).slice(-6)}`;
+
+          const custEl = card.querySelector('[data-i18n="cust_order_sample"]') || card.querySelector('p');
+          if (custEl) custEl.innerText = `Customer Village: ${order.delivery_village || 'Local'} (Immediate Delivery)`;
+
+          const amtEl = card.querySelector('.text-base.font-extrabold');
+          if (amtEl) amtEl.innerText = `₹${Number(order.total_amount || 340).toFixed(2)}`;
+
+          const acceptBtn = card.querySelector('button[onclick*="acceptOrder"]');
+          if (acceptBtn) acceptBtn.setAttribute('onclick', `acceptOrder('${order.id}')`);
+          const rejectBtn = card.querySelector('button[onclick*="rejectOrder"]');
+          if (rejectBtn) rejectBtn.setAttribute('onclick', `rejectOrder('${order.id}')`);
+        }
+
+        const badge = document.getElementById('new-orders-badge');
+        if (badge) badge.innerText = '1';
+
+        toastSuccess("🔔 New Order Received! Ringing chime.");
+      } else if (st === 'PREPARING' || st === 'ACCEPTED') {
+        const badgeNew = document.getElementById('new-orders-badge');
+        if (badgeNew) badgeNew.innerText = '0';
+        const badgePrep = document.getElementById('prep-orders-badge');
+        if (badgePrep) badgePrep.innerText = '1';
+      } else if (st === 'READY_FOR_PICKUP' || st === 'PACKED') {
+        const badgePrep = document.getElementById('prep-orders-badge');
+        if (badgePrep) badgePrep.innerText = '0';
+        const badgeReady = document.getElementById('ready-orders-badge');
+        if (badgeReady) badgeReady.innerText = '1';
+      }
+    }
+
+    // Auto-initialize when window loads or dashboard opens
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(setupVendorRealtimeOrders, 1200);
+    });
+
+
     // DASHBOARD ORDERS SUB-TABS & ACTIONS
     // ---------------------------------------------------------------------------
     function handleShopToggle(checkbox) {
@@ -3911,6 +4015,15 @@
         await apiRequest('/api/v1/orders/vendor/orders/' + orderId + '/action', 'POST', { action: 'ACCEPT' });
       } catch (e) {}
 
+      const supa = getSupabaseVendorClient();
+      if (supa) {
+        try {
+          await supa.from('orders').update({ status: 'PREPARING' }).eq('id', orderId);
+        } catch (sErr) {
+          console.warn("Supabase order status update notice:", sErr);
+        }
+      }
+
       toastSuccess("Order " + orderId + " accepted! Start packing items.");
       setTimeout(() => switchOrdersSubTab('preparing'), 800);
     }
@@ -3944,6 +4057,15 @@
       try {
         await apiRequest('/api/v1/orders/vendor/orders/' + orderId + '/action', 'POST', { action: 'PACK' });
       } catch (e) {}
+
+      const supa = getSupabaseVendorClient();
+      if (supa) {
+        try {
+          await supa.from('orders').update({ status: 'READY_FOR_PICKUP' }).eq('id', orderId);
+        } catch (sErr) {
+          console.warn("Supabase order status update notice:", sErr);
+        }
+      }
 
       toastSuccess("Order " + orderId + " marked Ready for Runner Handover!");
       setTimeout(() => switchOrdersSubTab('ready'), 800);

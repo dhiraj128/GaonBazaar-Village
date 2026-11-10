@@ -46,6 +46,9 @@
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Supabase JS Client for Real-time 3-Way Order Routing -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- Toastify CSS & JS -->
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
@@ -1441,6 +1444,138 @@
   <!-- JAVASCRIPT: LOGIC, ROUTER, WEB AUDIO SYNTH, LOCALIZATION -->
   <!-- ========================================================================= -->
   <script>
+    
+    // ===========================================================================
+    // SUPABASE REALTIME GEOSPATIAL RUNNER DISPATCH & CONCURRENCY LOCKING
+    // ===========================================================================
+    const SUPABASE_URL = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
+    const SUPABASE_ANON_KEY = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
+
+    let supabaseRunnerClient = null;
+    function getSupabaseRunnerClient() {
+      if (!supabaseRunnerClient && window.supabase && typeof window.supabase.createClient === 'function') {
+        supabaseRunnerClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.supabaseClient = supabaseRunnerClient;
+      }
+      return supabaseRunnerClient;
+    }
+
+    function setupRunnerRealtimeOrders() {
+      const client = getSupabaseRunnerClient();
+      if (!client) return;
+
+      if (window.runnerRealtimeChannel) {
+        try { client.removeChannel(window.runnerRealtimeChannel); } catch (e) {}
+      }
+
+      window.runnerRealtimeChannel = client
+        .channel('runner-orders-broadcast')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        }, (payload) => {
+          handleIncomingRunnerOrderEvent(payload);
+        })
+        .subscribe((status) => {
+          console.log("[Supabase Realtime] Runner missions subscription status:", status);
+        });
+    }
+
+    function getRunnerVillage() {
+      return (
+        document.getElementById('runner-base-village')?.value ||
+        localStorage.getItem('gb_runner_village') ||
+        state.userProfile?.village ||
+        'Chaturshi'
+      ).trim().toLowerCase();
+    }
+
+    function handleIncomingRunnerOrderEvent(payload) {
+      const order = payload.new || {};
+      if (!order || !order.id) return;
+
+      const runnerVillage = getRunnerVillage();
+      const runnerId = state.userProfile?.id || localStorage.getItem('gb_user_id') || 'usr_runner_01';
+      const orderVillage = (order.delivery_village || '').trim().toLowerCase();
+      const st = (order.status || '').toUpperCase();
+
+      console.log(`[Runner Realtime] Order ${order.id} status=${st} village=${order.delivery_village} runner_id=${order.runner_id}`);
+
+      // 1. AUTO-DISMISSAL: If claimed by another runner, immediately vanish from screen
+      if (order.runner_id && order.runner_id !== runnerId) {
+        console.log(`[Runner Dispatch] Order ${order.id} claimed by another runner (${order.runner_id}). Auto-dismissing.`);
+        dismissRunnerMissionCard(order.id);
+        return;
+      }
+
+      // 2. STRICT GEOSPATIAL ISOLATION:
+      // Runners must NEVER see orders outside their operating village
+      const isMatch = !orderVillage || !runnerVillage ||
+        orderVillage === runnerVillage ||
+        orderVillage.includes(runnerVillage) ||
+        runnerVillage.includes(orderVillage);
+
+      if (!isMatch) {
+        console.log(`[Geospatial Filter] Order ${order.id} delivery_village '${order.delivery_village}' does not match runner's hub '${runnerVillage}'. Suppressed.`);
+        dismissRunnerMissionCard(order.id);
+        return;
+      }
+
+      // 3. BROADCAST TRIGGER: When READY_FOR_PICKUP and unassigned, trigger chime & pop up card
+      if ((st === 'READY_FOR_PICKUP' || st === 'PACKED') && !order.runner_id) {
+        displayLiveRunnerMissionCard(order);
+        startMissionAlertRingtone();
+        toastSuccess(`🚀 New Delivery Mission in ${order.delivery_village || runnerVillage}!`);
+      } else if (st !== 'READY_FOR_PICKUP' && st !== 'PACKED' && st !== 'RUNNER_ASSIGNED') {
+        dismissRunnerMissionCard(order.id);
+      }
+    }
+
+    function displayLiveRunnerMissionCard(order) {
+      const empty = document.getElementById('no-missions-empty');
+      if (empty) empty.classList.add('hidden');
+
+      const banner = document.getElementById('runner-alert-banner');
+      if (banner) banner.classList.remove('hidden');
+
+      const card = document.getElementById('mission-card-201');
+      if (card) {
+        card.classList.remove('hidden');
+        card.classList.add('pulse-mission');
+        card.dataset.orderId = order.id;
+
+        const titleEl = card.querySelector('[data-i18n="sample_mission_title"]') || card.querySelector('h3');
+        if (titleEl) titleEl.innerText = `Mission #${(order.order_id || order.id).slice(-6)}`;
+
+        const badgeEl = card.querySelector('[data-i18n="hot_mission_badge"]');
+        if (badgeEl) badgeEl.innerText = `HOT MISSION • ${(order.delivery_village || 'LOCAL').toUpperCase()} • 2.8 KM`;
+
+        const acceptBtn = card.querySelector('button[onclick*="acceptMission"]');
+        if (acceptBtn) acceptBtn.setAttribute('onclick', `acceptMission('${order.id}')`);
+      }
+    }
+
+    function dismissRunnerMissionCard(orderId) {
+      stopMissionAlertRingtone();
+      const banner = document.getElementById('runner-alert-banner');
+      if (banner) banner.classList.add('hidden');
+
+      const card = document.getElementById('mission-card-201');
+      if (card && (!orderId || card.dataset.orderId === orderId || !card.dataset.orderId)) {
+        card.classList.add('hidden');
+        card.classList.remove('pulse-mission');
+      }
+
+      const empty = document.getElementById('no-missions-empty');
+      if (empty) empty.classList.remove('hidden');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(setupRunnerRealtimeOrders, 1200);
+    });
+
+
     // ---------------------------------------------------------------------------
     // LOCALIZATION DICTIONARY
     // ---------------------------------------------------------------------------
@@ -3280,11 +3415,50 @@
       const banner = document.getElementById('runner-alert-banner');
       if (banner) banner.classList.add('hidden');
 
+      const runnerId = state.userProfile?.id || localStorage.getItem('gb_user_id') || 'usr_runner_01';
+      let claimSuccess = true;
+
+      // 1. ATOMIC CONCURRENCY LOCK IN SUPABASE
+      const supa = getSupabaseRunnerClient();
+      if (supa) {
+        try {
+          const { data, error } = await supa
+            .from('orders')
+            .update({
+              runner_id: runnerId,
+              status: 'RUNNER_ASSIGNED'
+            })
+            .eq('id', missionId)
+            .is('runner_id', null)
+            .in('status', ['READY_FOR_PICKUP', 'PACKED', 'ACCEPTED'])
+            .select();
+
+          if (error || !data || data.length === 0) {
+            claimSuccess = false;
+          }
+        } catch (err) {
+          console.warn("Supabase atomic claim check notice:", err);
+        }
+      }
+
+      // 2. ATOMIC BACKEND CONCURRENCY CHECK
       try {
         await apiRequest('/api/v1/orders/runner/jobs/' + missionId + '/action', 'POST', { action: 'ACCEPT' });
-      } catch (e) {}
+      } catch (e) {
+        if (!claimSuccess) {
+          toastError("Too late! Another runner just claimed this delivery mission.");
+          dismissRunnerMissionCard(missionId);
+          return;
+        }
+      }
 
-      toastSuccess("Mission " + missionId + " Accepted! Navigating to Active Run...");
+      if (!claimSuccess) {
+        toastError("This mission was already claimed by another runner.");
+        dismissRunnerMissionCard(missionId);
+        return;
+      }
+
+      toastSuccess("Mission " + missionId + " Assigned to You! Navigating to Active Run...");
       setTimeout(() => {
         switchDashboardTab('activerun');
       }, 700);

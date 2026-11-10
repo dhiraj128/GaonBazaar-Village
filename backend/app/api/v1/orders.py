@@ -180,9 +180,11 @@ async def create_order(
 
     order = Order(
         customer_id=customer_id,
+        vendor_id=store.owner_id if store else None,
+        delivery_village=address.village if address else None,
         store_id=store.id,
         delivery_address_id=address.id,
-        status="PLACED",
+        status="PENDING",
         subtotal=totals["subtotal"],
         delivery_fee=totals["delivery_fee"],
         platform_fee=totals["platform_fee"], # Strict ₹3.00
@@ -196,6 +198,8 @@ async def create_order(
     )
     db.add(order)
     await db.flush()
+    if not order.order_id:
+        order.order_id = order.id
     
     # Attach order items
     for oi in order_items_to_create:
@@ -839,15 +843,15 @@ async def vendor_order_action(
     act = action_data.action.upper()
     now = datetime.now(timezone.utc)
     
-    if act == "ACCEPT":
-        if order.status != "PLACED":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot ACCEPT order in status '{order.status}'. Order must be 'PLACED'.")
-        order.status = "ACCEPTED"
-        title = "दुकानदार ने स्वीकार किया (Accepted)"
-    elif act in ["PACK", "PACKED"]:
-        if order.status not in ["ACCEPTED", "PLACED"]:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot PACK order in status '{order.status}'. Order must be 'ACCEPTED' or 'PLACED'.")
-        order.status = "PACKED"
+    if act in ["ACCEPT", "PREPARING", "PREPARE"]:
+        if order.status not in ["PLACED", "PENDING"]:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot ACCEPT order in status '{order.status}'. Order must be 'PENDING' or 'PLACED'.")
+        order.status = "PREPARING"
+        title = "दुकानदार ने स्वीकार किया (Accepted & Preparing)"
+    elif act in ["PACK", "PACKED", "READY_FOR_PICKUP"]:
+        if order.status not in ["ACCEPTED", "PREPARING", "PLACED", "PENDING"]:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot PACK order in status '{order.status}'.")
+        order.status = "READY_FOR_PICKUP"
         title = "सामान पैक हो गया (Packed & Ready)"
     elif act in ["HANDOFF", "HANDED_OFF"]:
         if order.status not in ["PACKED", "RUNNER_ASSIGNED"]:
@@ -929,7 +933,7 @@ async def runner_job_action(
             update(Order)
             .where(
                 Order.id == order.id,
-                Order.status.in_(["PACKED", "ACCEPTED"]),
+                Order.status.in_(["READY_FOR_PICKUP", "PACKED", "ACCEPTED", "PREPARING"]),
                 (Order.runner_id.is_(None) | (Order.runner_id == target_runner_id))
             )
             .values(
@@ -1093,7 +1097,10 @@ async def _format_order_response(
 
     return OrderResponse(
         id=order.id,
+        order_id=getattr(order, "order_id", None) or order.id,
         customer_id=order.customer_id,
+        vendor_id=getattr(order, "vendor_id", None) or (order.store.owner_id if order.store else None),
+        delivery_village=getattr(order, "delivery_village", None) or (order.delivery_address.village if order.delivery_address else None),
         customer_name=order.customer.name if order.customer else None,
         customer_phone=order.customer.phone if (order.customer and (is_cust or is_assigned_runner or is_admin)) else None,
         store_id=order.store_id,
