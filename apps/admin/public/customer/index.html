@@ -995,13 +995,13 @@
             </div>
 
             <!-- Compact Selected Address Preview -->
-            <div id="checkout-selected-address-card" class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 flex items-center justify-between text-xs">
+            <div id="checkout-selected-address-card" class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 flex flex-col sm:flex-row gap-2.5 sm:items-center sm:justify-between text-xs">
               <div class="min-w-0 pr-2">
                 <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">Deliver to:</span>
-                <p id="checkout-active-addr-title" class="font-bold text-slate-900 truncate">Home — Chaturshi, Muzaffarpur</p>
-                <p id="checkout-active-addr-landmark" class="text-[11px] text-slate-600 truncate">Near Shiv Mandir</p>
+                <p id="checkout-active-addr-title" class="font-bold text-slate-900 break-words whitespace-normal leading-relaxed">Home — Chaturshi, Muzaffarpur</p>
+                <p id="checkout-active-addr-landmark" class="text-[11px] text-slate-600 break-words whitespace-normal">Near Shiv Mandir</p>
               </div>
-              <button type="button" onclick="openManageAddressesModal()" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-emerald-800 border border-emerald-300 rounded-lg font-bold text-xs shrink-0 transition active:scale-95 shadow-2xs">
+              <button type="button" onclick="openManageAddressesModal()" class="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-white hover:bg-slate-50 text-emerald-800 border border-emerald-300 rounded-xl font-bold text-xs shrink-0 transition active:scale-95 shadow-2xs flex items-center justify-center">
                 Change
               </button>
             </div>
@@ -1225,15 +1225,15 @@
                     <p id="order-runner-badge" class="text-[10px] text-slate-500">Motorcycle • GaonBazaar Partner</p>
                   </div>
                 </div>
-                <div class="flex space-x-1.5">
-                  <a id="runner-call-link" href="tel:9800000003" class="w-8 h-8 rounded-xl bg-white border border-slate-200 text-emerald-700 flex items-center justify-center shadow-xs active:scale-95 transition" title="Call Runner">
-                    <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                <div class="flex items-center gap-2">
+                  <a id="runner-call-link" href="tel:9800000003" class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-white border border-slate-200 text-emerald-700 flex items-center justify-center shadow-xs active:scale-95 transition" title="Call Runner">
+                    <i data-lucide="phone" class="w-4 h-4"></i>
                   </a>
-                  <button onclick="openRunnerChatModal()" class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs active:scale-95 transition" title="Message Runner">
-                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                  <button onclick="openRunnerChatModal()" class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs active:scale-95 transition" title="Message Runner">
+                    <i data-lucide="message-square" class="w-4 h-4"></i>
                   </button>
-                  <button onclick="shareCustomerConfirmedLocationPin()" class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs active:scale-95 transition" title="Share Exact Doorstep Pin">
-                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                  <button onclick="shareCustomerConfirmedLocationPin()" class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs active:scale-95 transition" title="Share Exact Doorstep Pin">
+                    <i data-lucide="map-pin" class="w-4 h-4"></i>
                   </button>
                 </div>
               </div>
@@ -1250,8 +1250,8 @@
                       03:00
                     </span>
                   </div>
-                  <button onclick="cancelActiveOrderBinary()" id="cancel-order-btn" class="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold rounded-xl flex items-center justify-center space-x-1.5 transition active:scale-95 text-xs">
-                    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                  <button onclick="cancelActiveOrderBinary()" id="cancel-order-btn" class="w-full min-h-[48px] h-12 py-3 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold rounded-xl flex items-center justify-center space-x-2 transition active:scale-95 text-sm">
+                    <i data-lucide="x-circle" class="w-4 h-4"></i>
                     <span data-i18n="cancel_order_btn">Cancel Order (Full Refund)</span>
                   </button>
                 </div>

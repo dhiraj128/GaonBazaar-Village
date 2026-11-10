@@ -35,6 +35,7 @@ def test_touch_targets_and_otp_accessibility():
 
     runner_html = (repo_root / "apps" / "admin" / "public" / "runner" / "index.html").read_text(encoding="utf-8")
     vendor_html = (repo_root / "apps" / "admin" / "public" / "vendor" / "index.html").read_text(encoding="utf-8")
+    customer_html = (repo_root / "apps" / "admin" / "public" / "customer" / "index.html").read_text(encoding="utf-8")
 
     # Check 4-digit customer delivery OTP field height
     assert 'id="cust-delivery-otp"' in runner_html
@@ -44,21 +45,38 @@ def test_touch_targets_and_otp_accessibility():
     assert 'id="btn-complete-delivery"' in runner_html
     assert 'min-h-[48px]' in runner_html
 
+    # Check runner confirm pickup button
+    assert 'id="btn-confirm-pickup"' in runner_html
+    assert 'min-h-[48px]' in runner_html
+
     # Check pickup handover OTP in vendor app
     assert 'id="handover-otp-input"' in vendor_html
     assert 'min-h-[48px]' in vendor_html or 'h-12' in vendor_html
+
+    # Check mark ready button in vendor app
+    assert 'markOrderReady' in vendor_html
+    assert 'min-h-[48px]' in vendor_html
+
+    # Check cancel order button in customer app
+    assert 'id="cancel-order-btn"' in customer_html
+    assert 'min-h-[48px]' in customer_html
 
 
 def test_collect_cash_badge_and_address_text_wrapping():
     """Verify cash badge and addresses wrap properly without horizontal clipping."""
     repo_root = Path(__file__).resolve().parent.parent.parent
     runner_html = (repo_root / "apps" / "admin" / "public" / "runner" / "index.html").read_text(encoding="utf-8")
+    customer_html = (repo_root / "apps" / "admin" / "public" / "customer" / "index.html").read_text(encoding="utf-8")
 
     # Badge wrapping classes
     assert 'id="order-payment-badge"' in runner_html
     assert 'break-words' in runner_html
     assert 'whitespace-normal' in runner_html
 
-    # Address wrapping classes
+    # Address wrapping classes in runner app
     assert 'id="order-customer-address"' in runner_html
     assert 'break-words' in runner_html
+
+    # Address wrapping in customer cart checkout
+    assert 'id="checkout-active-addr-title"' in customer_html
+    assert 'break-words' in customer_html
