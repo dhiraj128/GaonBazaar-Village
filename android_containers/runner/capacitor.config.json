@@ -1,0 +1,14 @@
+{
+  "appId": "in.gaonbazaar.runner",
+  "appName": "GaonBazaar Runner",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  }
+}

@@ -100,7 +100,8 @@ export const PayoutSetup: React.FC<PayoutSetupProps> = ({
 
       // 1. Call backend Razorpay verify / penny drop endpoint if available
       try {
-        const backendEndpoint = 'http://127.0.0.1:8000/api/v1/payments/verify-penny-drop';
+        const apiBase = ((import.meta.env.VITE_API_BASE_URL as string) || 'https://gaonbazaar-village.onrender.com/api/v1').replace(/\/+$/, '');
+        const backendEndpoint = `${apiBase}/payments/verify-penny-drop`;
         await fetch(backendEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

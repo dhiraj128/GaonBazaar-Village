@@ -2189,10 +2189,9 @@
     // ---------------------------------------------------------------------------
     // UNIFIED DATA LOOP & BACKEND SYNC CLIENT
     // ---------------------------------------------------------------------------
+    const isLocalDevTab = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '5173' || window.location.port === '8080');
     const BACKEND_CONFIG = {
-      apiBase: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-        ? 'http://127.0.0.1:8000'
-        : 'https://gaonbazaar-village.onrender.com',
+      apiBase: isLocalDevTab ? 'http://127.0.0.1:8000' : 'https://gaonbazaar-village.onrender.com',
       get wsBase() {
         return this.apiBase.replace(/^http/, 'ws');
       },
@@ -2820,7 +2819,7 @@
       const registeredName = (state.userProfile.name || 'Sonu Kumar Verma').toUpperCase();
 
       try {
-        const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://127.0.0.1:8000/api/v1";
+        const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "https://gaonbazaar-village.onrender.com/api/v1";
         try {
           await safeApiCall(`${backendUrl}/kyc/pan`, 'POST', { pan: pan, name: registeredName, role: 'runner' }, 8000);
         } catch (beErr) {
@@ -2890,7 +2889,7 @@
 
       try {
         let refId = "cf_ref_" + Math.random().toString(36).substring(2, 10);
-        const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://127.0.0.1:8000/api/v1";
+        const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "https://gaonbazaar-village.onrender.com/api/v1";
 
         try {
           const res = await safeApiCall(`${backendUrl}/kyc/aadhaar/otp`, 'POST', { aadhaar_number: cleanAadhaar }, 8000);
@@ -2942,7 +2941,7 @@
       const name = state.userProfile.name || 'Sonu Kumar Verma';
 
       try {
-        const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://127.0.0.1:8000/api/v1";
+        const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "https://gaonbazaar-village.onrender.com/api/v1";
         try {
           await safeApiCall(`${backendUrl}/kyc/aadhaar/verify`, 'POST', {
             otp: otp,
@@ -5283,5 +5282,17 @@
       lucide.createIcons();
     });
   </script>
+
+  <!-- GaonBazaar Offline-First Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log('GaonBazaar SW active:', reg.scope))
+          .catch(err => console.warn('SW registration notice:', err));
+      });
+    }
+  </script>
+
 </body>
 </html>

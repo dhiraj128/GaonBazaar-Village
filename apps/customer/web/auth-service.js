@@ -500,7 +500,7 @@ export async function submitPanVerification() {
 
   try {
     let result = null;
-    const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://127.0.0.1:8000/api/v1";
+    const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "https://gaonbazaar-village.onrender.com/api/v1";
 
     // 1. Try FastAPI backend endpoint first
     try {
@@ -616,7 +616,7 @@ export async function submitAadhaarOtpRequest() {
 
   try {
     let result = null;
-    const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://127.0.0.1:8000/api/v1";
+    const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "https://gaonbazaar-village.onrender.com/api/v1";
 
     try {
       const resp = await fetch(`${backendUrl}/kyc/aadhaar/otp`, {
@@ -710,7 +710,7 @@ export async function submitAadhaarVerification() {
 
   try {
     let result = null;
-    const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "http://127.0.0.1:8000/api/v1";
+    const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "https://gaonbazaar-village.onrender.com/api/v1";
 
     try {
       const resp = await fetch(`${backendUrl}/kyc/aadhaar/verify`, {

@@ -2410,9 +2410,8 @@
     // ---------------------------------------------------------------------------
     // BACKEND API & AUTH HELPERS
     // ---------------------------------------------------------------------------
-    const BACKEND_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://127.0.0.1:8000'
-      : 'https://gaonbazaar-village.onrender.com';
+    const isLocalDevTab = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (window.location.port === '5173' || window.location.port === '8080');
+    const BACKEND_BASE = isLocalDevTab ? 'http://127.0.0.1:8000' : 'https://gaonbazaar-village.onrender.com';
 
     function getCustomerAuthToken() {
       return localStorage.getItem('gb_customer_jwt');
@@ -9732,6 +9731,18 @@ function createProductCardElement(p) {
         </div>
       </div>
     </div>
+
+
+  <!-- GaonBazaar Offline-First Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log('GaonBazaar SW active:', reg.scope))
+          .catch(err => console.warn('SW registration notice:', err));
+      });
+    }
+  </script>
 
 </body>
 </html>
