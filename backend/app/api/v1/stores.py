@@ -1,6 +1,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import or_
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from app.db.session import get_db
@@ -256,8 +257,23 @@ async def get_store_products(
     return output
 
 @router.get("/catalog/global", response_model=List[GlobalCatalogResponse])
-async def get_global_catalog(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(GlobalCatalogItem))
+async def get_global_catalog(
+    query: Optional[str] = Query(None, description="Optional search query for dynamic FMCG catalog filtering"),
+    db: AsyncSession = Depends(get_db)
+):
+    stmt = select(GlobalCatalogItem)
+    if query and query.strip():
+        q_term = f"%{query.strip()}%"
+        stmt = stmt.where(
+            or_(
+                GlobalCatalogItem.name_en.ilike(q_term),
+                GlobalCatalogItem.name_hi.ilike(q_term),
+                GlobalCatalogItem.category.ilike(q_term),
+                GlobalCatalogItem.tags.ilike(q_term),
+                GlobalCatalogItem.id.ilike(q_term)
+            )
+        )
+    result = await db.execute(stmt)
     items = result.scalars().all()
     return [
         GlobalCatalogResponse(
