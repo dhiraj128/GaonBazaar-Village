@@ -184,13 +184,13 @@ async def create_order(
         delivery_village=address.village if address else None,
         store_id=store.id,
         delivery_address_id=address.id,
-        status="PENDING",
+        status="PLACED",
         subtotal=totals["subtotal"],
         delivery_fee=totals["delivery_fee"],
         platform_fee=totals["platform_fee"], # Strict ₹3.00
         total_amount=totals["total_amount"],
         payment_method=payment_method,
-        payment_status="PENDING",
+        payment_status="PLACED",
         delivery_otp=delivery_otp,
         placed_at=now,
         cancel_until=cancel_until,
@@ -568,10 +568,12 @@ async def list_runner_jobs(
     # Available jobs (PACKED and unassigned, OR assigned to this runner)
     if runner:
         query = select(Order.id).where(
-            ((Order.status == "PACKED") & (Order.runner_id.is_(None))) | (Order.runner_id == runner.id)
+            ((Order.status.in_(["PACKED", "READY_FOR_PICKUP"])) & (Order.runner_id.is_(None))) | (Order.runner_id == runner.id)
         ).order_by(Order.placed_at.desc())
     else:
-        query = select(Order.id).where((Order.status == "PACKED") & (Order.runner_id.is_(None))).order_by(Order.placed_at.desc())
+        query = select(Order.id).where(
+            (Order.status.in_(["PACKED", "READY_FOR_PICKUP"])) & (Order.runner_id.is_(None))
+        ).order_by(Order.placed_at.desc())
         
     orders_res = await db.execute(query)
     order_ids = orders_res.scalars().all()
@@ -846,12 +848,12 @@ async def vendor_order_action(
     if act in ["ACCEPT", "PREPARING", "PREPARE"]:
         if order.status not in ["PLACED", "PENDING"]:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot ACCEPT order in status '{order.status}'. Order must be 'PENDING' or 'PLACED'.")
-        order.status = "PREPARING"
+        order.status = "ACCEPTED"
         title = "दुकानदार ने स्वीकार किया (Accepted & Preparing)"
     elif act in ["PACK", "PACKED", "READY_FOR_PICKUP"]:
         if order.status not in ["ACCEPTED", "PREPARING", "PLACED", "PENDING"]:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot PACK order in status '{order.status}'.")
-        order.status = "READY_FOR_PICKUP"
+        order.status = "PACKED" if act in ["PACK", "PACKED"] else "READY_FOR_PICKUP"
         title = "सामान पैक हो गया (Packed & Ready)"
     elif act in ["HANDOFF", "HANDED_OFF"]:
         if order.status not in ["PACKED", "RUNNER_ASSIGNED"]:
@@ -885,7 +887,7 @@ async def vendor_order_action(
             "store_id": order.store_id,
             "runner_id": order.runner_id
         })
-        if order.status == "PACKED":
+        if order.status in ["PACKED", "READY_FOR_PICKUP"]:
             await ws_manager.emit_mission_assigned({
                 "order_id": order.id,
                 "store_id": order.store_id,
