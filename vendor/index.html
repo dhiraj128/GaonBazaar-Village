@@ -5985,8 +5985,10 @@
       }
 ];
     window.MASTER_SKU_DATABASE = MASTER_SKU_DATABASE;
-    const RURAL_50_STAPLES = MASTER_SKU_DATABASE;
-    window.RURAL_50_STAPLES = RURAL_50_STAPLES;
+    let DYNAMIC_MASTER_CATALOG = Array.isArray(MASTER_SKU_DATABASE) ? [...MASTER_SKU_DATABASE] : [];
+    window.DYNAMIC_MASTER_CATALOG = DYNAMIC_MASTER_CATALOG;
+    const RURAL_50_STAPLES = DYNAMIC_MASTER_CATALOG; // Backwards compatibility
+    window.RURAL_50_STAPLES = DYNAMIC_MASTER_CATALOG;
 
 
     const masterCatalog = MASTER_SKU_DATABASE.map(s => ({
@@ -6876,19 +6878,26 @@
       'प्याज': 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=600&q=80',
       'atta': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80',
       'flour': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80',
+      'wheat': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80',
+      'aashirvaad': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80',
       'आटा': 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80',
       'rice': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&q=80',
       'chawal': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&q=80',
+      'basmati': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&q=80',
       'चावल': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&q=80',
       'dal': 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&q=80',
       'दाल': 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&q=80',
       'arhar': 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&q=80',
+      'toor': 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&q=80',
+      'chana': 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&q=80',
+      'moong': 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=600&q=80',
       'milk': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=600&q=80',
       'doodh': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=600&q=80',
       'दूध': 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=600&q=80',
       'ghee': 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=600&q=80',
       'घी': 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=600&q=80',
       'oil': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&q=80',
+      'mustard': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&q=80',
       'tel': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&q=80',
       'तेल': 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&q=80',
       'sugar': 'https://images.unsplash.com/photo-1581441363689-1f3c3c414635?w=600&q=80',
@@ -6901,11 +6910,28 @@
       'namak': 'https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=600&q=80',
       'नमक': 'https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=600&q=80',
       'maggi': 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=600&q=80',
+      'noodles': 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=600&q=80',
       'मैगी': 'https://images.unsplash.com/photo-1612927601601-6638404737ce?w=600&q=80',
       'biscuit': 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=600&q=80',
+      'biscuits': 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=600&q=80',
+      'parle': 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=600&q=80',
       'बिस्कुट': 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=600&q=80',
       'soap': 'https://images.unsplash.com/photo-1607006314188-755a5b5123d5?w=600&q=80',
+      'lifebuoy': 'https://images.unsplash.com/photo-1607006314188-755a5b5123d5?w=600&q=80',
+      'dettol': 'https://images.unsplash.com/photo-1607006314188-755a5b5123d5?w=600&q=80',
+      'lux': 'https://images.unsplash.com/photo-1607006314188-755a5b5123d5?w=600&q=80',
       'साबुन': 'https://images.unsplash.com/photo-1607006314188-755a5b5123d5?w=600&q=80',
+      'detergent': 'https://images.unsplash.com/photo-1585421514738-01798e348b17?w=600&q=80',
+      'surf': 'https://images.unsplash.com/photo-1585421514738-01798e348b17?w=600&q=80',
+      'tide': 'https://images.unsplash.com/photo-1585421514738-01798e348b17?w=600&q=80',
+      'ghadi': 'https://images.unsplash.com/photo-1585421514738-01798e348b17?w=600&q=80',
+      'shampoo': 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=600&q=80',
+      'toothpaste': 'https://images.unsplash.com/photo-1559591937-e62fb3d8d5bb?w=600&q=80',
+      'colgate': 'https://images.unsplash.com/photo-1559591937-e62fb3d8d5bb?w=600&q=80',
+      'spices': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&q=80',
+      'haldi': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&q=80',
+      'mirch': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&q=80',
+      'masala': 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&q=80',
       'sweets': 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=600&q=80',
       'gulab jamun': 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=600&q=80',
       'मिठाई': 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=600&q=80'
@@ -7105,11 +7131,94 @@
         image_url: 'https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=600&q=80'
       },
       'soap': {
+        title: 'Lifebuoy Total Germ Protection Soap',
+        brand: 'Lifebuoy',
+        category: 'Personal Care',
+        unit: '100 g',
+        mrp: 40,
+        suggested_price: 36,
+        image_url: 'https://images.unsplash.com/photo-1607006314188-755a5b5123d5?w=600&q=80'
+      },
+      'dettol': {
         title: 'Dettol Original Bathing Soap Bar',
         brand: 'Dettol',
         category: 'Personal Care',
         unit: '125 g',
+        mrp: 45,
+        suggested_price: 40,
         image_url: 'https://images.unsplash.com/photo-1607006314188-755a5b5123d5?w=600&q=80'
+      },
+      'lux': {
+        title: 'Lux Soft Glow Rose Bath Soap',
+        brand: 'Lux',
+        category: 'Personal Care',
+        unit: '100 g',
+        mrp: 38,
+        suggested_price: 34,
+        image_url: 'https://images.unsplash.com/photo-1607006314188-755a5b5123d5?w=600&q=80'
+      },
+      'shampoo': {
+        title: 'Clinic Plus Strong & Long Health Shampoo (175ml)',
+        brand: 'Clinic Plus',
+        category: 'Personal Care',
+        unit: '175 ml',
+        mrp: 130,
+        suggested_price: 115,
+        image_url: 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=600&q=80'
+      },
+      'detergent': {
+        title: 'Ghadi Detergent Washing Powder (1kg)',
+        brand: 'Ghadi',
+        category: 'Household',
+        unit: '1 kg',
+        mrp: 70,
+        suggested_price: 62,
+        image_url: 'https://images.unsplash.com/photo-1585421514738-01798e348b17?w=600&q=80'
+      },
+      'surf': {
+        title: 'Surf Excel Easy Wash Detergent Powder (1kg)',
+        brand: 'Surf Excel',
+        category: 'Household',
+        unit: '1 kg',
+        mrp: 145,
+        suggested_price: 130,
+        image_url: 'https://images.unsplash.com/photo-1585421514738-01798e348b17?w=600&q=80'
+      },
+      'toothpaste': {
+        title: 'Colgate Strong Teeth Anticavity Toothpaste (100g)',
+        brand: 'Colgate',
+        category: 'Personal Care',
+        unit: '100 g',
+        mrp: 65,
+        suggested_price: 58,
+        image_url: 'https://images.unsplash.com/photo-1559591937-e62fb3d8d5bb?w=600&q=80'
+      },
+      'colgate': {
+        title: 'Colgate Strong Teeth Toothpaste (100g)',
+        brand: 'Colgate',
+        category: 'Personal Care',
+        unit: '100 g',
+        mrp: 65,
+        suggested_price: 58,
+        image_url: 'https://images.unsplash.com/photo-1559591937-e62fb3d8d5bb?w=600&q=80'
+      },
+      'spices': {
+        title: 'Everest Turmeric Powder / Haldi (200g)',
+        brand: 'Everest',
+        category: 'Spices',
+        unit: '200 g',
+        mrp: 65,
+        suggested_price: 58,
+        image_url: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&q=80'
+      },
+      'haldi': {
+        title: 'Everest Pure Turmeric Powder (200g)',
+        brand: 'Everest',
+        category: 'Spices',
+        unit: '200 g',
+        mrp: 65,
+        suggested_price: 58,
+        image_url: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&q=80'
       }
     };
 
@@ -7609,40 +7718,138 @@
     }
     window.openMasterCatalogModal = openMasterCatalogModal;
 
-    function renderMasterCatalogToggleList(filterQuery = '') {
+    // Dynamic FMCG search query resolver (Unlimited Catalog & Instant Database Lookups)
+    async function searchDynamicMasterCatalog(query) {
+      const q = (query || '').toLowerCase().trim();
+      let results = [];
+
+      // 1. Actively query backend database API
+      try {
+        const apiPath = '/api/v1/catalog/global' + (q ? `?query=${encodeURIComponent(q)}` : '');
+        const backendItems = await apiRequest(apiPath, 'GET');
+        if (Array.isArray(backendItems) && backendItems.length > 0) {
+          backendItems.forEach(b => {
+            results.push({
+              id: b.id,
+              name: b.name_en || b.name_hi,
+              brand: "GaonBazaar Certified",
+              variant: b.default_unit || "1 unit",
+              category: b.category || "Grocery",
+              price: b.suggested_mrp ? Math.round(b.suggested_mrp * 0.92) : 50.0,
+              mrp: b.suggested_mrp || 55.0,
+              img: b.image_url || getProductStockImage(b.name_en, b.category)
+            });
+          });
+        }
+      } catch (e) {
+        // Fall through to rich local master SKU database
+      }
+
+      // 2. Query rich Master SKU Database
+      const localPool = (window.DYNAMIC_MASTER_CATALOG && window.DYNAMIC_MASTER_CATALOG.length > 0)
+        ? window.DYNAMIC_MASTER_CATALOG
+        : (window.MASTER_SKU_DATABASE || []);
+
+      localPool.forEach(it => {
+        const title = (it.name || it.product_name || '').toLowerCase();
+        const brand = (it.brand || '').toLowerCase();
+        const cat = (it.category || '').toLowerCase();
+        if (!q || title.includes(q) || brand.includes(q) || cat.includes(q)) {
+          if (!results.some(r => r.name.toLowerCase() === title)) {
+            results.push({
+              id: it.id,
+              name: it.name || it.product_name,
+              brand: it.brand || "Standard",
+              variant: it.variant || it.unit || "1 unit",
+              category: it.category || "Grocery",
+              price: it.price || it.suggested_price || it.mrp || 40.0,
+              mrp: it.mrp || 50.0,
+              img: it.img || it.image_url || it.image || getProductStockImage(it.name || it.product_name, it.category)
+            });
+          }
+        }
+      });
+
+      // 3. Dynamic FMCG synthesis: resolve ANY common staple or product keyword instantly
+      if (q.length >= 2) {
+        for (const [k, staple] of Object.entries(MASTER_STAPLE_MAP)) {
+          if (q.includes(k) || k.includes(q)) {
+            if (!results.some(r => r.name.toLowerCase() === staple.title.toLowerCase())) {
+              results.unshift({
+                id: 'dyn_' + k + '_' + Date.now().toString(36),
+                name: staple.title,
+                brand: staple.brand,
+                variant: staple.unit,
+                category: staple.category,
+                price: staple.suggested_price || Math.round(staple.mrp * 0.92),
+                mrp: staple.mrp,
+                img: staple.image_url || getProductStockImage(staple.title, staple.category)
+              });
+            }
+          }
+        }
+
+        // 4. Truly UNLIMITED fallback: if vendor searched for arbitrary FMCG query, build matching item
+        if (results.length === 0) {
+          const capitalized = q.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+          let cat = 'Grocery';
+          if (['soap', 'shampoo', 'paste', 'cream', 'oil', 'brush'].some(k => q.includes(k))) cat = 'Personal Care';
+          else if (['tomato', 'potato', 'onion', 'chili', 'vegetable', 'fruit'].some(k => q.includes(k))) cat = 'Vegetables';
+          else if (['milk', 'curd', 'paneer', 'ghee', 'butter', 'doodh'].some(k => q.includes(k))) cat = 'Dairy';
+
+          results.push({
+            id: 'dyn_gen_' + Date.now().toString(36),
+            name: `${capitalized} Standard Pack`,
+            brand: 'Verified Brand',
+            variant: cat === 'Dairy' ? '1 L' : '1 kg',
+            category: cat,
+            price: 65.0,
+            mrp: 75.0,
+            img: getProductStockImage(q, cat)
+          });
+        }
+      }
+
+      return results;
+    }
+    window.searchDynamicMasterCatalog = searchDynamicMasterCatalog;
+
+    async function renderMasterCatalogToggleList(filterQuery = '') {
       const container = document.getElementById('master-catalog-items-list');
       const counterEl = document.getElementById('master-catalog-enabled-count');
       if (!container) return;
 
-      container.innerHTML = '';
       const q = (filterQuery || '').toLowerCase().trim();
+      const filtered = await searchDynamicMasterCatalog(q);
 
-      const filtered = RURAL_50_STAPLES.filter(it => {
-        if (!q) return true;
-        return it.name.toLowerCase().includes(q) || it.brand.toLowerCase().includes(q) || it.category.toLowerCase().includes(q);
-      });
-
+      container.innerHTML = '';
       let activeCount = 0;
       const existingInventory = getVendorInventory();
 
       filtered.forEach(it => {
-        const inShop = existingInventory.find(p => (p.title || p.name || '').toLowerCase() === it.name.toLowerCase() && (p.unit || p.variant || '') === it.variant);
+        const inShop = existingInventory.find(p => (p.title || p.name || '').toLowerCase() === it.name.toLowerCase());
         const isChecked = inShop && inShop.in_stock !== false;
         if (isChecked) activeCount++;
+
+        const safeName = it.name.replace(/'/g, "\\'");
+        const safeBrand = (it.brand || '').replace(/'/g, "\\'");
+        const safeVariant = (it.variant || '').replace(/'/g, "\\'");
+        const safeCat = (it.category || '').replace(/'/g, "\\'");
+        const safeImg = (it.img || '').replace(/'/g, "\\'");
 
         const row = document.createElement('div');
         row.className = "flex items-center justify-between p-2.5 bg-slate-50 hover:bg-slate-100/80 rounded-2xl border border-slate-200/80 transition gap-2";
         row.innerHTML = `
           <div class="flex items-center space-x-2.5 min-w-0 flex-1">
-            <img src="${it.img}" alt="${it.name}" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0 bg-white">
+            <img src="${it.img}" alt="${it.name}" class="w-10 h-10 rounded-xl object-cover border border-slate-200 shrink-0 bg-white" onerror="this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&q=80'">
             <div class="min-w-0 flex-1">
               <h4 class="text-xs font-bold text-slate-900 truncate">${it.name}</h4>
               <p class="text-[10px] text-slate-500 truncate">${it.brand} • ${it.variant} • MRP ₹${it.mrp}</p>
-              <span class="text-xs font-extrabold text-emerald-800 font-mono">₹${it.price.toFixed(2)}</span>
+              <span class="text-xs font-extrabold text-emerald-800 font-mono">₹${Number(it.price).toFixed(2)}</span>
             </div>
           </div>
           <label class="relative inline-flex items-center cursor-pointer shrink-0">
-            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleMasterCatalogProduct('${it.id}', this.checked)" class="sr-only peer">
+            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleMasterCatalogProduct('${it.id}', this.checked, '${safeName}', '${safeBrand}', '${safeVariant}', '${safeCat}', ${it.price}, ${it.mrp}, '${safeImg}')" class="sr-only peer">
             <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
           </label>
         `;
@@ -7650,7 +7857,7 @@
       });
 
       if (counterEl) {
-        counterEl.innerText = `${activeCount} of ${RURAL_50_STAPLES.length} Staples Active`;
+        counterEl.innerText = `${activeCount} Items Active in Shop`;
       }
       if (window.lucide) lucide.createIcons();
     }
@@ -7661,12 +7868,33 @@
     }
     window.filterMasterCatalogList = filterMasterCatalogList;
 
-    function toggleMasterCatalogProduct(stapleId, isChecked) {
-      const staple = RURAL_50_STAPLES.find(s => s.id === stapleId);
-      if (!staple) return;
-
+    function toggleMasterCatalogProduct(stapleId, isChecked, optName, optBrand, optVariant, optCat, optPrice, optMrp, optImg) {
       let inventory = getVendorInventory();
-      const existingIdx = inventory.findIndex(p => (p.title || p.name || '').toLowerCase() === staple.name.toLowerCase() && (p.unit || p.variant || '') === staple.variant);
+      let itemName = optName;
+      let itemBrand = optBrand || "Verified Brand";
+      let itemVariant = optVariant || "1 unit";
+      let itemCat = optCat || "Grocery";
+      let itemPrice = optPrice || 45.0;
+      let itemMrp = optMrp || 50.0;
+      let itemImg = optImg || getProductStockImage(itemName, itemCat);
+
+      if (!itemName) {
+        const pool = (window.DYNAMIC_MASTER_CATALOG || MASTER_SKU_DATABASE || []);
+        const staple = pool.find(s => s.id === stapleId);
+        if (staple) {
+          itemName = staple.name || staple.product_name;
+          itemBrand = staple.brand;
+          itemVariant = staple.variant || staple.unit;
+          itemCat = staple.category;
+          itemPrice = staple.price || staple.suggested_price || staple.mrp;
+          itemMrp = staple.mrp;
+          itemImg = staple.img || staple.image_url;
+        }
+      }
+
+      if (!itemName) return;
+
+      const existingIdx = inventory.findIndex(p => (p.title || p.name || '').toLowerCase() === itemName.toLowerCase());
 
       if (isChecked) {
         if (existingIdx !== -1) {
@@ -7674,25 +7902,25 @@
         } else {
           inventory.unshift({
             id: 'v_prod_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-            title: staple.name,
-            name: staple.name,
-            brand: staple.brand,
-            variant: staple.variant,
-            unit: staple.variant,
-            price: staple.price,
-            mrp: staple.mrp,
-            category: staple.category,
+            title: itemName,
+            name: itemName,
+            brand: itemBrand,
+            variant: itemVariant,
+            unit: itemVariant,
+            price: Number(itemPrice),
+            mrp: Number(itemMrp),
+            category: itemCat,
             stock: 50,
             in_stock: true,
-            img: staple.img
+            img: itemImg
           });
         }
-        toastSuccess(`Added ${staple.name} (${staple.variant}) to Live Stock!`);
+        toastSuccess(`Added ${itemName} to Live Stock!`);
       } else {
         if (existingIdx !== -1) {
           inventory[existingIdx].in_stock = false;
         }
-        toastInfo(`Removed ${staple.name} from live counter.`);
+        toastInfo(`Removed ${itemName} from live counter.`);
       }
 
       saveVendorInventory(inventory);
@@ -8017,7 +8245,7 @@ function openAddProductModal() {
     });
   </script>
 
-    <!-- Master Catalog 50 Rural Staples Toggle Modal -->
+    <!-- Dynamic Master Product Catalog Modal -->
     <div id="modal-master-catalog" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
       <div class="w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl text-left border border-slate-200 max-h-[90vh] flex flex-col">
         <!-- Header -->
@@ -8025,9 +8253,9 @@ function openAddProductModal() {
           <div>
             <h3 class="text-base font-extrabold flex items-center space-x-2">
               <i data-lucide="book-open" class="w-5 h-5"></i>
-              <span>Master Catalog (50 Rural Staples)</span>
+              <span data-i18n="master_catalog_title">Master Product Catalog</span>
             </h3>
-            <p class="text-xs text-emerald-100 mt-0.5">Toggle switches ON/OFF to instantly stock items in your shop.</p>
+            <p class="text-xs text-emerald-100 mt-0.5" data-i18n="master_catalog_sub">Dynamic FMCG search & instant shop stocking.</p>
           </div>
           <button onclick="closeModal('modal-master-catalog')" class="w-8 h-8 rounded-full bg-emerald-900/60 hover:bg-emerald-900 text-white flex items-center justify-center transition active:scale-95">
             <i data-lucide="x" class="w-4 h-4"></i>
@@ -8038,7 +8266,7 @@ function openAddProductModal() {
         <div class="p-3 border-b border-slate-100 bg-slate-50 shrink-0">
           <div class="relative">
             <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
-            <input type="text" id="master-catalog-search" oninput="filterMasterCatalogList(this.value)" placeholder="Search 50 staples (Atta, Dal, Sugar, Oil, Biscuits)..." class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600">
+            <input type="text" id="master-catalog-search" oninput="filterMasterCatalogList(this.value)" placeholder="Search any FMCG product (Atta, Soap, Dal, Oil, Biscuits)..." class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-emerald-600">
           </div>
         </div>
 
@@ -8049,7 +8277,7 @@ function openAddProductModal() {
 
         <!-- Footer -->
         <div class="p-3.5 border-t border-slate-100 bg-white flex items-center justify-between shrink-0">
-          <span id="master-catalog-enabled-count" class="text-xs font-bold text-slate-600">0 of 50 Staples Active</span>
+          <span id="master-catalog-enabled-count" class="text-xs font-bold text-slate-600">0 Items Active in Shop</span>
           <button onclick="closeModal('modal-master-catalog')" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition">
             Done
           </button>
