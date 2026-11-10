@@ -93,7 +93,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4 text-xs">
             <div>
               <label className="font-bold text-slate-700 block mb-1">
                 Authorized Admin Phone (+91):
@@ -102,6 +102,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                 <span className="absolute left-3 top-2.5 text-slate-400 font-bold">+91</span>
                 <input
                   type="tel"
+                  autoComplete="off"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="9800000099"
@@ -118,6 +119,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
               <div className="relative">
                 <input
                   type="password"
+                  autoComplete="off"
                   value={secretOrOtp}
                   onChange={(e) => setSecretOrOtp(e.target.value)}
                   placeholder="Passcode 123456 or Admin Key"

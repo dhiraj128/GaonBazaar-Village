@@ -289,7 +289,7 @@ export const PayoutSetup: React.FC<PayoutSetupProps> = ({
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
         {/* TAB 1: UPI ID FORM */}
         {payoutMode === 'upi' && (
           <div className="space-y-4 animate-in fade-in duration-200">
@@ -300,6 +300,7 @@ export const PayoutSetup: React.FC<PayoutSetupProps> = ({
               <div className="relative flex items-center">
                 <input
                   type="text"
+                  autoComplete="off"
                   value={upiId}
                   onChange={(e) => setUpiId(e.target.value)}
                   placeholder="e.g. name@bank or 9876543210@paytm"
@@ -341,7 +342,9 @@ export const PayoutSetup: React.FC<PayoutSetupProps> = ({
                 Bank Account Number <span className="text-rose-500">*</span>
               </label>
               <input
-                type="password"
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
                 value={accountNumber}
                 onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
                 placeholder="Enter 9 to 18-digit account number"
@@ -357,6 +360,8 @@ export const PayoutSetup: React.FC<PayoutSetupProps> = ({
               </label>
               <input
                 type="text"
+                inputMode="numeric"
+                autoComplete="off"
                 value={confirmAccountNumber}
                 onChange={(e) => setConfirmAccountNumber(e.target.value.replace(/\D/g, ''))}
                 placeholder="Re-enter to verify account number"
@@ -386,6 +391,7 @@ export const PayoutSetup: React.FC<PayoutSetupProps> = ({
               </label>
               <input
                 type="text"
+                autoComplete="off"
                 value={ifscCode}
                 onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
                 placeholder="e.g. SBIN0001234 or HDFC0004567"
