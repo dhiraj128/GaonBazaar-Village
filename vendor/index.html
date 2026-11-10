@@ -247,12 +247,12 @@
             <div class="space-y-2">
               <label class="block text-center text-[11px] font-semibold text-slate-600" data-i18n="enter_otp_label">Enter 6-Digit OTP</label>
               <div class="flex justify-between space-x-1.5 max-w-[320px] mx-auto">
-                <input type="text" maxlength="1" id="otp-1" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="1">
-                <input type="text" maxlength="1" id="otp-2" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="2">
-                <input type="text" maxlength="1" id="otp-3" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="3">
-                <input type="text" maxlength="1" id="otp-4" oninput="handleOtpInput(4, event)" onkeydown="handleOtpKey(4, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="4">
-                <input type="text" maxlength="1" id="otp-5" oninput="handleOtpInput(5, event)" onkeydown="handleOtpKey(5, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="5">
-                <input type="text" maxlength="1" id="otp-6" oninput="handleOtpInput(6, event)" onkeydown="handleOtpKey(6, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="6">
+                <input type="text" maxlength="1" id="otp-1" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="1">
+                <input type="text" maxlength="1" id="otp-2" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="2">
+                <input type="text" maxlength="1" id="otp-3" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="3">
+                <input type="text" maxlength="1" id="otp-4" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(4, event)" onkeydown="handleOtpKey(4, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="4">
+                <input type="text" maxlength="1" id="otp-5" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(5, event)" onkeydown="handleOtpKey(5, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="5">
+                <input type="text" maxlength="1" id="otp-6" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(6, event)" onkeydown="handleOtpKey(6, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="6">
               </div>
             </div>
 
@@ -480,7 +480,7 @@
                 <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="enter_aadhaar_otp_label">
                   Enter 6-Digit Aadhaar OTP <span class="text-rose-500">*</span>
                 </label>
-                <input type="tel" id="kyc-aadhaar-otp-input" maxlength="6" value="123456" placeholder="123456" class="w-full text-center py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-extrabold text-lg tracking-widest focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+                <input type="tel" id="kyc-aadhaar-otp-input" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="6" value="123456" placeholder="123456" class="w-full text-center py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-extrabold text-lg tracking-widest focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
               </div>
 
               <button onclick="submitAadhaarVerification()" id="btn-verify-aadhaar-otp" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
@@ -547,7 +547,7 @@
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="upi_id_label">
                 Virtual Payment Address (UPI ID) <span class="text-rose-500">*</span>
               </label>
-              <input type="text" id="upi-vpa" placeholder="e.g. name@bank or 9876543210@paytm" value="sharmakirana@okhdfcbank" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+              <input type="text" autocomplete="off" id="upi-vpa" placeholder="e.g. name@bank or 9876543210@paytm" value="sharmakirana@okhdfcbank" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
               <span class="text-[11px] text-slate-500 mt-1 block" data-i18n="upi_supported_apps">Supported: Google Pay, PhonePe, Paytm, BHIM, Cred</span>
             </div>
 
@@ -565,14 +565,14 @@
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="acc_num_label">
                 Account Number <span class="text-rose-500">*</span>
               </label>
-              <input type="password" id="bank-acc-no" value="50100456789012" placeholder="Enter bank account number" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+              <input type="text" inputmode="numeric" autocomplete="off" id="bank-acc-no" value="50100456789012" placeholder="Enter bank account number" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="reenter_acc_num_label">
                 Re-enter Account Number <span class="text-rose-500">*</span>
               </label>
-              <input type="text" id="bank-acc-no-confirm" value="50100456789012" oninput="checkAccountMatch()" placeholder="Re-enter to verify account number" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+              <input type="text" inputmode="numeric" autocomplete="off" id="bank-acc-no-confirm" value="50100456789012" oninput="checkAccountMatch()" placeholder="Re-enter to verify account number" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
               <p id="acc-match-msg" class="text-[10px] mt-1 font-semibold hidden"></p>
             </div>
 
@@ -580,7 +580,7 @@
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="ifsc_label">
                 IFSC Code <span class="text-rose-500">*</span>
               </label>
-              <input type="text" id="bank-ifsc" value="HDFC0001234" maxlength="11" oninput="this.value = this.value.toUpperCase()" placeholder="e.g. SBIN0001234 or HDFC0001234" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-bold text-xs tracking-wider focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
+              <input type="text" autocomplete="off" id="bank-ifsc" value="HDFC0001234" maxlength="11" oninput="this.value = this.value.toUpperCase()" placeholder="e.g. SBIN0001234 or HDFC0001234" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-bold text-xs tracking-wider focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs">
               <p class="text-[10px] text-slate-400 mt-1">11-character code on your cheque book or passbook (5th character is 0)</p>
             </div>
 
@@ -823,7 +823,7 @@
               
               <!-- Responsive non-overflowing input group -->
               <div class="flex flex-col sm:flex-row gap-2.5 w-full">
-                <input type="text" id="handover-otp-input" maxlength="4" placeholder="e.g. 5821" data-i18n-placeholder="handover_otp_placeholder" class="w-full sm:flex-1 min-w-0 px-3 py-2 text-center font-mono font-bold text-lg tracking-widest border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-xs">
+                <input type="text" id="handover-otp-input" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="4" placeholder="e.g. 5821" data-i18n-placeholder="handover_otp_placeholder" class="w-full sm:flex-1 min-w-0 px-3 py-2 text-center font-mono font-bold text-lg tracking-widest border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-xs">
                 <button onclick="verifyPickupOTPAndComplete('GB-8915')" class="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm active:scale-95 transition shrink-0 flex items-center justify-center space-x-1" data-i18n="handover_btn">
                   <i data-lucide="check" class="w-4 h-4"></i>
                   <span>Handover</span>
@@ -1567,7 +1567,7 @@
 
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="enter_security_otp_label">Enter Security OTP (Default: 7788)</label>
-            <input type="text" id="payout-security-otp" maxlength="4" placeholder="7788" class="w-full px-3 py-2 text-center text-lg font-mono font-bold tracking-widest rounded-lg border border-slate-300 focus:outline-none focus:border-emerald-600">
+            <input type="text" id="payout-security-otp" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="4" placeholder="7788" class="w-full px-3 py-2 text-center text-lg font-mono font-bold tracking-widest rounded-lg border border-slate-300 focus:outline-none focus:border-emerald-600">
           </div>
 
           <div>
@@ -2624,27 +2624,33 @@
       } catch (e) {}
     }
 
-    function updateOrdersUIFromData(orders) {
-      const placed = orders.filter(o => o.status === 'PLACED');
-      const preparing = orders.filter(o => o.status === 'ACCEPTED' || o.status === 'PREPARING');
-      const ready = orders.filter(o => o.status === 'PACKED' || o.status === 'RUNNER_ASSIGNED');
+    function updateOrdersUIFromData(orders = []) {
+      if (!Array.isArray(orders)) {
+        orders = Array.isArray(window.currentVendorOrders) ? window.currentVendorOrders : [];
+      }
+      window.currentVendorOrders = orders;
+
+      const placed = (orders || []).filter(o => o && (o.status === 'PLACED' || o.status === 'CREATED'));
+      const preparing = (orders || []).filter(o => o && (o.status === 'ACCEPTED' || o.status === 'PREPARING'));
+      const ready = (orders || []).filter(o => o && (o.status === 'PACKED' || o.status === 'RUNNER_ASSIGNED'));
 
       const newBadge = document.getElementById('new-orders-badge');
       const prepBadge = document.getElementById('prep-orders-badge');
       const readyBadge = document.getElementById('ready-orders-badge');
 
-      if (newBadge) newBadge.innerText = String(placed.length);
-      if (prepBadge) prepBadge.innerText = String(preparing.length);
-      if (readyBadge) readyBadge.innerText = String(ready.length);
+      if (newBadge) newBadge.innerText = String(placed?.length ?? 0);
+      if (prepBadge) prepBadge.innerText = String(preparing?.length ?? 0);
+      if (readyBadge) readyBadge.innerText = String(ready?.length ?? 0);
 
       const newEmpty = document.getElementById('new-orders-empty');
       const prepEmpty = document.getElementById('prep-orders-empty');
       const readyEmpty = document.getElementById('ready-orders-empty');
 
-      if (newEmpty) newEmpty.classList.toggle('hidden', placed.length > 0);
-      if (prepEmpty) prepEmpty.classList.toggle('hidden', preparing.length > 0);
-      if (readyEmpty) readyEmpty.classList.toggle('hidden', ready.length > 0);
+      if (newEmpty) newEmpty.classList.toggle('hidden', (placed?.length ?? 0) > 0);
+      if (prepEmpty) prepEmpty.classList.toggle('hidden', (preparing?.length ?? 0) > 0);
+      if (readyEmpty) readyEmpty.classList.toggle('hidden', (ready?.length ?? 0) > 0);
     }
+    window.updateOrdersUIFromData = updateOrdersUIFromData;
 
     // ---------------------------------------------------------------------------
     // STATE & ROUTER ARCHITECTURE (HTML5 HISTORY API)
@@ -2871,7 +2877,7 @@
           if (typeof renderSampleBarcodes === 'function') renderSampleBarcodes();
           if (typeof renderLooseItemChips === 'function') renderLooseItemChips();
         } else if (tabName === 'orders') {
-          if (typeof updateOrdersUIFromData === 'function') updateOrdersUIFromData();
+          if (typeof updateOrdersUIFromData === 'function') updateOrdersUIFromData(window.currentVendorOrders || []);
         }
         if (window.lucide) lucide.createIcons();
       }, tabName.charAt(0).toUpperCase() + tabName.slice(1) + ' Section');
