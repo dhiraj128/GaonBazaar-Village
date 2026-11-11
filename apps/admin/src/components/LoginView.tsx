@@ -19,8 +19,8 @@ export function LoginView({
   onToggleLang,
 }: LoginViewProps) {
   const t = translations[lang];
-  const [identifier, setIdentifier] = useState('9800000099');
-  const [secretOrOtp, setSecretOrOtp] = useState('123456');
+  const [identifier, setIdentifier] = useState('');
+  const [secretOrOtp, setSecretOrOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

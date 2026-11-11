@@ -35,4 +35,5 @@ export function CustomerPortal() {
   );
 }
 
+export { MobileLogin } from './MobileLogin';
 export default CustomerPortal;

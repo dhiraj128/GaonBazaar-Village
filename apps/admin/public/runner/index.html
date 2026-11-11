@@ -237,7 +237,7 @@
                   <span>🇮🇳</span>
                   <span class="font-mono text-blue-700 font-extrabold">+91</span>
                 </div>
-                <input type="tel" id="runner-phone-input" maxlength="10" placeholder="9905361711" value="9905361711" class="w-full pl-20 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs font-mono font-bold">
+                <input type="tel" id="runner-phone-input" maxlength="10" placeholder="Enter 10-digit mobile number" value="" autocomplete="off" class="w-full pl-20 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs font-mono font-bold">
               </div>
               <p class="text-[10px] text-slate-400 mt-1" data-i18n="sms_dispatched_note">Instant SMS OTP delivered to your mobile phone</p>
             </div>
@@ -2570,7 +2570,7 @@
         const sendBtnText = document.getElementById('send-otp-text');
         if (sendBtn) {
           sendBtn.disabled = true;
-          if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "OTP भेजा जा रहा है..." : "Sending OTP...";
+          if (sendBtnText) sendBtnText.innerText = "Sending...";
         }
 
         const proceedToOtpInput = () => {

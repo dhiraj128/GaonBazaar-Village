@@ -137,12 +137,60 @@ export async function sendCustomerOTP() {
   const formattedPhoneNumber = `+91${clean}`;
 
   const btn = document.getElementById('send-otp-btn');
+  const btnText = document.getElementById('send-otp-text');
   if (btn) {
-    btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${window.currentLang === 'hi' ? 'OTP भेजा जा रहा है...' : 'Sending OTP...'}`;
     btn.disabled = true;
+    if (btnText) {
+      btnText.innerText = "Sending...";
+    } else {
+      btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> <span>Sending...</span>`;
+    }
   }
 
   try {
+    // 1. Razorpay Compliance Backdoor: 9999999999 strictly bypasses SMS dispatch with static 123456
+    const isRazorpayBackdoor = (clean === "9999999999");
+    if (isRazorpayBackdoor) {
+      console.log("Razorpay Compliance Backdoor active for [9999999999]. Bypassing SMS dispatch.");
+      window.confirmationResult = {
+        confirm: async (enteredCode) => {
+          if (enteredCode === "123456" || enteredCode === "1234") {
+            return {
+              user: {
+                uid: "usr_razorpay_compliance_reviewer",
+                phoneNumber: formattedPhoneNumber
+              }
+            };
+          }
+          throw { code: "auth/invalid-verification-code" };
+        }
+      };
+
+      const phoneDisplay = document.getElementById('otp-phone-display');
+      if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
+
+      document.getElementById('phone-input-section')?.classList.add('hidden');
+      document.getElementById('otp-input-section')?.classList.remove('hidden');
+
+      const testDigits = ['1', '2', '3', '4', '5', '6'];
+      for (let i = 1; i <= 6; i++) {
+        const box = document.getElementById(`otp-${i}`);
+        if (box) box.value = testDigits[i - 1];
+      }
+      document.getElementById('otp-1')?.focus();
+
+      startResendTimer();
+
+      if (window.toastSuccess) {
+        window.toastSuccess(
+          window.currentLang === 'hi'
+            ? "रेज़रपे अनुपालन समीक्षा मोड: ओटीपी 123456 सक्रिय है"
+            : "Razorpay Compliance Review: Static code 123456 active"
+        );
+      }
+      return;
+    }
+
     const isFirebaseTestNumber = (clean === "9905361711" || clean === "9876543210");
 
     // For designated Firebase Test Credentials, bypass SMS carrier network & reCAPTCHA blocks
@@ -278,12 +326,15 @@ export async function verifyCustomerOTP() {
 
   const formattedPhoneNumber = `+91${clean}`;
   const enteredName = (nameInput?.value || '').trim() || 'Customer';
-  const isTestPhone = (clean === "9905361711" || clean === "9876543210");
+  const isRazorpayBackdoor = (clean === "9999999999");
+  const isTestPhone = (clean === "9905361711" || clean === "9876543210" || isRazorpayBackdoor);
   const isTestOtp = (code === "123456" || code === "1234");
 
   try {
     let authUser = null;
-    if (isTestPhone && isTestOtp) {
+    if (isRazorpayBackdoor && isTestOtp) {
+      authUser = { uid: "usr_razorpay_compliance_reviewer", phoneNumber: formattedPhoneNumber };
+    } else if (isTestPhone && isTestOtp) {
       authUser = { uid: `usr_test_${clean}`, phoneNumber: formattedPhoneNumber };
     } else if (window.confirmationResult) {
       try {
@@ -324,10 +375,10 @@ export async function verifyCustomerOTP() {
     localStorage.setItem('gb_customer_profile', JSON.stringify({
       id: dbUser.id || uid,
       uid: uid,
-      name: dbUser.name || enteredName,
+      name: (clean === "9999999999" ? "Razorpay Reviewer" : (dbUser.name || enteredName)),
       phone: formattedPhoneNumber,
       role: 'customer',
-      kyc_status: 'verified'
+      kyc_status: 'unverified'
     }));
 
     // STRICT ROLE-BASED ROUTING FOR CUSTOMER:
@@ -1077,20 +1128,20 @@ window.skipKycAndProceed = skipKycAndProceed;
 window.showKycError = showKycError;
 window.hideKycError = hideKycError;
 
-// Cross-App Auth Persistence Restoration
+// Enforce strictly empty inputs on initial load for new users
 try {
-  const savedPhone = localStorage.getItem('gb_user_phone') || localStorage.getItem('gb_auth_phone') || localStorage.getItem('gb_vendor_phone') || localStorage.getItem('gb_runner_phone') || localStorage.getItem('gb_customer_phone');
-  if (savedPhone) {
-    const el = document.getElementById('cust-phone-input');
-    if (el && !el.value) el.value = savedPhone;
+  const elPhone = document.getElementById('cust-phone-input');
+  if (elPhone) {
+    elPhone.value = '';
+    elPhone.setAttribute('autocomplete', 'off');
   }
-  const savedName = localStorage.getItem('gb_user_name') || localStorage.getItem('gb_vendor_name') || localStorage.getItem('gb_runner_name') || localStorage.getItem('gb_customer_name');
-  if (savedName) {
-    const el = document.getElementById('cust-name-input');
-    if (el && !el.value) el.value = savedName;
+  const elName = document.getElementById('cust-name-input');
+  if (elName) {
+    elName.value = '';
+    elName.setAttribute('autocomplete', 'off');
   }
 } catch (e) {
-  console.warn('Cross-app auth restore notice:', e);
+  console.warn('Init auth clean notice:', e);
 }
 
 console.log("GaonBazaar Auth & Paperless KYC service initialized successfully.");
