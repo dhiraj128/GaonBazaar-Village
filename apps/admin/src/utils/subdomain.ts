@@ -1,23 +1,24 @@
-export type AppTarget = 'admin' | 'dukaan' | 'mitra' | 'customer' | 'splash' | 'login';
+export type AppTarget = 'admin' | 'dukaan' | 'mitra' | 'customer' | 'splash' | 'language' | 'login';
 
 /**
  * Resolves which GaonBazaar application to render based on the current hostname,
  * search parameters, and pathname.
  *
  * Strict Rendering Hierarchy:
- * 1. Explicit query param override (e.g. `?app=admin`, `?app=dukaan`, `?app=mitra`, `?app=customer`, `?app=login`, `?app=splash`)
+ * 1. Explicit query param override (e.g. `?app=admin`, `?app=dukaan`, `?app=mitra`, `?app=customer`, `?app=login`, `?app=language`, `?app=splash`)
  *    Enables developer switching and integration testing on any environment.
- * 2. Explicit pathname prefix (e.g. `/admin`, `/dukaan`, `/vendor`, `/mitra`, `/runner`, `/customer`, `/login`)
+ * 2. Explicit pathname prefix (e.g. `/admin`, `/dukaan`, `/vendor`, `/mitra`, `/runner`, `/customer`, `/language`, `/login`)
  * 3. Exact Subdomain / Hostname Matching:
  *    - `admin.apnagaonbazaar.in` (or starting with `admin.`) -> 'admin' (Super Admin Command Center)
  *    - `dukaan.apnagaonbazaar.in` (or starting with `dukaan.` or `vendor.`) -> 'dukaan' (GaonBazaar Dukaan Vendor Portal)
  *    - `mitra.apnagaonbazaar.in` (or starting with `mitra.` or `runner.`) -> 'mitra' (Gaon Mitra Runner Portal)
  *    - `apnagaonbazaar.in` or `www.apnagaonbazaar.in` or fallback host (localhost/preview):
- *        - Root route `/` -> 'splash' (Branded Green Splash Screen, auto-redirects to /login)
- *        - `/login` -> 'login' (Mobile Login with Firebase Phone Auth)
+ *        - Root route `/` -> 'splash' (Branded Green Splash Screen, auto-redirects to /language)
+ *        - `/language` -> 'language' (Bilingual Language Selection Onboarding Screen)
+ *        - `/login` -> 'login' (Mobile Login with 6-Digit OTP)
  *        - `/customer` or `/store` -> 'customer' (Apna GaonBazaar Customer App)
  * 4. Fallback / Default:
- *    - Any unrecognized host -> 'splash' on root `/`, 'login' on `/login`, or 'customer'
+ *    - Any unrecognized host -> 'splash' on root `/`, 'language' on `/language`, 'login' on `/login`, or 'customer'
  *    - CRITICAL REQUIREMENT: Default fallback must NEVER be the Admin Panel.
  */
 export function resolveAppTarget(
@@ -37,6 +38,7 @@ export function resolveAppTarget(
     if (appQuery === 'mitra' || appQuery === 'runner') return 'mitra';
     if (appQuery === 'customer') return 'customer';
     if (appQuery === 'login') return 'login';
+    if (appQuery === 'language') return 'language';
     if (appQuery === 'splash') return 'splash';
   } catch {
     // Ignore URL parse errors
@@ -51,6 +53,9 @@ export function resolveAppTarget(
   }
   if (cleanPath.startsWith('/mitra') || cleanPath.startsWith('/runner')) {
     return 'mitra';
+  }
+  if (cleanPath === '/language' || cleanPath.startsWith('/language')) {
+    return 'language';
   }
   if (cleanPath === '/login' || cleanPath.startsWith('/login')) {
     return 'login';

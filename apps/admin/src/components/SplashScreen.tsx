@@ -8,11 +8,12 @@ interface SplashScreenProps {
 
 export function SplashScreen({
   onFinish,
-  destination = '/login',
+  destination = '/language',
   durationMs = 2500,
 }: SplashScreenProps) {
   useEffect(() => {
-    // 2. Routing Logic: Auto navigate after 2500ms
+    // 1. Restore Language Selection Routing:
+    // Flow: SplashScreen (2.5s delay) -> LanguageSelectionScreen -> MobileLoginScreen
     const timer = setTimeout(() => {
       if (onFinish) {
         onFinish();

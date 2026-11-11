@@ -18,7 +18,7 @@ export function MobileLogin({
   onSuccess,
   onCancel,
   title = "Mobile Login",
-  subtitle = "Enter your mobile number to receive a secure 6-digit SMS verification code on your phone."
+  subtitle = "Enter your mobile number to receive a secure 6-digit OTP."
 }: MobileLoginProps) {
   // 1. Clear Hardcoded React State: strictly empty strings for new users
   const [name, setName] = useState('');
@@ -63,37 +63,26 @@ export function MobileLogin({
         return;
       }
 
-      console.log('[Firebase Phone Auth] Initiating OTP dispatch with invisible reCAPTCHA for:', formattedPhoneNumber);
+      console.log('[Auth] Initiating OTP dispatch for:', formattedPhoneNumber);
 
-      // Trigger Firebase Phone Auth with invisible RecaptchaVerifier
+      // Trigger Phone Auth with invisible RecaptchaVerifier
       const confirmation = await sendFirebaseOtp(clean);
       setConfirmationResult(confirmation);
       setStep('otp');
       setStatusMessage(`Verification code sent to ${formattedPhoneNumber}`);
     } catch (err: any) {
-      console.error('[Firebase Phone Auth Error Code]:', err?.code);
-      console.error('[Firebase Phone Auth Error Message]:', err?.message);
-      console.error('[Firebase Phone Auth Error Stack]:', err);
+      // Log the actual raw error securely in the background for developer debugging only
+      console.error('[Auth Error Details]:', err);
 
       const code = err?.code || '';
-      const rawMsg = err?.message || 'Failed to dispatch verification code';
 
-      // Explicitly Surface the Real Error without generic masking
-      if (code === 'auth/unauthorized-domain' || rawMsg.toLowerCase().includes('unauthorized-domain')) {
-        const currentDomain = typeof window !== 'undefined' ? window.location.hostname : 'apnagaonbazaar.in';
-        setError(`Firebase Error (auth/unauthorized-domain): Domain '${currentDomain}' is not authorized. Please add it in Firebase Console > Authentication > Settings > Authorized Domains.`);
-      } else if (code === 'auth/quota-exceeded' || rawMsg.toLowerCase().includes('quota')) {
-        setError(`Firebase Error (auth/quota-exceeded): SMS Quota Exceeded. Free tier limit reached. Please check Firebase SMS billing.`);
+      // 3. Graceful Error Handling: Map error codes to user-friendly UI messages
+      if (code === 'auth/operation-not-allowed') {
+        setError('SMS services are temporarily unavailable in this region. Please contact support.');
       } else if (code === 'auth/too-many-requests') {
-        setError(`Firebase Error (auth/too-many-requests): Too many OTP attempts. Please wait 1-2 minutes before trying again.`);
-      } else if (code === 'auth/invalid-phone-number' || rawMsg.toLowerCase().includes('invalid-phone')) {
-        setError(`Firebase Error (auth/invalid-phone-number): Invalid phone number format. Must be +91 followed by 10 digits.`);
-      } else if (code === 'auth/captcha-check-failed' || code === 'auth/invalid-app-credential') {
-        setError(`Firebase Error (${code}): Invisible reCAPTCHA verification failed. Please refresh and try again.`);
-      } else if (code) {
-        setError(`Firebase Error (${code}): ${rawMsg}`);
+        setError('Too many attempts. Please try again in a few minutes.');
       } else {
-        setError(`Firebase Error: ${rawMsg}`);
+        setError('Unable to send OTP. Please check your network and try again.');
       }
     } finally {
       setIsLoading(false);
@@ -127,11 +116,11 @@ export function MobileLogin({
         return;
       }
 
-      // Verify OTP via Firebase confirmationResult
-      console.log('[Firebase Phone Auth] Confirming OTP with Firebase token...');
+      // Verify OTP via confirmationResult
+      console.log('[Auth] Confirming OTP with verification token...');
       const userCred = await verifyFirebaseOtp(code);
-      const firebaseUser = userCred.user;
-      console.log('[Firebase Phone Auth] OTP successfully verified for UID:', firebaseUser.uid);
+      const authUser = userCred.user;
+      console.log('[Auth] OTP successfully verified for UID:', authUser.uid);
 
       // Attempt optional backend sync
       try {
@@ -155,9 +144,9 @@ export function MobileLogin({
         console.warn('[Backend Sync Notice]:', backendSyncErr);
       }
 
-      // If backend was offline or not reachable, proceed with Firebase authentication
+      // If backend was offline or not reachable, proceed with verified authentication
       if (onSuccess) {
-        const token = await firebaseUser.getIdToken().catch(() => 'firebase-verified');
+        const token = await authUser.getIdToken().catch(() => 'auth-verified');
         onSuccess({
           phone: formattedPhoneNumber,
           name: name.trim() || undefined,
@@ -165,20 +154,17 @@ export function MobileLogin({
         });
       }
     } catch (err: any) {
-      console.error('[Firebase Verification Error Code]:', err?.code);
-      console.error('[Firebase Verification Error Message]:', err?.message);
+      // Log the actual raw error securely in the background for developer debugging only
+      console.error('[Auth Verification Error Details]:', err);
 
       const code = err?.code || '';
-      const msg = err?.message || 'Verification failed. Please verify the 6-digit code.';
 
       if (code === 'auth/invalid-verification-code') {
-        setError('Firebase Error (auth/invalid-verification-code): Incorrect OTP code entered.');
+        setError('Invalid OTP code. Please enter the correct 6-digit code.');
       } else if (code === 'auth/code-expired') {
-        setError('Firebase Error (auth/code-expired): OTP has expired. Please click Resend OTP.');
-      } else if (code) {
-        setError(`Firebase Error (${code}): ${msg}`);
+        setError('Verification code has expired. Please request a new OTP.');
       } else {
-        setError(msg);
+        setError('Unable to verify OTP. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -217,7 +203,7 @@ export function MobileLogin({
 
   return (
     <div className="max-w-md w-full mx-auto bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden font-sans relative">
-      {/* Invisible Firebase reCAPTCHA Container */}
+      {/* Invisible reCAPTCHA Container */}
       <div id="firebase-recaptcha-container" className="hidden" />
 
       {/* Brand Header */}
@@ -247,7 +233,7 @@ export function MobileLogin({
       </div>
 
       <div className="p-6 space-y-5">
-        {/* Real Error Message Display */}
+        {/* Graceful Human-Readable Error Message Display */}
         {error && (
           <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-start space-x-2 leading-relaxed">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
@@ -303,7 +289,7 @@ export function MobileLogin({
                 />
               </div>
               <p className="text-[10px] text-slate-400 mt-1">
-                Free Firebase SMS OTP delivered to your phone
+                Instant SMS OTP delivered to your phone.
               </p>
             </div>
 
@@ -316,7 +302,7 @@ export function MobileLogin({
               {isLoading ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  <span>Sending Free OTP...</span>
+                  <span>Sending OTP...</span>
                 </>
               ) : (
                 <>

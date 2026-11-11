@@ -961,34 +961,20 @@ export function hideKycError() {
  * Handle Auth Errors & map error codes to friendly bilingual messages
  */
 export function handleAuthError(error) {
-  console.error('[Telecom Gateway Error Details]:', error);
-  const code = error?.code || '';
-  const rawMsg = error?.message || (typeof error === 'string' ? error : '');
-  let message = `Firebase Error: ${code || rawMsg || 'Failed to dispatch verification code'}`;
+  // Log the actual raw error securely in the background for developer debugging only
+  console.error('[Auth Error Details]:', error);
 
-  if (code === 'auth/unauthorized-domain') {
-    const currentDomain = typeof window !== 'undefined' ? window.location.hostname : 'apnagaonbazaar.in';
-    message = `Firebase Error (auth/unauthorized-domain): Domain '${currentDomain}' is not authorized. Please add it to Firebase Console > Authentication > Settings > Authorized Domains.`;
-  } else if (code === 'auth/quota-exceeded') {
-    message = "Firebase Error (auth/quota-exceeded): SMS Quota Exceeded. Free tier monthly limit reached. Please check Firebase SMS billing.";
-  } else if (code === 'auth/invalid-phone-number') {
-    message = "Firebase Error (auth/invalid-phone-number): Please enter a valid 10-digit Indian mobile number formatted with +91.";
+  const code = error?.code || '';
+  let message = 'Unable to send OTP. Please check your network and try again.';
+
+  if (code === 'auth/operation-not-allowed') {
+    message = 'SMS services are temporarily unavailable in this region. Please contact support.';
   } else if (code === 'auth/too-many-requests') {
-    message = "Firebase Error (auth/too-many-requests): SMS delivery temporarily rate-limited. Please wait a few moments before trying again.";
-  } else if (code === 'auth/network-request-failed') {
-    message = "Firebase Error (auth/network-request-failed): Unable to reach telecom gateway. Please verify internet connection.";
-  } else if (code === 'auth/captcha-check-failed' || code === 'auth/invalid-app-credential') {
-    message = `Firebase Error (${code}): Invisible reCAPTCHA verification failed. Please refresh and try again.`;
-  } else if (code === 'auth/app-not-authorized') {
-    message = "Firebase Error (auth/app-not-authorized): Client app not authorized to use Firebase Auth.";
+    message = 'Too many attempts. Please try again in a few minutes.';
   } else if (code === 'auth/invalid-verification-code') {
-    message = "Firebase Error (auth/invalid-verification-code): Incorrect OTP code entered. Please enter the correct 6-digit code.";
+    message = 'Invalid OTP code. Please enter the correct 6-digit code.';
   } else if (code === 'auth/code-expired') {
-    message = "Firebase Error (auth/code-expired): This OTP code has expired. Please tap 'Resend OTP' to request a new code.";
-  } else if (code) {
-    message = `Firebase Error (${code}): ${rawMsg}`;
-  } else if (rawMsg) {
-    message = `Firebase Error: ${rawMsg}`;
+    message = 'Verification code has expired. Please request a new OTP.';
   }
 
   showAuthError(message);

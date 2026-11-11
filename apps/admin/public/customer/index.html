@@ -4031,12 +4031,20 @@
           if (typeof toastSuccess === 'function') toastSuccess("OTP sent to " + formatted + "!");
         }
       } catch (err) {
-        console.error("[Telecom Gateway Error]:", err);
-        const errDetail = err?.message || err?.code || "Network error dispatching SMS";
+        // Log the actual raw error securely in the background for developer debugging only
+        console.error("[Auth Error Details]:", err);
+        const code = err?.code || '';
+        let userMsg = 'Unable to send OTP. Please check your network and try again.';
+        if (code === 'auth/operation-not-allowed') {
+          userMsg = 'SMS services are temporarily unavailable in this region. Please contact support.';
+        } else if (code === 'auth/too-many-requests') {
+          userMsg = 'Too many attempts. Please try again in a few minutes.';
+        }
+
         if (typeof toastError === 'function') {
-          toastError("SMS Gateway Error: " + errDetail);
+          toastError(userMsg);
         } else {
-          alert("SMS Gateway Error: " + errDetail);
+          alert(userMsg);
         }
       } finally {
         if (btn) {

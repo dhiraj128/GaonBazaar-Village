@@ -5,19 +5,21 @@ import { CustomerPortal } from './components/CustomerPortal';
 import { VendorPortal } from './components/VendorPortal';
 import { RunnerPortal } from './components/RunnerPortal';
 import { SplashScreen } from './components/SplashScreen';
+import { LanguageSelectionScreen } from './components/LanguageSelectionScreen';
 import { MobileLogin } from './components/MobileLogin';
 
 /**
  * Root Subdomain Router for Apna GaonBazaar Multi-App Platform
  *
  * Routing Matrix:
- * - / (Root Route)           -> Branded Green Splash Screen (<SplashScreen />), auto-navigates to /login
- * - /login                   -> Customer Mobile Login with Firebase Phone Auth (<MobileLogin />)
+ * - / (Root Route)           -> Branded Green Splash Screen (<SplashScreen />), auto-navigates to /language (2.5s)
+ * - /language                -> Bilingual Language Selection Screen (<LanguageSelectionScreen />), navigates to /login
+ * - /login                   -> Customer Mobile Login with 6-Digit OTP (<MobileLogin />)
  * - admin.apnagaonbazaar.in  -> Super Admin Command Center (<AdminApp />)
  * - dukaan.apnagaonbazaar.in -> GaonBazaar Dukaan Vendor Portal (<VendorPortal />)
  * - mitra.apnagaonbazaar.in  -> Gaon Mitra Runner Delivery App (<RunnerPortal />)
  * - apnagaonbazaar.in        -> Root Splash Screen / Customer App (<CustomerPortal />)
- * - Fallback (localhost/etc) -> Splash on `/`, Login on `/login`, or Customer App
+ * - Fallback (localhost/etc) -> Splash on `/`, Language on `/language`, Login on `/login`, or Customer App
  */
 export function App() {
   const [target, setTarget] = useState<AppTarget>(() =>
@@ -58,21 +60,29 @@ export function App() {
 
   return (
     <>
-      {/* 2. Branded Green Splash Screen as Default Root Route (/) */}
+      {/* 1. Branded Green Splash Screen as Default Root Route (/) */}
       {target === 'splash' && (
         <SplashScreen
-          destination="/login"
+          destination="/language"
           durationMs={2500}
-          onFinish={() => navigateTo('login')}
+          onFinish={() => navigateTo('language')}
         />
       )}
 
-      {/* Customer Mobile Login (/login) */}
+      {/* 2. Language Selection Screen (/language) */}
+      {target === 'language' && (
+        <LanguageSelectionScreen
+          destination="/login"
+          onSelect={() => navigateTo('login')}
+        />
+      )}
+
+      {/* 3. Customer Mobile Login (/login) */}
       {target === 'login' && (
         <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
           <MobileLogin
-            title="GaonBazaar Login"
-            subtitle="Enter your mobile number to receive a free Firebase SMS OTP code."
+            title="Mobile Login"
+            subtitle="Enter your mobile number to receive a secure 6-digit OTP."
             onSuccess={(user) => {
               console.log('[Auth] User successfully authenticated:', user);
               navigateTo('customer');
@@ -106,6 +116,17 @@ export function App() {
             }`}
           >
             Splash (Root /)
+          </button>
+          <button
+            type="button"
+            onClick={() => switchApp('language')}
+            className={`px-2 py-1 rounded transition-colors font-medium ${
+              target === 'language'
+                ? 'bg-purple-600 text-white font-semibold'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            Language (/language)
           </button>
           <button
             type="button"
