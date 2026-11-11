@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Send, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import {
-  sendFirebaseOtp,
-  verifyFirebaseOtp,
-  resetRecaptchaVerifier,
-  type ConfirmationResult
+  sendFast2SmsOtp,
+  verifyFast2SmsOtp
 } from '../utils/firebase';
 import { PullToRefresh } from './PullToRefresh';
 
@@ -34,7 +32,7 @@ export function MobileLogin({
     }
   });
 
-  // 4. Final Wipe of Hardcoded State: force strictly empty strings
+  // Final Wipe of Hardcoded State: force strictly empty strings
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -42,7 +40,6 @@ export function MobileLogin({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   // Guarantee strictly empty inputs on mount
   useEffect(() => {
@@ -56,22 +53,6 @@ export function MobileLogin({
       setLang(propLang);
     }
   }, [propLang]);
-
-  // Cleanup verifier on unmount
-  useEffect(() => {
-    return () => {
-      if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
-        try {
-          (window as any).recaptchaVerifier.clear();
-          console.log('[Auth] window.recaptchaVerifier cleared on unmount');
-        } catch (e) {
-          console.warn('[Auth] Error clearing recaptcha on unmount:', e);
-        }
-        (window as any).recaptchaVerifier = null;
-      }
-      resetRecaptchaVerifier();
-    };
-  }, []);
 
   // Strict localized copy dictionary
   const isHindi = lang === 'hi';
@@ -122,54 +103,18 @@ export function MobileLogin({
         return;
       }
 
-      console.log('[Auth] Initiating OTP dispatch for:', formattedPhoneNumber);
+      console.log('[Auth] Initiating Fast2SMS OTP dispatch for:', formattedPhoneNumber);
 
-      // Trigger Phone Auth with invisible RecaptchaVerifier attached to recaptcha-container
-      const confirmation = await sendFirebaseOtp(clean, 'recaptcha-container');
-      setConfirmationResult(confirmation);
+      // Trigger custom Fast2SMS OTP flow
+      await sendFast2SmsOtp(clean);
       setStep('otp');
       setStatusMessage(isHindi ? `सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया` : `Verification code sent to ${formattedPhoneNumber}`);
     } catch (err: any) {
-      // Unmask the Real Firebase Error: aggressively log to console
-      console.error("FIREBASE ERROR:", err);
-      console.error("FIREBASE FATAL ERROR:", err?.code, err?.message);
-      console.error("FIREBASE FULL ERROR:", err);
-
-      // Temporarily alert raw error for developer visibility
-      alert("Firebase Error: " + (err?.code || 'unknown') + " - " + (err?.message || 'Unknown error'));
-
-      // Clean up reCAPTCHA verifier immediately to prevent infinite spinning/hanging
-      if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
-        try {
-          (window as any).recaptchaVerifier.clear();
-          console.log('[Auth] window.recaptchaVerifier cleared after error');
-        } catch (clearErr) {
-          console.warn('[Auth] Error clearing window.recaptchaVerifier:', clearErr);
-        }
-        (window as any).recaptchaVerifier = null;
-      }
-      resetRecaptchaVerifier();
-
-      const code = err?.code || '';
-
-      // Graceful error mapping
-      if (code === 'auth/captcha-timeout') {
-        setError(isHindi
-          ? "reCAPTCHA सत्यापन समय समाप्त हो गया। कृपया नीचे खींचकर पृष्ठ रीफ़्रेश करें।"
-          : "reCAPTCHA verification timed out. Please pull down to refresh.");
-      } else if (code === 'auth/operation-not-allowed') {
-        setError(isHindi
-          ? "इस क्षेत्र में SMS सेवाएं अस्थायी रूप से अनुपलब्ध हैं। कृपया सहायता से संपर्क करें।"
-          : "SMS services are temporarily unavailable in this region. Please contact support.");
-      } else if (code === 'auth/too-many-requests') {
-        setError(isHindi
-          ? "बहुत सारे प्रयास। कृपया कुछ मिनटों में पुनः प्रयास करें।"
-          : "Too many attempts. Please try again in a few minutes.");
-      } else {
-        setError(isHindi
-          ? "OTP भेजने में असमर्थ। कृपया अपना नेटवर्क जांचें और पुनः प्रयास करें।"
-          : "Unable to send OTP. Please check your network and try again.");
-      }
+      console.error("FAST2SMS DISPATCH ERROR:", err);
+      const msg = err?.message || (isHindi
+        ? "OTP भेजने में असमर्थ। कृपया अपना नेटवर्क जांचें और पुनः प्रयास करें।"
+        : "Unable to send OTP. Please check your network and try again.");
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -202,9 +147,9 @@ export function MobileLogin({
         return;
       }
 
-      // Verify OTP via confirmationResult
-      console.log('[Auth] Confirming OTP with verification token...');
-      const userCred = await verifyFirebaseOtp(code);
+      // Verify OTP via Fast2SMS API & authenticate with Firebase Custom Token
+      console.log('[Auth] Verifying OTP and signing in via Firebase Custom Token...');
+      const userCred = await verifyFast2SmsOtp(clean, code);
       const authUser = userCred.user;
       console.log('[Auth] OTP successfully verified for UID:', authUser.uid);
 
@@ -254,9 +199,9 @@ export function MobileLogin({
           ? "सत्यापन कोड समाप्त हो गया है। कृपया नया OTP अनुरोध करें।"
           : "Verification code has expired. Please request a new OTP.");
       } else {
-        setError(isHindi
+        setError(err?.message || (isHindi
           ? "OTP सत्यापित करने में असमर्थ। कृपया पुनः प्रयास करें।"
-          : "Unable to verify OTP. Please try again.");
+          : "Unable to verify OTP. Please try again."));
       }
     } finally {
       setIsLoading(false);
@@ -296,9 +241,6 @@ export function MobileLogin({
   return (
     <PullToRefresh className="w-full flex items-center justify-center">
       <div className="max-w-md w-full mx-auto bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden font-sans relative select-none">
-        {/* Invisible reCAPTCHA Container: dedicated DOM anchor */}
-        <div id="recaptcha-container"></div>
-
         {/* Brand Header */}
         <div className="bg-[#0F9D58] p-6 text-white text-center relative border-b border-emerald-700/50">
           {/* Logo Monogram */}
@@ -341,12 +283,12 @@ export function MobileLogin({
             </div>
           )}
 
-          {step === 'phone' ? (
-            <form onSubmit={handleSendOtp} autoComplete="off" className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {t.phoneLabel}
-                </label>
+        {step === 'phone' ? (
+          <form onSubmit={handleSendOtp} autoComplete="off" className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                {t.phoneLabel}
+              </label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3.5 flex items-center space-x-1 text-xs font-bold text-slate-700 border-r border-slate-200 pr-2 select-none">
                     <span>🇮🇳</span>
@@ -375,7 +317,7 @@ export function MobileLogin({
               </p>
             </div>
 
-            {/* Send OTP Button with Visual Loading State and ID for reCAPTCHA attachment */}
+            {/* Send OTP Button with Visual Loading State */}
             <button
               id="send-otp-btn"
               type="submit"
@@ -466,7 +408,7 @@ export function MobileLogin({
           </form>
         )}
 
-        {/* 2. Upgraded Trust Badge: Strict i18n & Tailwind Typography */}
+        {/* Upgraded Trust Badge: Strict i18n & Tailwind Typography */}
         <div className="text-xs font-medium text-gray-500 tracking-wide mt-4 flex items-center justify-center gap-1 select-none">
           <span>{t.trustBadge}</span>
         </div>

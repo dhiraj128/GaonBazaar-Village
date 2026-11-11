@@ -117,8 +117,8 @@ class Settings(BaseSettings):
     TESTING: bool = False
     
     # SMS Gateway Configuration
-    SMS_PROVIDER: Optional[str] = None # fast2sms, msg91, twilio, mock
-    SMS_API_KEY: Optional[str] = None
+    SMS_PROVIDER: Optional[str] = "fast2sms" # fast2sms, msg91, twilio, mock
+    SMS_API_KEY: Optional[str] = "XsoSYvBFIKVteH8tVfguXYkVcFsxVrVLFDbeH3sTPPv0vyErS6yuPzySrgai1ir1lVg31OVM8CnyXiio"
     SMS_SENDER_ID: str = "GAONBZ"
     SMS_TEMPLATE_ID: Optional[str] = None
     

@@ -1,0 +1,12 @@
+{
+  "name": "gaon-bazaar-village",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "npm --prefix apps/admin run build"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.2.0"
+  }
+}

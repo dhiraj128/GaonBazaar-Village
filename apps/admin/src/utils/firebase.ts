@@ -1,14 +1,12 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   getAuth,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  type ConfirmationResult,
+  signInWithCustomToken,
   type Auth,
   type UserCredential
 } from 'firebase/auth';
 
-export type { ConfirmationResult, UserCredential };
+export type { UserCredential };
 
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBVwI7wmdylF7499nrIGJKJP9Nvfj761xA",
@@ -23,116 +21,17 @@ export const firebaseConfig = {
 export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 
-// Global confirmation result cache
-let activeConfirmationResult: ConfirmationResult | null = null;
-let activeRecaptchaVerifier: RecaptchaVerifier | null = null;
-
 /**
- * Initializes or retrieves an invisible RecaptchaVerifier attached to the recaptcha-container.
- */
-export function getOrCreateRecaptchaVerifier(preferredTargetId = 'recaptcha-container'): RecaptchaVerifier {
-  if (typeof window === 'undefined') {
-    throw new Error('reCAPTCHA can only be initialized in browser environment');
-  }
-
-  // Check window global reference as well
-  if ((window as any).recaptchaVerifier) {
-    activeRecaptchaVerifier = (window as any).recaptchaVerifier;
-    return activeRecaptchaVerifier as RecaptchaVerifier;
-  }
-
-  // If already instantiated, verify or reuse
-  if (activeRecaptchaVerifier) {
-    (window as any).recaptchaVerifier = activeRecaptchaVerifier;
-    return activeRecaptchaVerifier;
-  }
-
-  // 1. Unmask the Real Firebase Error & Ensure reCAPTCHA Container is Mounted
-  let targetId = preferredTargetId;
-  let targetElement = document.getElementById(targetId);
-
-  // If preferred target not found, fallback to dedicated 'recaptcha-container'
-  if (!targetElement) {
-    targetId = 'recaptcha-container';
-    targetElement = document.getElementById(targetId);
-  }
-
-  // If still does not exist, check legacy container id
-  if (!targetElement) {
-    const legacyEl = document.getElementById('firebase-recaptcha-container');
-    if (legacyEl) {
-      targetId = 'firebase-recaptcha-container';
-      targetElement = legacyEl;
-    }
-  }
-
-  // If neither exists, dynamically inject a safe, dedicated container
-  if (!targetElement) {
-    targetElement = document.createElement('div');
-    targetElement.id = 'recaptcha-container';
-    document.body.appendChild(targetElement);
-    targetId = 'recaptcha-container';
-  }
-
-  console.log('[Firebase reCAPTCHA] Initializing invisible RecaptchaVerifier on target:', targetId);
-
-  activeRecaptchaVerifier = new RecaptchaVerifier(auth, targetId, {
-    size: 'invisible',
-    callback: (response: any) => {
-      console.log('[Firebase Recaptcha] Invisible challenge solved successfully, response token length:', response?.length || 0);
-    },
-    'expired-callback': () => {
-      console.warn('[Firebase Recaptcha] Token expired. Resetting verifier...');
-      resetRecaptchaVerifier();
-    }
-  });
-
-  (window as any).recaptchaVerifier = activeRecaptchaVerifier;
-  return activeRecaptchaVerifier;
-}
-
-/**
- * Clears and resets the reCAPTCHA verifier instance.
+ * No-op stub for backwards compatibility
  */
 export function resetRecaptchaVerifier(): void {
-  // Use window.recaptchaVerifier.clear() before resetting to prevent hanging/spinning
-  if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
-    try {
-      (window as any).recaptchaVerifier.clear();
-      console.log('[Firebase Recaptcha] window.recaptchaVerifier cleared successfully');
-    } catch (e) {
-      console.warn('[Firebase Recaptcha] Error clearing window.recaptchaVerifier:', e);
-    }
-    (window as any).recaptchaVerifier = null;
-  }
-
-  if (activeRecaptchaVerifier) {
-    try {
-      activeRecaptchaVerifier.clear();
-    } catch (e) {
-      console.warn('[Firebase Recaptcha] Error clearing activeRecaptchaVerifier:', e);
-    }
-    activeRecaptchaVerifier = null;
-  }
-
-  // Clear inner DOM of container so stale iframes/scripts don't persist
-  if (typeof document !== 'undefined') {
-    const el = document.getElementById('recaptcha-container');
-    if (el) {
-      el.innerHTML = '';
-    }
-    const legacyEl = document.getElementById('firebase-recaptcha-container');
-    if (legacyEl) {
-      legacyEl.innerHTML = '';
-    }
-  }
+  // Recaptcha removed in favor of Fast2SMS API custom OTP flow
 }
 
 /**
- * Sends a live SMS OTP via Firebase Phone Authentication with invisible reCAPTCHA.
- * Strictly enforces +91 country code prefix (+91${clean10}) with no spaces or dashes.
+ * Sends a 6-digit OTP via Fast2SMS API through Vercel Serverless Function (/api/send-otp).
  */
-export async function sendFirebaseOtp(rawPhone: string, targetId = 'recaptcha-container'): Promise<ConfirmationResult> {
+export async function sendFast2SmsOtp(rawPhone: string): Promise<{ success: boolean; message?: string }> {
   const clean10 = rawPhone.replace(/\D/g, '').slice(-10);
   if (!/^[6-9]\d{9}$/.test(clean10) && clean10 !== '9999999999') {
     throw {
@@ -141,68 +40,58 @@ export async function sendFirebaseOtp(rawPhone: string, targetId = 'recaptcha-co
     };
   }
 
-  // Enforce +91 Prefix strictly formatted as +91${clean10}
-  const formattedPhone = `+91${clean10}`;
-  console.log('[Firebase Auth] Dispatching SMS OTP to:', formattedPhone);
+  console.log('[Fast2SMS Client] Requesting OTP dispatch for:', clean10);
 
-  const verifier = getOrCreateRecaptchaVerifier(targetId);
+  const response = await fetch('/api/send-otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phoneNumber: clean10 })
+  });
 
-  try {
-    // Wrap with a 20-second timeout to prevent indefinite spinning when domain is unauthorized
-    const confirmationPromise = signInWithPhoneNumber(auth, formattedPhone, verifier);
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject({
-          code: 'auth/captcha-timeout',
-          message: 'reCAPTCHA verification timed out. Ensure apnagaonbazaar.in is added to Firebase Authorized Domains.'
-        });
-      }, 20000);
-    });
-
-    const confirmationResult = await Promise.race([confirmationPromise, timeoutPromise]);
-    activeConfirmationResult = confirmationResult;
-    console.log('[Firebase Auth] SMS verification code sent successfully to:', formattedPhone);
-    return confirmationResult;
-  } catch (error: any) {
-    // 1. Unmask the Real Firebase Error: aggressively log to console
-    console.error("FIREBASE ERROR:", error);
-    console.error("FIREBASE FATAL ERROR:", error?.code, error?.message);
-    console.error("FIREBASE FULL ERROR:", error);
-
-    // Always clear window.recaptchaVerifier and active verifier in catch block
-    if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
-      try {
-        (window as any).recaptchaVerifier.clear();
-      } catch (e) {}
-      (window as any).recaptchaVerifier = null;
-    }
-    resetRecaptchaVerifier();
-    throw error;
-  }
-}
-
-/**
- * Verifies the 6-digit OTP code using the active confirmation result.
- */
-export async function verifyFirebaseOtp(code: string): Promise<UserCredential> {
-  if (!activeConfirmationResult) {
+  const data = await response.json();
+  if (!response.ok || !data.success) {
     throw {
-      code: 'auth/null-confirmation-result',
-      message: 'No active OTP verification session found. Please request a new OTP.'
+      code: data.code || 'auth/sms-failed',
+      message: data.message || 'Unable to send OTP via SMS gateway. Please try again.'
     };
   }
 
-  try {
-    const result = await activeConfirmationResult.confirm(code);
-    console.log('[Firebase Auth] User successfully verified via OTP:', result.user.phoneNumber);
-    return result;
-  } catch (error: any) {
-    console.error("FIREBASE FATAL ERROR:", error?.code, error?.message);
-    console.error("FIREBASE FULL ERROR:", error);
-    throw error;
-  }
+  return data;
 }
 
-export function getActiveConfirmationResult(): ConfirmationResult | null {
-  return activeConfirmationResult;
+/**
+ * Verifies the 6-digit OTP code with /api/verify-otp, receives a Firebase Custom Token,
+ * and signs in with Firebase via signInWithCustomToken.
+ */
+export async function verifyFast2SmsOtp(rawPhone: string, otp: string): Promise<UserCredential> {
+  const clean10 = rawPhone.replace(/\D/g, '').slice(-10);
+  const cleanOtp = String(otp || '').trim();
+
+  if (!cleanOtp || cleanOtp.length < 4) {
+    throw {
+      code: 'auth/invalid-verification-code',
+      message: 'Please enter the complete verification code'
+    };
+  }
+
+  console.log('[Fast2SMS Client] Verifying OTP and requesting Custom Token for:', clean10);
+
+  const response = await fetch('/api/verify-otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phoneNumber: clean10, otp: cleanOtp })
+  });
+
+  const data = await response.json();
+  if (!response.ok || !data.success || !data.customToken) {
+    throw {
+      code: data.code || 'auth/invalid-verification-code',
+      message: data.message || 'Invalid or expired OTP code'
+    };
+  }
+
+  console.log('[Firebase Auth] Signing in seamlessly with Custom Token...');
+  const userCredential = await signInWithCustomToken(auth, data.customToken);
+  console.log('[Firebase Auth] User authenticated successfully:', userCredential.user.uid);
+  return userCredential;
 }

@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
       "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
       "source": "/(.*)",
       "destination": "/vendor/index.html"

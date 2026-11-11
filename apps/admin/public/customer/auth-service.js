@@ -196,6 +196,23 @@ export async function sendCustomerOTP() {
     let smsDispatched = false;
     let telecomError = null;
 
+    // --- Provider A0: Fast2SMS Serverless API (/api/send-otp) ---
+    try {
+      console.log(`[Telecom Gateway] Pinging Fast2SMS serverless API for: ${formattedPhoneNumber}`);
+      const f2sRes = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: clean })
+      });
+      const f2sData = await f2sRes.json();
+      if (f2sRes.ok && f2sData.success) {
+        console.log(`[Telecom Gateway] Fast2SMS OTP dispatched successfully for: ${formattedPhoneNumber}`);
+        smsDispatched = true;
+      }
+    } catch (f2sErr) {
+      console.warn(`[Telecom Gateway] Fast2SMS API notice:`, f2sErr);
+    }
+
     // --- Provider A: Firebase Phone Auth (Invisible reCAPTCHA) ---
     try {
       console.log(`[Telecom Gateway] Pinging Firebase Auth telecom API for: ${formattedPhoneNumber}`);
@@ -350,7 +367,25 @@ export async function verifyCustomerOTP() {
       authUser = { uid: "usr_razorpay_compliance_reviewer", phoneNumber: formattedPhoneNumber };
     } else if (isTestPhone && isTestOtp) {
       authUser = { uid: `usr_test_${clean}`, phoneNumber: formattedPhoneNumber };
-    } else if (window.confirmationResult) {
+    } else {
+      // Fast2SMS Serverless OTP Verification (/api/verify-otp)
+      try {
+        const vRes = await fetch('/api/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber: clean, otp: code })
+        });
+        const vData = await vRes.json();
+        if (vRes.ok && vData.success) {
+          authUser = { uid: `usr_f2s_${clean}`, phoneNumber: formattedPhoneNumber };
+          console.log("[Auth] Fast2SMS OTP verified, customToken available:", !!vData.customToken);
+        }
+      } catch (f2sVErr) {
+        console.warn("[Auth] Fast2SMS verify notice:", f2sVErr);
+      }
+    }
+
+    if (!authUser && window.confirmationResult) {
       try {
         const userCredential = await window.confirmationResult.confirm(code);
         authUser = userCredential.user;
