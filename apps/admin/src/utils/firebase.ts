@@ -42,17 +42,40 @@ export async function sendFast2SmsOtp(rawPhone: string): Promise<{ success: bool
 
   console.log('[Fast2SMS Client] Requesting OTP dispatch for:', clean10);
 
-  const response = await fetch('/api/send-otp', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phoneNumber: clean10 })
-  });
+  let response: Response;
+  try {
+    response = await fetch('/api/send-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ phoneNumber: clean10 })
+    });
+  } catch (netErr: any) {
+    console.error('[Fast2SMS Client Network Exception]:', netErr);
+    throw {
+      code: 'auth/network-error',
+      message: 'Network connection error. Please verify your internet connection.'
+    };
+  }
 
-  const data = await response.json();
+  const rawText = await response.text();
+  let data: any = {};
+  try {
+    data = JSON.parse(rawText);
+  } catch (parseErr) {
+    console.error('[Fast2SMS Client Non-JSON Server Response]:', response.status, rawText);
+    throw {
+      code: 'auth/server-error',
+      message: `Server returned HTTP ${response.status}: ${rawText.slice(0, 100) || 'Service temporarily unavailable'}`
+    };
+  }
+
   if (!response.ok || !data.success) {
     throw {
       code: data.code || 'auth/sms-failed',
-      message: data.message || 'Unable to send OTP via SMS gateway. Please try again.'
+      message: data.message || data.error || 'Unable to send OTP via SMS gateway. Please try again.'
     };
   }
 
@@ -76,17 +99,40 @@ export async function verifyFast2SmsOtp(rawPhone: string, otp: string): Promise<
 
   console.log('[Fast2SMS Client] Verifying OTP and requesting Custom Token for:', clean10);
 
-  const response = await fetch('/api/verify-otp', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ phoneNumber: clean10, otp: cleanOtp })
-  });
+  let response: Response;
+  try {
+    response = await fetch('/api/verify-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ phoneNumber: clean10, otp: cleanOtp })
+    });
+  } catch (netErr: any) {
+    console.error('[Fast2SMS Verify Network Exception]:', netErr);
+    throw {
+      code: 'auth/network-error',
+      message: 'Network connection error. Please verify your internet connection.'
+    };
+  }
 
-  const data = await response.json();
+  const rawText = await response.text();
+  let data: any = {};
+  try {
+    data = JSON.parse(rawText);
+  } catch (parseErr) {
+    console.error('[Fast2SMS Verify Non-JSON Server Response]:', response.status, rawText);
+    throw {
+      code: 'auth/server-error',
+      message: `Server returned HTTP ${response.status}: ${rawText.slice(0, 100) || 'Service temporarily unavailable'}`
+    };
+  }
+
   if (!response.ok || !data.success || !data.customToken) {
     throw {
       code: data.code || 'auth/invalid-verification-code',
-      message: data.message || 'Invalid or expired OTP code'
+      message: data.message || data.error || 'Invalid or expired OTP code'
     };
   }
 

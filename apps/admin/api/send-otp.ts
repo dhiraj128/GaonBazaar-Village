@@ -1,4 +1,61 @@
-import { getFirebaseAdmin } from './_firebaseAdmin';
+import * as firebaseAdmin from 'firebase-admin';
+
+const admin = (firebaseAdmin as any).default || firebaseAdmin;
+
+function getFirebaseAdmin() {
+  try {
+    if (admin.apps && admin.apps.length > 0) {
+      return admin;
+    }
+
+    const projectId = process.env.FIREBASE_PROJECT_ID || 'gaon-bazaar-village';
+    const serviceAccountEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY
+      ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+      : undefined;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+
+    if (serviceAccountEnv) {
+      try {
+        const creds = typeof serviceAccountEnv === 'string' ? JSON.parse(serviceAccountEnv) : serviceAccountEnv;
+        admin.initializeApp({
+          credential: admin.credential.cert(creds),
+          projectId: creds.project_id || projectId,
+        });
+        return admin;
+      } catch (e) {
+        console.error('[Send OTP] Error parsing FIREBASE_SERVICE_ACCOUNT:', e);
+      }
+    }
+
+    if (privateKey && clientEmail) {
+      try {
+        admin.initializeApp({
+          credential: admin.credential.cert({
+            projectId,
+            clientEmail,
+            privateKey,
+          }),
+          projectId,
+        });
+        return admin;
+      } catch (e) {
+        console.error('[Send OTP] Error initializing with privateKey:', e);
+      }
+    }
+
+    try {
+      admin.initializeApp({ projectId });
+    } catch (e) {
+      console.warn('[Send OTP] Default initialization notice:', e);
+    }
+
+    return admin;
+  } catch (err) {
+    console.warn('[Send OTP] getFirebaseAdmin caught exception:', err);
+    return null;
+  }
+}
 
 // Cross-invocation in-memory cache for Vercel functions
 interface OtpRecord {
@@ -14,6 +71,19 @@ const getOtpCache = (): Map<string, OtpRecord> => {
   return (global as any).__gb_otp_cache;
 };
 
+const sendJson = (res: any, statusCode: number, data: any) => {
+  try {
+    res.setHeader('Content-Type', 'application/json');
+    if (typeof res.status === 'function') {
+      return res.status(statusCode).json(data);
+    }
+    res.statusCode = statusCode;
+    return res.end(JSON.stringify(data));
+  } catch (e) {
+    console.error('[Send OTP sendJson error]:', e);
+  }
+};
+
 export default async function handler(req: any, res: any) {
   // CORS configuration
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -23,26 +93,41 @@ export default async function handler(req: any, res: any) {
     'Access-Control-Allow-Headers',
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
+  res.setHeader('Content-Type', 'application/json');
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return sendJson(res, 200, { success: true });
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method Not Allowed' });
+    return sendJson(res, 405, { success: false, error: 'Method Not Allowed', message: 'Method Not Allowed' });
   }
 
   try {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (pErr) {
+        console.error('[Send OTP Body Parse Error]:', pErr);
+        return sendJson(res, 400, {
+          success: false,
+          error: 'Invalid JSON request body',
+          message: 'Invalid JSON request body'
+        });
+      }
+    }
+    body = body || {};
+
     const rawPhone = body.phoneNumber || body.phone || '';
     const clean = rawPhone.replace(/\D/g, '').slice(-10);
 
     // Validate 10-digit Indian Mobile format (starts with 6-9) or Razorpay backdoor 9999999999
     if (!/^[6-9]\d{9}$/.test(clean) && clean !== '9999999999') {
-      return res.status(400).json({
+      return sendJson(res, 400, {
         success: false,
         code: 'auth/invalid-phone-number',
+        error: 'Please enter a valid 10-digit Indian mobile number',
         message: 'Please enter a valid 10-digit Indian mobile number'
       });
     }
@@ -52,7 +137,7 @@ export default async function handler(req: any, res: any) {
       const otp = '123456';
       const expiresAt = Date.now() + 5 * 60 * 1000;
       getOtpCache().set(clean, { otp, expiresAt, attempts: 0 });
-      return res.status(200).json({
+      return sendJson(res, 200, {
         success: true,
         message: 'Razorpay Compliance Review: Static code 123456 active',
         phoneNumber: clean
@@ -66,20 +151,21 @@ export default async function handler(req: any, res: any) {
     // 1. Store in memory cache
     getOtpCache().set(clean, { otp, expiresAt, attempts: 0 });
 
-    // 2. Store in Firestore collection 'otp_challenges' if Firebase Admin is available
+    // 2. Optional: Store in Firestore collection 'otp_challenges'
     try {
-      const admin = getFirebaseAdmin();
-      if (admin && admin.firestore) {
-        await admin.firestore().collection('otp_challenges').doc(clean).set({
+      const fbAdmin = getFirebaseAdmin();
+      if (fbAdmin && fbAdmin.firestore) {
+        await fbAdmin.firestore().collection('otp_challenges').doc(clean).set({
           otp,
           phoneNumber: clean,
           expiresAt: new Date(expiresAt).toISOString(),
           createdAt: new Date().toISOString(),
           isUsed: false
         });
+        console.log(`[Send OTP] Challenge synced to Firestore for +91${clean}`);
       }
     } catch (fsErr) {
-      console.warn('[Send OTP] Firestore sync notice:', fsErr);
+      console.warn('[Send OTP] Firestore sync notice (continuing without Firestore):', fsErr);
     }
 
     // 3. Dispatch SMS via Fast2SMS API
@@ -99,30 +185,41 @@ export default async function handler(req: any, res: any) {
       })
     });
 
-    const f2sData = await f2sResponse.json();
+    const f2sText = await f2sResponse.text();
+    let f2sData: any = {};
+    try {
+      f2sData = JSON.parse(f2sText);
+    } catch {
+      f2sData = { return: false, message: f2sText };
+    }
+
     console.log(`[Fast2SMS] Response for +91${clean}:`, f2sData);
 
     if (f2sResponse.ok && f2sData.return) {
-      return res.status(200).json({
+      return sendJson(res, 200, {
         success: true,
         message: 'OTP sent successfully via Fast2SMS',
         phoneNumber: clean
       });
     } else {
-      const errDetail = Array.isArray(f2sData.message) ? f2sData.message.join(', ') : (f2sData.message || 'SMS Gateway rejection');
-      console.error('[Fast2SMS Error]:', errDetail);
-      return res.status(502).json({
+      const errDetail = Array.isArray(f2sData.message)
+        ? f2sData.message.join(', ')
+        : (f2sData.message || 'SMS Gateway rejection');
+      console.error('[Fast2SMS Delivery Error]:', errDetail);
+      return sendJson(res, 502, {
         success: false,
         code: 'auth/sms-delivery-failed',
+        error: `Fast2SMS delivery error: ${errDetail}`,
         message: `Fast2SMS delivery error: ${errDetail}`,
         details: f2sData
       });
     }
   } catch (error: any) {
-    console.error('[Send OTP Serverless Fatal Error]:', error);
-    return res.status(500).json({
+    console.error('[SEND-OTP FATAL ERROR]:', error);
+    return sendJson(res, 500, {
       success: false,
       code: 'auth/internal-error',
+      error: error?.message || 'Internal server error dispatching OTP',
       message: error?.message || 'Internal server error dispatching OTP'
     });
   }
