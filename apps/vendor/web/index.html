@@ -3013,16 +3013,16 @@
         else if (clean.startsWith('0') && clean.length === 11) clean = clean.slice(1);
         clean = clean.replace(/\D/g, '').slice(-10);
 
-        if (clean.length !== 10) {
-          toastError(currentLang === 'hi' ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें" : "Please enter a valid 10-digit Indian mobile number");
+        if (!/^[6-9]\d{9}$/.test(clean) && clean !== '9999999999') {
+          toastError("Please enter a valid 10-digit Indian mobile number (e.g. 9905361711)");
           phoneInput?.focus();
           return;
         }
 
+        // 1. Enforce +91 Country Code Formatting
         const formattedPhoneNumber = `+91${clean}`;
         state.userProfile.phone = clean;
         const isRazorpay = (clean === "9999999999");
-        const isTest = (clean === "9905361711" || clean === "9876543210" || isRazorpay);
 
         const sendBtn = document.getElementById('send-otp-btn');
         const sendBtnText = document.getElementById('send-otp-text');
@@ -3042,32 +3042,31 @@
           document.getElementById('phone-input-section')?.classList.add('hidden');
           document.getElementById('otp-container')?.classList.remove('hidden');
 
-          if (isTest) {
+          if (isRazorpay) {
             ['1','2','3','4','5','6'].forEach((d, i) => {
               const b = document.getElementById('otp-' + (i + 1));
               if (b) b.value = d;
             });
+            toastSuccess(currentLang === 'hi' ? "रेज़रपे अनुपालन समीक्षा मोड: परीक्षण ओटीपी 123456" : "Razorpay Compliance Review Mode: Test OTP 123456");
           } else {
             for (let i = 1; i <= 6; i++) {
               const b = document.getElementById('otp-' + i);
               if (b) b.value = '';
             }
+            toastSuccess("OTP sent to " + formattedPhoneNumber + "!");
           }
           const otp1 = document.getElementById('otp-1');
           if (otp1) otp1.focus();
-
-          if (isRazorpay) {
-            toastSuccess(currentLang === 'hi' ? "रेज़रपे अनुपालन समीक्षा मोड: परीक्षण ओटीपी 123456" : "Razorpay Compliance Review Mode: Test OTP 123456");
-          } else {
-            toastSuccess(currentLang === 'hi' ? "OTP आपके मोबाइल पर भेज दिया गया है!" : "OTP sent to " + formattedPhoneNumber + "!");
-          }
         };
 
-        if (isTest) {
+        // Razorpay Compliance Review Backdoor bypass
+        if (isRazorpay) {
           proceedToOtpInput();
           return;
         }
 
+        // 2. Mandatory Network Trigger (Firebase & Backend Transactional SMS)
+        console.log("[Telecom Gateway] Pinging Firebase Auth telecom API for:", formattedPhoneNumber);
         let verifier = window.recaptchaVerifier;
         if (!verifier && typeof window.initInvisibleRecaptcha === 'function') {
           verifier = window.initInvisibleRecaptcha();
@@ -3077,28 +3076,63 @@
           window.firebaseSignInWithPhone(formattedPhoneNumber, verifier)
             .then(confirmation => {
               window.confirmationResult = confirmation;
+              console.log("[Telecom Gateway] Firebase SMS confirmation received successfully for:", formattedPhoneNumber);
               proceedToOtpInput();
             })
-            .catch(err => {
-              console.warn("Firebase phone auth notice:", err);
-              if (sendBtn) {
-                sendBtn.disabled = false;
-                if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "OTP प्राप्त करें" : "Send OTP";
-              }
-              const masked = currentLang === 'hi'
-                ? "सत्यापन कोड भेजने में असमर्थ। कृपया अपना नंबर जांचें या बाद में पुनः प्रयास करें।"
-                : "Unable to send verification code. Please check your number or try again later.";
-              toastError(masked);
+            .catch(fbErr => {
+              console.error("[Telecom Gateway Error]: Firebase rejected SMS:", fbErr);
+              // Fallback to backend live SMS dispatch
+              fetch('/api/v1/auth/otp/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: clean, role: 'vendor' })
+              }).then(res => {
+                if (res.ok) {
+                  console.log("[Telecom Gateway] Backend transactional SMS dispatched to:", formattedPhoneNumber);
+                  proceedToOtpInput();
+                } else {
+                  throw fbErr;
+                }
+              }).catch(finalErr => {
+                if (sendBtn) {
+                  sendBtn.disabled = false;
+                  if (sendBtnText) sendBtnText.innerText = "Send OTP";
+                }
+                const errDetail = finalErr?.message || finalErr?.code || "Network error dispatching SMS";
+                toastError("SMS Gateway Error: " + errDetail);
+              });
             });
         } else {
-          proceedToOtpInput();
+          // Direct backend SMS API trigger
+          fetch('/api/v1/auth/otp/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: clean, role: 'vendor' })
+          }).then(res => {
+            if (res.ok) {
+              console.log("[Telecom Gateway] Backend transactional SMS dispatched to:", formattedPhoneNumber);
+              proceedToOtpInput();
+            } else {
+              throw new Error("Telecom Gateway API rejected request");
+            }
+          }).catch(err => {
+            if (sendBtn) {
+              sendBtn.disabled = false;
+              if (sendBtnText) sendBtnText.innerText = "Send OTP";
+            }
+            console.error("[Telecom Gateway Error]:", err);
+            toastError("SMS Gateway Error: " + (err?.message || "Failed to dispatch SMS"));
+          });
         }
       } catch (err) {
-        console.error("sendMobileOTP error:", err);
-        const masked = currentLang === 'hi'
-          ? "सत्यापन कोड भेजने में असमर्थ। कृपया अपना नंबर जांचें या बाद में पुनः प्रयास करें।"
-          : "Unable to send verification code. Please check your number or try again later.";
-        toastError(masked);
+        console.error("[Telecom Gateway Fatal Error]:", err);
+        const sendBtn = document.getElementById('send-otp-btn');
+        const sendBtnText = document.getElementById('send-otp-text');
+        if (sendBtn) {
+          sendBtn.disabled = false;
+          if (sendBtnText) sendBtnText.innerText = "Send OTP";
+        }
+        toastError("SMS Gateway Error: " + (err?.message || "Network error"));
       }
     }
 

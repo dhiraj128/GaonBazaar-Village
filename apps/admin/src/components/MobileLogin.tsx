@@ -29,9 +29,12 @@ export function MobileLogin({
 
     const clean = phone.replace(/\D/g, '').slice(-10);
     if (!/^[6-9]\d{9}$/.test(clean) && clean !== '9999999999') {
-      setError('Please enter a valid 10-digit Indian mobile number (starts with 6-9)');
+      setError('Please enter a valid 10-digit Indian mobile number (e.g. 9905361711)');
       return;
     }
+
+    // 1. Enforce +91 Country Code Formatting
+    const formattedPhoneNumber = `+91${clean}`;
 
     // 3. Visual loading feedback: isLoading state, "Sending..." text, disabled button
     setIsLoading(true);
@@ -45,8 +48,32 @@ export function MobileLogin({
         return;
       }
 
-      // Backend / Firebase OTP Dispatch
+      // 2. Mandatory Telecom Network Trigger
+      let dispatched = false;
+      let lastError: any = null;
+
+      // Attempt Supabase live SMS OTP trigger
       try {
+        if (typeof window !== 'undefined' && window.supabase && window.supabase.auth) {
+          console.log('[Telecom Gateway] Pinging Supabase Auth for:', formattedPhoneNumber);
+          const { data, error } = await window.supabase.auth.signInWithOtp({
+            phone: formattedPhoneNumber
+          });
+          if (error) {
+            console.error('[Telecom Gateway Error] Supabase OTP error:', error);
+            lastError = error;
+          } else {
+            console.log('[Telecom Gateway] Supabase OTP dispatched:', data);
+            dispatched = true;
+          }
+        }
+      } catch (supaErr) {
+        console.warn('[Telecom Gateway] Supabase OTP call notice:', supaErr);
+      }
+
+      // Attempt Backend Transactional SMS trigger
+      try {
+        console.log('[Telecom Gateway] Pinging Backend SMS API for:', formattedPhoneNumber);
         const res = await fetch('/api/v1/auth/otp/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -57,19 +84,36 @@ export function MobileLogin({
           })
         });
 
-        if (!res.ok) {
+        if (res.ok) {
+          console.log('[Telecom Gateway] Backend SMS dispatched for:', formattedPhoneNumber);
+          dispatched = true;
+        } else {
           const body = await res.json().catch(() => ({}));
-          console.warn('API OTP send warning:', body.detail);
+          console.error('[Telecom Gateway Error] Backend rejected OTP:', body.detail);
+          lastError = new Error(body.detail || 'SMS Gateway rejected request');
         }
-      } catch (netErr) {
-        console.warn('Offline or background OTP notice:', netErr);
+      } catch (netErr: any) {
+        console.error('[Telecom Gateway Error] Network call exception:', netErr);
+        if (!lastError) lastError = netErr;
+      }
+
+      if (!dispatched && lastError) {
+        throw lastError;
       }
 
       setStep('otp');
-      setStatusMessage(`Verification code sent to +91 ${clean}`);
+      setStatusMessage(`Verification code sent to ${formattedPhoneNumber}`);
     } catch (err: any) {
-      console.error('Firebase OTP API call error:', err);
-      setError(err?.message || 'Failed to dispatch verification code. Please check your number.');
+      console.error('[Telecom Gateway Fatal Error]:', err);
+      const code = err?.code || '';
+      const msg = err?.message || 'Failed to dispatch verification code';
+      if (code === 'auth/quota-exceeded' || msg.toLowerCase().includes('quota')) {
+        setError('SMS Gateway Error: SMS Quota Exceeded. Please contact support.');
+      } else if (code === 'auth/invalid-phone-number' || msg.toLowerCase().includes('invalid')) {
+        setError('SMS Gateway Error: Invalid Phone Number (+91 format required).');
+      } else {
+        setError(`SMS Gateway Error: ${msg}`);
+      }
     } finally {
       setIsLoading(false);
     }

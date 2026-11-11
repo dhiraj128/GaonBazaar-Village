@@ -3965,14 +3965,15 @@
       clean = clean.replace(/\D/g, '').slice(-10);
 
       if (!/^[6-9]\d{9}$/.test(clean) && clean !== '9999999999') {
-        if (typeof toastError === 'function') {
-          toastError(window.currentLang === 'hi' ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें" : "Please enter a valid 10-digit Indian mobile number");
-        } else {
-          alert("Please enter a valid 10-digit Indian mobile number");
-        }
+        const err = "Please enter a valid 10-digit Indian mobile number (e.g. 9905361711)";
+        if (typeof toastError === 'function') toastError(err);
+        else alert(err);
         phoneInput?.focus();
         return;
       }
+
+      // Enforce +91 country code formatting
+      const formatted = `+91${clean}`;
 
       // Visual Loading state: disabled={isLoading}, text changes to "Sending..."
       if (btn) {
@@ -3985,10 +3986,35 @@
         if (window.authService && typeof window.authService.sendCustomerOTP === 'function') {
           await window.authService.sendCustomerOTP();
         } else {
-          console.warn("authService not ready, using direct OTP dispatch...");
-          const formatted = `+91${clean}`;
+          console.warn("[Telecom Gateway] authService not ready, using direct network trigger...");
           const isRazorpay = (clean === "9999999999");
-          const isTest = (clean === "9905361711" || clean === "9876543210" || isRazorpay);
+
+          if (isRazorpay) {
+            const phoneDisplay = document.getElementById('otp-phone-display');
+            if (phoneDisplay) phoneDisplay.innerText = formatted;
+            document.getElementById('phone-input-section')?.classList.add('hidden');
+            document.getElementById('otp-input-section')?.classList.remove('hidden');
+            ['1','2','3','4','5','6'].forEach((d, i) => {
+              const b = document.getElementById(`otp-${i+1}`);
+              if (b) b.value = d;
+            });
+            if (typeof toastSuccess === 'function') toastSuccess("Razorpay Compliance Review: Test OTP 123456");
+            document.getElementById('otp-1')?.focus();
+            return;
+          }
+
+          // Direct live backend SMS dispatch
+          const apiBase = (window.APP_CONFIG && window.APP_CONFIG.BACKEND_URL) || '';
+          const res = await fetch(`${apiBase}/api/v1/auth/otp/send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: clean, role: 'customer' })
+          });
+
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.detail || "SMS Gateway API rejected request");
+          }
 
           const phoneDisplay = document.getElementById('otp-phone-display');
           if (phoneDisplay) phoneDisplay.innerText = formatted;
@@ -3996,29 +4022,21 @@
           document.getElementById('phone-input-section')?.classList.add('hidden');
           document.getElementById('otp-input-section')?.classList.remove('hidden');
 
-          if (isTest) {
-            ['1','2','3','4','5','6'].forEach((d, i) => {
-              const b = document.getElementById(`otp-${i+1}`);
-              if (b) b.value = d;
-            });
-            if (isRazorpay) {
-              if (typeof toastSuccess === 'function') toastSuccess("Razorpay Compliance Review: Test OTP 123456");
-            } else {
-              if (typeof toastSuccess === 'function') toastSuccess("OTP sent to " + formatted + "! (Test Code: 123456)");
-            }
-          } else {
-            for (let i = 1; i <= 6; i++) {
-              const b = document.getElementById(`otp-${i}`);
-              if (b) b.value = '';
-            }
-            if (typeof toastSuccess === 'function') toastSuccess("OTP sent to " + formatted + "!");
+          for (let i = 1; i <= 6; i++) {
+            const b = document.getElementById(`otp-${i}`);
+            if (b) b.value = '';
           }
           document.getElementById('otp-1')?.focus();
+
+          if (typeof toastSuccess === 'function') toastSuccess("OTP sent to " + formatted + "!");
         }
       } catch (err) {
-        console.error("sendCustomerOTP error:", err);
+        console.error("[Telecom Gateway Error]:", err);
+        const errDetail = err?.message || err?.code || "Network error dispatching SMS";
         if (typeof toastError === 'function') {
-          toastError("Unable to send verification code. Please check your number.");
+          toastError("SMS Gateway Error: " + errDetail);
+        } else {
+          alert("SMS Gateway Error: " + errDetail);
         }
       } finally {
         if (btn) {

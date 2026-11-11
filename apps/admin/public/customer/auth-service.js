@@ -111,7 +111,7 @@ export async function sendCustomerOTP() {
   const rawInput = (phoneInput?.value || '').trim();
   const name = (nameInput?.value || '').trim();
 
-  // Strip non-digits except +
+  // 1. Enforce "+91" Country Code Formatting
   let clean = rawInput.replace(/[^\d+]/g, '');
   if (clean.startsWith('+91')) {
     clean = clean.slice(3);
@@ -122,18 +122,18 @@ export async function sendCustomerOTP() {
   }
   clean = clean.replace(/\D/g, '').slice(-10);
 
-  // Validate 10-digit Indian Mobile format (starts with 6-9)
-  if (!/^[6-9]\d{9}$/.test(clean)) {
-    showAuthError(
-      window.currentLang === 'hi'
-        ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें (6-9 से शुरू)"
-        : "Please enter a valid 10-digit Indian mobile number (starts with 6-9)"
-    );
+  // Validate 10-digit Indian Mobile format (starts with 6-9) or Razorpay backdoor 9999999999
+  if (!/^[6-9]\d{9}$/.test(clean) && clean !== '9999999999') {
+    const invalidMsg = window.currentLang === 'hi'
+      ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें (6-9 से शुरू)"
+      : "Please enter a valid 10-digit Indian mobile number (e.g. 9905361711)";
+    showAuthError(invalidMsg);
+    if (window.toastError) window.toastError(invalidMsg);
     phoneInput?.focus();
     return;
   }
 
-  // Rigorous E.164 string: strictly hardcoded to India +91, NO SPACES, NO DASHES
+  // Rigorous E.164 string: strictly prepends +91, NO SPACES, NO DASHES
   const formattedPhoneNumber = `+91${clean}`;
 
   const btn = document.getElementById('send-otp-btn');
@@ -148,10 +148,10 @@ export async function sendCustomerOTP() {
   }
 
   try {
-    // 1. Razorpay Compliance Backdoor: 9999999999 strictly bypasses SMS dispatch with static 123456
+    // Razorpay Compliance Review Backdoor: ONLY 9999999999 is bypassed
     const isRazorpayBackdoor = (clean === "9999999999");
     if (isRazorpayBackdoor) {
-      console.log("Razorpay Compliance Backdoor active for [9999999999]. Bypassing SMS dispatch.");
+      console.log("[Telecom Gateway] Razorpay Compliance Review Backdoor active for [9999999999].");
       window.confirmationResult = {
         confirm: async (enteredCode) => {
           if (enteredCode === "123456" || enteredCode === "1234") {
@@ -162,7 +162,7 @@ export async function sendCustomerOTP() {
               }
             };
           }
-          throw { code: "auth/invalid-verification-code" };
+          throw { code: "auth/invalid-verification-code", message: "Invalid compliance review OTP" };
         }
       };
 
@@ -191,66 +191,77 @@ export async function sendCustomerOTP() {
       return;
     }
 
-    const isFirebaseTestNumber = (clean === "9905361711" || clean === "9876543210");
+    // 2. Mandatory Telecom Network Trigger (Firebase + Supabase + Backend)
+    // NO mock interceptors: live numbers (including 9905361711) must ping the network!
+    let smsDispatched = false;
+    let telecomError = null;
 
-    // For designated Firebase Test Credentials, bypass SMS carrier network & reCAPTCHA blocks
-    if (isFirebaseTestNumber) {
-      console.log(`Firebase test credential recognized: [${formattedPhoneNumber}]. Pre-binding test session.`);
-      window.confirmationResult = {
-        confirm: async (enteredCode) => {
-          if (enteredCode === "123456" || enteredCode === "1234") {
-            return {
-              user: {
-                uid: "usr_test_" + clean,
-                phoneNumber: formattedPhoneNumber
-              }
-            };
-          }
-          throw { code: "auth/invalid-verification-code" };
-        }
-      };
-
-      // Background attempt to dispatch Firebase test credential
-      try {
-        const verifier = getOrCreateRecaptchaVerifier();
-        if (verifier) {
-          signInWithPhoneNumber(auth, formattedPhoneNumber, verifier).then(res => {
-            window.confirmationResult = res;
-          }).catch(e => console.log("Firebase background test dispatch:", e?.code || e?.message));
-        }
-      } catch (e) {}
-
-      // Transition UI to Step 2 (OTP Entry)
-      const phoneDisplay = document.getElementById('otp-phone-display');
-      if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
-
-      document.getElementById('phone-input-section')?.classList.add('hidden');
-      document.getElementById('otp-input-section')?.classList.remove('hidden');
-
-      const testDigits = ['1', '2', '3', '4', '5', '6'];
-      for (let i = 1; i <= 6; i++) {
-        const box = document.getElementById(`otp-${i}`);
-        if (box) box.value = testDigits[i - 1];
+    // --- Provider A: Firebase Phone Auth (Invisible reCAPTCHA) ---
+    try {
+      console.log(`[Telecom Gateway] Pinging Firebase Auth telecom API for: ${formattedPhoneNumber}`);
+      const verifier = getOrCreateRecaptchaVerifier();
+      if (!verifier) {
+        throw new Error("reCAPTCHA verifier initialization failed on device");
       }
-      document.getElementById('otp-1')?.focus();
-
-      startResendTimer();
-
-      if (window.toastSuccess) {
-        window.toastSuccess(
-          window.currentLang === 'hi'
-            ? "OTP आपके मोबाइल पर भेज दिया गया है! (टेस्ट कोड: 123456)"
-            : "OTP sent to " + formattedPhoneNumber + "! (Test Code: 123456)"
-        );
-      }
-      return;
+      await verifier.render();
+      const confirmationResult = await signInWithPhoneNumber(auth, formattedPhoneNumber, verifier);
+      window.confirmationResult = confirmationResult;
+      smsDispatched = true;
+      console.log(`[Telecom Gateway] Firebase SMS confirmation received for: ${formattedPhoneNumber}`);
+    } catch (fbErr) {
+      console.error(`[Telecom Gateway] Firebase SMS dispatch failed:`, fbErr);
+      telecomError = fbErr;
+      resetRecaptcha();
     }
 
-    // Live phone number dispatch with rigorous E.164 string
-    const verifier = getOrCreateRecaptchaVerifier();
-    console.log(`Dispatching live SMS OTP via Firebase SDK to [${formattedPhoneNumber}]`);
-    const confirmationResult = await signInWithPhoneNumber(auth, formattedPhoneNumber, verifier);
-    window.confirmationResult = confirmationResult;
+    // --- Provider B: Supabase Auth OTP Fallback / Dual Trigger ---
+    if (!smsDispatched) {
+      try {
+        console.log(`[Telecom Gateway] Pinging Supabase Auth telecom API for: ${formattedPhoneNumber}`);
+        const client = typeof getSupabaseCustomerClient === 'function' ? getSupabaseCustomerClient() : supabase;
+        if (client && client.auth) {
+          const { data, error } = await client.auth.signInWithOtp({
+            phone: formattedPhoneNumber
+          });
+          if (error) {
+            console.error(`[Telecom Gateway] Supabase signInWithOtp rejected:`, error);
+            if (!telecomError) telecomError = error;
+          } else {
+            console.log(`[Telecom Gateway] Supabase OTP dispatched:`, data);
+            smsDispatched = true;
+          }
+        }
+      } catch (supaErr) {
+        console.error(`[Telecom Gateway] Supabase SMS request exception:`, supaErr);
+        if (!telecomError) telecomError = supaErr;
+      }
+    }
+
+    // --- Provider C: Backend Transactional SMS Fallback API trigger ---
+    try {
+      const apiBase = (window.APP_CONFIG && window.APP_CONFIG.BACKEND_URL) || '';
+      const beRes = await fetch(`${apiBase}/api/v1/auth/otp/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: clean,
+          role: 'customer',
+          name: name || undefined
+        })
+      });
+      if (beRes.ok) {
+        const beData = await beRes.json();
+        console.log(`[Telecom Gateway] Backend transactional challenge created:`, beData);
+        smsDispatched = true;
+      }
+    } catch (beErr) {
+      console.warn(`[Telecom Gateway] Backend OTP call notice:`, beErr);
+    }
+
+    // 4. Error Surfacing: If all providers failed, throw to catch block for explicit user-facing display
+    if (!smsDispatched && telecomError) {
+      throw telecomError;
+    }
 
     // Transition UI to Step 2 (OTP Entry)
     const phoneDisplay = document.getElementById('otp-phone-display');
@@ -275,16 +286,17 @@ export async function sendCustomerOTP() {
       );
     }
   } catch (error) {
-    console.error("sendCustomerOTP error:", error);
+    console.error("[Telecom Gateway Fatal Error]:", error);
     resetRecaptcha();
     handleAuthError(error);
   } finally {
     if (btn) {
-      btn.innerHTML = `<span>${window.currentLang === 'hi' ? 'OTP प्राप्त करें' : 'Send OTP'}</span> <i data-lucide="send" class="w-4 h-4 ml-1"></i>`;
       btn.disabled = false;
+      if (btnText) btnText.innerText = "Send OTP";
       if (window.lucide) window.lucide.createIcons();
     }
   }
+}
 }
 
 /**
@@ -949,43 +961,38 @@ export function hideKycError() {
  * Handle Auth Errors & map error codes to friendly bilingual messages
  */
 export function handleAuthError(error) {
-  let message = "An error occurred during authentication. Please try again.";
+  console.error('[Telecom Gateway Error Details]:', error);
   const code = error?.code || '';
+  const rawMsg = error?.message || (typeof error === 'string' ? error : '');
+  let message = `SMS Gateway Error: ${code || rawMsg || 'Failed to dispatch verification code'}`;
 
-  if (code === 'auth/invalid-verification-code') {
-    message = window.currentLang === 'hi'
-      ? "अमान्य OTP कोड! कृपया अपने फोन पर आया 6-अंकीय कोड दोबारा जांचें।"
-      : "Invalid OTP code. Please enter the correct 6-digit code sent to your phone.";
-  } else if (code === 'auth/code-expired') {
-    message = window.currentLang === 'hi'
-      ? "यह OTP कोड समाप्त हो चुका है। कृपया 'Resend OTP' दबाकर नया कोड मंगाएं।"
-      : "This OTP code has expired. Please tap 'Resend OTP' to request a new code.";
-  } else if (code === 'auth/too-many-requests') {
-    message = window.currentLang === 'hi'
-      ? "बहुत अधिक प्रयास! सुरक्षा कारणों से कुछ समय के लिए अनुरोध रोक दिया गया है। कृपया थोड़ी देर बाद प्रयास करें।"
-      : "Too many attempts. Requests have been temporarily blocked for security. Please wait a few moments before trying again.";
-  } else if (code === 'auth/network-request-failed') {
-    message = window.currentLang === 'hi'
-      ? "नेटवर्क त्रुटि! कृपया अपना इंटरनेट कनेक्शन जांचें और पुनः प्रयास करें।"
-      : "Network error. Please check your internet connection and try again.";
+  if (code === 'auth/quota-exceeded') {
+    message = "SMS Quota Exceeded: Telecom provider daily SMS quota reached. Please upgrade quota or check console.";
   } else if (code === 'auth/invalid-phone-number') {
-    message = window.currentLang === 'hi'
-      ? "अमान्य फोन नंबर! कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें।"
-      : "Invalid phone number. Please enter a valid 10-digit Indian mobile number.";
+    message = "Invalid Phone Number: Please enter a valid 10-digit Indian mobile number formatted with +91.";
+  } else if (code === 'auth/too-many-requests') {
+    message = "Too Many Requests: SMS delivery temporarily rate-limited. Please wait a few moments before trying again.";
+  } else if (code === 'auth/network-request-failed') {
+    message = "Network Error: Unable to reach telecom gateway. Please verify internet connection.";
   } else if (code === 'auth/captcha-check-failed') {
-    message = window.currentLang === 'hi'
-      ? "सुरक्षा जांच विफल रही। कृपया पुनः प्रयास करें।"
-      : "Security verification failed. Please try again.";
-  } else {
-    // Strict masking: suppress raw backend strings, never expose technical codes or "Firebase"
-    message = window.currentLang === 'hi'
-      ? "सत्यापन कोड भेजने में असमर्थ। कृपया अपना नंबर जांचें या बाद में पुनः प्रयास करें।"
-      : "Unable to send verification code. Please check your number or try again later.";
+    message = "reCAPTCHA Verification Failed: Please tap Send OTP again.";
+  } else if (code === 'auth/unauthorized-domain') {
+    message = "Invalid Network Config: Domain not authorized in Firebase Console Auth settings.";
+  } else if (code === 'auth/app-not-authorized') {
+    message = "Invalid Network Config: Client app not authorized to use Firebase Auth.";
+  } else if (code === 'auth/invalid-verification-code') {
+    message = "Invalid OTP code. Please enter the correct 6-digit code sent to your phone.";
+  } else if (code === 'auth/code-expired') {
+    message = "This OTP code has expired. Please tap 'Resend OTP' to request a new code.";
+  } else if (rawMsg) {
+    message = `SMS Gateway Error (${code || 'Telecom'}): ${rawMsg}`;
   }
 
   showAuthError(message);
   if (window.toastError) {
     window.toastError(message);
+  } else {
+    alert(message);
   }
 }
 
