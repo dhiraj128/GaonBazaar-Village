@@ -60,6 +60,15 @@ export function MobileLogin({
   // Cleanup verifier on unmount
   useEffect(() => {
     return () => {
+      if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
+        try {
+          (window as any).recaptchaVerifier.clear();
+          console.log('[Auth] window.recaptchaVerifier cleared on unmount');
+        } catch (e) {
+          console.warn('[Auth] Error clearing recaptcha on unmount:', e);
+        }
+        (window as any).recaptchaVerifier = null;
+      }
       resetRecaptchaVerifier();
     };
   }, []);
@@ -115,15 +124,19 @@ export function MobileLogin({
 
       console.log('[Auth] Initiating OTP dispatch for:', formattedPhoneNumber);
 
-      // Trigger Phone Auth with invisible RecaptchaVerifier attached to button or container
-      const confirmation = await sendFirebaseOtp(clean, 'send-otp-btn');
+      // Trigger Phone Auth with invisible RecaptchaVerifier attached to recaptcha-container
+      const confirmation = await sendFirebaseOtp(clean, 'recaptcha-container');
       setConfirmationResult(confirmation);
       setStep('otp');
       setStatusMessage(isHindi ? `सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया` : `Verification code sent to ${formattedPhoneNumber}`);
     } catch (err: any) {
       // Unmask the Real Firebase Error: aggressively log to console
+      console.error("FIREBASE ERROR:", err);
       console.error("FIREBASE FATAL ERROR:", err?.code, err?.message);
       console.error("FIREBASE FULL ERROR:", err);
+
+      // Temporarily alert raw error for developer visibility
+      alert("Firebase Error: " + (err?.code || 'unknown') + " - " + (err?.message || 'Unknown error'));
 
       // Clean up reCAPTCHA verifier immediately to prevent infinite spinning/hanging
       if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
@@ -283,11 +296,8 @@ export function MobileLogin({
   return (
     <PullToRefresh className="w-full flex items-center justify-center">
       <div className="max-w-md w-full mx-auto bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden font-sans relative select-none">
-        {/* Invisible reCAPTCHA Container: mounted safely in DOM without display:none */}
-        <div
-          id="firebase-recaptcha-container"
-          style={{ position: 'fixed', bottom: 0, opacity: 0, pointerEvents: 'none', zIndex: -1 }}
-        />
+        {/* Invisible reCAPTCHA Container: dedicated DOM anchor */}
+        <div id="recaptcha-container"></div>
 
         {/* Brand Header */}
         <div className="bg-[#0F9D58] p-6 text-white text-center relative border-b border-emerald-700/50">

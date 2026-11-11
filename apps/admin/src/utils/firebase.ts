@@ -28,9 +28,9 @@ let activeConfirmationResult: ConfirmationResult | null = null;
 let activeRecaptchaVerifier: RecaptchaVerifier | null = null;
 
 /**
- * Initializes or retrieves an invisible RecaptchaVerifier attached to the Send OTP button or container.
+ * Initializes or retrieves an invisible RecaptchaVerifier attached to the recaptcha-container.
  */
-export function getOrCreateRecaptchaVerifier(preferredTargetId = 'send-otp-btn'): RecaptchaVerifier {
+export function getOrCreateRecaptchaVerifier(preferredTargetId = 'recaptcha-container'): RecaptchaVerifier {
   if (typeof window === 'undefined') {
     throw new Error('reCAPTCHA can only be initialized in browser environment');
   }
@@ -51,23 +51,27 @@ export function getOrCreateRecaptchaVerifier(preferredTargetId = 'send-otp-btn')
   let targetId = preferredTargetId;
   let targetElement = document.getElementById(targetId);
 
-  // If button not found, fallback to dedicated container
+  // If preferred target not found, fallback to dedicated 'recaptcha-container'
   if (!targetElement) {
-    targetId = 'firebase-recaptcha-container';
+    targetId = 'recaptcha-container';
     targetElement = document.getElementById(targetId);
   }
 
-  // If neither exists, dynamically inject a safe, non-hidden container
+  // If still does not exist, check legacy container id
+  if (!targetElement) {
+    const legacyEl = document.getElementById('firebase-recaptcha-container');
+    if (legacyEl) {
+      targetId = 'firebase-recaptcha-container';
+      targetElement = legacyEl;
+    }
+  }
+
+  // If neither exists, dynamically inject a safe, dedicated container
   if (!targetElement) {
     targetElement = document.createElement('div');
-    targetElement.id = 'firebase-recaptcha-container';
-    targetElement.style.position = 'fixed';
-    targetElement.style.bottom = '0';
-    targetElement.style.opacity = '0';
-    targetElement.style.pointerEvents = 'none';
-    targetElement.style.zIndex = '-1';
+    targetElement.id = 'recaptcha-container';
     document.body.appendChild(targetElement);
-    targetId = 'firebase-recaptcha-container';
+    targetId = 'recaptcha-container';
   }
 
   console.log('[Firebase reCAPTCHA] Initializing invisible RecaptchaVerifier on target:', targetId);
@@ -113,18 +117,22 @@ export function resetRecaptchaVerifier(): void {
 
   // Clear inner DOM of container so stale iframes/scripts don't persist
   if (typeof document !== 'undefined') {
-    const el = document.getElementById('firebase-recaptcha-container');
+    const el = document.getElementById('recaptcha-container');
     if (el) {
       el.innerHTML = '';
+    }
+    const legacyEl = document.getElementById('firebase-recaptcha-container');
+    if (legacyEl) {
+      legacyEl.innerHTML = '';
     }
   }
 }
 
 /**
  * Sends a live SMS OTP via Firebase Phone Authentication with invisible reCAPTCHA.
- * Strictly enforces +91 country code prefix.
+ * Strictly enforces +91 country code prefix (+91${clean10}) with no spaces or dashes.
  */
-export async function sendFirebaseOtp(rawPhone: string, targetId = 'send-otp-btn'): Promise<ConfirmationResult> {
+export async function sendFirebaseOtp(rawPhone: string, targetId = 'recaptcha-container'): Promise<ConfirmationResult> {
   const clean10 = rawPhone.replace(/\D/g, '').slice(-10);
   if (!/^[6-9]\d{9}$/.test(clean10) && clean10 !== '9999999999') {
     throw {
@@ -133,7 +141,7 @@ export async function sendFirebaseOtp(rawPhone: string, targetId = 'send-otp-btn
     };
   }
 
-  // Enforce +91 Prefix
+  // Enforce +91 Prefix strictly formatted as +91${clean10}
   const formattedPhone = `+91${clean10}`;
   console.log('[Firebase Auth] Dispatching SMS OTP to:', formattedPhone);
 
@@ -157,6 +165,7 @@ export async function sendFirebaseOtp(rawPhone: string, targetId = 'send-otp-btn
     return confirmationResult;
   } catch (error: any) {
     // 1. Unmask the Real Firebase Error: aggressively log to console
+    console.error("FIREBASE ERROR:", error);
     console.error("FIREBASE FATAL ERROR:", error?.code, error?.message);
     console.error("FIREBASE FULL ERROR:", error);
 

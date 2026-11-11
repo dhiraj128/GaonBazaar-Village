@@ -286,7 +286,9 @@ export async function sendCustomerOTP() {
       );
     }
   } catch (error) {
+    console.error("FIREBASE ERROR:", error);
     console.error("[Telecom Gateway Fatal Error]:", error);
+    alert("Firebase Error: " + (error?.code || 'unknown') + " - " + (error?.message || error?.toString() || 'Unknown error'));
     resetRecaptcha();
     handleAuthError(error);
   } finally {
