@@ -91,6 +91,7 @@ class OrderActionRequest(BaseModel):
     handover_code: Optional[str] = None
     runner_payout: Optional[float] = None
     cash_collected: Optional[bool] = None
+    collection_mode: Optional[str] = "CASH" # CASH, ADMIN_QR
     reason: Optional[str] = None
 
 class SendOrderMessageRequest(BaseModel):

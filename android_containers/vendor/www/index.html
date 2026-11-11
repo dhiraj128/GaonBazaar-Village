@@ -249,7 +249,7 @@
 
             <div class="space-y-2">
               <label class="block text-center text-[11px] font-semibold text-slate-600" data-i18n="enter_otp_label">Enter 6-Digit OTP</label>
-              <div class="flex justify-between space-x-1.5 max-w-[320px] mx-auto">
+              <div class="flex justify-center items-center gap-1.5 sm:gap-2 max-w-full mx-auto px-1">
                 <input type="text" maxlength="1" id="otp-1" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="1">
                 <input type="text" maxlength="1" id="otp-2" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="2">
                 <input type="text" maxlength="1" id="otp-3" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="3">
@@ -720,7 +720,7 @@
               <div>
                 <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800" data-i18n="instant_dispatch_badge">INSTANT DISPATCH</span>
                 <h3 class="text-base font-bold text-slate-900 mt-1" data-i18n="order_gb8921_title">Order #GB-8921</h3>
-                <p class="text-xs text-slate-500" data-i18n="cust_order_sample">Customer: Sunita Devi (Gopalpur Village - 1.8km)</p>
+                <p class="text-xs text-slate-500 break-words whitespace-normal leading-relaxed" data-i18n="cust_order_sample">Customer: Sunita Devi (Gopalpur Village - 1.8km)</p>
               </div>
               <span class="text-base font-extrabold text-slate-900">₹340.00</span>
             </div>
@@ -746,11 +746,11 @@
             </div>
 
             <!-- Actions: Accept / Reject -->
-            <div class="flex space-x-3 pt-1">
-              <button onclick="rejectOrder('GB-8921')" class="flex-1 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-lg text-xs border border-rose-200 transition active:scale-95" data-i18n="reject_order_btn">
+            <div class="flex flex-col sm:flex-row gap-2.5 pt-1 w-full">
+              <button onclick="rejectOrder('GB-8921')" class="w-full sm:w-1/3 min-h-[48px] h-12 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs sm:text-sm border border-rose-200 transition active:scale-95 flex items-center justify-center" data-i18n="reject_order_btn">
                 Reject
               </button>
-              <button onclick="acceptOrder('GB-8921')" class="flex-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm transition active:scale-95 flex items-center justify-center space-x-1" data-i18n="accept_order_btn">
+              <button onclick="acceptOrder('GB-8921')" class="w-full sm:flex-1 min-h-[48px] h-12 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition active:scale-95 flex items-center justify-center space-x-1.5" data-i18n="accept_order_btn">
                 <i data-lucide="check" class="w-4 h-4"></i>
                 <span>Accept Order</span>
               </button>
@@ -773,7 +773,7 @@
               <div>
                 <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800" data-i18n="packing_progress_badge">PACKING IN PROGRESS</span>
                 <h3 class="text-sm font-bold text-slate-900 mt-1" data-i18n="order_gb8919_title">Order #GB-8919</h3>
-                <p class="text-xs text-slate-500" data-i18n="cust_prep_sample">Customer: Vikram Singh (Chaupal Road)</p>
+                <p class="text-xs text-slate-500 break-words whitespace-normal leading-relaxed" data-i18n="cust_prep_sample">Customer: Vikram Singh (Chaupal Road)</p>
               </div>
               <span class="text-sm font-extrabold text-slate-900">₹185.00</span>
             </div>
@@ -790,7 +790,7 @@
               </label>
             </div>
 
-            <button onclick="markOrderReady('GB-8919')" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-sm transition active:scale-95 flex items-center justify-center space-x-1.5" data-i18n="mark_ready_btn">
+            <button onclick="markOrderReady('GB-8919')" class="w-full min-h-[48px] h-12 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-sm transition active:scale-95 flex items-center justify-center space-x-2" data-i18n="mark_ready_btn">
               <i data-lucide="package-check" class="w-4 h-4"></i>
               <span>Mark Ready for Handover</span>
             </button>
@@ -826,8 +826,8 @@
               
               <!-- Responsive non-overflowing input group -->
               <div class="flex flex-col sm:flex-row gap-2.5 w-full">
-                <input type="text" id="handover-otp-input" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="4" placeholder="e.g. 5821" data-i18n-placeholder="handover_otp_placeholder" class="w-full sm:flex-1 min-w-0 px-3 py-2 text-center font-mono font-bold text-lg tracking-widest border border-blue-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-xs">
-                <button onclick="verifyPickupOTPAndComplete('GB-8915')" class="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm active:scale-95 transition shrink-0 flex items-center justify-center space-x-1" data-i18n="handover_btn">
+                <input type="text" id="handover-otp-input" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="4" placeholder="e.g. 5821" data-i18n-placeholder="handover_otp_placeholder" class="w-full sm:flex-1 min-w-0 min-h-[48px] h-12 px-3 py-2 text-center font-mono font-bold text-xl tracking-widest border-2 border-blue-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs">
+                <button onclick="verifyPickupOTPAndComplete('GB-8915')" class="w-full sm:w-auto min-h-[48px] h-12 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm active:scale-95 transition shrink-0 flex items-center justify-center space-x-1.5" data-i18n="handover_btn">
                   <i data-lucide="check" class="w-4 h-4"></i>
                   <span>Handover</span>
                 </button>
@@ -1231,9 +1231,21 @@
           </div>
         </div>
 
-        <!-- GROUP 4: HELP & SUPPORT -->
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
+        <!-- GROUP 4: HELP & SUPPORT & PARTNER FAQ -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
           <span class="text-xs font-bold text-slate-800 uppercase tracking-wide" data-i18n="support_header">Help & Operations</span>
+
+          <!-- Partner FAQ Card: 0% Commission & 3% Online Bank Settlement Fee -->
+          <div class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 text-left space-y-1.5">
+            <div class="flex items-start space-x-2 text-emerald-950 font-bold text-xs">
+              <span class="text-emerald-600 font-extrabold text-sm">Q:</span>
+              <span>Why is there a 3% deduction on my online orders? / ऑनलाइन ऑर्डर पर 3% की कटौती क्यों होती है?</span>
+            </div>
+            <div class="text-[11px] text-slate-700 leading-relaxed pl-5 space-y-1">
+              <p><strong>Apna GaonBazaar charges 0% platform commission.</strong> The 3% deduction is strictly a mandatory <em>"Online Gateway & Bank Settlement Fee"</em>. This covers the RBI-regulated payment gateway processing costs, 18% GST on digital transactions, and the automated IMPS bank transfer fee to your account.</p>
+              <p class="text-emerald-800 font-medium">✓ If an order is Cash on Delivery (COD), there are zero digital banking fees, so you receive exactly 100% of your earnings with no deductions.</p>
+            </div>
+          </div>
           
           <button onclick="openRaiseTicketModal()" class="w-full py-2.5 px-3 rounded-lg hover:bg-slate-50 text-left text-xs font-semibold text-slate-800 flex justify-between items-center transition border border-transparent hover:border-slate-200">
             <div class="flex items-center space-x-2.5">
@@ -1960,7 +1972,7 @@
         ledger_sub: "Real-time breakdown of daily sales & disbursements",
         daily_sales: "Daily Sales",
         orders_count_badge: "14 Orders",
-        commission_label: "Commission",
+        commission_label: "0% Commission (3% Online Bank Fee)",
         rural_launch_badge: "Rural Launch",
         net_payout: "Net Payout",
         daily_direct_badge: "Daily Direct",
@@ -2241,7 +2253,7 @@
         ledger_sub: "दैनिक बिक्री और बैंक हस्तांतरण का वास्तविक ब्यौरा",
         daily_sales: "दैनिक बिक्री",
         orders_count_badge: "14 ऑर्डर",
-        commission_label: "कमीशन",
+        commission_label: "0% कमीशन (3% ऑनलाइन बैंक शुल्क)",
         rural_launch_badge: "ग्रामीण ऑफर",
         net_payout: "कुल भुगतान",
         daily_direct_badge: "दैनिक प्रत्यक्ष",

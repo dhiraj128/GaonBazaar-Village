@@ -172,20 +172,24 @@
                 <span class="text-base">⚡</span>
               </div>
 
-              <!-- UPI Intent Brand Chips -->
-              <div class="mt-2.5 pt-2 border-t border-emerald-200/60 flex items-center space-x-2 overflow-x-auto text-[10px]">
-                <span class="px-2 py-0.8 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 shadow-2xs flex items-center space-x-1">
-                  <span class="text-blue-600 font-extrabold">G</span>Pay
-                </span>
-                <span class="px-2 py-0.8 bg-white border border-slate-200 rounded-lg font-bold text-purple-700 shadow-2xs flex items-center space-x-1">
-                  Phone<span class="text-purple-600">Pe</span>
-                </span>
-                <span class="px-2 py-0.8 bg-white border border-slate-200 rounded-lg font-bold text-sky-600 shadow-2xs flex items-center space-x-1">
-                  Paytm
-                </span>
-                <span class="px-2 py-0.8 bg-white border border-slate-200 rounded-lg font-bold text-emerald-700 shadow-2xs flex items-center space-x-1">
-                  BHIM
-                </span>
+              <!-- UPI Intent Brand Chips (Deep Link Intent) -->
+              <div class="mt-2.5 pt-2 border-t border-emerald-200/60 grid grid-cols-4 gap-1.5 text-[10px]">
+                <div onclick="selectUpiApp(event, 'gpay')" id="chip-upi-gpay" class="p-1.5 bg-white border-2 border-emerald-500 rounded-xl font-bold text-slate-800 shadow-2xs flex flex-col items-center justify-center cursor-pointer transition active:scale-95">
+                  <span class="text-blue-600 font-extrabold text-xs">GPay</span>
+                  <span class="text-[8px] text-emerald-600 font-bold">Zero MDR</span>
+                </div>
+                <div onclick="selectUpiApp(event, 'phonepe')" id="chip-upi-phonepe" class="p-1.5 bg-white border border-slate-200 rounded-xl font-bold text-purple-700 shadow-2xs flex flex-col items-center justify-center cursor-pointer transition active:scale-95">
+                  <span class="text-purple-700 font-extrabold text-xs">PhonePe</span>
+                  <span class="text-[8px] text-slate-400">Direct</span>
+                </div>
+                <div onclick="selectUpiApp(event, 'paytm')" id="chip-upi-paytm" class="p-1.5 bg-white border border-slate-200 rounded-xl font-bold text-sky-600 shadow-2xs flex flex-col items-center justify-center cursor-pointer transition active:scale-95">
+                  <span class="text-sky-600 font-extrabold text-xs">Paytm</span>
+                  <span class="text-[8px] text-slate-400">Instant</span>
+                </div>
+                <div onclick="selectUpiApp(event, 'bhim')" id="chip-upi-bhim" class="p-1.5 bg-white border border-slate-200 rounded-xl font-bold text-emerald-700 shadow-2xs flex flex-col items-center justify-center cursor-pointer transition active:scale-95">
+                  <span class="text-emerald-700 font-extrabold text-xs">BHIM</span>
+                  <span class="text-[8px] text-slate-400">NPCI</span>
+                </div>
               </div>
             </div>
 
@@ -8237,6 +8241,24 @@ function createProductCardElement(p) {
       updateCheckoutModalUI();
     }
     window.selectCheckoutModalPayment = selectCheckoutModalPayment;
+    let selectedUpiAppChoice = 'gpay';
+    function selectUpiApp(e, appId) {
+      if (e) e.stopPropagation();
+      selectedUpiAppChoice = appId;
+      selectCheckoutModalPayment('ONLINE');
+      ['gpay', 'phonepe', 'paytm', 'bhim'].forEach(id => {
+        const el = document.getElementById('chip-upi-' + id);
+        if (el) {
+          if (id === appId) {
+            el.className = "p-1.5 bg-emerald-50 border-2 border-emerald-600 rounded-xl font-bold text-slate-800 shadow-2xs flex flex-col items-center justify-center cursor-pointer transition active:scale-95";
+          } else {
+            el.className = "p-1.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 shadow-2xs flex flex-col items-center justify-center cursor-pointer transition active:scale-95";
+          }
+        }
+      });
+    }
+    window.selectUpiApp = selectUpiApp;
+
     window.openRuralAddressModal = openRuralAddressModal;
 
     function updateCheckoutModalUI() {
@@ -8338,8 +8360,35 @@ function createProductCardElement(p) {
           btn.disabled = true;
         }
 
-        // Simulate secure UPI payment gateway intent / authorization
-        await new Promise(r => setTimeout(r, 900));
+        const itemTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        const grandTotal = itemTotal + 3.00;
+        const upiPayee = "gaonbazaar@razorpay";
+        const upiName = encodeURIComponent("Apna GaonBazaar");
+        const tempOrderId = 'ord_' + Math.random().toString(36).substring(2, 9);
+        const upiDeepLink = `upi://pay?pa=${upiPayee}&pn=${upiName}&tr=${tempOrderId}&am=${grandTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Apna GaonBazaar Order')}`;
+
+        // Direct Native UPI Intent (bypasses browser popups for 0% MDR)
+        const win = window;
+        if (win.Capacitor && win.Capacitor.isNativePlatform && win.Capacitor.isNativePlatform() && win.Capacitor.Plugins && win.Capacitor.Plugins.RazorpayCheckout) {
+          try {
+            await win.Capacitor.Plugins.RazorpayCheckout.open({
+              key: 'rzp_test_GaonBazaarVillage',
+              amount: Math.round(grandTotal * 100),
+              name: 'Apna GaonBazaar',
+              description: 'Rural Hyperlocal Order',
+              prefill: { contact: userProfile?.phone || '', name: userProfile?.name || 'Customer' },
+              theme: { color: '#047857' },
+              upi_app: selectedUpiAppChoice || undefined
+            });
+          } catch(e) {
+            console.log('Capacitor UPI intent fallback to deep link', e);
+            try { win.location.href = upiDeepLink; } catch(err) {}
+          }
+        } else {
+          try { win.location.href = upiDeepLink; } catch(err) {}
+        }
+
+        await new Promise(r => setTimeout(r, 600));
 
         try {
           await executeOrderPlacementWithMethod('ONLINE');

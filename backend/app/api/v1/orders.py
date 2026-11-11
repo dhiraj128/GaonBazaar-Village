@@ -177,6 +177,8 @@ async def create_order(
     
     # Genuine payment methods: COD or ONLINE
     payment_method = data.payment_method.upper() if data.payment_method in ["COD", "ONLINE"] else "COD"
+    # Strict 3% online gateway fee deduction on ONLINE orders, 0% on COD
+    online_gw_fee = round(totals["subtotal"] * 0.03, 2) if payment_method == "ONLINE" else 0.0
 
     order = Order(
         customer_id=customer_id,
@@ -194,7 +196,9 @@ async def create_order(
         delivery_otp=delivery_otp,
         placed_at=now,
         cancel_until=cancel_until,
-        customer_notes=data.customer_notes
+        customer_notes=data.customer_notes,
+        online_gateway_fee=online_gw_fee,
+        collection_mode="CASH"
     )
     db.add(order)
     await db.flush()
@@ -535,15 +539,23 @@ async def get_vendor_finances(
         for o in delivered_orders[:15]
     ]
     
+    # Calculate strict 3% Online Gateway & Settlement Fee strictly on ONLINE orders (0% on COD)
+    online_gw_total = sum(round(o.subtotal * 0.03, 2) for o in delivered_orders if o.payment_method == "ONLINE")
+    commission_rate = 0.0 # Strict 0% platform commission
+    commission_deducted = 0.0
+    net_payout_due = round(total_sales - online_gw_total, 2)
+
     return {
         "store_id": store.id,
         "total_sales": total_sales,
         "today_sales": today_sales,
         "weekly_sales": weekly_sales,
         "today_orders_count": today_orders_count,
-        "commission_rate": store.commission_rate,
-        "commission_deducted": round(total_sales * (store.commission_rate / 100.0), 2),
-        "net_payout_due": total_sales - round(total_sales * (store.commission_rate / 100.0), 2),
+        "commission_rate": commission_rate,
+        "commission_deducted": commission_deducted,
+        "online_gateway_fee": online_gw_total,
+        "fee_label": "Online Bank Settlement Fee",
+        "net_payout_due": net_payout_due,
         "total_delivered_orders": len(delivered_orders),
         "upi_id": store.upi_id or "Not configured",
         "recent_settlements": recent_settlements
@@ -638,9 +650,16 @@ async def get_runner_finances(
         for o in delivered_orders[:30]
     ]
     
+    # Strict 3% online gateway fee deduction strictly on ONLINE orders, 0% on COD
+    runner_online_gw_total = sum(round(_get_payout(o) * 0.03, 2) for o in delivered_orders if o.payment_method == "ONLINE")
+    net_runner_earnings = round(total_delivery_fees - runner_online_gw_total, 2)
+
     return {
         "runner_id": runner.id,
-        "total_delivery_earnings": total_delivery_fees,
+        "total_delivery_earnings": net_runner_earnings,
+        "gross_delivery_fees": total_delivery_fees,
+        "online_gateway_fee": runner_online_gw_total,
+        "fee_label": "Online Bank Settlement Fee",
         "today_earnings": today_earnings,
         "weekly_earnings": weekly_earnings,
         "total_deliveries_count": len(delivered_orders),
@@ -989,10 +1008,14 @@ async def runner_job_action(
         
         # Payment State Machine Handling: require verified cash collection for COD
         if order.payment_method == "COD":
-            if action_data.cash_collected is True:
+            coll_mode = action_data.collection_mode or ("ADMIN_QR" if getattr(action_data, 'reason', '') == 'ADMIN_QR' else "CASH")
+            order.collection_mode = coll_mode
+            if action_data.cash_collected is True or coll_mode in ["CASH", "ADMIN_QR"]:
                 order.payment_status = "PAID"
             else:
                 order.payment_status = "PENDING"
+            # Crucial: As order originated as COD, keep online_gateway_fee = 0.0 (100% partner payout)
+            order.online_gateway_fee = 0.0
             
         title = "सफलतापूर्वक डिलीवर हुआ (Delivered)"
     else:

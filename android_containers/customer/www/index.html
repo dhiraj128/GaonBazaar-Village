@@ -172,20 +172,24 @@
                 <span class="text-base">⚡</span>
               </div>
 
-              <!-- UPI Intent Brand Chips -->
-              <div class="mt-2.5 pt-2 border-t border-emerald-200/60 flex items-center space-x-2 overflow-x-auto text-[10px]">
-                <span class="px-2 py-0.8 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 shadow-2xs flex items-center space-x-1">
-                  <span class="text-blue-600 font-extrabold">G</span>Pay
-                </span>
-                <span class="px-2 py-0.8 bg-white border border-slate-200 rounded-lg font-bold text-purple-700 shadow-2xs flex items-center space-x-1">
-                  Phone<span class="text-purple-600">Pe</span>
-                </span>
-                <span class="px-2 py-0.8 bg-white border border-slate-200 rounded-lg font-bold text-sky-600 shadow-2xs flex items-center space-x-1">
-                  Paytm
-                </span>
-                <span class="px-2 py-0.8 bg-white border border-slate-200 rounded-lg font-bold text-emerald-700 shadow-2xs flex items-center space-x-1">
-                  BHIM
-                </span>
+              <!-- UPI Intent Brand Chips (Deep Link Intent) -->
+              <div class="mt-2.5 pt-2 border-t border-emerald-200/60 grid grid-cols-4 gap-1.5 text-[10px]">
+                <div onclick="selectUpiApp(event, 'gpay')" id="chip-upi-gpay" class="p-1.5 bg-white border-2 border-emerald-500 rounded-xl font-bold text-slate-800 shadow-2xs flex flex-col items-center justify-center cursor-pointer transition active:scale-95">
+                  <span class="text-blue-600 font-extrabold text-xs">GPay</span>
+                  <span class="text-[8px] text-emerald-600 font-bold">Zero MDR</span>
+                </div>
+                <div onclick="selectUpiApp(event, 'phonepe')" id="chip-upi-phonepe" class="p-1.5 bg-white border border-slate-200 rounded-xl font-bold text-purple-700 shadow-2xs flex flex-col items-center justify-center cursor-pointer transition active:scale-95">
+                  <span class="text-purple-700 font-extrabold text-xs">PhonePe</span>
+                  <span class="text-[8px] text-slate-400">Direct</span>
+                </div>
+                <div onclick="selectUpiApp(event, 'paytm')" id="chip-upi-paytm" class="p-1.5 bg-white border border-slate-200 rounded-xl font-bold text-sky-600 shadow-2xs flex flex-col items-center justify-center cursor-pointer transition active:scale-95">
+                  <span class="text-sky-600 font-extrabold text-xs">Paytm</span>
+                  <span class="text-[8px] text-slate-400">Instant</span>
+                </div>
+                <div onclick="selectUpiApp(event, 'bhim')" id="chip-upi-bhim" class="p-1.5 bg-white border border-slate-200 rounded-xl font-bold text-emerald-700 shadow-2xs flex flex-col items-center justify-center cursor-pointer transition active:scale-95">
+                  <span class="text-emerald-700 font-extrabold text-xs">BHIM</span>
+                  <span class="text-[8px] text-slate-400">NPCI</span>
+                </div>
               </div>
             </div>
 
@@ -528,7 +532,7 @@
 
           <div class="space-y-2">
             <label class="block text-center text-[11px] font-semibold text-slate-600">Enter 6-Digit SMS Verification Code</label>
-            <div class="flex justify-between space-x-1.5 max-w-[320px] mx-auto">
+            <div class="flex justify-center items-center gap-1.5 sm:gap-2 max-w-full mx-auto px-1">
               <input type="tel" maxlength="1" id="otp-1" autocomplete="one-time-code" autocomplete="one-time-code" value="1" onkeyup="handleOtpInput(this, 'otp-2', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
               <input type="tel" maxlength="1" id="otp-2" autocomplete="one-time-code" autocomplete="one-time-code" value="2" onkeyup="handleOtpInput(this, 'otp-3', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
               <input type="tel" maxlength="1" id="otp-3" autocomplete="one-time-code" autocomplete="one-time-code" value="3" onkeyup="handleOtpInput(this, 'otp-4', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
@@ -683,7 +687,7 @@
                 <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="enter_aadhaar_otp_label">
                   Enter 6-Digit Aadhaar OTP
                 </label>
-                <input type="tel" id="kyc-aadhaar-otp-input" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="6" placeholder="123456" class="w-full text-center py-3 bg-white border border-slate-300 focus:border-emerald-600 focus:outline-none rounded-xl text-lg font-mono font-bold tracking-widest text-slate-900 shadow-2xs">
+                <input type="tel" id="kyc-aadhaar-otp-input" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="6" placeholder="123456" class="w-full min-h-[48px] h-12 text-center py-3 bg-white border-2 border-slate-300 focus:border-emerald-600 focus:outline-none rounded-xl text-xl font-mono font-bold tracking-widest text-slate-900 shadow-2xs">
               </div>
 
               <button onclick="submitAadhaarVerification()" id="btn-verify-aadhaar-otp" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 flex items-center justify-center space-x-2 text-xs transition active:scale-98">
@@ -995,13 +999,13 @@
             </div>
 
             <!-- Compact Selected Address Preview -->
-            <div id="checkout-selected-address-card" class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 flex items-center justify-between text-xs">
+            <div id="checkout-selected-address-card" class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 flex flex-col sm:flex-row gap-2.5 sm:items-center sm:justify-between text-xs">
               <div class="min-w-0 pr-2">
                 <span class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">Deliver to:</span>
-                <p id="checkout-active-addr-title" class="font-bold text-slate-900 truncate">Home — Chaturshi, Muzaffarpur</p>
-                <p id="checkout-active-addr-landmark" class="text-[11px] text-slate-600 truncate">Near Shiv Mandir</p>
+                <p id="checkout-active-addr-title" class="font-bold text-slate-900 break-words whitespace-normal leading-relaxed">Home — Chaturshi, Muzaffarpur</p>
+                <p id="checkout-active-addr-landmark" class="text-[11px] text-slate-600 break-words whitespace-normal">Near Shiv Mandir</p>
               </div>
-              <button type="button" onclick="openManageAddressesModal()" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-emerald-800 border border-emerald-300 rounded-lg font-bold text-xs shrink-0 transition active:scale-95 shadow-2xs">
+              <button type="button" onclick="openManageAddressesModal()" class="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-white hover:bg-slate-50 text-emerald-800 border border-emerald-300 rounded-xl font-bold text-xs shrink-0 transition active:scale-95 shadow-2xs flex items-center justify-center">
                 Change
               </button>
             </div>
@@ -1225,15 +1229,15 @@
                     <p id="order-runner-badge" class="text-[10px] text-slate-500">Motorcycle • GaonBazaar Partner</p>
                   </div>
                 </div>
-                <div class="flex space-x-1.5">
-                  <a id="runner-call-link" href="tel:9800000003" class="w-8 h-8 rounded-xl bg-white border border-slate-200 text-emerald-700 flex items-center justify-center shadow-xs active:scale-95 transition" title="Call Runner">
-                    <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                <div class="flex items-center gap-2">
+                  <a id="runner-call-link" href="tel:9800000003" class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-white border border-slate-200 text-emerald-700 flex items-center justify-center shadow-xs active:scale-95 transition" title="Call Runner">
+                    <i data-lucide="phone" class="w-4 h-4"></i>
                   </a>
-                  <button onclick="openRunnerChatModal()" class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs active:scale-95 transition" title="Message Runner">
-                    <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+                  <button onclick="openRunnerChatModal()" class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs active:scale-95 transition" title="Message Runner">
+                    <i data-lucide="message-square" class="w-4 h-4"></i>
                   </button>
-                  <button onclick="shareCustomerConfirmedLocationPin()" class="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs active:scale-95 transition" title="Share Exact Doorstep Pin">
-                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                  <button onclick="shareCustomerConfirmedLocationPin()" class="min-w-[44px] min-h-[44px] w-11 h-11 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs active:scale-95 transition" title="Share Exact Doorstep Pin">
+                    <i data-lucide="map-pin" class="w-4 h-4"></i>
                   </button>
                 </div>
               </div>
@@ -1250,8 +1254,8 @@
                       03:00
                     </span>
                   </div>
-                  <button onclick="cancelActiveOrderBinary()" id="cancel-order-btn" class="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold rounded-xl flex items-center justify-center space-x-1.5 transition active:scale-95 text-xs">
-                    <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+                  <button onclick="cancelActiveOrderBinary()" id="cancel-order-btn" class="w-full min-h-[48px] h-12 py-3 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold rounded-xl flex items-center justify-center space-x-2 transition active:scale-95 text-sm">
+                    <i data-lucide="x-circle" class="w-4 h-4"></i>
                     <span data-i18n="cancel_order_btn">Cancel Order (Full Refund)</span>
                   </button>
                 </div>
@@ -8237,6 +8241,24 @@ function createProductCardElement(p) {
       updateCheckoutModalUI();
     }
     window.selectCheckoutModalPayment = selectCheckoutModalPayment;
+    let selectedUpiAppChoice = 'gpay';
+    function selectUpiApp(e, appId) {
+      if (e) e.stopPropagation();
+      selectedUpiAppChoice = appId;
+      selectCheckoutModalPayment('ONLINE');
+      ['gpay', 'phonepe', 'paytm', 'bhim'].forEach(id => {
+        const el = document.getElementById('chip-upi-' + id);
+        if (el) {
+          if (id === appId) {
+            el.className = "p-1.5 bg-emerald-50 border-2 border-emerald-600 rounded-xl font-bold text-slate-800 shadow-2xs flex flex-col items-center justify-center cursor-pointer transition active:scale-95";
+          } else {
+            el.className = "p-1.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 shadow-2xs flex flex-col items-center justify-center cursor-pointer transition active:scale-95";
+          }
+        }
+      });
+    }
+    window.selectUpiApp = selectUpiApp;
+
     window.openRuralAddressModal = openRuralAddressModal;
 
     function updateCheckoutModalUI() {
@@ -8338,8 +8360,35 @@ function createProductCardElement(p) {
           btn.disabled = true;
         }
 
-        // Simulate secure UPI payment gateway intent / authorization
-        await new Promise(r => setTimeout(r, 900));
+        const itemTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+        const grandTotal = itemTotal + 3.00;
+        const upiPayee = "gaonbazaar@razorpay";
+        const upiName = encodeURIComponent("Apna GaonBazaar");
+        const tempOrderId = 'ord_' + Math.random().toString(36).substring(2, 9);
+        const upiDeepLink = `upi://pay?pa=${upiPayee}&pn=${upiName}&tr=${tempOrderId}&am=${grandTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Apna GaonBazaar Order')}`;
+
+        // Direct Native UPI Intent (bypasses browser popups for 0% MDR)
+        const win = window;
+        if (win.Capacitor && win.Capacitor.isNativePlatform && win.Capacitor.isNativePlatform() && win.Capacitor.Plugins && win.Capacitor.Plugins.RazorpayCheckout) {
+          try {
+            await win.Capacitor.Plugins.RazorpayCheckout.open({
+              key: 'rzp_test_GaonBazaarVillage',
+              amount: Math.round(grandTotal * 100),
+              name: 'Apna GaonBazaar',
+              description: 'Rural Hyperlocal Order',
+              prefill: { contact: userProfile?.phone || '', name: userProfile?.name || 'Customer' },
+              theme: { color: '#047857' },
+              upi_app: selectedUpiAppChoice || undefined
+            });
+          } catch(e) {
+            console.log('Capacitor UPI intent fallback to deep link', e);
+            try { win.location.href = upiDeepLink; } catch(err) {}
+          }
+        } else {
+          try { win.location.href = upiDeepLink; } catch(err) {}
+        }
+
+        await new Promise(r => setTimeout(r, 600));
 
         try {
           await executeOrderPlacementWithMethod('ONLINE');

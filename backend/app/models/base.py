@@ -71,6 +71,7 @@ class User(Base):
     aadhaar_number = Column(String(20), nullable=True)
     aadhaar_data = Column(JSON, nullable=True)
     kyc_photo_url = Column(String(500), nullable=True)
+    payout_account_verified = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -205,6 +206,8 @@ class Order(Base):
     
     payment_method = Column(String(20), default="COD") # COD, ONLINE
     payment_status = Column(String(20), default="PENDING") # PENDING, PAID, REFUNDED
+    collection_mode = Column(String(30), default="CASH") # CASH, ADMIN_QR
+    online_gateway_fee = Column(Float, default=0.0) # 3% on ONLINE, 0 on COD
     payment_order_id = Column(String(100), nullable=True) # Razorpay Order ID
     transaction_id = Column(String(100), nullable=True) # Razorpay Payment ID
     delivery_otp = Column(String(6), nullable=False) # 4 or 6 digit verification code

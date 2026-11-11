@@ -92,7 +92,7 @@ export const translations = {
     exportVendorCsv: 'Export Batch CSV (NEFT/RTGS)',
     exportRunnerCsv: 'Export Runner Batch CSV',
     grossSales: 'Gross Sales',
-    platformCommission: 'Platform Commission',
+    platformCommission: 'Online Bank Settlement Fee',
     netPayoutDue: 'Net Payout Due',
     exactCashHeld: 'Exact Cash Held (INR)',
     cashReceivedConfirm: 'Confirm Cash Received & Deposited into local hub ledger?',
