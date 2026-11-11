@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, User, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Send, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import {
   sendFirebaseOtp,
   verifyFirebaseOtp,
@@ -333,31 +333,6 @@ export function MobileLogin({
 
           {step === 'phone' ? (
             <form onSubmit={handleSendOtp} autoComplete="off" className="space-y-4">
-              {/* 4. Final Wipe of Hardcoded State: forced empty useState, autoComplete="off", spellCheck="false" */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  {t.nameLabel} <span className="text-slate-400 font-normal">{t.nameSublabel}</span>
-                </label>
-                <div className="relative flex items-center">
-                  <User className="absolute left-3.5 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    name="gb_usr_reg_name"
-                    id="customer-name-field"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck={false}
-                    data-lpignore="true"
-                    data-form-type="other"
-                    placeholder={t.namePlaceholder}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-[#0F9D58] focus:bg-white transition"
-                  />
-                </div>
-              </div>
-
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   {t.phoneLabel}
