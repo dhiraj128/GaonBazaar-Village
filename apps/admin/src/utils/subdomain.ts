@@ -1,20 +1,23 @@
-export type AppTarget = 'admin' | 'dukaan' | 'mitra' | 'customer';
+export type AppTarget = 'admin' | 'dukaan' | 'mitra' | 'customer' | 'splash' | 'login';
 
 /**
  * Resolves which GaonBazaar application to render based on the current hostname,
  * search parameters, and pathname.
  *
  * Strict Rendering Hierarchy:
- * 1. Explicit query param override (e.g. `?app=admin`, `?app=dukaan`, `?app=mitra`, `?app=customer`)
+ * 1. Explicit query param override (e.g. `?app=admin`, `?app=dukaan`, `?app=mitra`, `?app=customer`, `?app=login`, `?app=splash`)
  *    Enables developer switching and integration testing on any environment.
- * 2. Explicit pathname prefix (e.g. `/admin`, `/dukaan`, `/vendor`, `/mitra`, `/runner`, `/customer`)
+ * 2. Explicit pathname prefix (e.g. `/admin`, `/dukaan`, `/vendor`, `/mitra`, `/runner`, `/customer`, `/login`)
  * 3. Exact Subdomain / Hostname Matching:
  *    - `admin.apnagaonbazaar.in` (or starting with `admin.`) -> 'admin' (Super Admin Command Center)
  *    - `dukaan.apnagaonbazaar.in` (or starting with `dukaan.` or `vendor.`) -> 'dukaan' (GaonBazaar Dukaan Vendor Portal)
  *    - `mitra.apnagaonbazaar.in` (or starting with `mitra.` or `runner.`) -> 'mitra' (Gaon Mitra Runner Portal)
- *    - `apnagaonbazaar.in` or `www.apnagaonbazaar.in` -> 'customer' (Apna GaonBazaar Customer App)
+ *    - `apnagaonbazaar.in` or `www.apnagaonbazaar.in` or fallback host (localhost/preview):
+ *        - Root route `/` -> 'splash' (Branded Green Splash Screen, auto-redirects to /login)
+ *        - `/login` -> 'login' (Mobile Login with Firebase Phone Auth)
+ *        - `/customer` or `/store` -> 'customer' (Apna GaonBazaar Customer App)
  * 4. Fallback / Default:
- *    - Localhost, 127.0.0.1, Vercel preview domains, or any unrecognized host -> 'customer'
+ *    - Any unrecognized host -> 'splash' on root `/`, 'login' on `/login`, or 'customer'
  *    - CRITICAL REQUIREMENT: Default fallback must NEVER be the Admin Panel.
  */
 export function resolveAppTarget(
@@ -33,6 +36,8 @@ export function resolveAppTarget(
     if (appQuery === 'dukaan' || appQuery === 'vendor') return 'dukaan';
     if (appQuery === 'mitra' || appQuery === 'runner') return 'mitra';
     if (appQuery === 'customer') return 'customer';
+    if (appQuery === 'login') return 'login';
+    if (appQuery === 'splash') return 'splash';
   } catch {
     // Ignore URL parse errors
   }
@@ -47,7 +52,10 @@ export function resolveAppTarget(
   if (cleanPath.startsWith('/mitra') || cleanPath.startsWith('/runner')) {
     return 'mitra';
   }
-  if (cleanPath.startsWith('/customer')) {
+  if (cleanPath === '/login' || cleanPath.startsWith('/login')) {
+    return 'login';
+  }
+  if (cleanPath.startsWith('/customer') || cleanPath.startsWith('/store')) {
     return 'customer';
   }
 
@@ -75,12 +83,12 @@ export function resolveAppTarget(
     return 'mitra';
   }
 
-  // 3d. Customer App: apnagaonbazaar.in or www.apnagaonbazaar.in
-  if (cleanHost === 'apnagaonbazaar.in' || cleanHost === 'www.apnagaonbazaar.in') {
-    return 'customer';
+  // 3d. Customer App & Root Domain: apnagaonbazaar.in, www.apnagaonbazaar.in, or fallback
+  // Root route '/' MUST render the Splash Screen as default, which routes to '/login'
+  if (cleanPath === '/' || cleanPath === '') {
+    return 'splash';
   }
 
-  // 4. Default Fallback: Any unrecognized host (e.g. localhost, 127.0.0.1, preview URLs)
-  // MUST ALWAYS DEFAULT TO CUSTOMER APP, NEVER ADMIN!
+  // Default Fallback
   return 'customer';
 }

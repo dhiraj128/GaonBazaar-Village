@@ -4013,7 +4013,7 @@
 
           if (!res.ok) {
             const body = await res.json().catch(() => ({}));
-            throw new Error(body.detail || "SMS Gateway API rejected request");
+            throw new Error(body.detail || "Firebase Auth dispatch delayed. Please ensure domain is authorized.");
           }
 
           const phoneDisplay = document.getElementById('otp-phone-display');

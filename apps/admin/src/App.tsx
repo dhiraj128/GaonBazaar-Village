@@ -4,18 +4,20 @@ import { AdminApp } from './AdminApp';
 import { CustomerPortal } from './components/CustomerPortal';
 import { VendorPortal } from './components/VendorPortal';
 import { RunnerPortal } from './components/RunnerPortal';
+import { SplashScreen } from './components/SplashScreen';
+import { MobileLogin } from './components/MobileLogin';
 
 /**
  * Root Subdomain Router for Apna GaonBazaar Multi-App Platform
  *
  * Routing Matrix:
+ * - / (Root Route)           -> Branded Green Splash Screen (<SplashScreen />), auto-navigates to /login
+ * - /login                   -> Customer Mobile Login with Firebase Phone Auth (<MobileLogin />)
  * - admin.apnagaonbazaar.in  -> Super Admin Command Center (<AdminApp />)
  * - dukaan.apnagaonbazaar.in -> GaonBazaar Dukaan Vendor Portal (<VendorPortal />)
  * - mitra.apnagaonbazaar.in  -> Gaon Mitra Runner Delivery App (<RunnerPortal />)
- * - apnagaonbazaar.in        -> Apna GaonBazaar Customer App (<CustomerPortal />)
- * - www.apnagaonbazaar.in    -> Apna GaonBazaar Customer App (<CustomerPortal />)
- * - Fallback (localhost/etc) -> Apna GaonBazaar Customer App (<CustomerPortal />)
- *   (Admin panel is NEVER served as fallback)
+ * - apnagaonbazaar.in        -> Root Splash Screen / Customer App (<CustomerPortal />)
+ * - Fallback (localhost/etc) -> Splash on `/`, Login on `/login`, or Customer App
  */
 export function App() {
   const [target, setTarget] = useState<AppTarget>(() =>
@@ -41,6 +43,12 @@ export function App() {
       window.location.hostname === '127.0.0.1' ||
       window.location.hostname.endsWith('.local'));
 
+  const navigateTo = (app: AppTarget) => {
+    const path = app === 'splash' ? '/' : `/${app}`;
+    window.history.pushState({}, '', path);
+    setTarget(app);
+  };
+
   const switchApp = (app: AppTarget) => {
     const url = new URL(window.location.href);
     url.searchParams.set('app', app);
@@ -50,6 +58,29 @@ export function App() {
 
   return (
     <>
+      {/* 2. Branded Green Splash Screen as Default Root Route (/) */}
+      {target === 'splash' && (
+        <SplashScreen
+          destination="/login"
+          durationMs={2500}
+          onFinish={() => navigateTo('login')}
+        />
+      )}
+
+      {/* Customer Mobile Login (/login) */}
+      {target === 'login' && (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+          <MobileLogin
+            title="GaonBazaar Login"
+            subtitle="Enter your mobile number to receive a free Firebase SMS OTP code."
+            onSuccess={(user) => {
+              console.log('[Auth] User successfully authenticated:', user);
+              navigateTo('customer');
+            }}
+          />
+        </div>
+      )}
+
       {/* Dynamic Subdomain Component Rendering */}
       {target === 'admin' && <AdminApp />}
       {target === 'dukaan' && <VendorPortal />}
@@ -67,6 +98,28 @@ export function App() {
           </span>
           <button
             type="button"
+            onClick={() => switchApp('splash')}
+            className={`px-2 py-1 rounded transition-colors font-medium ${
+              target === 'splash'
+                ? 'bg-[#0F9D58] text-white font-semibold'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            Splash (Root /)
+          </button>
+          <button
+            type="button"
+            onClick={() => switchApp('login')}
+            className={`px-2 py-1 rounded transition-colors font-medium ${
+              target === 'login'
+                ? 'bg-blue-600 text-white font-semibold'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            }`}
+          >
+            Login (/login)
+          </button>
+          <button
+            type="button"
             onClick={() => switchApp('customer')}
             className={`px-2 py-1 rounded transition-colors font-medium ${
               target === 'customer'
@@ -74,7 +127,7 @@ export function App() {
                 : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             }`}
           >
-            Customer (Default)
+            Customer
           </button>
           <button
             type="button"

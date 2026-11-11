@@ -964,28 +964,31 @@ export function handleAuthError(error) {
   console.error('[Telecom Gateway Error Details]:', error);
   const code = error?.code || '';
   const rawMsg = error?.message || (typeof error === 'string' ? error : '');
-  let message = `SMS Gateway Error: ${code || rawMsg || 'Failed to dispatch verification code'}`;
+  let message = `Firebase Error: ${code || rawMsg || 'Failed to dispatch verification code'}`;
 
-  if (code === 'auth/quota-exceeded') {
-    message = "SMS Quota Exceeded: Telecom provider daily SMS quota reached. Please upgrade quota or check console.";
+  if (code === 'auth/unauthorized-domain') {
+    const currentDomain = typeof window !== 'undefined' ? window.location.hostname : 'apnagaonbazaar.in';
+    message = `Firebase Error (auth/unauthorized-domain): Domain '${currentDomain}' is not authorized. Please add it to Firebase Console > Authentication > Settings > Authorized Domains.`;
+  } else if (code === 'auth/quota-exceeded') {
+    message = "Firebase Error (auth/quota-exceeded): SMS Quota Exceeded. Free tier monthly limit reached. Please check Firebase SMS billing.";
   } else if (code === 'auth/invalid-phone-number') {
-    message = "Invalid Phone Number: Please enter a valid 10-digit Indian mobile number formatted with +91.";
+    message = "Firebase Error (auth/invalid-phone-number): Please enter a valid 10-digit Indian mobile number formatted with +91.";
   } else if (code === 'auth/too-many-requests') {
-    message = "Too Many Requests: SMS delivery temporarily rate-limited. Please wait a few moments before trying again.";
+    message = "Firebase Error (auth/too-many-requests): SMS delivery temporarily rate-limited. Please wait a few moments before trying again.";
   } else if (code === 'auth/network-request-failed') {
-    message = "Network Error: Unable to reach telecom gateway. Please verify internet connection.";
-  } else if (code === 'auth/captcha-check-failed') {
-    message = "reCAPTCHA Verification Failed: Please tap Send OTP again.";
-  } else if (code === 'auth/unauthorized-domain') {
-    message = "Invalid Network Config: Domain not authorized in Firebase Console Auth settings.";
+    message = "Firebase Error (auth/network-request-failed): Unable to reach telecom gateway. Please verify internet connection.";
+  } else if (code === 'auth/captcha-check-failed' || code === 'auth/invalid-app-credential') {
+    message = `Firebase Error (${code}): Invisible reCAPTCHA verification failed. Please refresh and try again.`;
   } else if (code === 'auth/app-not-authorized') {
-    message = "Invalid Network Config: Client app not authorized to use Firebase Auth.";
+    message = "Firebase Error (auth/app-not-authorized): Client app not authorized to use Firebase Auth.";
   } else if (code === 'auth/invalid-verification-code') {
-    message = "Invalid OTP code. Please enter the correct 6-digit code sent to your phone.";
+    message = "Firebase Error (auth/invalid-verification-code): Incorrect OTP code entered. Please enter the correct 6-digit code.";
   } else if (code === 'auth/code-expired') {
-    message = "This OTP code has expired. Please tap 'Resend OTP' to request a new code.";
+    message = "Firebase Error (auth/code-expired): This OTP code has expired. Please tap 'Resend OTP' to request a new code.";
+  } else if (code) {
+    message = `Firebase Error (${code}): ${rawMsg}`;
   } else if (rawMsg) {
-    message = `SMS Gateway Error (${code || 'Telecom'}): ${rawMsg}`;
+    message = `Firebase Error: ${rawMsg}`;
   }
 
   showAuthError(message);
