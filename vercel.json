@@ -1,75 +1,8 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/((?!customer/|vendor/|runner/|assets/|favicon|icons|manifest).*|)",
-      "has": [
-        {
-          "type": "host",
-          "value": "admin.apnagaonbazaar.in"
-        }
-      ],
-      "destination": "/index.html"
-    },
-    {
-      "source": "/((?!customer/|vendor/|runner/|assets/|favicon|icons|manifest).*|)",
-      "has": [
-        {
-          "type": "host",
-          "value": "dukaan.apnagaonbazaar.in"
-        }
-      ],
-      "destination": "/vendor/index.html"
-    },
-    {
-      "source": "/((?!customer/|vendor/|runner/|assets/|favicon|icons|manifest).*|)",
-      "has": [
-        {
-          "type": "host",
-          "value": "mitra.apnagaonbazaar.in"
-        }
-      ],
-      "destination": "/runner/index.html"
-    },
-    {
-      "source": "/((?!customer/|vendor/|runner/|assets/|favicon|icons|manifest).*|)",
-      "has": [
-        {
-          "type": "host",
-          "value": "apnagaonbazaar.in"
-        }
-      ],
-      "destination": "/customer/index.html"
-    },
-    {
-      "source": "/((?!customer/|vendor/|runner/|assets/|favicon|icons|manifest).*|)",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.apnagaonbazaar.in"
-        }
-      ],
-      "destination": "/customer/index.html"
-    },
-    {
-      "source": "/((?!customer/|vendor/|runner/|assets/|favicon|icons|manifest).*|)",
-      "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
       "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        }
-      ]
+      "destination": "/index.html"
     }
   ]
 }
