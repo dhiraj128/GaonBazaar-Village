@@ -1,6 +1,16 @@
 {
   "rewrites": [
     {
+      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
+      "source": "/(.*)",
+      "destination": "/vendor/index.html"
+    },
+    {
+      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
+      "source": "/(.*)",
+      "destination": "/runner/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
