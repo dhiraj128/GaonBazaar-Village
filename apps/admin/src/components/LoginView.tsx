@@ -35,6 +35,7 @@ export function LoginView({
       // Strict Super Admin RBAC Gate: Only authorized administrative credentials permitted
       const isAllowedAdmin =
         cleanId === '9800000099' ||
+        cleanId === '9999999999' ||
         cleanId.toLowerCase().includes('admin') ||
         cleanId.toLowerCase().endsWith('@gaonbazaar.in');
 

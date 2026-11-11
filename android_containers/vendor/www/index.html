@@ -3021,7 +3021,8 @@
 
         const formattedPhoneNumber = `+91${clean}`;
         state.userProfile.phone = clean;
-        const isTest = (clean === "9905361711" || clean === "9876543210");
+        const isRazorpay = (clean === "9999999999");
+        const isTest = (clean === "9905361711" || clean === "9876543210" || isRazorpay);
 
         const sendBtn = document.getElementById('send-otp-btn');
         const sendBtnText = document.getElementById('send-otp-text');
@@ -3055,7 +3056,11 @@
           const otp1 = document.getElementById('otp-1');
           if (otp1) otp1.focus();
 
-          toastSuccess(currentLang === 'hi' ? "OTP आपके मोबाइल पर भेज दिया गया है!" : "OTP sent to " + formattedPhoneNumber + "!");
+          if (isRazorpay) {
+            toastSuccess(currentLang === 'hi' ? "रेज़रपे अनुपालन समीक्षा मोड: परीक्षण ओटीपी 123456" : "Razorpay Compliance Review Mode: Test OTP 123456");
+          } else {
+            toastSuccess(currentLang === 'hi' ? "OTP आपके मोबाइल पर भेज दिया गया है!" : "OTP sent to " + formattedPhoneNumber + "!");
+          }
         };
 
         if (isTest) {

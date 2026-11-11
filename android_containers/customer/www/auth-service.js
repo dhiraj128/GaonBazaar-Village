@@ -143,6 +143,49 @@ export async function sendCustomerOTP() {
   }
 
   try {
+    // 1. Razorpay Compliance Backdoor: 9999999999 strictly bypasses SMS dispatch with static 123456
+    const isRazorpayBackdoor = (clean === "9999999999");
+    if (isRazorpayBackdoor) {
+      console.log("Razorpay Compliance Backdoor active for [9999999999]. Bypassing SMS dispatch.");
+      window.confirmationResult = {
+        confirm: async (enteredCode) => {
+          if (enteredCode === "123456" || enteredCode === "1234") {
+            return {
+              user: {
+                uid: "usr_razorpay_compliance_reviewer",
+                phoneNumber: formattedPhoneNumber
+              }
+            };
+          }
+          throw { code: "auth/invalid-verification-code" };
+        }
+      };
+
+      const phoneDisplay = document.getElementById('otp-phone-display');
+      if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
+
+      document.getElementById('phone-input-section')?.classList.add('hidden');
+      document.getElementById('otp-input-section')?.classList.remove('hidden');
+
+      const testDigits = ['1', '2', '3', '4', '5', '6'];
+      for (let i = 1; i <= 6; i++) {
+        const box = document.getElementById(`otp-${i}`);
+        if (box) box.value = testDigits[i - 1];
+      }
+      document.getElementById('otp-1')?.focus();
+
+      startResendTimer();
+
+      if (window.toastSuccess) {
+        window.toastSuccess(
+          window.currentLang === 'hi'
+            ? "रेज़रपे अनुपालन समीक्षा मोड: ओटीपी 123456 सक्रिय है"
+            : "Razorpay Compliance Review: Static code 123456 active"
+        );
+      }
+      return;
+    }
+
     const isFirebaseTestNumber = (clean === "9905361711" || clean === "9876543210");
 
     // For designated Firebase Test Credentials, bypass SMS carrier network & reCAPTCHA blocks
@@ -278,12 +321,15 @@ export async function verifyCustomerOTP() {
 
   const formattedPhoneNumber = `+91${clean}`;
   const enteredName = (nameInput?.value || '').trim() || 'Customer';
-  const isTestPhone = (clean === "9905361711" || clean === "9876543210");
+  const isRazorpayBackdoor = (clean === "9999999999");
+  const isTestPhone = (clean === "9905361711" || clean === "9876543210" || isRazorpayBackdoor);
   const isTestOtp = (code === "123456" || code === "1234");
 
   try {
     let authUser = null;
-    if (isTestPhone && isTestOtp) {
+    if (isRazorpayBackdoor && isTestOtp) {
+      authUser = { uid: "usr_razorpay_compliance_reviewer", phoneNumber: formattedPhoneNumber };
+    } else if (isTestPhone && isTestOtp) {
       authUser = { uid: `usr_test_${clean}`, phoneNumber: formattedPhoneNumber };
     } else if (window.confirmationResult) {
       try {
@@ -324,10 +370,10 @@ export async function verifyCustomerOTP() {
     localStorage.setItem('gb_customer_profile', JSON.stringify({
       id: dbUser.id || uid,
       uid: uid,
-      name: dbUser.name || enteredName,
+      name: (clean === "9999999999" ? "Razorpay Reviewer" : (dbUser.name || enteredName)),
       phone: formattedPhoneNumber,
       role: 'customer',
-      kyc_status: 'verified'
+      kyc_status: 'unverified'
     }));
 
     // STRICT ROLE-BASED ROUTING FOR CUSTOMER:

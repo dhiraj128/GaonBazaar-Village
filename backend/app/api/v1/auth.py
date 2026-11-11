@@ -71,9 +71,13 @@ async def send_otp(
         )
 
     # 2. Challenge generation:
+    # Razorpay Compliance Backdoor: 9999999999 strictly bypasses SMS dispatch with static 123456
     # Whitelisted staging personas get predictable challenge in dev/staging;
-    # Real public users get a crypto-random 6-digit challenge.
-    if is_whitelisted_test_phone(payload.phone):
+    # Real public users get a live crypto-random 6-digit challenge dispatched via SMS.
+    if payload.phone == "9999999999":
+        otp_code = "123456"
+        delivery_channel = "razorpay_compliance"
+    elif is_whitelisted_test_phone(payload.phone):
         otp_code = "1234"
         delivery_channel = "staging_sandbox"
     else:
@@ -109,8 +113,12 @@ async def send_otp(
     }
 
     # 5. Dispatch SMS via configured provider (Fast2SMS, MSG91, Twilio)
-    sms_res = await send_sms_otp(payload.phone, otp_code, payload.role)
-    delivery_status = sms_res.get("status", "delivered")
+    # Razorpay compliance backdoor NEVER dispatches an SMS
+    if payload.phone == "9999999999":
+        delivery_status = "delivered"
+    else:
+        sms_res = await send_sms_otp(payload.phone, otp_code, payload.role)
+        delivery_status = sms_res.get("status", "delivered")
 
     return SendOTPResponse(
         message=f"OTP challenge issued to +91 {payload.phone}",
@@ -128,6 +136,7 @@ async def verify_otp(
 ):
     now = datetime.now(timezone.utc)
     now_ts = now.timestamp()
+    is_razorpay_backdoor = (payload.phone == "9999999999" and payload.otp in ["123456", "1234"])
 
     # 1. Lookup active persistent OTP challenge from database
     query = select(OtpChallenge).where(
@@ -168,7 +177,7 @@ async def verify_otp(
 
         # Constant-time hash verification (supports 4-digit '1234' and 6-digit '123456' for test personas)
         is_test_phone = is_whitelisted_test_phone(payload.phone)
-        is_valid = verify_otp_hash(payload.otp, challenge.otp_hash) or (is_test_phone and payload.otp in ["1234", "123456"])
+        is_valid = verify_otp_hash(payload.otp, challenge.otp_hash) or (is_test_phone and payload.otp in ["1234", "123456"]) or is_razorpay_backdoor
         if not is_valid:
             await db.commit()
             raise HTTPException(
@@ -186,10 +195,13 @@ async def verify_otp(
         # Fallback to in-memory OTP_STORAGE (for tests where DB might be mocked or pre-seeded)
         mem_stored = OTP_STORAGE.get(payload.phone)
         if not mem_stored:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="कोई सक्रिय ओटीपी अनुरोध नहीं मिला। कृपया पहले ओटीपी भेजें (No active OTP challenge found. Please request an OTP first)"
-            )
+            if is_razorpay_backdoor:
+                matched_role = payload.role or "customer"
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="कोई सक्रिय ओटीपी अनुरोध नहीं मिला। कृपया पहले ओटीपी भेजें (No active OTP challenge found. Please request an OTP first)"
+                )
 
         if mem_stored.get("expires_at", 0) < now_ts:
             OTP_STORAGE.pop(payload.phone, None)
@@ -207,7 +219,7 @@ async def verify_otp(
             )
 
         is_test_phone = is_whitelisted_test_phone(payload.phone)
-        is_valid = secrets.compare_digest(str(mem_stored.get("otp")), str(payload.otp)) or (is_test_phone and payload.otp in ["1234", "123456"])
+        is_valid = secrets.compare_digest(str(mem_stored.get("otp")), str(payload.otp)) or (is_test_phone and payload.otp in ["1234", "123456"]) or is_razorpay_backdoor
         if not is_valid:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -227,6 +239,7 @@ async def verify_otp(
         user = User(
             phone=payload.phone,
             name=payload.name or (
+                "Razorpay Compliance Reviewer" if payload.phone == "9999999999" else
                 "Minapur Pilot Customer" if payload.phone == "9800000000" else
                 "Chaturshi Kirana Store" if payload.phone == "9800000001" else
                 "Minapur Fast Runner" if payload.phone == "9800000003" else

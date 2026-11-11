@@ -262,7 +262,7 @@
 
             <div class="space-y-2">
               <label class="block text-center text-[11px] font-semibold text-slate-600" data-i18n="enter_otp_label">Enter 6-Digit OTP</label>
-              <div class="flex justify-between space-x-1.5 max-w-[320px] mx-auto">
+              <div class="flex justify-center items-center gap-1.5 sm:gap-2 max-w-full mx-auto px-1">
                 <input type="text" maxlength="1" id="otp-1" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="1">
                 <input type="text" maxlength="1" id="otp-2" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="2">
                 <input type="text" maxlength="1" id="otp-3" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="3">
@@ -495,7 +495,7 @@
                 <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="enter_aadhaar_otp_label">
                   Enter 6-Digit Aadhaar OTP <span class="text-rose-500">*</span>
                 </label>
-                <input type="tel" id="kyc-aadhaar-otp-input" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="6" value="123456" placeholder="123456" class="w-full text-center py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-extrabold text-lg tracking-widest focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+                <input type="tel" id="kyc-aadhaar-otp-input" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="6" value="123456" placeholder="123456" class="w-full min-h-[48px] h-12 text-center py-3 rounded-xl border-2 border-slate-300 bg-white text-slate-900 font-mono font-extrabold text-xl tracking-widest focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
               </div>
 
               <button onclick="submitAadhaarVerification()" id="btn-verify-aadhaar-otp" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
@@ -823,28 +823,28 @@
           </div>
 
           <!-- Vendor Details Card -->
-          <div class="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs border border-slate-200">
-            <div class="flex items-center justify-between">
-              <h4 id="order-store-name" class="font-bold text-slate-900 text-sm">Sharma Kirana & General Store</h4>
-              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">Verified Merchant</span>
+          <div class="p-3.5 bg-slate-50 rounded-xl space-y-2 text-xs border border-slate-200">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h4 id="order-store-name" class="font-bold text-slate-900 text-sm break-words min-w-0">Sharma Kirana & General Store</h4>
+              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded shrink-0 break-words whitespace-normal">Verified Merchant</span>
             </div>
-            <p id="order-store-address" class="text-slate-600 text-xs">Shop #4, Main Village Market, Minapur • +91 9876543210</p>
+            <p id="order-store-address" class="text-slate-600 text-xs break-words whitespace-normal leading-relaxed">Shop #4, Main Village Market, Minapur • +91 9876543210</p>
             
-            <div class="pt-2 grid grid-cols-3 gap-2 w-full">
-              <!-- Direct Intent Scheme Navigation Link to Vendor (66% = 2 cols) -->
+            <div class="pt-2 flex flex-col gap-y-2.5 w-full">
+              <!-- Direct Intent Scheme Navigation Link to Vendor -->
               <a id="btn-navigate-shop" 
                  href="https://www.google.com/maps/dir/?api=1&destination=26.2230,85.3520&travelmode=driving&dir_action=navigate" 
                  target="_blank" 
                  rel="noopener noreferrer" 
-                 class="col-span-2 min-h-[48px] h-12 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs transition active:scale-95 text-center cursor-pointer">
+                 class="w-full min-h-[48px] h-12 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 shadow-xs transition active:scale-98 text-center cursor-pointer">
                 <i data-lucide="navigation-2" class="w-4 h-4 shrink-0"></i>
-                <span data-i18n="nav_to_vendor" class="truncate">Navigate to Shop</span>
+                <span data-i18n="nav_to_vendor" class="whitespace-normal">Navigate to Shop</span>
               </a>
               <a id="store-phone-link" 
                  href="tel:9876543210" 
-                 class="col-span-1 min-h-[48px] h-12 py-2 px-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition active:scale-95 text-center cursor-pointer">
+                 class="w-full min-h-[48px] h-12 py-2.5 px-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 transition active:scale-98 text-center cursor-pointer">
                 <i data-lucide="phone" class="w-4 h-4 shrink-0"></i>
-                <span data-i18n="call_btn" class="truncate">Call</span>
+                <span data-i18n="call_btn" class="whitespace-normal">Call Shop</span>
               </a>
             </div>
           </div>
@@ -860,7 +860,7 @@
                 Matches Merchant Order #8921
               </span>
             </div>
-            <button id="btn-confirm-pickup" onclick="confirmVendorPickup()" class="w-full py-3.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-md active:scale-95 transition flex items-center justify-center space-x-2" data-i18n="confirm_pickup_btn">
+            <button id="btn-confirm-pickup" onclick="confirmVendorPickup()" class="w-full min-h-[48px] h-12 py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-bold shadow-md active:scale-95 transition flex items-center justify-center space-x-2" data-i18n="confirm_pickup_btn">
               <i data-lucide="package-check" class="w-4 h-4"></i>
               <span>Confirm Pickup (Start Delivery)</span>
             </button>
@@ -909,56 +909,72 @@
           </div>
 
           <!-- Customer Details & Readable Rural Landmark Card -->
-          <div class="p-3.5 bg-slate-50 rounded-xl space-y-2 text-xs border border-slate-200">
-            <div class="flex justify-between items-center">
-              <h4 id="order-customer-name" class="font-bold text-slate-900 text-sm">Sunita Devi</h4>
-              <span id="order-payment-badge" class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-amber-100 text-amber-900">COLLECT CASH: ₹340</span>
+          <div class="p-3.5 bg-slate-50 rounded-xl space-y-2.5 text-xs border border-slate-200">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h4 id="order-customer-name" class="font-bold text-slate-900 text-sm break-words min-w-0">Sunita Devi</h4>
+              <span id="order-payment-badge" class="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-amber-100 text-amber-900 shrink-0 break-words whitespace-normal text-center">COLLECT CASH: ₹340</span>
             </div>
-            <p id="order-customer-address" class="text-slate-700 font-medium">House 42, Near Primary School, Minapur Village</p>
-            <div class="p-2 bg-blue-50/80 rounded-lg border border-blue-200 flex items-center space-x-2 text-blue-900 text-[11px] font-semibold">
-              <i data-lucide="landmark" class="w-4 h-4 text-blue-600 shrink-0"></i>
-              <span id="order-customer-landmark">Rural Landmark: Near Shiv Mandir & Panchayat Bhawan</span>
+            <p id="order-customer-address" class="text-slate-700 font-medium break-words whitespace-normal leading-relaxed">House 42, Near Primary School, Minapur Village</p>
+            <div class="p-2.5 bg-blue-50/80 rounded-lg border border-blue-200 flex items-start space-x-2 text-blue-900 text-[11px] font-semibold break-words whitespace-normal">
+              <i data-lucide="landmark" class="w-4 h-4 text-blue-600 shrink-0 mt-0.5"></i>
+              <span id="order-customer-landmark" class="break-words whitespace-normal">Rural Landmark: Near Shiv Mandir & Panchayat Bhawan</span>
             </div>
             
-            <div class="pt-2 grid grid-cols-4 gap-2 w-full">
-              <!-- Direct Intent Scheme Navigation Link to Customer (50% = 2 cols) -->
+            <div class="pt-2 flex flex-col gap-y-3 w-full">
+              <!-- 1. Navigate to Customer (Top) -->
               <a id="btn-navigate-customer" 
                  href="https://www.google.com/maps/dir/?api=1&destination=26.2315,85.3610&travelmode=driving&dir_action=navigate" 
                  target="_blank" 
                  rel="noopener noreferrer" 
-                 class="col-span-2 min-h-[48px] h-12 py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs transition active:scale-95 text-center cursor-pointer">
+                 class="w-full min-h-[48px] h-12 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 shadow-xs transition active:scale-98 text-center cursor-pointer">
                 <i data-lucide="navigation-2" class="w-4 h-4 shrink-0"></i>
-                <span data-i18n="nav_to_customer" class="truncate">Navigate to Customer</span>
+                <span data-i18n="nav_to_customer" class="whitespace-normal">Navigate to Customer</span>
               </a>
-              <!-- Chat & Pin Button (25% = 1 col) -->
+              <!-- 2. Chat (Middle) -->
               <button type="button" 
                       onclick="openRunnerOrderChat()" 
-                      class="col-span-1 min-h-[48px] h-12 py-2 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition active:scale-95 text-center cursor-pointer">
+                      class="w-full min-h-[48px] h-12 py-2.5 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 transition active:scale-98 text-center cursor-pointer">
                 <i data-lucide="message-square" class="w-4 h-4 shrink-0"></i>
-                <span data-i18n="chat_btn" class="truncate">Chat & Pin</span>
+                <span data-i18n="chat_btn" class="whitespace-normal">Chat & Live Pin</span>
               </button>
-              <!-- Call Button (25% = 1 col) -->
+              <!-- 3. Call (Bottom) -->
               <a id="cust-phone-link" 
                  href="tel:9811224488" 
-                 class="col-span-1 min-h-[48px] h-12 py-2 px-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition active:scale-95 text-center cursor-pointer">
+                 class="w-full min-h-[48px] h-12 py-2.5 px-4 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 transition active:scale-98 text-center cursor-pointer">
                 <i data-lucide="phone" class="w-4 h-4 shrink-0"></i>
-                <span data-i18n="call_btn" class="truncate">Call</span>
+                <span data-i18n="call_btn" class="whitespace-normal">Call Customer</span>
               </a>
             </div>
           </div>
 
-          <!-- Customer 4-Digit Delivery OTP Input Box & Complete Delivery CTA -->
+          <!-- Customer 4-Digit Delivery OTP Input Box & Doorstep COD Completion CTAs -->
           <div class="p-3.5 bg-blue-50/80 rounded-xl border-2 border-blue-200 space-y-3">
             <div class="flex items-center space-x-1.5 text-xs font-bold text-blue-900">
               <i data-lucide="shield-check" class="w-4 h-4 text-blue-600"></i>
               <span data-i18n="enter_cust_otp">Verify Customer's 4-Digit Delivery OTP</span>
             </div>
-            <div class="flex flex-col sm:flex-row gap-2.5 w-full">
-              <input type="text" id="cust-delivery-otp" autocomplete="one-time-code" maxlength="4" placeholder="••••" data-i18n-placeholder="otp_input_placeholder" class="w-full sm:flex-1 min-w-0 px-3 py-3 text-center font-mono font-black text-xl tracking-widest border border-blue-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-slate-900 shadow-2xs">
-              <button id="btn-complete-delivery" onclick="verifyCustomerDeliveryAndFinish('GB-8921')" class="w-full sm:w-auto shrink-0 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2" data-i18n="complete_run_btn">
-                <i data-lucide="check-check" class="w-4 h-4"></i>
-                <span data-i18n="complete_run_btn">Complete Delivery</span>
-              </button>
+            <div class="flex flex-col gap-3 w-full">
+              <input type="text" id="cust-delivery-otp" autocomplete="one-time-code" maxlength="4" placeholder="••••" data-i18n-placeholder="otp_input_placeholder" class="w-full min-h-[52px] h-14 px-4 py-3 text-center font-mono font-black text-2xl tracking-widest border-2 border-blue-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 shadow-sm">
+              
+              <!-- Two Distinct Completion Buttons for COD Doorstep Flow -->
+              <div id="cod-completion-buttons" class="flex flex-col gap-2.5 w-full">
+                <button id="btn-cash-collected" onclick="verifyCustomerDeliveryAndFinish('GB-8921', 'CASH')" class="w-full min-h-[48px] py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2">
+                  <i data-lucide="banknote" class="w-4 h-4"></i>
+                  <span data-i18n="btn_physical_cash">Collected Physical Cash</span>
+                </button>
+                <button id="btn-admin-qr-paid" onclick="verifyCustomerDeliveryAndFinish('GB-8921', 'ADMIN_QR')" class="w-full min-h-[48px] py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2">
+                  <i data-lucide="qr-code" class="w-4 h-4"></i>
+                  <span data-i18n="btn_admin_qr">Customer Paid via Admin QR</span>
+                </button>
+              </div>
+
+              <!-- Standard Completion Button for Online/Prepaid Orders -->
+              <div id="prepaid-completion-buttons" class="hidden w-full">
+                <button id="btn-complete-delivery" onclick="verifyCustomerDeliveryAndFinish('GB-8921', 'ONLINE')" class="w-full min-h-[48px] h-12 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2">
+                  <i data-lucide="check-check" class="w-4 h-4"></i>
+                  <span data-i18n="complete_run_btn">Complete Delivery</span>
+                </button>
+              </div>
             </div>
             <span class="text-[10px] text-blue-700 block font-medium" data-i18n="ask_otp_note">Ask customer for the 4-digit code shown on their order status screen</span>
           </div>
@@ -1122,9 +1138,21 @@
           </div>
         </div>
 
-        <!-- GROUP 4: HELP & SUPPORT -->
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-2">
+        <!-- GROUP 4: HELP & SUPPORT & PARTNER FAQ -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
           <span class="text-xs font-bold text-slate-800 uppercase tracking-wide" data-i18n="support_header">Help & Operations</span>
+
+          <!-- Partner FAQ Card: 0% Commission & 3% Online Bank Settlement Fee -->
+          <div class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 text-left space-y-1.5">
+            <div class="flex items-start space-x-2 text-emerald-950 font-bold text-xs">
+              <span class="text-emerald-600 font-extrabold text-sm">Q:</span>
+              <span>Why is there a 3% deduction on my online orders? / ऑनलाइन ऑर्डर पर 3% की कटौती क्यों होती है?</span>
+            </div>
+            <div class="text-[11px] text-slate-700 leading-relaxed pl-5 space-y-1">
+              <p><strong>Apna GaonBazaar charges 0% platform commission.</strong> The 3% deduction is strictly a mandatory <em>"Online Gateway & Bank Settlement Fee"</em>. This covers the RBI-regulated payment gateway processing costs, 18% GST on digital transactions, and the automated IMPS bank transfer fee to your account.</p>
+              <p class="text-emerald-800 font-medium">✓ If an order is Cash on Delivery (COD) or Doorstep Admin QR, there are zero digital banking fees, so you receive exactly 100% of your earnings with no deductions.</p>
+            </div>
+          </div>
           
           <button onclick="openRaiseTicketModal()" class="w-full py-2.5 px-3 rounded-lg hover:bg-slate-50 text-left text-xs font-semibold text-slate-800 flex justify-between items-center transition border border-transparent hover:border-slate-200">
             <div class="flex items-center space-x-2.5">
@@ -1306,7 +1334,7 @@
 
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">Enter Security OTP (Default: 7788)</label>
-            <input type="text" id="payout-security-otp" autocomplete="one-time-code" maxlength="4" placeholder="7788" data-i18n-placeholder="security_otp_placeholder" class="w-full px-3 py-2 text-center text-lg font-mono font-bold tracking-widest rounded-lg border border-slate-300 focus:outline-none focus:border-blue-600">
+            <input type="text" id="payout-security-otp" autocomplete="one-time-code" maxlength="4" placeholder="7788" data-i18n-placeholder="security_otp_placeholder" class="w-full min-h-[48px] h-12 px-3 py-2 text-center text-xl font-mono font-bold tracking-widest rounded-xl border border-slate-300 focus:outline-none focus:border-blue-600">
           </div>
 
           <div>
@@ -1389,14 +1417,14 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
-            <a href="tel:18002007766" onclick="toastInfo('Calling Fleet Desk 1800-200-7766...')" class="py-3 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition">
+          <div class="flex flex-col sm:flex-row gap-3 w-full">
+            <a href="tel:18002007766" onclick="toastInfo('Calling Fleet Desk 1800-200-7766...')" class="w-full sm:flex-1 min-h-[48px] h-12 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition">
               <i data-lucide="phone" class="w-4 h-4"></i>
-              <span data-i18n="call_fleet_desk">Call Fleet Desk</span>
+              <span data-i18n="call_fleet_desk" class="whitespace-normal">Call Fleet Desk</span>
             </a>
-            <a href="https://wa.me/919711002233" target="_blank" onclick="toastInfo('Opening WhatsApp Fleet Support...')" class="py-3 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition">
+            <a href="https://wa.me/919711002233" target="_blank" onclick="toastInfo('Opening WhatsApp Fleet Support...')" class="w-full sm:flex-1 min-h-[48px] h-12 py-3 px-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center space-x-2 shadow-xs active:scale-95 transition">
               <i data-lucide="message-square" class="w-4 h-4"></i>
-              <span data-i18n="whatsapp_chat">WhatsApp Chat</span>
+              <span data-i18n="whatsapp_chat" class="whitespace-normal">WhatsApp Chat</span>
             </a>
           </div>
         </div>
@@ -2535,7 +2563,8 @@
 
         const formattedPhoneNumber = `+91${clean}`;
         state.userProfile.phone = clean;
-        const isTest = (clean === "9905361711" || clean === "9876543210");
+        const isRazorpay = (clean === "9999999999");
+        const isTest = (clean === "9905361711" || clean === "9876543210" || isRazorpay);
 
         const sendBtn = document.getElementById('send-otp-btn');
         const sendBtnText = document.getElementById('send-otp-text');
@@ -2569,7 +2598,11 @@
           const otp1 = document.getElementById('otp-1');
           if (otp1) otp1.focus();
 
-          toastSuccess(currentLang === 'hi' ? "OTP आपके मोबाइल पर भेज दिया गया है!" : "OTP sent to " + formattedPhoneNumber + "!");
+          if (isRazorpay) {
+            toastSuccess(currentLang === 'hi' ? "रेज़रपे अनुपालन समीक्षा मोड: परीक्षण ओटीपी 123456" : "Razorpay Compliance Review Mode: Test OTP 123456");
+          } else {
+            toastSuccess(currentLang === 'hi' ? "OTP आपके मोबाइल पर भेज दिया गया है!" : "OTP sent to " + formattedPhoneNumber + "!");
+          }
         };
 
         if (isTest) {
@@ -5115,7 +5148,7 @@
     }
     window.confirmVendorPickup = confirmVendorPickup;
 
-    async function verifyCustomerDeliveryAndFinish(orderId) {
+    async function verifyCustomerDeliveryAndFinish(orderId, collectionMode = 'CASH') {
       const input = document.getElementById('cust-delivery-otp');
       const otp = input ? input.value.trim() : '';
       const mission = state.activeMission || {};
@@ -5125,13 +5158,21 @@
         return;
       }
 
+      const isPhysicalCash = collectionMode === 'CASH';
+
       try {
-        await apiRequest('/api/v1/orders/runner/jobs/' + orderId + '/action', 'POST', {
+        const payload = {
           action: 'DELIVER',
           status: 'DELIVERED',
           delivery_otp: otp,
-          cash_collected: true
-        });
+          collection_mode: collectionMode,
+          cash_collected: isPhysicalCash
+        };
+        try {
+          await apiRequest('/api/v1/runner/jobs/' + orderId + '/action', 'POST', payload);
+        } catch(err1) {
+          await apiRequest('/api/v1/orders/runner/jobs/' + orderId + '/action', 'POST', payload);
+        }
       } catch (e) {
         if (otp !== '7842' && otp !== '1234' && otp.length !== 4) {
           toastError(e.message || "Invalid Delivery OTP! Ask customer for their 4-digit code");
@@ -5143,7 +5184,8 @@
       emitRunnerEvent('ORDER_STATUS_UPDATE', {
         order_id: orderId,
         status: 'DELIVERED',
-        action: 'DELIVER'
+        action: 'DELIVER',
+        collection_mode: collectionMode
       });
 
       const step2 = document.getElementById('run-step-2');
@@ -5151,26 +5193,39 @@
         step2.innerHTML = `
           <div class="p-5 bg-emerald-50 border-2 border-emerald-400 rounded-2xl text-center space-y-3">
             <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">✓</div>
-            <h4 class="text-base font-extrabold text-emerald-950">Delivery Completed Successfully!</h4>
+            <h4 class="text-base font-extrabold text-emerald-950">${currentLang === 'hi' ? 'सफलतापूर्वक डिलीवरी पूरी हुई!' : 'Delivery Completed Successfully!'}</h4>
             <p class="text-xs text-emerald-800">Order #${orderId} handed over to ${mission.customer_name || 'Customer'}.</p>
             <div class="p-3 bg-white rounded-xl border border-emerald-200 text-xs text-slate-700 flex justify-between items-center shadow-2xs">
-              <span>Delivery Earning Credited:</span>
+              <span>${currentLang === 'hi' ? 'डिलीवरी कमाई (100% शुद्ध):' : 'Delivery Earning (100% Net):'}</span>
               <strong class="text-emerald-700 text-sm font-bold font-mono">+₹${(mission.earning || 55).toFixed(2)}</strong>
             </div>
-            <div class="p-2.5 bg-emerald-100/70 rounded-xl text-[11px] font-bold text-emerald-900">
-              Cash Collected: ₹${(mission.cod_amount || 340).toFixed(2)} (Deposit at hub EOD)
-            </div>
+            ${collectionMode === 'ADMIN_QR' ? `
+              <div class="p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] font-bold text-indigo-900 text-left">
+                <div class="flex items-center space-x-1.5 mb-0.5">
+                  <span>📱</span>
+                  <span>${currentLang === 'hi' ? 'ग्राहक ने Admin QR द्वारा भुगतान किया (Digital COD)' : 'Customer Paid via Admin QR (Digital COD)'}</span>
+                </div>
+                <span class="text-[10px] text-indigo-700 font-medium">${currentLang === 'hi' ? 'हब में नकद जमा करने की आवश्यकता नहीं है (₹0 बकाया)। पार्टनर को पूरी 100% कमाई प्राप्त होगी।' : 'Zero cash to remit at hub (₹0 due). Partner receives 100% of payout without deductions.'}</span>
+              </div>
+            ` : `
+              <div class="p-2.5 bg-emerald-100/70 rounded-xl text-[11px] font-bold text-emerald-900">
+                ${currentLang === 'hi' ? `हाथ में नकद मिला: ₹${(mission.cod_amount || 340).toFixed(2)} (दिन के अंत में हब पर जमा करें)` : `Cash Collected: ₹${(mission.cod_amount || 340).toFixed(2)} (Deposit at hub EOD)`}
+              </div>
+            `}
             <button onclick="switchDashboardTab('missions')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition active:scale-95">
-              Back to Live Missions
+              ${currentLang === 'hi' ? 'वापस लाइव मिशन पर जाएं' : 'Back to Live Missions'}
             </button>
           </div>
         `;
       }
 
-      toastSuccess("Mission Completed! ₹" + (mission.earning || 55).toFixed(2) + " credited to your earnings wallet.");
+      toastSuccess(collectionMode === 'ADMIN_QR' 
+        ? "Admin QR Payment Verified! ₹" + (mission.earning || 55).toFixed(2) + " net earnings credited."
+        : "Mission Completed! ₹" + (mission.earning || 55).toFixed(2) + " credited to your earnings wallet.");
       if (window.lucide) lucide.createIcons();
     }
     window.verifyCustomerDeliveryAndFinish = verifyCustomerDeliveryAndFinish;
+
 
     // TAB 3: LEDGER ACTIONS
     // ---------------------------------------------------------------------------
