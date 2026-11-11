@@ -44,6 +44,12 @@ export function MobileLogin({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
+  // Guarantee strictly empty inputs on mount
+  useEffect(() => {
+    setName('');
+    setPhone('');
+  }, []);
+
   // Sync prop changes if language is updated from parent
   useEffect(() => {
     if (propLang && (propLang === 'en' || propLang === 'hi')) {
@@ -115,12 +121,9 @@ export function MobileLogin({
       setStep('otp');
       setStatusMessage(isHindi ? `सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया` : `Verification code sent to ${formattedPhoneNumber}`);
     } catch (err: any) {
-      // 1. Unmask the Real Firebase Error: aggressively log to console
+      // Unmask the Real Firebase Error: aggressively log to console
       console.error("FIREBASE FATAL ERROR:", err?.code, err?.message);
       console.error("FIREBASE FULL ERROR:", err);
-
-      // 3. Expose Raw Firebase Error to Window Alert
-      alert("Firebase Error: " + (err?.message || err?.code || String(err)));
 
       // Clean up reCAPTCHA verifier immediately to prevent infinite spinning/hanging
       if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
@@ -339,17 +342,16 @@ export function MobileLogin({
                   <User className="absolute left-3.5 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
-                    name="customer_full_name_clean"
+                    name="gb_usr_reg_name"
                     id="customer-name-field"
-                    defaultValue=""
-                    autoComplete="new-password"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck={false}
                     data-lpignore="true"
                     data-form-type="other"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
                     placeholder={t.namePlaceholder}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-[#0F9D58] focus:bg-white transition"
                   />
@@ -367,18 +369,17 @@ export function MobileLogin({
                   </div>
                   <input
                     type="tel"
-                    name="customer_mobile_phone_clean"
+                    name="gb_usr_reg_phone"
                     id="customer-phone-field"
                     maxLength={10}
-                    defaultValue=""
-                    autoComplete="new-password"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                    autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck={false}
                     data-lpignore="true"
                     data-form-type="other"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                     placeholder={t.phonePlaceholder}
                     required
                     className="w-full pl-20 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-800 outline-none focus:border-[#0F9D58] focus:bg-white transition"

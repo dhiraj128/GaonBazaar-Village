@@ -210,7 +210,6 @@ export async function sendCustomerOTP() {
       console.log(`[Telecom Gateway] Firebase SMS confirmation received for: ${formattedPhoneNumber}`);
     } catch (fbErr) {
       console.error(`[Telecom Gateway] Firebase SMS dispatch failed:`, fbErr);
-      alert('Firebase Error: ' + (fbErr.message || fbErr.code || String(fbErr)));
       telecomError = fbErr;
       resetRecaptcha();
     }
