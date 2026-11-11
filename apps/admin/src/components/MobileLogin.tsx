@@ -119,6 +119,9 @@ export function MobileLogin({
       console.error("FIREBASE FATAL ERROR:", err?.code, err?.message);
       console.error("FIREBASE FULL ERROR:", err);
 
+      // 3. Expose Raw Firebase Error to Window Alert
+      alert("Firebase Error: " + (err?.message || err?.code || String(err)));
+
       // Clean up reCAPTCHA verifier immediately to prevent infinite spinning/hanging
       if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
         try {
@@ -338,7 +341,8 @@ export function MobileLogin({
                     type="text"
                     name="customer_full_name_clean"
                     id="customer-name-field"
-                    autoComplete="off"
+                    defaultValue=""
+                    autoComplete="new-password"
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck={false}
@@ -366,7 +370,8 @@ export function MobileLogin({
                     name="customer_mobile_phone_clean"
                     id="customer-phone-field"
                     maxLength={10}
-                    autoComplete="off"
+                    defaultValue=""
+                    autoComplete="new-password"
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck={false}
