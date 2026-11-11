@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, User, ArrowRight, ShieldCheck, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Send, User, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import {
   sendFirebaseOtp,
   verifyFirebaseOtp,
@@ -10,6 +10,7 @@ import {
 interface MobileLoginProps {
   onSuccess?: (user: { phone: string; name?: string; token?: string }) => void;
   onCancel?: () => void;
+  lang?: 'en' | 'hi';
   title?: string;
   subtitle?: string;
 }
@@ -17,10 +18,22 @@ interface MobileLoginProps {
 export function MobileLogin({
   onSuccess,
   onCancel,
-  title = "Mobile Login",
-  subtitle = "Enter your mobile number to receive a secure 6-digit OTP."
+  lang: propLang,
+  title: propTitle,
+  subtitle: propSubtitle,
 }: MobileLoginProps) {
-  // 1. Clear Hardcoded React State: strictly empty strings for new users
+  // 3. Strict Language Detection (No mixing of Hindi & English)
+  const [lang, setLang] = useState<'en' | 'hi'>(() => {
+    if (propLang === 'en' || propLang === 'hi') return propLang;
+    try {
+      const stored = localStorage.getItem('gb_customer_lang');
+      return stored === 'hi' ? 'hi' : 'en';
+    } catch {
+      return 'en';
+    }
+  });
+
+  // 4. Final Wipe of Hardcoded State: force strictly empty strings
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -30,12 +43,45 @@ export function MobileLogin({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
+  // Sync prop changes if language is updated from parent
+  useEffect(() => {
+    if (propLang && (propLang === 'en' || propLang === 'hi')) {
+      setLang(propLang);
+    }
+  }, [propLang]);
+
   // Cleanup verifier on unmount
   useEffect(() => {
     return () => {
       resetRecaptchaVerifier();
     };
   }, []);
+
+  // Strict localized copy dictionary
+  const isHindi = lang === 'hi';
+  const t = {
+    title: propTitle || (isHindi ? "मोबाइल लॉगिन" : "Mobile Login"),
+    subtitle: propSubtitle || (isHindi
+      ? "सुरक्षित 6-अंकीय OTP प्राप्त करने के लिए अपना मोबाइल नंबर दर्ज करें।"
+      : "Enter your mobile number to receive a secure 6-digit OTP."),
+    nameLabel: isHindi ? "पूरा नाम" : "Full Name",
+    nameSublabel: isHindi ? "(नए ग्राहकों के लिए)" : "(for new customers)",
+    namePlaceholder: isHindi ? "उदा. रमेश कुमार" : "e.g. Ramesh Kumar",
+    phoneLabel: isHindi ? "मोबाइल नंबर" : "Mobile Number",
+    phonePlaceholder: isHindi ? "10 अंकों का मोबाइल नंबर दर्ज करें" : "Enter 10-digit mobile number",
+    phoneHelper: isHindi ? "आपके फोन पर तुरंत SMS OTP भेजा जाएगा।" : "Instant SMS OTP delivered to your phone.",
+    sendBtn: isHindi ? "OTP भेजें" : "Send OTP",
+    sendingBtn: isHindi ? "भेजा जा रहा है..." : "Sending...",
+    codeSentTo: isHindi ? "कोड भेजा गया:" : "Code sent to:",
+    changeBtn: isHindi ? "बदलें" : "Change",
+    otpTitle: isHindi ? "6-अंकीय SMS सत्यापन कोड दर्ज करें" : "Enter 6-Digit SMS Verification Code",
+    verifyBtn: isHindi ? "सत्यापित करें और आगे बढ़ें" : "Verify & Proceed",
+    verifyingBtn: isHindi ? "सत्यापित हो रहा है..." : "Verifying...",
+    resendBtn: isHindi ? "OTP पुनः भेजें" : "Resend OTP",
+    trustBadge: isHindi ? "🔒 100% सुरक्षित और एन्क्रिप्टेड लॉगिन" : "🔒 256-bit Encrypted & Secure Authentication",
+    invalidPhone: isHindi ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें" : "Please enter a valid 10-digit Indian mobile number",
+    invalidOtp: isHindi ? "कृपया पूरा 6-अंकीय OTP कोड दर्ज करें" : "Please enter complete 6-digit OTP",
+  };
 
   const handleSendOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -44,14 +90,11 @@ export function MobileLogin({
 
     const clean = phone.replace(/\D/g, '').slice(-10);
     if (!/^[6-9]\d{9}$/.test(clean) && clean !== '9999999999') {
-      setError('Please enter a valid 10-digit Indian mobile number (e.g. 9905361711)');
+      setError(t.invalidPhone);
       return;
     }
 
-    // 1. Enforce +91 Country Code Formatting
     const formattedPhoneNumber = `+91${clean}`;
-
-    // Visual loading feedback
     setIsLoading(true);
 
     try {
@@ -59,30 +102,37 @@ export function MobileLogin({
       if (clean === '9999999999') {
         setStep('otp');
         setOtp(['1', '2', '3', '4', '5', '6']);
-        setStatusMessage('Razorpay Compliance Review: Static code 123456 active');
+        setStatusMessage(isHindi ? "रेज़रपे समीक्षा मोड: कोड 123456 सक्रिय है" : "Razorpay Review Mode: Code 123456 active");
         return;
       }
 
       console.log('[Auth] Initiating OTP dispatch for:', formattedPhoneNumber);
 
-      // Trigger Phone Auth with invisible RecaptchaVerifier
-      const confirmation = await sendFirebaseOtp(clean);
+      // Trigger Phone Auth with invisible RecaptchaVerifier attached to button or container
+      const confirmation = await sendFirebaseOtp(clean, 'send-otp-btn');
       setConfirmationResult(confirmation);
       setStep('otp');
-      setStatusMessage(`Verification code sent to ${formattedPhoneNumber}`);
+      setStatusMessage(isHindi ? `सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया` : `Verification code sent to ${formattedPhoneNumber}`);
     } catch (err: any) {
-      // Log the actual raw error securely in the background for developer debugging only
-      console.error('[Auth Error Details]:', err);
+      // 1. Unmask the Real Firebase Error: aggressively log to console
+      console.error("FIREBASE FATAL ERROR:", err?.code, err?.message);
+      console.error("FIREBASE FULL ERROR:", err);
 
       const code = err?.code || '';
 
-      // 3. Graceful Error Handling: Map error codes to user-friendly UI messages
+      // Graceful error mapping
       if (code === 'auth/operation-not-allowed') {
-        setError('SMS services are temporarily unavailable in this region. Please contact support.');
+        setError(isHindi
+          ? "इस क्षेत्र में SMS सेवाएं अस्थायी रूप से अनुपलब्ध हैं। कृपया सहायता से संपर्क करें।"
+          : "SMS services are temporarily unavailable in this region. Please contact support.");
       } else if (code === 'auth/too-many-requests') {
-        setError('Too many attempts. Please try again in a few minutes.');
+        setError(isHindi
+          ? "बहुत सारे प्रयास। कृपया कुछ मिनटों में पुनः प्रयास करें।"
+          : "Too many attempts. Please try again in a few minutes.");
       } else {
-        setError('Unable to send OTP. Please check your network and try again.');
+        setError(isHindi
+          ? "OTP भेजने में असमर्थ। कृपया अपना नेटवर्क जांचें और पुनः प्रयास करें।"
+          : "Unable to send OTP. Please check your network and try again.");
       }
     } finally {
       setIsLoading(false);
@@ -95,7 +145,7 @@ export function MobileLogin({
 
     const code = otp.join('');
     if (code.length !== 6) {
-      setError('Please enter complete 6-digit OTP');
+      setError(t.invalidOtp);
       return;
     }
 
@@ -144,7 +194,7 @@ export function MobileLogin({
         console.warn('[Backend Sync Notice]:', backendSyncErr);
       }
 
-      // If backend was offline or not reachable, proceed with verified authentication
+      // Proceed with verified auth session
       if (onSuccess) {
         const token = await authUser.getIdToken().catch(() => 'auth-verified');
         onSuccess({
@@ -154,17 +204,23 @@ export function MobileLogin({
         });
       }
     } catch (err: any) {
-      // Log the actual raw error securely in the background for developer debugging only
-      console.error('[Auth Verification Error Details]:', err);
+      console.error("FIREBASE FATAL ERROR:", err?.code, err?.message);
+      console.error("FIREBASE FULL ERROR:", err);
 
       const code = err?.code || '';
 
       if (code === 'auth/invalid-verification-code') {
-        setError('Invalid OTP code. Please enter the correct 6-digit code.');
+        setError(isHindi
+          ? "अमान्य OTP कोड। कृपया सही 6-अंकीय कोड दर्ज करें।"
+          : "Invalid OTP code. Please enter the correct 6-digit code.");
       } else if (code === 'auth/code-expired') {
-        setError('Verification code has expired. Please request a new OTP.');
+        setError(isHindi
+          ? "सत्यापन कोड समाप्त हो गया है। कृपया नया OTP अनुरोध करें।"
+          : "Verification code has expired. Please request a new OTP.");
       } else {
-        setError('Unable to verify OTP. Please try again.');
+        setError(isHindi
+          ? "OTP सत्यापित करने में असमर्थ। कृपया पुनः प्रयास करें।"
+          : "Unable to verify OTP. Please try again.");
       }
     } finally {
       setIsLoading(false);
@@ -202,9 +258,12 @@ export function MobileLogin({
   };
 
   return (
-    <div className="max-w-md w-full mx-auto bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden font-sans relative">
-      {/* Invisible reCAPTCHA Container */}
-      <div id="firebase-recaptcha-container" className="hidden" />
+    <div className="max-w-md w-full mx-auto bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden font-sans relative select-none">
+      {/* Invisible reCAPTCHA Container: mounted safely in DOM without display:none */}
+      <div
+        id="firebase-recaptcha-container"
+        style={{ position: 'fixed', bottom: 0, opacity: 0, pointerEvents: 'none', zIndex: -1 }}
+      />
 
       {/* Brand Header */}
       <div className="bg-[#0F9D58] p-6 text-white text-center relative border-b border-emerald-700/50">
@@ -226,14 +285,14 @@ export function MobileLogin({
             <path d="M12 54H52" stroke="#1B5E20" strokeWidth="3" strokeLinecap="round" />
           </svg>
         </div>
-        <h2 className="text-2xl font-black tracking-tight text-white">{title}</h2>
+        <h2 className="text-2xl font-black tracking-tight text-white">{t.title}</h2>
         <p className="text-xs text-emerald-100 mt-1 max-w-xs mx-auto leading-relaxed">
-          {subtitle}
+          {t.subtitle}
         </p>
       </div>
 
       <div className="p-6 space-y-5">
-        {/* Graceful Human-Readable Error Message Display */}
+        {/* Human-Readable Error Message Display */}
         {error && (
           <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-start space-x-2 leading-relaxed">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
@@ -250,19 +309,26 @@ export function MobileLogin({
 
         {step === 'phone' ? (
           <form onSubmit={handleSendOtp} autoComplete="off" className="space-y-4">
-            {/* 2. Disable Browser Auto-fill: autoComplete="off" */}
+            {/* 4. Final Wipe of Hardcoded State: forced empty useState, autoComplete="off", spellCheck="false" */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Full Name <span className="text-slate-400 font-normal">(for new customers)</span>
+                {t.nameLabel} <span className="text-slate-400 font-normal">{t.nameSublabel}</span>
               </label>
               <div className="relative flex items-center">
                 <User className="absolute left-3.5 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
+                  name="customer_full_name_clean"
+                  id="customer-name-field"
                   autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  data-lpignore="true"
+                  data-form-type="other"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Ramesh Kumar"
+                  placeholder={t.namePlaceholder}
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-[#0F9D58] focus:bg-white transition"
                 />
               </div>
@@ -270,7 +336,7 @@ export function MobileLogin({
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Mobile Number
+                {t.phoneLabel}
               </label>
               <div className="relative flex items-center">
                 <div className="absolute left-3.5 flex items-center space-x-1 text-xs font-bold text-slate-700 border-r border-slate-200 pr-2 select-none">
@@ -279,22 +345,30 @@ export function MobileLogin({
                 </div>
                 <input
                   type="tel"
+                  name="customer_mobile_phone_clean"
+                  id="customer-phone-field"
                   maxLength={10}
                   autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  data-lpignore="true"
+                  data-form-type="other"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Enter 10-digit mobile number"
+                  placeholder={t.phonePlaceholder}
                   required
                   className="w-full pl-20 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-800 outline-none focus:border-[#0F9D58] focus:bg-white transition"
                 />
               </div>
               <p className="text-[10px] text-slate-400 mt-1">
-                Instant SMS OTP delivered to your phone.
+                {t.phoneHelper}
               </p>
             </div>
 
-            {/* Send OTP Button with Visual Loading State */}
+            {/* Send OTP Button with Visual Loading State and ID for reCAPTCHA attachment */}
             <button
+              id="send-otp-btn"
               type="submit"
               disabled={isLoading}
               className="w-full py-3.5 bg-[#0F9D58] hover:bg-[#0D874C] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-sm cursor-pointer active:scale-98"
@@ -302,11 +376,11 @@ export function MobileLogin({
               {isLoading ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  <span>Sending OTP...</span>
+                  <span>{t.sendingBtn}</span>
                 </>
               ) : (
                 <>
-                  <span>Send OTP</span>
+                  <span>{t.sendBtn}</span>
                   <Send className="w-4 h-4" />
                 </>
               )}
@@ -316,20 +390,20 @@ export function MobileLogin({
           <form onSubmit={handleVerifyOtp} autoComplete="off" className="space-y-4">
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-600">
-                Code sent to: <strong className="text-slate-900">+91 {phone}</strong>
+                {t.codeSentTo} <strong className="text-slate-900">+91 {phone}</strong>
               </span>
               <button
                 type="button"
                 onClick={() => setStep('phone')}
                 className="text-[#0F9D58] font-bold hover:underline"
               >
-                Change
+                {t.changeBtn}
               </button>
             </div>
 
             <div>
               <label className="block text-center text-xs font-semibold text-slate-600 mb-2">
-                Enter 6-Digit SMS Verification Code
+                {t.otpTitle}
               </label>
               <div className="flex justify-center items-center gap-2">
                 {otp.map((digit, idx) => (
@@ -339,6 +413,10 @@ export function MobileLogin({
                     type="tel"
                     maxLength={1}
                     autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    data-lpignore="true"
                     value={digit}
                     onChange={(e) => handleOtpChange(idx, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(idx, e)}
@@ -356,11 +434,11 @@ export function MobileLogin({
               {isLoading ? (
                 <>
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  <span>Verifying...</span>
+                  <span>{t.verifyingBtn}</span>
                 </>
               ) : (
                 <>
-                  <span>Verify & Proceed</span>
+                  <span>{t.verifyBtn}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -373,15 +451,15 @@ export function MobileLogin({
                 disabled={isLoading}
                 className="text-xs text-slate-500 hover:text-[#0F9D58] font-semibold underline"
               >
-                Resend OTP
+                {t.resendBtn}
               </button>
             </div>
           </form>
         )}
 
-        <div className="pt-2 text-center text-[11px] text-slate-400 flex items-center justify-center space-x-1">
-          <ShieldCheck className="w-3.5 h-3.5 text-[#0F9D58]" />
-          <span>Apna GaonBazaar Secure Zero-Data-Leak Authentication</span>
+        {/* 2. Upgraded Trust Badge: Strict i18n & Tailwind Typography */}
+        <div className="text-xs font-medium text-gray-500 tracking-wide mt-4 flex items-center justify-center gap-1 select-none">
+          <span>{t.trustBadge}</span>
         </div>
       </div>
     </div>

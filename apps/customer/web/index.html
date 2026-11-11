@@ -494,7 +494,7 @@
             </label>
             <div class="relative flex items-center">
               <i data-lucide="user" class="absolute left-3.5 w-4 h-4 text-slate-400"></i>
-              <input type="text" id="cust-name-input" placeholder="e.g. Ramesh Kumar" value="" autocomplete="off" class="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-xs font-semibold text-slate-900 transition shadow-2xs">
+              <input type="text" id="cust-name-input" placeholder="e.g. Ramesh Kumar" value="" autocomplete="off" spellcheck="false" class="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-xs font-semibold text-slate-900 transition shadow-2xs">
             </div>
           </div>
 
@@ -507,7 +507,7 @@
                 <span>🇮🇳</span>
                 <span class="font-mono text-emerald-800 font-extrabold">+91</span>
               </div>
-              <input type="tel" id="cust-phone-input" maxlength="10" placeholder="Enter 10-digit mobile number" value="" autocomplete="off" class="w-full pl-20 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs font-mono">
+              <input type="tel" id="cust-phone-input" maxlength="10" placeholder="Enter 10-digit mobile number" value="" autocomplete="off" spellcheck="false" class="w-full pl-20 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs font-mono">
             </div>
             <p class="text-[10px] text-slate-400 mt-1" data-i18n="sms_dispatched_note">Instant SMS OTP delivered to your mobile phone</p>
           </div>
@@ -525,7 +525,7 @@
         <div id="otp-input-section" class="hidden space-y-5 pt-1">
           <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-between">
             <div class="text-xs text-emerald-900">
-              <span class="font-medium" data-i18n="otp_sent_to">Code sent to:</span> <span id="otp-phone-display" class="font-bold">+91 9876543210</span>
+              <span class="font-medium" data-i18n="otp_sent_to">Code sent to:</span> <span id="otp-phone-display" class="font-bold"></span>
             </div>
             <button onclick="resetCustomerPhone()" class="text-xs text-emerald-700 font-bold hover:underline" data-i18n="change_number">Change</button>
           </div>
@@ -533,12 +533,12 @@
           <div class="space-y-2">
             <label class="block text-center text-[11px] font-semibold text-slate-600">Enter 6-Digit SMS Verification Code</label>
             <div class="flex justify-center items-center gap-1.5 sm:gap-2 max-w-full mx-auto px-1">
-              <input type="tel" maxlength="1" id="otp-1" autocomplete="one-time-code" autocomplete="one-time-code" value="1" onkeyup="handleOtpInput(this, 'otp-2', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-2" autocomplete="one-time-code" autocomplete="one-time-code" value="2" onkeyup="handleOtpInput(this, 'otp-3', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-3" autocomplete="one-time-code" autocomplete="one-time-code" value="3" onkeyup="handleOtpInput(this, 'otp-4', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-4" autocomplete="one-time-code" autocomplete="one-time-code" value="4" onkeyup="handleOtpInput(this, 'otp-5', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-5" autocomplete="one-time-code" autocomplete="one-time-code" value="5" onkeyup="handleOtpInput(this, 'otp-6', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-6" autocomplete="one-time-code" autocomplete="one-time-code" value="6" onkeyup="handleOtpInput(this, null, event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-1" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-2', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-2" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-3', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-3" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-4', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-4" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-5', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-5" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-6', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-6" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, null, event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
             </div>
           </div>
 

@@ -28,30 +28,47 @@ let activeConfirmationResult: ConfirmationResult | null = null;
 let activeRecaptchaVerifier: RecaptchaVerifier | null = null;
 
 /**
- * Initializes or retrieves an invisible RecaptchaVerifier attached to the DOM container.
+ * Initializes or retrieves an invisible RecaptchaVerifier attached to the Send OTP button or container.
  */
-export function getOrCreateRecaptchaVerifier(containerId = 'firebase-recaptcha-container'): RecaptchaVerifier {
+export function getOrCreateRecaptchaVerifier(preferredTargetId = 'send-otp-btn'): RecaptchaVerifier {
   if (typeof window === 'undefined') {
     throw new Error('reCAPTCHA can only be initialized in browser environment');
   }
 
-  // Ensure DOM container exists
-  let container = document.getElementById(containerId);
-  if (!container) {
-    container = document.createElement('div');
-    container.id = containerId;
-    document.body.appendChild(container);
-  }
-
-  // If already instantiated, reuse it
+  // If already instantiated, verify or reuse
   if (activeRecaptchaVerifier) {
     return activeRecaptchaVerifier;
   }
 
-  activeRecaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+  // 1. Unmask the Real Firebase Error & Ensure reCAPTCHA Container is Mounted
+  let targetId = preferredTargetId;
+  let targetElement = document.getElementById(targetId);
+
+  // If button not found, fallback to dedicated container
+  if (!targetElement) {
+    targetId = 'firebase-recaptcha-container';
+    targetElement = document.getElementById(targetId);
+  }
+
+  // If neither exists, dynamically inject a safe, non-hidden container
+  if (!targetElement) {
+    targetElement = document.createElement('div');
+    targetElement.id = 'firebase-recaptcha-container';
+    targetElement.style.position = 'fixed';
+    targetElement.style.bottom = '0';
+    targetElement.style.opacity = '0';
+    targetElement.style.pointerEvents = 'none';
+    targetElement.style.zIndex = '-1';
+    document.body.appendChild(targetElement);
+    targetId = 'firebase-recaptcha-container';
+  }
+
+  console.log('[Firebase reCAPTCHA] Initializing invisible RecaptchaVerifier on target:', targetId);
+
+  activeRecaptchaVerifier = new RecaptchaVerifier(auth, targetId, {
     size: 'invisible',
-    callback: () => {
-      console.log('[Firebase Recaptcha] Verified successfully');
+    callback: (response: any) => {
+      console.log('[Firebase Recaptcha] Invisible challenge solved successfully, response token length:', response?.length || 0);
     },
     'expired-callback': () => {
       console.warn('[Firebase Recaptcha] Token expired. Resetting verifier...');
@@ -80,7 +97,7 @@ export function resetRecaptchaVerifier(): void {
  * Sends a live SMS OTP via Firebase Phone Authentication with invisible reCAPTCHA.
  * Strictly enforces +91 country code prefix.
  */
-export async function sendFirebaseOtp(rawPhone: string): Promise<ConfirmationResult> {
+export async function sendFirebaseOtp(rawPhone: string, targetId = 'send-otp-btn'): Promise<ConfirmationResult> {
   const clean10 = rawPhone.replace(/\D/g, '').slice(-10);
   if (!/^[6-9]\d{9}$/.test(clean10) && clean10 !== '9999999999') {
     throw {
@@ -93,7 +110,7 @@ export async function sendFirebaseOtp(rawPhone: string): Promise<ConfirmationRes
   const formattedPhone = `+91${clean10}`;
   console.log('[Firebase Auth] Dispatching SMS OTP to:', formattedPhone);
 
-  const verifier = getOrCreateRecaptchaVerifier();
+  const verifier = getOrCreateRecaptchaVerifier(targetId);
 
   try {
     const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, verifier);
@@ -101,7 +118,9 @@ export async function sendFirebaseOtp(rawPhone: string): Promise<ConfirmationRes
     console.log('[Firebase Auth] SMS verification code sent successfully to:', formattedPhone);
     return confirmationResult;
   } catch (error: any) {
-    console.error('[Firebase Auth] signInWithPhoneNumber failed:', error);
+    // 1. Unmask the Real Firebase Error: aggressively log to console
+    console.error("FIREBASE FATAL ERROR:", error?.code, error?.message);
+    console.error("FIREBASE FULL ERROR:", error);
     resetRecaptchaVerifier();
     throw error;
   }
@@ -123,7 +142,8 @@ export async function verifyFirebaseOtp(code: string): Promise<UserCredential> {
     console.log('[Firebase Auth] User successfully verified via OTP:', result.user.phoneNumber);
     return result;
   } catch (error: any) {
-    console.error('[Firebase Auth] confirm() failed:', error);
+    console.error("FIREBASE FATAL ERROR:", error?.code, error?.message);
+    console.error("FIREBASE FULL ERROR:", error);
     throw error;
   }
 }
