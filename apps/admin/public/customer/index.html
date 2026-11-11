@@ -1937,7 +1937,7 @@
               <label class="block text-[11px] font-semibold text-slate-700">Enter UPI ID (Virtual Payment Address)</label>
               <div class="relative flex items-center">
                 <i data-lucide="at-sign" class="absolute left-3 w-3.5 h-3.5 text-emerald-600 pointer-events-none"></i>
-                <input type="text" autocomplete="off" id="vault-upi-input" placeholder="e.g. 9905361711@upi" value="9905361711@upi" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-2xs">
+                <input type="text" autocomplete="off" id="vault-upi-input" placeholder="e.g. yourname@upi" value="" class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-2xs">
               </div>
               <div class="flex flex-wrap gap-1 text-[9px] pt-0.5">
                 <button type="button" onclick="event.stopPropagation(); appendUpiSuffix('@upi')" class="px-2 py-1 bg-white border border-slate-200 rounded-lg text-slate-700 font-mono hover:bg-slate-50 transition">@upi</button>
@@ -8316,7 +8316,7 @@ function createProductCardElement(p) {
 
         // Supabase customer ledger synchronization
         const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
-        const userPhone = (localStorage.getItem('gb_customer_phone') || localStorage.getItem('gb_user_phone') || '9905361711').replace(/\D/g, '').slice(-10);
+        const userPhone = (localStorage.getItem('gb_customer_phone') || localStorage.getItem('gb_user_phone') || '').replace(/\D/g, '').slice(-10);
         if (userPhone && typeof safeApiCall === 'function') {
           await safeApiCall(`${supabaseUrl}/rest/v1/customers?phone=eq.${userPhone}`, 'PATCH', {
             payment_settings: payload
@@ -9966,6 +9966,39 @@ function createProductCardElement(p) {
     window.addEventListener('DOMContentLoaded', () => {
       initCustomerOrderSync();
     });
+
+    // Native Mobile Pull-to-Refresh Gesture
+    (function initPullToRefresh() {
+      let startY = 0;
+      let isPulling = false;
+      const THRESHOLD = 75;
+
+      window.addEventListener('touchstart', (e) => {
+        if ((window.scrollY || document.documentElement.scrollTop || 0) <= 0) {
+          startY = e.touches[0].clientY;
+          isPulling = true;
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isPulling) return;
+        const currentY = e.touches[0].clientY;
+        const diff = currentY - startY;
+        if (diff > THRESHOLD && (window.scrollY || document.documentElement.scrollTop || 0) <= 0) {
+          isPulling = false;
+          if (typeof toastSuccess === 'function') {
+            toastSuccess(window.currentLang === 'hi' ? 'रीफ़्रेश हो रहा है...' : 'Refreshing...');
+          }
+          setTimeout(() => {
+            window.location.reload();
+          }, 350);
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchend', () => {
+        isPulling = false;
+      }, { passive: true });
+    })();
 
   </script>
 

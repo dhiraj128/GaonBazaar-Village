@@ -35,8 +35,15 @@ export function getOrCreateRecaptchaVerifier(preferredTargetId = 'send-otp-btn')
     throw new Error('reCAPTCHA can only be initialized in browser environment');
   }
 
+  // Check window global reference as well
+  if ((window as any).recaptchaVerifier) {
+    activeRecaptchaVerifier = (window as any).recaptchaVerifier;
+    return activeRecaptchaVerifier as RecaptchaVerifier;
+  }
+
   // If already instantiated, verify or reuse
   if (activeRecaptchaVerifier) {
+    (window as any).recaptchaVerifier = activeRecaptchaVerifier;
     return activeRecaptchaVerifier;
   }
 
@@ -76,6 +83,7 @@ export function getOrCreateRecaptchaVerifier(preferredTargetId = 'send-otp-btn')
     }
   });
 
+  (window as any).recaptchaVerifier = activeRecaptchaVerifier;
   return activeRecaptchaVerifier;
 }
 
@@ -83,13 +91,32 @@ export function getOrCreateRecaptchaVerifier(preferredTargetId = 'send-otp-btn')
  * Clears and resets the reCAPTCHA verifier instance.
  */
 export function resetRecaptchaVerifier(): void {
+  // Use window.recaptchaVerifier.clear() before resetting to prevent hanging/spinning
+  if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
+    try {
+      (window as any).recaptchaVerifier.clear();
+      console.log('[Firebase Recaptcha] window.recaptchaVerifier cleared successfully');
+    } catch (e) {
+      console.warn('[Firebase Recaptcha] Error clearing window.recaptchaVerifier:', e);
+    }
+    (window as any).recaptchaVerifier = null;
+  }
+
   if (activeRecaptchaVerifier) {
     try {
       activeRecaptchaVerifier.clear();
     } catch (e) {
-      console.warn('[Firebase Recaptcha] Error clearing verifier:', e);
+      console.warn('[Firebase Recaptcha] Error clearing activeRecaptchaVerifier:', e);
     }
     activeRecaptchaVerifier = null;
+  }
+
+  // Clear inner DOM of container so stale iframes/scripts don't persist
+  if (typeof document !== 'undefined') {
+    const el = document.getElementById('firebase-recaptcha-container');
+    if (el) {
+      el.innerHTML = '';
+    }
   }
 }
 
@@ -102,7 +129,7 @@ export async function sendFirebaseOtp(rawPhone: string, targetId = 'send-otp-btn
   if (!/^[6-9]\d{9}$/.test(clean10) && clean10 !== '9999999999') {
     throw {
       code: 'auth/invalid-phone-number',
-      message: 'Please enter a valid 10-digit Indian mobile number (e.g. 9905361711)'
+      message: 'Please enter a valid 10-digit Indian mobile number'
     };
   }
 
@@ -113,7 +140,18 @@ export async function sendFirebaseOtp(rawPhone: string, targetId = 'send-otp-btn
   const verifier = getOrCreateRecaptchaVerifier(targetId);
 
   try {
-    const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, verifier);
+    // Wrap with a 20-second timeout to prevent indefinite spinning when domain is unauthorized
+    const confirmationPromise = signInWithPhoneNumber(auth, formattedPhone, verifier);
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject({
+          code: 'auth/captcha-timeout',
+          message: 'reCAPTCHA verification timed out. Ensure apnagaonbazaar.in is added to Firebase Authorized Domains.'
+        });
+      }, 20000);
+    });
+
+    const confirmationResult = await Promise.race([confirmationPromise, timeoutPromise]);
     activeConfirmationResult = confirmationResult;
     console.log('[Firebase Auth] SMS verification code sent successfully to:', formattedPhone);
     return confirmationResult;
@@ -121,6 +159,14 @@ export async function sendFirebaseOtp(rawPhone: string, targetId = 'send-otp-btn
     // 1. Unmask the Real Firebase Error: aggressively log to console
     console.error("FIREBASE FATAL ERROR:", error?.code, error?.message);
     console.error("FIREBASE FULL ERROR:", error);
+
+    // Always clear window.recaptchaVerifier and active verifier in catch block
+    if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
+      try {
+        (window as any).recaptchaVerifier.clear();
+      } catch (e) {}
+      (window as any).recaptchaVerifier = null;
+    }
     resetRecaptchaVerifier();
     throw error;
   }

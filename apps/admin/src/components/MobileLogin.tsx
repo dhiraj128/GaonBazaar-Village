@@ -6,6 +6,7 @@ import {
   resetRecaptchaVerifier,
   type ConfirmationResult
 } from '../utils/firebase';
+import { PullToRefresh } from './PullToRefresh';
 
 interface MobileLoginProps {
   onSuccess?: (user: { phone: string; name?: string; token?: string }) => void;
@@ -118,10 +119,26 @@ export function MobileLogin({
       console.error("FIREBASE FATAL ERROR:", err?.code, err?.message);
       console.error("FIREBASE FULL ERROR:", err);
 
+      // Clean up reCAPTCHA verifier immediately to prevent infinite spinning/hanging
+      if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
+        try {
+          (window as any).recaptchaVerifier.clear();
+          console.log('[Auth] window.recaptchaVerifier cleared after error');
+        } catch (clearErr) {
+          console.warn('[Auth] Error clearing window.recaptchaVerifier:', clearErr);
+        }
+        (window as any).recaptchaVerifier = null;
+      }
+      resetRecaptchaVerifier();
+
       const code = err?.code || '';
 
       // Graceful error mapping
-      if (code === 'auth/operation-not-allowed') {
+      if (code === 'auth/captcha-timeout') {
+        setError(isHindi
+          ? "reCAPTCHA सत्यापन समय समाप्त हो गया। कृपया नीचे खींचकर पृष्ठ रीफ़्रेश करें।"
+          : "reCAPTCHA verification timed out. Please pull down to refresh.");
+      } else if (code === 'auth/operation-not-allowed') {
         setError(isHindi
           ? "इस क्षेत्र में SMS सेवाएं अस्थायी रूप से अनुपलब्ध हैं। कृपया सहायता से संपर्क करें।"
           : "SMS services are temporarily unavailable in this region. Please contact support.");
@@ -258,109 +275,110 @@ export function MobileLogin({
   };
 
   return (
-    <div className="max-w-md w-full mx-auto bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden font-sans relative select-none">
-      {/* Invisible reCAPTCHA Container: mounted safely in DOM without display:none */}
-      <div
-        id="firebase-recaptcha-container"
-        style={{ position: 'fixed', bottom: 0, opacity: 0, pointerEvents: 'none', zIndex: -1 }}
-      />
+    <PullToRefresh className="w-full flex items-center justify-center">
+      <div className="max-w-md w-full mx-auto bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden font-sans relative select-none">
+        {/* Invisible reCAPTCHA Container: mounted safely in DOM without display:none */}
+        <div
+          id="firebase-recaptcha-container"
+          style={{ position: 'fixed', bottom: 0, opacity: 0, pointerEvents: 'none', zIndex: -1 }}
+        />
 
-      {/* Brand Header */}
-      <div className="bg-[#0F9D58] p-6 text-white text-center relative border-b border-emerald-700/50">
-        {/* Logo Monogram */}
-        <div className="w-14 h-14 mx-auto rounded-2xl bg-white shadow-lg shadow-black/10 flex items-center justify-center mb-3">
-          <svg
-            className="w-9 h-9 text-[#0F9D58]"
-            viewBox="0 0 64 64"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M32 6L8 24H56L32 6Z" fill="#0F9D58" />
-            <rect x="14" y="24" width="36" height="28" rx="2" fill="#E8F5E9" />
-            <rect x="18" y="28" width="6" height="20" rx="1" fill="#0F9D58" />
-            <rect x="29" y="32" width="6" height="16" rx="1" fill="#0F9D58" />
-            <rect x="40" y="28" width="6" height="20" rx="1" fill="#0F9D58" />
-            <circle cx="20" cy="54" r="4" fill="#1B5E20" />
-            <circle cx="44" cy="54" r="4" fill="#1B5E20" />
-            <path d="M12 54H52" stroke="#1B5E20" strokeWidth="3" strokeLinecap="round" />
-          </svg>
+        {/* Brand Header */}
+        <div className="bg-[#0F9D58] p-6 text-white text-center relative border-b border-emerald-700/50">
+          {/* Logo Monogram */}
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-white shadow-lg shadow-black/10 flex items-center justify-center mb-3">
+            <svg
+              className="w-9 h-9 text-[#0F9D58]"
+              viewBox="0 0 64 64"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M32 6L8 24H56L32 6Z" fill="#0F9D58" />
+              <rect x="14" y="24" width="36" height="28" rx="2" fill="#E8F5E9" />
+              <rect x="18" y="28" width="6" height="20" rx="1" fill="#0F9D58" />
+              <rect x="29" y="32" width="6" height="16" rx="1" fill="#0F9D58" />
+              <rect x="40" y="28" width="6" height="20" rx="1" fill="#0F9D58" />
+              <circle cx="20" cy="54" r="4" fill="#1B5E20" />
+              <circle cx="44" cy="54" r="4" fill="#1B5E20" />
+              <path d="M12 54H52" stroke="#1B5E20" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-black tracking-tight text-white">{t.title}</h2>
+          <p className="text-xs text-emerald-100 mt-1 max-w-xs mx-auto leading-relaxed">
+            {t.subtitle}
+          </p>
         </div>
-        <h2 className="text-2xl font-black tracking-tight text-white">{t.title}</h2>
-        <p className="text-xs text-emerald-100 mt-1 max-w-xs mx-auto leading-relaxed">
-          {t.subtitle}
-        </p>
-      </div>
 
-      <div className="p-6 space-y-5">
-        {/* Human-Readable Error Message Display */}
-        {error && (
-          <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-start space-x-2 leading-relaxed">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-            <div className="flex-1 font-medium">{error}</div>
-          </div>
-        )}
-
-        {statusMessage && !error && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 text-[#0F9D58] shrink-0" />
-            <span>{statusMessage}</span>
-          </div>
-        )}
-
-        {step === 'phone' ? (
-          <form onSubmit={handleSendOtp} autoComplete="off" className="space-y-4">
-            {/* 4. Final Wipe of Hardcoded State: forced empty useState, autoComplete="off", spellCheck="false" */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                {t.nameLabel} <span className="text-slate-400 font-normal">{t.nameSublabel}</span>
-              </label>
-              <div className="relative flex items-center">
-                <User className="absolute left-3.5 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  name="customer_full_name_clean"
-                  id="customer-name-field"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                  data-lpignore="true"
-                  data-form-type="other"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={t.namePlaceholder}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-[#0F9D58] focus:bg-white transition"
-                />
-              </div>
+        <div className="p-6 space-y-5">
+          {/* Human-Readable Error Message Display */}
+          {error && (
+            <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-start space-x-2 leading-relaxed">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <div className="flex-1 font-medium">{error}</div>
             </div>
+          )}
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                {t.phoneLabel}
-              </label>
-              <div className="relative flex items-center">
-                <div className="absolute left-3.5 flex items-center space-x-1 text-xs font-bold text-slate-700 border-r border-slate-200 pr-2 select-none">
-                  <span>🇮🇳</span>
-                  <span className="font-mono text-[#0F9D58] font-extrabold">+91</span>
+          {statusMessage && !error && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 text-[#0F9D58] shrink-0" />
+              <span>{statusMessage}</span>
+            </div>
+          )}
+
+          {step === 'phone' ? (
+            <form onSubmit={handleSendOtp} autoComplete="off" className="space-y-4">
+              {/* 4. Final Wipe of Hardcoded State: forced empty useState, autoComplete="off", spellCheck="false" */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {t.nameLabel} <span className="text-slate-400 font-normal">{t.nameSublabel}</span>
+                </label>
+                <div className="relative flex items-center">
+                  <User className="absolute left-3.5 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    name="customer_full_name_clean"
+                    id="customer-name-field"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    data-lpignore="true"
+                    data-form-type="other"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={t.namePlaceholder}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-[#0F9D58] focus:bg-white transition"
+                  />
                 </div>
-                <input
-                  type="tel"
-                  name="customer_mobile_phone_clean"
-                  id="customer-phone-field"
-                  maxLength={10}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                  data-lpignore="true"
-                  data-form-type="other"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                  placeholder={t.phonePlaceholder}
-                  required
-                  className="w-full pl-20 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-800 outline-none focus:border-[#0F9D58] focus:bg-white transition"
-                />
               </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {t.phoneLabel}
+                </label>
+                <div className="relative flex items-center">
+                  <div className="absolute left-3.5 flex items-center space-x-1 text-xs font-bold text-slate-700 border-r border-slate-200 pr-2 select-none">
+                    <span>🇮🇳</span>
+                    <span className="font-mono text-[#0F9D58] font-extrabold">+91</span>
+                  </div>
+                  <input
+                    type="tel"
+                    name="customer_mobile_phone_clean"
+                    id="customer-phone-field"
+                    maxLength={10}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    data-lpignore="true"
+                    data-form-type="other"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                    placeholder={t.phonePlaceholder}
+                    required
+                    className="w-full pl-20 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-800 outline-none focus:border-[#0F9D58] focus:bg-white transition"
+                  />
+                </div>
               <p className="text-[10px] text-slate-400 mt-1">
                 {t.phoneHelper}
               </p>
@@ -462,7 +480,8 @@ export function MobileLogin({
           <span>{t.trustBadge}</span>
         </div>
       </div>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
 

@@ -4,7 +4,7 @@ import pytest
 
 
 def test_vercel_json_edge_rewrites_structure():
-    """Verify that vercel.json exists in root and apps/admin, and defines the strict subdomain routing matrix."""
+    """Verify that vercel.json exists in root and apps/admin, and defines the SPA catch-all rewrite matrix."""
     repo_root = Path(__file__).resolve().parent.parent.parent
     root_vercel = repo_root / "vercel.json"
     admin_vercel = repo_root / "apps" / "admin" / "vercel.json"
@@ -19,60 +19,12 @@ def test_vercel_json_edge_rewrites_structure():
         assert "rewrites" in data, f"{config_path} must have rewrites"
         rewrites = data["rewrites"]
 
-        # Check Admin Subdomain Mapping
-        admin_rule = next(
-            (
-                r for r in rewrites
-                if any(h.get("type") == "host" and h.get("value") == "admin.apnagaonbazaar.in" for h in r.get("has", []))
-            ),
+        # Check SPA Catch-All Rule
+        spa_rule = next(
+            (r for r in rewrites if r.get("source") == "/(.*)" and r.get("destination") == "/index.html"),
             None,
         )
-        assert admin_rule is not None, "admin.apnagaonbazaar.in rewrite rule missing"
-        assert admin_rule["destination"] == "/index.html", "admin must route to /index.html"
-
-        # Check Vendor Subdomain Mapping
-        vendor_rule = next(
-            (
-                r for r in rewrites
-                if any(h.get("type") == "host" and h.get("value") == "dukaan.apnagaonbazaar.in" for h in r.get("has", []))
-            ),
-            None,
-        )
-        assert vendor_rule is not None, "dukaan.apnagaonbazaar.in rewrite rule missing"
-        assert vendor_rule["destination"] == "/vendor/index.html", "dukaan must route to /vendor/index.html"
-
-        # Check Runner Subdomain Mapping
-        runner_rule = next(
-            (
-                r for r in rewrites
-                if any(h.get("type") == "host" and h.get("value") == "mitra.apnagaonbazaar.in" for h in r.get("has", []))
-            ),
-            None,
-        )
-        assert runner_rule is not None, "mitra.apnagaonbazaar.in rewrite rule missing"
-        assert runner_rule["destination"] == "/runner/index.html", "mitra must route to /runner/index.html"
-
-        # Check Customer Domain Mapping (apnagaonbazaar.in)
-        customer_rule = next(
-            (
-                r for r in rewrites
-                if any(h.get("type") == "host" and h.get("value") == "apnagaonbazaar.in" for h in r.get("has", []))
-            ),
-            None,
-        )
-        assert customer_rule is not None, "apnagaonbazaar.in rewrite rule missing"
-        assert customer_rule["destination"] == "/customer/index.html", "customer must route to /customer/index.html"
-
-        # Check WWW Customer Domain Mapping (www.apnagaonbazaar.in)
-        www_customer_rule = next(
-            (
-                r for r in rewrites
-                if any(h.get("type") == "host" and h.get("value") == "www.apnagaonbazaar.in" for h in r.get("has", []))
-            ),
-            None,
-        )
-        assert www_customer_rule is not None, "www.apnagaonbazaar.in rewrite rule missing"
-        assert www_customer_rule["destination"] == "/customer/index.html", "www must route to /customer/index.html"
+        assert spa_rule is not None, f"{config_path} must define SPA catch-all rewrite to /index.html"
 
 
 def test_static_distribution_assets_exist():

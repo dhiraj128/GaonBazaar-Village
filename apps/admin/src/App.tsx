@@ -7,6 +7,7 @@ import { RunnerPortal } from './components/RunnerPortal';
 import { SplashScreen } from './components/SplashScreen';
 import { LanguageSelectionScreen } from './components/LanguageSelectionScreen';
 import { MobileLogin } from './components/MobileLogin';
+import { PullToRefresh } from './components/PullToRefresh';
 
 /**
  * Root Subdomain Router for Apna GaonBazaar Multi-App Platform
@@ -59,7 +60,7 @@ export function App() {
   };
 
   return (
-    <>
+    <PullToRefresh>
       {/* 1. Branded Green Splash Screen as Default Root Route (/) */}
       {target === 'splash' && (
         <SplashScreen
@@ -185,7 +186,7 @@ export function App() {
           </button>
         </aside>
       )}
-    </>
+    </PullToRefresh>
   );
 }
 
