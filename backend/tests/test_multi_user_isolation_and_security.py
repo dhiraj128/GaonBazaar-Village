@@ -48,7 +48,7 @@ async def test_strict_customer_isolation_orders_and_idor():
 
         # Get Store 1 and Product
         stores = (await client.get("/api/v1/stores/nearby?latitude=26.1950&longitude=85.3450")).json()
-        store_1 = stores[0]
+        store_1 = next((s for s in stores if s["id"] == "str_01"), stores[0])
         prods = (await client.get(f"/api/v1/stores/{store_1['id']}/products")).json()
         prod = prods[0]
 
@@ -142,7 +142,7 @@ async def test_strict_customer_address_and_notification_isolation():
 
         # Customer B attempts to place order using A's address_id -> 404 Delivery address not found
         stores = (await client.get("/api/v1/stores/nearby?latitude=26.1950&longitude=85.3450")).json()
-        st = stores[0]
+        st = next((s for s in stores if s["id"] == "str_01"), stores[0])
         prods = (await client.get(f"/api/v1/stores/{st['id']}/products")).json()
         ord_res = await client.post("/api/v1/orders", headers=cust_b, json={
             "store_id": st["id"],
@@ -372,7 +372,7 @@ async def test_payment_security_and_duplicate_refund_prevention():
         })).json()
 
         stores = (await client.get("/api/v1/stores/nearby?latitude=26.1950&longitude=85.3450")).json()
-        s1 = stores[0]
+        s1 = next((s for s in stores if s["id"] == "str_01"), stores[0])
         prods = (await client.get(f"/api/v1/stores/{s1['id']}/products")).json()
 
         ord_res = await client.post("/api/v1/orders", headers=cust, json={
