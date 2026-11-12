@@ -270,8 +270,8 @@ export const FinancialsLedgerView: React.FC<FinancialsLedgerViewProps> = ({
             <div>
               <h3 className="text-sm font-extrabold text-slate-900">
                 {lang === 'hi'
-                  ? 'विक्रेता निपटान सारांश (बिक्री मूल्य घटाव ऑनलाइन बैंक सेटलमेंट शुल्क)'
-                  : 'Vendor Weekly Settlement Summary (Sales minus Online Bank Settlement Fee)'}
+                  ? 'विक्रेता निपटान सारांश (साप्ताहिक बैंक भुगतान बहीखाता)'
+                  : 'Vendor Weekly Settlement Summary (Weekly Bank Payout Ledger)'}
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
                 {lang === 'hi'

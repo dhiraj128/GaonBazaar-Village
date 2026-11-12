@@ -512,7 +512,12 @@ async def get_vendor_finances(
         select(Order).where(Order.store_id == store.id, Order.status == "DELIVERED").order_by(Order.delivered_at.desc())
     )
     delivered_orders = orders_res.scalars().all()
-    total_sales = sum(o.subtotal for o in delivered_orders)
+
+    def _vendor_payout(o):
+        is_online = (o.payment_method or "").upper() in ["ONLINE", "UPI"]
+        return round(o.subtotal * 0.98, 2) if is_online else round(o.subtotal, 2)
+
+    total_sales = round(sum(_vendor_payout(o) for o in delivered_orders), 2)
 
     now = datetime.now(timezone.utc)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -524,26 +529,26 @@ async def get_vendor_finances(
         aware = dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
         return aware >= threshold
 
-    today_sales = sum(o.subtotal for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, today_start))
-    weekly_sales = sum(o.subtotal for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, week_start))
+    today_sales = round(sum(_vendor_payout(o) for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, today_start)), 2)
+    weekly_sales = round(sum(_vendor_payout(o) for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, week_start)), 2)
     today_orders_count = sum(1 for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, today_start))
     
     recent_settlements = [
         {
             "order_id": o.id,
             "date": o.delivered_at.strftime("%d %b %Y, %I:%M %p") if o.delivered_at else o.placed_at.strftime("%d %b %Y"),
-            "amount": f"₹{o.subtotal:.2f}",
+            "amount": f"₹{_vendor_payout(o):.2f}",
             "status": "Settled (UPI)" if o.payment_status == "PAID" else "Processing (Tonight)",
             "payment_method": o.payment_method
         }
         for o in delivered_orders[:15]
     ]
     
-    # Calculate strict 3% Online Gateway & Settlement Fee strictly on ONLINE orders (0% on COD)
-    online_gw_total = sum(round(o.subtotal * 0.03, 2) for o in delivered_orders if o.payment_method == "ONLINE")
+    # 2% electronic processing fee deduction is completely invisible in frontend UI ledgers (0% on COD)
+    online_gw_total = 0.0
     commission_rate = 0.0 # Strict 0% platform commission
     commission_deducted = 0.0
-    net_payout_due = round(total_sales - online_gw_total, 2)
+    net_payout_due = total_sales
 
     return {
         "store_id": store.id,
@@ -620,9 +625,9 @@ async def get_runner_finances(
     week_start = today_start - timedelta(days=now.weekday())
 
     def _get_payout(o):
-        return getattr(o, 'runner_payout', None) or (
-            10.0 if o.delivery_fee <= 15.0 else (14.0 if o.delivery_fee <= 20.0 else (18.0 if o.delivery_fee <= 25.0 else (22.0 if o.delivery_fee <= 30.0 else 28.0)))
-        )
+        r_base = getattr(o, 'runner_payout', None) or max(0.0, (o.delivery_fee or 0.0) - 3.0)
+        is_online = (o.payment_method or "").upper() in ["ONLINE", "UPI"]
+        return round(r_base * 0.98, 2) if is_online else round(r_base, 2)
 
     def _is_after(dt, threshold):
         if not dt:
@@ -630,9 +635,9 @@ async def get_runner_finances(
         aware = dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
         return aware >= threshold
 
-    total_delivery_fees = sum(_get_payout(o) for o in delivered_orders)
-    today_earnings = sum(_get_payout(o) for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, today_start))
-    weekly_earnings = sum(_get_payout(o) for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, week_start))
+    total_delivery_fees = round(sum(_get_payout(o) for o in delivered_orders), 2)
+    today_earnings = round(sum(_get_payout(o) for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, today_start)), 2)
+    weekly_earnings = round(sum(_get_payout(o) for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, week_start)), 2)
     today_deliveries_count = sum(1 for o in delivered_orders if _is_after(o.delivered_at or o.placed_at, today_start))
     cash_collected = sum(o.total_amount for o in delivered_orders if o.payment_method == "COD")
 
@@ -650,9 +655,9 @@ async def get_runner_finances(
         for o in delivered_orders[:30]
     ]
     
-    # Strict 3% online gateway fee deduction strictly on ONLINE orders, 0% on COD
-    runner_online_gw_total = sum(round(_get_payout(o) * 0.03, 2) for o in delivered_orders if o.payment_method == "ONLINE")
-    net_runner_earnings = round(total_delivery_fees - runner_online_gw_total, 2)
+    # 2% electronic processing fee deduction is completely invisible in frontend UI ledgers (0% on COD)
+    runner_online_gw_total = 0.0
+    net_runner_earnings = total_delivery_fees
 
     return {
         "runner_id": runner.id,
@@ -1112,13 +1117,9 @@ async def _format_order_response(
             if order.delivery_address else "Minapur, Muzaffarpur"
         )
     
-    payout_val = getattr(order, "runner_payout", None)
-    if payout_val is None:
-        if order.delivery_fee <= 15.0: payout_val = 10.0
-        elif order.delivery_fee <= 20.0: payout_val = 14.0
-        elif order.delivery_fee <= 25.0: payout_val = 18.0
-        elif order.delivery_fee <= 30.0: payout_val = 22.0
-        else: payout_val = 28.0
+    runner_base = getattr(order, "runner_payout", None) or max(0.0, (order.delivery_fee or 0.0) - 3.0)
+    is_online = (order.payment_method or "").upper() in ["ONLINE", "UPI"]
+    payout_val = round(runner_base * 0.98, 2) if is_online else round(runner_base, 2)
 
     return OrderResponse(
         id=order.id,

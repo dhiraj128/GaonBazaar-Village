@@ -1230,15 +1230,86 @@
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
           <span class="text-xs font-bold text-slate-800 uppercase tracking-wide" data-i18n="support_header">Help & Operations</span>
 
-          <!-- Partner FAQ Card: 0% Commission & 3% Online Bank Settlement Fee -->
-          <div class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 text-left space-y-1.5">
-            <div class="flex items-start space-x-2 text-emerald-950 font-bold text-xs">
-              <span class="text-emerald-600 font-extrabold text-sm">Q:</span>
-              <span>Why is there a 3% deduction on my online orders? / ऑनलाइन ऑर्डर पर 3% की कटौती क्यों होती है?</span>
+          <!-- Partner FAQ Section: 5-Point Operational Guidelines & Payout Explanation -->
+          <div class="rounded-xl border border-emerald-200 overflow-hidden bg-white text-left shadow-2xs">
+            <div class="p-3 bg-emerald-50/80 border-b border-emerald-100 flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="help-circle" class="w-4 h-4 text-emerald-700"></i>
+                <span class="text-xs font-bold text-emerald-950" data-i18n="faq_vendor_header">Merchant Guidelines & Operations FAQ</span>
+              </div>
+              <span class="text-[9px] font-extrabold text-emerald-800 bg-white px-2 py-0.5 rounded-full border border-emerald-200">5 Points</span>
             </div>
-            <div class="text-[11px] text-slate-700 leading-relaxed pl-5 space-y-1">
-              <p><strong>Apna GaonBazaar charges 0% platform commission.</strong> The 3% deduction is strictly a mandatory <em>"Online Gateway & Bank Settlement Fee"</em>. This covers the RBI-regulated payment gateway processing costs, 18% GST on digital transactions, and the automated IMPS bank transfer fee to your account.</p>
-              <p class="text-emerald-800 font-medium">✓ If an order is Cash on Delivery (COD), there are zero digital banking fees, so you receive exactly 100% of your earnings with no deductions.</p>
+
+            <div class="divide-y divide-slate-100 text-xs">
+              <!-- Point 1: Updating Shop Inventory & Daily Stocks -->
+              <details class="group p-2.5">
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-slate-800 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-emerald-600 font-extrabold">1.</span>
+                    <span data-i18n="faq_v1_q">How do I update shop inventory & daily stocks?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-600 leading-relaxed pl-4 bg-slate-50/60 p-2 rounded-lg border border-slate-100" data-i18n="faq_v1_a">
+                  Regularly update your item availability and quantities in the "Inventory" tab. When fresh dairy, produce, or packaged groceries arrive each morning, toggle them "IN STOCK" so village customers can place instant orders.
+                </div>
+              </details>
+
+              <!-- Point 2: Packaging Guidelines for Safe Rural Transit -->
+              <details class="group p-2.5">
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-slate-800 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-emerald-600 font-extrabold">2.</span>
+                    <span data-i18n="faq_v2_q">What are the packaging guidelines for safe rural transit?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-600 leading-relaxed pl-4 bg-slate-50/60 p-2 rounded-lg border border-slate-100" data-i18n="faq_v2_a">
+                  Always double-bag liquid items like milk pouches, mustard oil bottles, and ghee jars. Use sturdy paper or cloth bags for heavy grains, pulses, and flours to avoid tearing or spillage over unpaved village roads.
+                </div>
+              </details>
+
+              <!-- Point 3: Managing Out-of-Stock Items during Rush Hours -->
+              <details class="group p-2.5">
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-slate-800 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-emerald-600 font-extrabold">3.</span>
+                    <span data-i18n="faq_v3_q">How should I manage out-of-stock items during rush hours?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-600 leading-relaxed pl-4 bg-slate-50/60 p-2 rounded-lg border border-slate-100" data-i18n="faq_v3_a">
+                  If any item sells out in your physical store, immediately toggle its status to "OUT OF STOCK" in the Dukaan app. This prevents unfulfillable customer orders, avoids cancellation penalties, and protects your merchant rating.
+                </div>
+              </details>
+
+              <!-- Point 4: Weekly Bank Settlement Schedule -->
+              <details class="group p-2.5">
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-slate-800 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-emerald-600 font-extrabold">4.</span>
+                    <span data-i18n="faq_v4_q">What is the weekly bank settlement schedule?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-600 leading-relaxed pl-4 bg-slate-50/60 p-2 rounded-lg border border-slate-100" data-i18n="faq_v4_a">
+                  All fulfilled order earnings are automatically processed and transferred directly to your Penny Drop verified bank account every Tuesday and Friday night through automated NEFT/IMPS clearinghouse with 0% platform commission.
+                </div>
+              </details>
+
+              <!-- Point 5 (Mandatory Online Deduction Explanation) -->
+              <details class="group p-2.5 bg-emerald-50/40" open>
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-emerald-950 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-emerald-600 font-extrabold">5.</span>
+                    <span data-i18n="faq_v5_q">Why is my earning slightly less on online orders?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-emerald-600 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-700 leading-relaxed pl-4 bg-white p-2.5 rounded-lg border border-emerald-200/80 shadow-2xs" data-i18n="faq_v5_a">
+                  For online payments, backend processors like Razorpay deduct a standard percentage fee to process and transfer the money to your bank account. Cash on Delivery (COD) orders do not have this online fee, so you get the full amount.
+                </div>
+              </details>
             </div>
           </div>
           
@@ -1754,6 +1825,17 @@
     const i18n = {
       en: {
         header_vendor_badge: "VENDOR HUB",
+        faq_vendor_header: "Merchant Guidelines & Operations FAQ",
+        faq_v1_q: "How do I update shop inventory & daily stocks?",
+        faq_v1_a: "Regularly update your item availability and quantities in the \"Inventory\" tab. When fresh dairy, produce, or packaged groceries arrive each morning, toggle them \"IN STOCK\" so village customers can place instant orders.",
+        faq_v2_q: "What are the packaging guidelines for safe rural transit?",
+        faq_v2_a: "Always double-bag liquid items like milk pouches, mustard oil bottles, and ghee jars. Use sturdy paper or cloth bags for heavy grains, pulses, and flours to avoid tearing or spillage over unpaved village roads.",
+        faq_v3_q: "How should I manage out-of-stock items during rush hours?",
+        faq_v3_a: "If any item sells out in your physical store, immediately toggle its status to \"OUT OF STOCK\" in the Dukaan app. This prevents unfulfillable customer orders, avoids cancellation penalties, and protects your merchant rating.",
+        faq_v4_q: "What is the weekly bank settlement schedule?",
+        faq_v4_a: "All fulfilled order earnings are automatically processed and transferred directly to your Penny Drop verified bank account every Tuesday and Friday night through automated NEFT/IMPS clearinghouse with 0% platform commission.",
+        faq_v5_q: "Why is my earning slightly less on online orders?",
+        faq_v5_a: "For online payments, backend processors like Razorpay deduct a standard percentage fee to process and transfer the money to your bank account. Cash on Delivery (COD) orders do not have this online fee, so you get the full amount.",
                 id_verification_title: "Identity Verification",
         id_verification_sub: "Choose any one government ID to verify your identity instantly",
         pan_card_tab: "PAN Card",

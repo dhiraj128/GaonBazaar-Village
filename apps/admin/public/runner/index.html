@@ -1137,15 +1137,86 @@
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
           <span class="text-xs font-bold text-slate-800 uppercase tracking-wide" data-i18n="support_header">Help & Operations</span>
 
-          <!-- Partner FAQ Card: 0% Commission & 3% Online Bank Settlement Fee -->
-          <div class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 text-left space-y-1.5">
-            <div class="flex items-start space-x-2 text-emerald-950 font-bold text-xs">
-              <span class="text-emerald-600 font-extrabold text-sm">Q:</span>
-              <span>Why is there a 3% deduction on my online orders? / ऑनलाइन ऑर्डर पर 3% की कटौती क्यों होती है?</span>
+          <!-- Partner FAQ Section: 5-Point Operational Guidelines & Delivery Payout Explanation -->
+          <div class="rounded-xl border border-blue-200 overflow-hidden bg-white text-left shadow-2xs">
+            <div class="p-3 bg-blue-50/80 border-b border-blue-100 flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="help-circle" class="w-4 h-4 text-blue-700"></i>
+                <span class="text-xs font-bold text-blue-950" data-i18n="faq_runner_header">Delivery Partner Guidelines & Operations FAQ</span>
+              </div>
+              <span class="text-[9px] font-extrabold text-blue-800 bg-white px-2 py-0.5 rounded-full border border-blue-200">5 Points</span>
             </div>
-            <div class="text-[11px] text-slate-700 leading-relaxed pl-5 space-y-1">
-              <p><strong>Apna GaonBazaar charges 0% platform commission.</strong> The 3% deduction is strictly a mandatory <em>"Online Gateway & Bank Settlement Fee"</em>. This covers the RBI-regulated payment gateway processing costs, 18% GST on digital transactions, and the automated IMPS bank transfer fee to your account.</p>
-              <p class="text-emerald-800 font-medium">✓ If an order is Cash on Delivery (COD) or Doorstep Admin QR, there are zero digital banking fees, so you receive exactly 100% of your earnings with no deductions.</p>
+
+            <div class="divide-y divide-slate-100 text-xs">
+              <!-- Point 1: Delivery Radius & Cluster Geofencing -->
+              <details class="group p-2.5">
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-slate-800 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-blue-600 font-extrabold">1.</span>
+                    <span data-i18n="faq_r1_q">What are the delivery radius & cluster geofencing rules?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-600 leading-relaxed pl-4 bg-slate-50/60 p-2 rounded-lg border border-slate-100" data-i18n="faq_r1_a">
+                  Gaon Mitra operates within an 8km geofenced village cluster. Missions are assigned close to your base village to ensure 15–30 minute doorsteps while keeping bike fuel expenditure low.
+                </div>
+              </details>
+
+              <!-- Point 2: Handling Unreachable Customers -->
+              <details class="group p-2.5">
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-slate-800 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-blue-600 font-extrabold">2.</span>
+                    <span data-i18n="faq_r2_q">How should I handle unreachable customers at the doorstep?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-600 leading-relaxed pl-4 bg-slate-50/60 p-2 rounded-lg border border-slate-100" data-i18n="faq_r2_a">
+                  If a customer is unreachable, attempt at least 3 phone calls within 5 minutes. If still unavailable, notify your Hub Manager in the app. Never complete delivery without the customer's 4-digit handover OTP.
+                </div>
+              </details>
+
+              <!-- Point 3: Daily COD Cash Deposit at Rural Hub -->
+              <details class="group p-2.5">
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-slate-800 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-blue-600 font-extrabold">3.</span>
+                    <span data-i18n="faq_r3_q">How and when do I deposit daily COD cash at the rural hub?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-600 leading-relaxed pl-4 bg-slate-50/60 p-2 rounded-lg border border-slate-100" data-i18n="faq_r3_a">
+                  All cash collected from Cash on Delivery (COD) orders must be deposited at the Muzaffarpur rural operations hub at the end of each evening shift. The Hub Manager will instantly reconcile your cash collection.
+                </div>
+              </details>
+
+              <!-- Point 4: Weekly Delivery Payout Schedule -->
+              <details class="group p-2.5">
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-slate-800 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-blue-600 font-extrabold">4.</span>
+                    <span data-i18n="faq_r4_q">What is the weekly delivery payout schedule?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-600 leading-relaxed pl-4 bg-slate-50/60 p-2 rounded-lg border border-slate-100" data-i18n="faq_r4_a">
+                  Delivery fees and completed order bonuses are settled directly to your verified bank account or UPI ID every Friday night. You can review all completed trip earnings in real-time in your Earnings tab.
+                </div>
+              </details>
+
+              <!-- Point 5 (Mandatory Online Deduction Explanation) -->
+              <details class="group p-2.5 bg-blue-50/40" open>
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-blue-950 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-blue-600 font-extrabold">5.</span>
+                    <span data-i18n="faq_r5_q">Why is my delivery payout slightly less on online orders?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-blue-600 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-700 leading-relaxed pl-4 bg-white p-2.5 rounded-lg border border-blue-200/80 shadow-2xs" data-i18n="faq_r5_a">
+                  For online payments, backend processors like Razorpay charge a standard fee to process the electronic transfer. Cash on Delivery (COD) deliveries do not have this online fee.
+                </div>
+              </details>
             </div>
           </div>
           
@@ -1612,6 +1683,17 @@
     // ---------------------------------------------------------------------------
     const i18n = {
       en: {
+        faq_runner_header: "Delivery Partner Guidelines & Operations FAQ",
+        faq_r1_q: "What are the delivery radius & cluster geofencing rules?",
+        faq_r1_a: "Gaon Mitra operates within an 8km geofenced village cluster. Missions are assigned close to your base village to ensure 15–30 minute doorsteps while keeping bike fuel expenditure low.",
+        faq_r2_q: "How should I handle unreachable customers at the doorstep?",
+        faq_r2_a: "If a customer is unreachable, attempt at least 3 phone calls within 5 minutes. If still unavailable, notify your Hub Manager in the app. Never complete delivery without the customer's 4-digit handover OTP.",
+        faq_r3_q: "How and when do I deposit daily COD cash at the rural hub?",
+        faq_r3_a: "All cash collected from Cash on Delivery (COD) orders must be deposited at the Muzaffarpur rural operations hub at the end of each evening shift. The Hub Manager will instantly reconcile your cash collection.",
+        faq_r4_q: "What is the weekly delivery payout schedule?",
+        faq_r4_a: "Delivery fees and completed order bonuses are settled directly to your verified bank account or UPI ID every Friday night. You can review all completed trip earnings in real-time in your Earnings tab.",
+        faq_r5_q: "Why is my delivery payout slightly less on online orders?",
+        faq_r5_a: "For online payments, backend processors like Razorpay charge a standard fee to process the electronic transfer. Cash on Delivery (COD) deliveries do not have this online fee.",
                 id_verification_title: "Identity Verification",
         id_verification_sub: "Choose any one government ID to verify your identity instantly",
         pan_card_tab: "PAN Card",
@@ -1806,6 +1888,17 @@
         cancel_btn: "Cancel",
       },
       hi: {
+        faq_runner_header: "डिलीवरी पार्टनर दिशानिर्देश एवं अक्सर पूछे जाने वाले प्रश्न",
+        faq_r1_q: "डिलीवरी दायरा और क्लस्टर जियोफेंसिंग नियम क्या हैं?",
+        faq_r1_a: "गाँव मित्र 8 किमी के जियोफेंस्ड ग्रामीण क्लस्टर के भीतर काम करते हैं। 15-30 मिनट में डिलीवरी सुनिश्चित करने और बाइक पेट्रोल खर्च को कम रखने के लिए आपके आधार गाँव के करीब के मिशन सौंपे जाते हैं।",
+        faq_r2_q: "ग्राहक के न मिलने पर क्या प्रक्रिया अपनानी चाहिए?",
+        faq_r2_a: "यदि ग्राहक फोन नहीं उठाता है, तो 5 मिनट के भीतर कम से कम 3 बार कॉल करने का प्रयास करें। यदि फिर भी संपर्क न हो, तो ऐप में हब मैनेजर को सूचित करें। ग्राहक के 4-अंकीय ओटीपी (OTP) के बिना डिलीवरी कभी पूर्ण न करें।",
+        faq_r3_q: "दैनिक सीओडी (COD) नकद ग्रामीण हब पर कब और कैसे जमा करना है?",
+        faq_r3_a: "कैश ऑन डिलीवरी (COD) ऑर्डरों से एकत्र की गई पूरी नकद राशि हर शाम शिफ्ट खत्म होने पर मुजफ्फरपुर ग्रामीण हब पर जमा की जानी चाहिए। हब मैनेजर तुरंत आपके नकद संग्रह का समाधान करेंगे।",
+        faq_r4_q: "साप्ताहिक डिलीवरी भुगतान अनुसूची क्या है?",
+        faq_r4_a: "डिलीवरी शुल्क और पूर्ण ऑर्डर प्रोत्साहन राशि हर शुक्रवार की रात सीधे आपके सत्यापित बैंक खाते या यूपीआई आईडी में स्थानांतरित की जाती है। आप अपनी कमाई टैब में सभी पूरी की गई यात्राओं को देख सकते हैं।",
+        faq_r5_q: "ऑनलाइन ऑर्डर पर मेरा डिलीवरी भुगतान थोड़ा कम क्यों होता है?",
+        faq_r5_a: "ऑनलाइन भुगतान के लिए, रेज़रपे (Razorpay) जैसे बैकएंड प्रोसेसर इलेक्ट्रॉनिक ट्रांसफर को प्रोसेस करने के लिए एक मानक शुल्क लेते हैं। कैश ऑन डिलीवरी (COD) डिलीवरी में यह ऑनलाइन शुल्क नहीं होता है।",
                 id_verification_title: "पहचान सत्यापन",
         id_verification_sub: "तुरंत पहचान सत्यापित करने के लिए कोई एक सरकारी पहचान पत्र चुनें",
         pan_card_tab: "पैन कार्ड",
