@@ -151,7 +151,7 @@ export default async function handler(req: any, res: any) {
     // 1. Store in memory cache
     getOtpCache().set(clean, { otp, expiresAt, attempts: 0 });
 
-    // 2. Optional: Store in Firestore collection 'otp_challenges'
+    // 2. Optional: Store in Firestore collection 'otp_challenges' if available
     try {
       const fbAdmin = getFirebaseAdmin();
       if (fbAdmin && fbAdmin.firestore) {
@@ -168,10 +168,12 @@ export default async function handler(req: any, res: any) {
       console.warn('[Send OTP] Firestore sync notice (continuing without Firestore):', fsErr);
     }
 
-    // 3. Dispatch SMS via Fast2SMS API
+    // 3. Fast2SMS Smart OTP Dispatch (Generic Pre-Approved Route: route=otp)
     const fast2smsApiKey = process.env.FAST2SMS_API_KEY || 'XsoSYvBFIKVteH8tVfguXYkVcFsxVrVLFDbeH3sTPPv0vyErS6yuPzySrgai1ir1lVg31OVM8CnyXiio';
 
-    console.log(`[Fast2SMS] Dispatching OTP to +91${clean}...`);
+    console.log(`[Fast2SMS Smart OTP] Dispatching pre-approved OTP to +91${clean}...`);
+    
+    // Fast2SMS Generic Smart OTP endpoint
     const f2sResponse = await fetch('https://www.fast2sms.com/dev/bulkV2', {
       method: 'POST',
       headers: {
@@ -193,19 +195,24 @@ export default async function handler(req: any, res: any) {
       f2sData = { return: false, message: f2sText };
     }
 
-    console.log(`[Fast2SMS] Response for +91${clean}:`, f2sData);
+    console.log(`[Fast2SMS Smart OTP] Response for +91${clean}:`, f2sData);
 
     if (f2sResponse.ok && f2sData.return) {
       return sendJson(res, 200, {
         success: true,
-        message: 'OTP sent successfully via Fast2SMS',
+        message: 'Smart OTP sent successfully via Fast2SMS',
         phoneNumber: clean
       });
     } else {
-      const errDetail = Array.isArray(f2sData.message)
+      let errDetail = Array.isArray(f2sData.message)
         ? f2sData.message.join(', ')
         : (f2sData.message || 'SMS Gateway rejection');
-      console.error('[Fast2SMS Delivery Error]:', errDetail);
+
+      if (f2sData.status_code === 996) {
+        errDetail = "Fast2SMS Notice: Please complete website verification under 'OTP Message' in your Fast2SMS dashboard to activate API sending.";
+      }
+
+      console.error('[Fast2SMS Smart OTP Delivery Error]:', errDetail);
       return sendJson(res, 502, {
         success: false,
         code: 'auth/sms-delivery-failed',
