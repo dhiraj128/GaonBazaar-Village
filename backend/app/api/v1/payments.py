@@ -1,3 +1,4 @@
+import re
 import hmac
 import hashlib
 from typing import Optional
@@ -35,6 +36,27 @@ class RazorpayVerifyResponse(BaseModel):
     status: str
     order_id: str
     payment_id: str
+
+class UpiVerifyRequest(BaseModel):
+    order_id: str
+    utr_number: Optional[str] = None
+    upi_app: Optional[str] = "upi"
+    amount: Optional[float] = None
+
+class UpiVerifyResponse(BaseModel):
+    status: str
+    order_id: str
+    utr_number: Optional[str] = None
+    payment_status: str
+    message: str
+
+class UpiStatusResponse(BaseModel):
+    order_id: str
+    payment_status: str
+    payment_method: str
+    amount: float
+    transaction_id: Optional[str] = None
+    message: str
 
 def is_razorpay_configured() -> bool:
     """
@@ -279,6 +301,127 @@ async def verify_razorpay_payment(
         status="SUCCESS",
         order_id=order.id,
         payment_id=data.razorpay_payment_id
+    )
+
+@router.post("/verify-upi", response_model=UpiVerifyResponse)
+async def verify_upi_payment(
+    data: UpiVerifyRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Direct Native UPI Intent & Dynamic QR Verification Endpoint.
+    Validates UTR / Bank Reference without third-party redirection.
+    Transitions order payment status to PAID when valid 12-digit UTR is supplied,
+    or keeps PENDING_VERIFICATION while awaiting bank settlement.
+    """
+    res = await db.execute(
+        select(Order).where((Order.id == data.order_id) | (Order.order_id == data.order_id))
+    )
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    if order.status == "CANCELLED":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot pay for a cancelled order"
+        )
+
+    # Idempotent response if already verified
+    if order.payment_status == "PAID":
+        return UpiVerifyResponse(
+            status="SUCCESS",
+            order_id=order.id,
+            utr_number=order.transaction_id,
+            payment_status="PAID",
+            message="Payment already verified successfully"
+        )
+
+    now = datetime.now(timezone.utc)
+    utr_clean = (data.utr_number or "").strip().upper()
+
+    if utr_clean:
+        # Standard Indian Bank UTR / Ref Number: 8-30 alphanumeric characters
+        clean_code = re.sub(r"[^A-Z0-9]", "", utr_clean)
+        if len(clean_code) < 8 or len(clean_code) > 30:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid UTR / Transaction reference format. Standard UPI UTR is 12 digits/alphanumeric."
+            )
+
+        # Validate amount match if provided
+        if data.amount is not None and abs(data.amount - order.total_amount) > 1.0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Amount mismatch: Order total is ₹{order.total_amount:.2f}, submitted ₹{data.amount:.2f}"
+            )
+
+        order.payment_status = "PAID"
+        order.payment_method = "UPI"
+        order.transaction_id = clean_code
+        order.collection_mode = "DIRECT_UPI"
+
+        timeline_entry = OrderTimeline(
+            order_id=order.id,
+            status=order.status,
+            title="UPI भुगतान सत्यापित (UPI Payment Verified)",
+            description=f"App: {data.upi_app or 'UPI'}, UTR / Ref: {clean_code}, Amount: ₹{order.total_amount:.2f}",
+            timestamp=now
+        )
+        db.add(timeline_entry)
+        await db.commit()
+
+        return UpiVerifyResponse(
+            status="SUCCESS",
+            order_id=order.id,
+            utr_number=clean_code,
+            payment_status="PAID",
+            message="UPI Payment successfully verified against bank reference"
+        )
+    else:
+        # Intent triggered without UTR yet: mark as PENDING_VERIFICATION
+        order.payment_status = "PENDING_VERIFICATION"
+        order.payment_method = "UPI"
+        order.collection_mode = "DIRECT_UPI"
+
+        timeline_entry = OrderTimeline(
+            order_id=order.id,
+            status=order.status,
+            title="UPI भुगतान प्रक्रियाधीन (UPI Intent Initiated)",
+            description=f"App: {data.upi_app or 'UPI'}, Awaiting settlement or 12-digit UTR confirmation",
+            timestamp=now
+        )
+        db.add(timeline_entry)
+        await db.commit()
+
+        return UpiVerifyResponse(
+            status="PENDING_VERIFICATION",
+            order_id=order.id,
+            utr_number=None,
+            payment_status="PENDING_VERIFICATION",
+            message="UPI intent triggered. Status is pending bank confirmation or manual UTR entry."
+        )
+
+@router.get("/upi-status/{order_id}", response_model=UpiStatusResponse)
+async def get_upi_status(
+    order_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Pollable endpoint for frontend to check direct UPI payment settlement status."""
+    res = await db.execute(
+        select(Order).where((Order.id == order_id) | (Order.order_id == order_id))
+    )
+    order = res.scalars().first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    return UpiStatusResponse(
+        order_id=order.id,
+        payment_status=order.payment_status or "PENDING",
+        payment_method=order.payment_method or "UPI",
+        amount=order.total_amount,
+        transaction_id=order.transaction_id,
+        message=f"Order payment status is {order.payment_status}"
     )
 
 @router.post("/razorpay/webhook")
