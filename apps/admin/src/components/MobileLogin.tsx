@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Send, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import {
   sendFast2SmsOtp,
-  verifyFast2SmsOtp
+  verifyFast2SmsOtp,
+  sendFirebaseTestPhoneOtp,
+  type ConfirmationResult
 } from '../utils/firebase';
 import { PullToRefresh } from './PullToRefresh';
 
 interface MobileLoginProps {
-  onSuccess?: (user: { phone: string; name?: string; token?: string }) => void;
+  onSuccess?: (user: { phone: string; name?: string; token?: string; uid?: string; role?: string }) => void;
   onCancel?: () => void;
   lang?: 'en' | 'hi';
   title?: string;
@@ -21,7 +23,7 @@ export function MobileLogin({
   title: propTitle,
   subtitle: propSubtitle,
 }: MobileLoginProps) {
-  // 3. Strict Language Detection (No mixing of Hindi & English)
+  // Strict Language Detection (No mixing of Hindi & English)
   const [lang, setLang] = useState<'en' | 'hi'>(() => {
     if (propLang === 'en' || propLang === 'hi') return propLang;
     try {
@@ -32,7 +34,6 @@ export function MobileLogin({
     }
   });
 
-  // Final Wipe of Hardcoded State: force strictly empty strings
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -40,6 +41,7 @@ export function MobileLogin({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   // Guarantee strictly empty inputs on mount
   useEffect(() => {
@@ -95,22 +97,42 @@ export function MobileLogin({
     setIsLoading(true);
 
     try {
-      // Global Razorpay Compliance Review Backdoor
-      if (clean === '9999999999') {
+      // 1. Whitelisted Razorpay Compliance Numbers: Bypass external SMS (Fast2SMS)
+      const isComplianceTestNumber = (clean === '9905361711' || clean === '9999999999');
+      if (isComplianceTestNumber) {
+        console.log('[Auth] Compliance test number whitelisted for static review:', clean);
+
+        // Route into Firebase Phone Auth test flow (recognizes test numbers with static 123456)
+        try {
+          const conf = await sendFirebaseTestPhoneOtp(clean);
+          if (conf) {
+            setConfirmationResult(conf);
+          }
+        } catch (testFlowErr) {
+          console.warn('[Auth] Test flow verifier notice:', testFlowErr);
+        }
+
         setStep('otp');
         setOtp(['1', '2', '3', '4', '5', '6']);
-        setStatusMessage(isHindi ? "रेज़रपे समीक्षा मोड: कोड 123456 सक्रिय है" : "Razorpay Review Mode: Code 123456 active");
+        setStatusMessage(
+          isHindi
+            ? "रेज़रपे समीक्षा मोड: स्थिर कोड 123456 सक्रिय है"
+            : "Razorpay Review Mode: Static code 123456 active"
+        );
         return;
       }
 
+      // 2. Standard Public Number: Trigger Fast2SMS Smart OTP flow
       console.log('[Auth] Initiating Fast2SMS OTP dispatch for:', formattedPhoneNumber);
-
-      // Trigger custom Fast2SMS OTP flow
       await sendFast2SmsOtp(clean);
       setStep('otp');
-      setStatusMessage(isHindi ? `सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया` : `Verification code sent to ${formattedPhoneNumber}`);
+      setStatusMessage(
+        isHindi
+          ? `सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया`
+          : `Verification code sent to ${formattedPhoneNumber}`
+      );
     } catch (err: any) {
-      console.error("FAST2SMS DISPATCH ERROR:", err);
+      console.error("SMS DISPATCH ERROR:", err);
       const msg = err?.message || (isHindi
         ? "OTP भेजने में असमर्थ। कृपया अपना नेटवर्क जांचें और पुनः प्रयास करें।"
         : "Unable to send OTP. Please check your network and try again.");
@@ -135,19 +157,57 @@ export function MobileLogin({
       const clean = phone.replace(/\D/g, '').slice(-10);
       const formattedPhoneNumber = `+91${clean}`;
 
-      // Razorpay compliance backdoor
-      if (clean === '9999999999' && (code === '123456' || code === '1234')) {
+      // 1. Razorpay Compliance Static Verification (9905361711 or 9999999999 with 123456)
+      const isComplianceTestNumber = (clean === '9905361711' || clean === '9999999999');
+      const isStaticOtpValid = (code === '123456' || code === '1234');
+
+      if (isComplianceTestNumber && isStaticOtpValid) {
+        console.log('[Auth] Compliance test OTP verified successfully for:', formattedPhoneNumber);
+
+        let token = 'razorpay-compliance-verified-session-token';
+        let authUid = `usr_test_${clean}`;
+
+        // If native Firebase test ConfirmationResult exists, verify with Firebase
+        if (confirmationResult) {
+          try {
+            const cred = await confirmationResult.confirm(code);
+            if (cred && cred.user) {
+              authUid = cred.user.uid;
+              token = await cred.user.getIdToken().catch(() => token);
+              console.log('[Auth] Native Firebase test user confirmed, UID:', authUid);
+            }
+          } catch (confErr) {
+            console.warn('[Auth] ConfirmationResult notice:', confErr);
+          }
+        }
+
         const complianceUser = {
-          phone: '+919999999999',
-          name: 'Razorpay Compliance Reviewer',
+          phone: formattedPhoneNumber,
+          name: name.trim() || (clean === '9905361711' ? 'Dhiraj Kumar' : 'Razorpay Compliance Reviewer'),
           role: 'customer',
-          token: 'razorpay-compliance-token'
+          token: token,
+          uid: authUid
         };
-        if (onSuccess) onSuccess(complianceUser);
+
+        // Persist session tokens to grant full access to inner pages
+        try {
+          localStorage.setItem('gaonbazaar_admin_jwt_token', token);
+          localStorage.setItem('gb_customer_token', token);
+          localStorage.setItem('gb_customer_phone', formattedPhoneNumber);
+          localStorage.setItem('gb_customer_logged_in', 'true');
+          localStorage.setItem('gaonbazaar_admin_user_info', JSON.stringify(complianceUser));
+        } catch (storageErr) {
+          console.warn('[Auth] LocalStorage set notice:', storageErr);
+        }
+
+        // Grant full access
+        if (onSuccess) {
+          onSuccess(complianceUser);
+        }
         return;
       }
 
-      // Verify OTP via Fast2SMS API & authenticate with Firebase Custom Token
+      // 2. Standard Public Number: Verify OTP via Fast2SMS API & authenticate with Firebase Custom Token
       console.log('[Auth] Verifying OTP and signing in via Firebase Custom Token...');
       const userCred = await verifyFast2SmsOtp(clean, code);
       const authUser = userCred.user;
@@ -178,11 +238,19 @@ export function MobileLogin({
       // Proceed with verified auth session
       if (onSuccess) {
         const token = await authUser.getIdToken().catch(() => 'auth-verified');
-        onSuccess({
+        const sessionUser = {
           phone: formattedPhoneNumber,
           name: name.trim() || undefined,
-          token
-        });
+          token,
+          uid: authUser.uid
+        };
+        try {
+          localStorage.setItem('gaonbazaar_admin_jwt_token', token);
+          localStorage.setItem('gb_customer_token', token);
+          localStorage.setItem('gb_customer_phone', formattedPhoneNumber);
+          localStorage.setItem('gb_customer_logged_in', 'true');
+        } catch {}
+        onSuccess(sessionUser);
       }
     } catch (err: any) {
       console.error("FIREBASE FATAL ERROR:", err?.code, err?.message);
@@ -241,6 +309,9 @@ export function MobileLogin({
   return (
     <PullToRefresh className="w-full flex items-center justify-center">
       <div className="max-w-md w-full mx-auto bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden font-sans relative select-none">
+        {/* Invisible container for Firebase test phone auth reCAPTCHA */}
+        <div id="recaptcha-test-container" style={{ position: 'fixed', bottom: 0, opacity: 0, pointerEvents: 'none', zIndex: -1 }} />
+
         {/* Brand Header */}
         <div className="bg-[#0F9D58] p-6 text-white text-center relative border-b border-emerald-700/50">
           {/* Logo Monogram */}

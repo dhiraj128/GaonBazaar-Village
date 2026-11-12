@@ -2,11 +2,14 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   getAuth,
   signInWithCustomToken,
+  signInWithPhoneNumber,
+  RecaptchaVerifier,
   type Auth,
-  type UserCredential
+  type UserCredential,
+  type ConfirmationResult
 } from 'firebase/auth';
 
-export type { UserCredential };
+export type { UserCredential, ConfirmationResult };
 
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBVwI7wmdylF7499nrIGJKJP9Nvfj761xA",
@@ -25,11 +28,59 @@ export const auth: Auth = getAuth(app);
  * No-op stub for backwards compatibility
  */
 export function resetRecaptchaVerifier(): void {
-  // Recaptcha removed in favor of Fast2SMS API custom OTP flow
+  // Recaptcha reset hook
+  if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
+    try {
+      (window as any).recaptchaVerifier.clear();
+    } catch {}
+    (window as any).recaptchaVerifier = null;
+  }
+}
+
+/**
+ * Initiates Firebase Phone Auth specifically for whitelisted test phone numbers
+ * (e.g., +919905361711 or +919999999999) with static OTP 123456.
+ * Configured in Firebase Console under "Phone numbers for testing".
+ */
+export async function sendFirebaseTestPhoneOtp(rawPhone: string): Promise<ConfirmationResult | null> {
+  const clean10 = rawPhone.replace(/\D/g, '').slice(-10);
+  const formattedPhone = `+91${clean10}`;
+  console.log('[Firebase Test Flow] Initiating Phone Auth for whitelisted test number:', formattedPhone);
+
+  if (typeof window === 'undefined') return null;
+
+  try {
+    let container = document.getElementById('recaptcha-test-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'recaptcha-test-container';
+      container.style.position = 'fixed';
+      container.style.bottom = '0';
+      container.style.opacity = '0';
+      container.style.pointerEvents = 'none';
+      container.style.zIndex = '-1';
+      document.body.appendChild(container);
+    }
+
+    const appVerifier = new RecaptchaVerifier(auth, 'recaptcha-test-container', {
+      size: 'invisible',
+      callback: () => {
+        console.log('[Firebase Test Recaptcha] Verified automatically for test number');
+      }
+    });
+
+    const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+    console.log('[Firebase Test Flow] confirmationResult obtained successfully for:', formattedPhone);
+    return confirmationResult;
+  } catch (err: any) {
+    console.warn('[Firebase Test Flow Notice]: Could not create native confirmationResult, proceeding with compliance bypass:', err);
+    return null;
+  }
 }
 
 /**
  * Sends a 6-digit OTP via Fast2SMS API through Vercel Serverless Function (/api/send-otp).
+ * Whitelisted test numbers (9905361711, 9999999999) bypass external SMS APIs.
  */
 export async function sendFast2SmsOtp(rawPhone: string): Promise<{ success: boolean; message?: string }> {
   const clean10 = rawPhone.replace(/\D/g, '').slice(-10);
@@ -37,6 +88,15 @@ export async function sendFast2SmsOtp(rawPhone: string): Promise<{ success: bool
     throw {
       code: 'auth/invalid-phone-number',
       message: 'Please enter a valid 10-digit Indian mobile number'
+    };
+  }
+
+  // Whitelisted Compliance Test Numbers: DO NOT trigger external SMS APIs
+  if (clean10 === '9905361711' || clean10 === '9999999999') {
+    console.log('[Fast2SMS Client] Test number bypassed from external SMS:', clean10);
+    return {
+      success: true,
+      message: 'Razorpay Compliance Review: Static code 123456 active'
     };
   }
 

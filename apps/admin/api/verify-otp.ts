@@ -134,8 +134,8 @@ export default async function handler(req: any, res: any) {
 
     let isVerified = false;
 
-    // 1. Razorpay Compliance Review Backdoor
-    if (clean === '9999999999' && (enteredOtp === '123456' || enteredOtp === '1234')) {
+    // 1. Razorpay Compliance Review Backdoor (9999999999 and Whitelisted Test Number 9905361711)
+    if ((clean === '9999999999' || clean === '9905361711') && (enteredOtp === '123456' || enteredOtp === '1234')) {
       isVerified = true;
     }
 

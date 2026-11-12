@@ -132,8 +132,8 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // Razorpay Compliance Review Backdoor: ONLY 9999999999
-    if (clean === '9999999999') {
+    // Razorpay Compliance Review Backdoor: 9999999999 and Whitelisted Test Number 9905361711
+    if (clean === '9999999999' || clean === '9905361711') {
       const otp = '123456';
       const expiresAt = Date.now() + 5 * 60 * 1000;
       getOtpCache().set(clean, { otp, expiresAt, attempts: 0 });
