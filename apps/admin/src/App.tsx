@@ -4,23 +4,13 @@ import { AdminApp } from './AdminApp';
 import { CustomerPortal } from './components/CustomerPortal';
 import { VendorPortal } from './components/VendorPortal';
 import { RunnerPortal } from './components/RunnerPortal';
-import { SplashScreen } from './components/SplashScreen';
-import { LanguageSelectionScreen } from './components/LanguageSelectionScreen';
-import { MobileLogin } from './components/MobileLogin';
 import { PullToRefresh } from './components/PullToRefresh';
 
 /**
  * Root Subdomain Router for Apna GaonBazaar Multi-App Platform
- *
- * Routing Matrix:
- * - / (Root Route)           -> Branded Green Splash Screen (<SplashScreen />), auto-navigates to /language (2.5s)
- * - /language                -> Bilingual Language Selection Screen (<LanguageSelectionScreen />), navigates to /login
- * - /login                   -> Customer Mobile Login with 6-Digit OTP (<MobileLogin />)
- * - admin.apnagaonbazaar.in  -> Super Admin Command Center (<AdminApp />)
- * - dukaan.apnagaonbazaar.in -> GaonBazaar Dukaan Vendor Portal (<VendorPortal />)
- * - mitra.apnagaonbazaar.in  -> Gaon Mitra Runner Delivery App (<RunnerPortal />)
- * - apnagaonbazaar.in        -> Root Splash Screen / Customer App (<CustomerPortal />)
- * - Fallback (localhost/etc) -> Splash on `/`, Language on `/language`, Login on `/login`, or Customer App
+ * Customer entry routes (/, /language, /login, /customer) all mount the
+ * SAME customer application, which owns its language -> OTP -> dashboard flow.
+ * Admin, vendor and runner domains keep their existing independent portals.
  */
 export function App() {
   const [target, setTarget] = useState<AppTarget>(() =>
@@ -46,12 +36,6 @@ export function App() {
       window.location.hostname === '127.0.0.1' ||
       window.location.hostname.endsWith('.local'));
 
-  const navigateTo = (app: AppTarget) => {
-    const path = app === 'splash' ? '/' : `/${app}`;
-    window.history.pushState({}, '', path);
-    setTarget(app);
-  };
-
   const switchApp = (app: AppTarget) => {
     const url = new URL(window.location.href);
     url.searchParams.set('app', app);
@@ -61,42 +45,16 @@ export function App() {
 
   return (
     <PullToRefresh>
-      {/* 1. Branded Green Splash Screen as Default Root Route (/) */}
-      {target === 'splash' && (
-        <SplashScreen
-          destination="/language"
-          durationMs={2500}
-          onFinish={() => navigateTo('language')}
-        />
-      )}
-
-      {/* 2. Language Selection Screen (/language) */}
-      {target === 'language' && (
-        <LanguageSelectionScreen
-          destination="/login"
-          onSelect={() => navigateTo('login')}
-        />
-      )}
-
-      {/* 3. Customer Mobile Login (/login) */}
-      {target === 'login' && (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-          <MobileLogin
-            title="Mobile Login"
-            subtitle="Enter your mobile number to receive a secure 6-digit OTP."
-            onSuccess={(user) => {
-              console.log('[Auth] User successfully authenticated:', user);
-              navigateTo('customer');
-            }}
-          />
-        </div>
+      {/* One customer application owns language selection, OTP and dashboard.
+          Do not mount a second React onboarding flow before the customer iframe. */}
+      {(['splash', 'language', 'login', 'customer'] as AppTarget[]).includes(target) && (
+        <CustomerPortal />
       )}
 
       {/* Dynamic Subdomain Component Rendering */}
       {target === 'admin' && <AdminApp />}
       {target === 'dukaan' && <VendorPortal />}
       {target === 'mitra' && <RunnerPortal />}
-      {target === 'customer' && <CustomerPortal />}
 
       {/* Local Development Quick Switcher — only visible on localhost/127.0.0.1 */}
       {isLocalDev && (
@@ -107,50 +65,6 @@ export function App() {
           <span className="font-mono text-emerald-400 font-semibold uppercase tracking-wider text-[10px]">
             Dev Switcher:
           </span>
-          <button
-            type="button"
-            onClick={() => switchApp('splash')}
-            className={`px-2 py-1 rounded transition-colors font-medium ${
-              target === 'splash'
-                ? 'bg-[#0F9D58] text-white font-semibold'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            Splash (Root /)
-          </button>
-          <button
-            type="button"
-            onClick={() => switchApp('language')}
-            className={`px-2 py-1 rounded transition-colors font-medium ${
-              target === 'language'
-                ? 'bg-purple-600 text-white font-semibold'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            Language (/language)
-          </button>
-          <button
-            type="button"
-            onClick={() => switchApp('login')}
-            className={`px-2 py-1 rounded transition-colors font-medium ${
-              target === 'login'
-                ? 'bg-blue-600 text-white font-semibold'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            Login (/login)
-          </button>
-          <button
-            type="button"
-            onClick={() => switchApp('customer')}
-            className={`px-2 py-1 rounded transition-colors font-medium ${
-              target === 'customer'
-                ? 'bg-emerald-600 text-white font-semibold'
-                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-            }`}
-          >
-            Customer
-          </button>
           <button
             type="button"
             onClick={() => switchApp('dukaan')}
