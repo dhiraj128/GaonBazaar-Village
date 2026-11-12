@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { resolveAppTarget, type AppTarget } from './utils/subdomain';
+import { resolveAppTarget, isCustomerAuthenticated, type AppTarget } from './utils/subdomain';
 import { AdminApp } from './AdminApp';
 import { CustomerPortal } from './components/CustomerPortal';
 import { VendorPortal } from './components/VendorPortal';
@@ -13,7 +13,7 @@ import { PullToRefresh } from './components/PullToRefresh';
  * Root Subdomain Router for Apna GaonBazaar Multi-App Platform
  *
  * Routing Matrix:
- * - / (Root Route)           -> Branded Green Splash Screen (<SplashScreen />), auto-navigates to /language (2.5s)
+ * - / (Root Route)           -> Branded Green Splash Screen (<SplashScreen />), auto-navigates to /language (or directly to customer if authenticated)
  * - /language                -> Bilingual Language Selection Screen (<LanguageSelectionScreen />), navigates to /login
  * - /login                   -> Customer Mobile Login with 6-Digit OTP (<MobileLogin />)
  * - admin.apnagaonbazaar.in  -> Super Admin Command Center (<AdminApp />)
@@ -23,17 +23,26 @@ import { PullToRefresh } from './components/PullToRefresh';
  * - Fallback (localhost/etc) -> Splash on `/`, Language on `/language`, Login on `/login`, or Customer App
  */
 export function App() {
-  const [target, setTarget] = useState<AppTarget>(() =>
-    resolveAppTarget(
+  const resolveTargetSafely = (): AppTarget => {
+    const rawTarget = resolveAppTarget(
       typeof window !== 'undefined' ? window.location.hostname : '',
       typeof window !== 'undefined' ? window.location.search : '',
       typeof window !== 'undefined' ? window.location.pathname : ''
-    )
-  );
+    );
+    // If the customer has already authenticated, bypass onboarding screens on visit or refresh
+    if (isCustomerAuthenticated()) {
+      if (rawTarget === 'splash' || rawTarget === 'language' || rawTarget === 'login') {
+        return 'customer';
+      }
+    }
+    return rawTarget;
+  };
+
+  const [target, setTarget] = useState<AppTarget>(resolveTargetSafely);
 
   useEffect(() => {
     const handleLocationChange = () => {
-      setTarget(resolveAppTarget(window.location.hostname, window.location.search, window.location.pathname));
+      setTarget(resolveTargetSafely());
     };
 
     window.addEventListener('popstate', handleLocationChange);
@@ -64,9 +73,9 @@ export function App() {
       {/* 1. Branded Green Splash Screen as Default Root Route (/) */}
       {target === 'splash' && (
         <SplashScreen
-          destination="/language"
-          durationMs={2500}
-          onFinish={() => navigateTo('language')}
+          destination={isCustomerAuthenticated() ? '/customer' : '/language'}
+          durationMs={2200}
+          onFinish={() => navigateTo(isCustomerAuthenticated() ? 'customer' : 'language')}
         />
       )}
 
@@ -78,18 +87,16 @@ export function App() {
         />
       )}
 
-      {/* 3. Customer Mobile Login (/login) */}
+      {/* 3. Customer Mobile Login (/login) - Native Edge-to-Edge Responsive Layout */}
       {target === 'login' && (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-          <MobileLogin
-            title="Mobile Login"
-            subtitle="Enter your mobile number to receive a secure 6-digit OTP."
-            onSuccess={(user) => {
-              console.log('[Auth] User successfully authenticated:', user);
-              navigateTo('customer');
-            }}
-          />
-        </div>
+        <MobileLogin
+          title="Mobile Login"
+          subtitle="Enter your mobile number to receive a secure 6-digit OTP."
+          onSuccess={(user) => {
+            console.log('[Auth] User successfully authenticated:', user);
+            navigateTo('customer');
+          }}
+        />
       )}
 
       {/* Dynamic Subdomain Component Rendering */}

@@ -2943,70 +2943,98 @@
       const faqs = [
         {
           q: 'How fast does GaonBazaar deliver to my village?',
-          a: 'GaonBazaar connects you to local village kirana stores, dairies, and vegetable mandis in your local area. Deliveries typically arrive within 25 to 45 minutes via local village motorcycle runners.'
+          qHi: 'गांवबाजार मेरे गांव में कितनी जल्दी सामान पहुंचाता है?',
+          a: 'GaonBazaar connects you to local village kirana stores, dairies, and vegetable mandis in your local area. Deliveries typically arrive within 25 to 45 minutes via local village motorcycle runners.',
+          aHi: 'गांवबाजार आपके क्षेत्र की स्थानीय गांव किराना दुकानों, डेयरियों और सब्जी मंडियों से जुड़ा हुआ है। स्थानीय गांव के बाइक राइडर 25 से 45 मिनट के भीतर आपके घर सामान पहुंचाते हैं।'
         },
         {
           q: 'Does GaonBazaar deliver to remote farmhouses or dhans?',
-          a: 'Yes! We use GPS geolocation pins combined with rural landmarks (e.g., Near Panchayat Bhawan, Primary School, Shiv Mandir) so runners reach your exact doorstep without needing street numbers.'
+          qHi: 'क्या गांवबाजार दूर-दराज के खेतों या ढाणियों में भी डिलीवरी करता है?',
+          a: 'Yes! We use GPS geolocation pins combined with rural landmarks (e.g., Near Panchayat Bhawan, Primary School, Shiv Mandir) so runners reach your exact doorstep without needing street numbers.',
+          aHi: 'हाँ! हम GPS पिन और ग्रामीण लैंडमार्क (जैसे पंचायत भवन, प्राथमिक विद्यालय, शिव मंदिर के पास) का उपयोग करते हैं ताकि राइडर बिना गली नंबर के भी आपके सही दरवाजे तक पहुंच सके।'
         },
         {
           q: 'Which payment methods are accepted?',
-          a: 'Cash on Delivery (COD) is 100% active on every order. You pay the runner in cash only after receiving and inspecting your items. Online UPI & Card payments are undergoing pre-launch sandbox certification.'
+          qHi: 'भुगतान के कौन-से तरीके स्वीकार किए जाते हैं?',
+          a: 'Cash on Delivery (COD) is 100% active on every order. You pay the runner in cash only after receiving and inspecting your items. Online UPI & Card payments are undergoing pre-launch sandbox certification.',
+          aHi: 'हर ऑर्डर पर कैश ऑन डिलीवरी (COD) 100% उपलब्ध है। आप सामान प्राप्त करने और जांचने के बाद ही राइडर को नकद भुगतान करते हैं। ऑनलाइन UPI भुगतान भी उपलब्ध है।'
         },
         {
           q: 'Can I cancel my order after placing it?',
-          a: 'Yes. Every order has a strict 180-second (3-minute) zero-fee cancellation window. You can cancel instantly from the Orders tab with a single tap before the shopkeeper starts packing.'
+          qHi: 'क्या मैं ऑर्डर देने के बाद उसे रद्द कर सकता हूँ?',
+          a: 'Yes. Every order has a strict 180-second (3-minute) zero-fee cancellation window. You can cancel instantly from the Orders tab with a single tap before the shopkeeper starts packing.',
+          aHi: 'हाँ। हर ऑर्डर के लिए 180 सेकेंड (3 मिनट) की शून्य-शुल्क रद्दीकरण सुविधा उपलब्ध है। आप दुकानदार द्वारा पैकिंग शुरू करने से पहले ऑर्डर्स टैब से एक टैप में रद्द कर सकते हैं।'
         },
         {
           q: 'What is the 4-digit Delivery Verification OTP?',
-          a: 'For your security, every delivery has a 4-digit secret PIN shown in your Orders tab. Inspect your groceries first, then verbally share this OTP with the runner to complete handover.'
+          qHi: '4-अंकीय डिलीवरी सत्यापन OTP क्या है?',
+          a: 'For your security, every delivery has a 4-digit secret PIN shown in your Orders tab. Inspect your groceries first, then verbally share this OTP with the runner to complete handover.',
+          aHi: 'आपकी सुरक्षा के लिए आपके ऑर्डर्स टैब में 4 अंकों का गुप्त पिन दिखाया जाता है। पहले अपना किराना सामान जांचें, फिर सामान लेने के लिए राइडर को यह OTP बताएं।'
         },
         {
           q: 'How does the Monthly Ration List work?',
-          a: 'The Monthly Ration List lets you save your recurring household staples (Atta, Rice, Dal, Mustard Oil, Sugar). With one tap, you can check live store inventory and add all items to your cart for monthly reorders.'
+          qHi: 'मासिक राशन सूची कैसे काम करती है?',
+          a: 'The Monthly Ration List lets you save your recurring household staples (Atta, Rice, Dal, Mustard Oil, Sugar). With one tap, you can check live store inventory and add all items to your cart for monthly reorders.',
+          aHi: 'मासिक राशन सूची आपको अपनी नियमित घरेलू वस्तुओं (आटा, चावल, दाल, सरसों तेल, चीनी) को सहेजने की सुविधा देती है। एक टैप में आप सभी सामान को कार्ट में जोड़कर मासिक ऑर्डर दे सकते हैं।'
         },
         {
           q: 'What should I do if an item is damaged or missing?',
-          a: 'Inspect the items with the runner upon arrival. If anything is wrong, refuse the item or raise a ticket under Account → Support Tickets for immediate replacement or full refund.'
+          qHi: 'यदि कोई सामान खराब या गायब हो तो क्या करें?',
+          a: 'Inspect the items with the runner upon arrival. If anything is wrong, refuse the item or raise a ticket under Account → Support Tickets for immediate replacement or full refund.',
+          aHi: 'डिलीवरी के समय राइडर के सामने सामान जांचें। यदि कोई समस्या हो, तो सामान लेने से मना करें या खाता → सहायता टिकट से तुरंत शिकायत दर्ज करें।'
         },
         {
           q: 'Are prices higher on GaonBazaar than in the village shop?',
-          a: 'No. Prices are identical to local counter prices set directly by the village shopkeeper. GaonBazaar does not add hidden markups.'
+          qHi: 'क्या गांवबाजार पर कीमतें गांव की दुकान से अधिक हैं?',
+          a: 'No. Prices are identical to local counter prices set directly by the village shopkeeper. GaonBazaar does not add hidden markups.',
+          aHi: 'नहीं। कीमतें गांव के दुकानदार द्वारा निर्धारित वास्तविक काउंटर कीमतों के बिल्कुल समान हैं। गांवबाजार कोई छिपा हुआ शुल्क नहीं जोड़ता।'
         },
         {
           q: 'Can I call or chat with my delivery runner?',
-          a: 'Yes! Once a runner is assigned to your order, tap the phone icon to call or the chat icon to send real-time delivery notes and landmark updates.'
+          qHi: 'क्या मैं अपने डिलीवरी राइडर को कॉल या चैट कर सकता हूँ?',
+          a: 'Yes! Once a runner is assigned to your order, tap the phone icon to call or the chat icon to send real-time delivery notes and landmark updates.',
+          aHi: 'हाँ! ऑर्डर पर राइडर नियुक्त होने के बाद, कॉल करने के लिए फोन आइकन या लैंडमार्क बताने के लिए चैट आइकन पर टैप करें।'
         },
         {
           q: 'Is there a minimum order value for village delivery?',
-          a: 'No large minimum order required. You can order small daily essentials as well as complete monthly family ration supplies.'
+          qHi: 'क्या गांव में डिलीवरी के लिए कोई न्यूनतम ऑर्डर मूल्य है?',
+          a: 'No large minimum order required. You can order small daily essentials as well as complete monthly family ration supplies.',
+          aHi: 'कोई बड़ा न्यूनतम ऑर्डर आवश्यक नहीं है। आप रोजमर्रा की छोटी आवश्यकताएं और पूरे महीने का पारिवारिक राशन दोनों मंगवा सकते हैं।'
         },
         {
           q: 'What are store operating hours?',
-          a: 'Village stores generally operate from 7:00 AM to 9:00 PM. Store status badges indicate whether a store is currently Open or Closed.'
+          qHi: 'दुकानें खुलने का समय क्या है?',
+          a: 'Village stores generally operate from 7:00 AM to 9:00 PM. Store status badges indicate whether a store is currently Open or Closed.',
+          aHi: 'गांव की दुकानें आमतौर पर सुबह 7:00 बजे से रात 9:00 बजे तक खुली रहती हैं। स्टोर बैज से पता चलता है कि दुकान खुली है या बंद।'
         },
         {
           q: 'Can I use Voice Search in Hindi?',
-          a: 'Yes! Tap the microphone icon on the home search bar to speak in Hindi or English (e.g., "आटा", "सरसों का तेल", "Sugar"). The catalog filters automatically without redirecting to cart.'
+          qHi: 'क्या मैं हिंदी में बोलकर सामान खोज सकता हूँ?',
+          a: 'Yes! Tap the microphone icon on the home search bar to speak in Hindi or English (e.g., "आटा", "सरसों का तेल", "Sugar"). The catalog filters automatically without redirecting to cart.',
+          aHi: 'हाँ! होम सर्च बार पर माइक आइकन दबाकर हिंदी या अंग्रेजी में बोलें (जैसे "आटा", "सरसों का तेल", "चीनी")। कैटलॉग तुरंत फिल्टर हो जाएगा।'
         },
         {
           q: 'How do I raise a dispute or contact customer care?',
-          a: 'Go to Account → Support Tickets and click "+ New Ticket", or call our 24x7 village helpline. You can also request a human callback from our team.'
+          qHi: 'ग्राहक सेवा से संपर्क कैसे करें?',
+          a: 'Go to Account → Support Tickets and click "+ New Ticket", or call our 24x7 village helpline. You can also request a human callback from our team.',
+          aHi: 'खाता → सहायता टिकट पर जाएं और "+ नया टिकट" पर क्लिक करें, या हमारी 24x7 हेल्पलाइन पर कॉल करें।'
         },
         {
           q: 'How are refunds handled for cancelled orders?',
-          a: 'For Cash on Delivery orders, you pay nothing if cancelled within the 180s window. If paid via UPI during trial, refunds are credited back to the source account within 2 hours.'
+          qHi: 'रद्द किए गए ऑर्डरों का रिफंड कैसे मिलता है?',
+          a: 'For Cash on Delivery orders, you pay nothing if cancelled within the 180s window. If paid via UPI during trial, refunds are credited back to the source account within 2 hours.',
+          aHi: 'कैश ऑन डिलीवरी ऑर्डर 180 सेकंड में रद्द करने पर कुछ भी नहीं देना होता। UPI से भुगतान होने पर 2 घंटे के भीतर रिफंड वापस आ जाता है।'
         }
       ];
 
       container.innerHTML = faqs.map((faq, idx) => `
         <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-2xs">
           <button type="button" onclick="window.toggleFaqAccordion(${idx})" class="w-full p-3 text-left font-bold text-slate-800 flex items-center justify-between hover:bg-slate-50 transition">
-            <span class="text-xs text-slate-900">${faq.q}</span>
+            <span class="text-xs text-slate-900">${currentLang === 'hi' && faq.qHi ? faq.qHi : faq.q}</span>
             <i id="faq-icon-${idx}" data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200"></i>
           </button>
           <div id="faq-ans-${idx}" class="hidden p-3 pt-0 text-[11px] text-slate-600 border-t border-slate-100 bg-slate-50/50">
-            ${faq.a}
+            ${currentLang === 'hi' && faq.aHi ? faq.aHi : faq.a}
           </div>
         </div>
       `).join('');
@@ -3504,22 +3532,27 @@
         checkout_bill_platform: "Platform Fee:",
         checkout_bill_cod: "COD Convenience Fee:",
         checkout_bill_total: "To Pay:",
-        checkout_pay_upi: "Pay via UPI",
+        checkout_pay_upi: "1. Pay via UPI",
         checkout_pay_upi_desc: "Fast & secure instant UPI payment",
-        checkout_pay_cod: "Cash on Delivery (COD)",
+        checkout_pay_cod: "4. Cash on Delivery (COD)",
         checkout_pay_cod_desc: "Pay cash directly to runner upon delivery",
         select_language_title: "Choose Language",
         select_language_sub: "Select your preferred language for grocery shopping and voice assistant.",
-        continue_btn: "Continue",
+        continue_btn: "Continue / आगे बढ़ें",
         login_title: "Mobile Login",
         login_sub: "Enter your mobile number to receive a secure 6-digit SMS verification code on your phone.",
         get_otp_btn: "Get OTP",
+        send_otp_btn: "Send OTP",
+        verify_login_btn: "Verify & Login",
+        phone_label: "Mobile Number",
+        name_label: "Full Name",
         otp_sent_to: "Code sent to:",
         change_number: "Change",
         didnt_receive: "Didn't receive code?",
         resend_otp: "Resend OTP",
         verify_proceed_btn: "Verify & Proceed",
         terms_notice: "By continuing, you agree to GaonBazaar Rural Delivery Terms & Privacy Policy.",
+        terms_title: "Terms, Conditions & Rural Privacy",
         delivering_to: "Delivering To",
         search_placeholder: "Search stores (Sharma Kirana) or atta, milk...",
         categories_title: "Categories",
@@ -3537,58 +3570,80 @@
         groceries_count_badge: "6 Daily Essentials",
         snacks_count_badge: "4 Popular Snacks",
         bill_cod_fee: "COD Convenience Fee",
-      login_badge: "GaonBazaar Instant Verification",
-      sms_dispatched_note: "Instant SMS OTP delivered to your phone",
-      kyc_badge: "Cashfree SecureID • Paperless Verification",
-      kyc_title: "Paperless KYC Verification",
-      kyc_sub: "Instant identity verification for authentic rural village deliveries and priority doorstep support.",
-      pan_card_title: "Step 3A: PAN Card Verification",
-      pan_card_sub: "Government identity matching",
-      pan_input_label: "10-Digit PAN Number",
-      verify_pan_btn: "Verify PAN via Cashfree",
-      pan_verified_title: "PAN Successfully Verified",
-      aadhaar_card_title: "Step 3B: Offline Aadhaar OTP",
-      aadhaar_card_sub: "Paperless UIDAI OTP verification",
-      aadhaar_input_label: "12-Digit Aadhaar Number",
-      send_aadhaar_otp_btn: "Send Aadhaar OTP",
-      enter_aadhaar_otp_label: "Enter 6-Digit Aadhaar OTP",
-      verify_aadhaar_btn: "Verify Aadhaar & Complete KYC",
-      aadhaar_verified_title: "Aadhaar Verified & Photo Synced",
-      kyc_complete_title: "KYC 100% Complete!",
-      kyc_complete_sub: "Verified Rural Customer Account",
-      proceed_to_dashboard_btn: "Start Village Shopping",
-      skip_kyc_btn: "Skip for now, verify later in Account",
+        login_badge: "GaonBazaar Instant Verification",
+        sms_dispatched_note: "Instant SMS OTP delivered to your mobile phone",
+        kyc_badge: "Cashfree SecureID • Paperless Verification",
+        kyc_title: "Paperless KYC Verification",
+        kyc_sub: "Instant identity verification for authentic rural village deliveries and priority doorstep support.",
+        pan_card_title: "Step 3A: PAN Card Verification",
+        pan_card_sub: "Government identity matching",
+        pan_input_label: "10-Digit PAN Number",
+        verify_pan_btn: "Verify PAN via Cashfree",
+        pan_verified_title: "PAN Successfully Verified",
+        aadhaar_card_title: "Step 3B: Offline Aadhaar OTP",
+        aadhaar_card_sub: "Paperless UIDAI OTP verification",
+        aadhaar_input_label: "12-Digit Aadhaar Number",
+        send_aadhaar_otp_btn: "Send Aadhaar OTP",
+        enter_aadhaar_otp_label: "Enter 6-Digit Aadhaar OTP",
+        verify_aadhaar_btn: "Verify Aadhaar & Complete KYC",
+        aadhaar_verified_title: "Aadhaar Verified & Photo Synced",
+        kyc_complete_title: "KYC 100% Complete!",
+        kyc_complete_sub: "Verified Rural Customer Account",
+        proceed_to_dashboard_btn: "Start Village Shopping",
+        skip_kyc_btn: "Skip for now, verify later in Account",
         subtext_cod: "₹10 extra for Cash on Delivery.",
         subtext_upi: "Save ₹10 on delivery fees with UPI.",
         featured_stores_title: "Nearby Stores",
-        essentials_title: "Village Essentials",
+        essentials_title: "All Products",
         ai_assistant_title: "GaonBazaar AI Assistant",
         ai_assistant_sub: "Voice & Smart Cart Shopping Sahayak",
         ai_bot_name: "GaonBazaar Sahayak",
-        ai_welcome_msg: "Namaste! 🙏 Speak or type what you need (e.g. '1 kg doodh add karo', '2 kilo atta add karo', or 'Do packet Parle-G'). I will add them directly to your authoritative cart!",
+        ai_welcome_msg: "Namaste! 🙏 Speak or type what you need (e.g. \"1 kg doodh add karo\", \"2 kilo atta add karo\", or \"Do packet Parle-G\"). I will add them directly to your authoritative cart!",
         try_saying: "Try Saying:",
         tap_mic_to_speak: "Tap Microphone & Speak",
         ai_listening: "Listening to your voice... Speak now!",
-        ai_listening_hint: "Say '1 kilo cheeni', '1 litre doodh', or 'Do packet Parle-G'",
+        ai_listening_hint: "Say \"1 kilo cheeni\", \"1 litre doodh\", or \"Do packet Parle-G\"",
         ai_input_placeholder: "Type item e.g. 1kg sugar chahiye...",
         cart_title: "Your Shopping Cart",
         cart_sub: "Verified Rural Pricing",
-        delivery_address_title: "Delivery Address",
+        empty_cart_title: "Your Cart is Empty",
+        empty_cart_sub: "Add products to start shopping.",
+        browse_products_btn: "Browse Products",
+        delivery_address_title: "Delivery Destination",
         detect_gps_btn: "Detect GPS",
+        gps_detect_header: "Detect via Device GPS",
         village_label: "Village / Locality",
-        landmark_label: "Prominent Rural Landmark (Mandatory for Delivery Partner)",
+        landmark_label: "House / Street / Rural Landmark",
+        district_label: "District & State",
+        pincode_label: "Postal Pincode",
+        address_type_label: "Save Address As",
+        address_modal_title: "Add Delivery Address",
+        save_address_btn: "Save Address",
+        map_picker_title: "Select Delivery Location",
+        map_picker_header: "Select Exact Pin on Map",
+        open_map_btn: "Open Map",
+        open_in_google_maps: "Start Google Maps Turn-by-Turn Navigation",
         bill_summary_title: "Bill Summary",
         bill_item_total: "Item Total",
         bill_delivery_fee: "Delivery Charge",
         bill_platform_fee: "Platform Fee",
         bill_grand_total: "Grand Total",
         payment_mode_title: "Payment Method",
-        pay_cod: "Cash on Delivery",
-        pay_upi: "UPI / Online",
+        pay_cod: "Cash on Delivery (COD)",
+        pay_upi: "UPI / Online Payment",
         place_order_btn: "Place Order",
         orders_title: "Your Orders",
         orders_sub: "Live Village Tracking & History",
         active_mission: "Active Mission",
+        active_order_chat: "Active Order Support",
+        support_chat_header: "GaonBazaar AI Support",
+        chat_msg_runner_1: "Namaste! I have picked up your groceries from Sharma Kirana. I am riding towards your village now.",
+        no_active_orders_title: "No Active Delivery Mission",
+        no_active_orders_sub: "Place an order to track live delivery, ETA, and runner location.",
+        browse_stores_btn: "Browse Village Stores",
+        monthly_ration_title: "My Monthly Ration List",
+        monthly_ration_sub: "Save your regular groceries and order again",
+        manage_ration_btn: "Manage & Order",
         otp_handover_title: "Delivery Verification OTP",
         otp_handover_sub: "Share with runner ONLY after inspecting goods",
         runner_badge: "Hero Splendor • GaonBazaar Partner",
@@ -3598,17 +3653,29 @@
         view_receipt_btn: "Receipt",
         reorder_btn: "Reorder",
         report_issue_btn: "Report Issue",
+        tracking_stepper_title: "Live Delivery Progress",
+        est_delivery_title: "Estimated Delivery Window:",
+        route_map_title: "Live Route Telemetry",
+        customer_dest: "Customer Destination",
+        store_pickup: "Store Pickup",
+        recipient_name_label: "Recipient Name",
+        recipient_phone_label: "Mobile Number",
         account_title: "Customer Account",
         account_sub: "Profile, Addresses & Support",
         verified_customer: "Verified Customer",
         saved_addresses_title: "Saved Addresses",
         add_new_address_btn: "Add Address",
+        edit_profile_title: "Edit Personal Profile",
+        save_profile_btn: "Save Changes",
+        email_label: "Email Address (Optional)",
         menu_profile: "Personal Profile",
         menu_payment: "Payment Settings",
         menu_app_settings: "App Settings",
         menu_faq: "Frequently Asked Questions (FAQ)",
+        faq_title: "Frequently Asked Questions",
         menu_ai_support: "GaonBazaar AI Support Chat",
         menu_my_tickets: "My Support Tickets",
+        tickets_modal_title: "My Support Tickets",
         menu_refund_policy: "Refund & Replacement Policy",
         menu_terms: "Terms, Conditions & Privacy",
         logout_btn: "Log Out",
@@ -3619,7 +3686,7 @@
         nav_account: "Account",
         close_btn: "Close",
         payment_vault_title: "Payment Settings Vault",
-        payment_vault_sub: "Configure your default payment instrument",
+        payment_vault_sub: "Configure your default UPI or Bank Account",
         vault_security_primary: "🔒 256-bit Bank-Grade Security",
         vault_security_sub: "Your payment details are tokenized and securely stored via Razorpay. We never store your raw card numbers.",
         vault_save_btn: "Save Payment Details"
@@ -3632,9 +3699,9 @@
         checkout_bill_platform: "प्लेटफ़ॉर्म शुल्क:",
         checkout_bill_cod: "सीओडी सुविधा शुल्क:",
         checkout_bill_total: "कुल देय राशि:",
-        checkout_pay_upi: "UPI द्वारा भुगतान करें",
+        checkout_pay_upi: "1. UPI द्वारा भुगतान करें",
         checkout_pay_upi_desc: "तेज़ एवं सुरक्षित तत्काल यूपीआई भुगतान",
-        checkout_pay_cod: "कैश ऑन डिलीवरी (COD)",
+        checkout_pay_cod: "4. कैश ऑन डिलीवरी (COD)",
         checkout_pay_cod_desc: "डिलीवरी के समय सीधे राइडर को नकद भुगतान करें",
         select_language_title: "भाषा चुनें",
         select_language_sub: "किराना खरीदारी और वॉयस असिस्टेंट के लिए अपनी पसंदीदा भाषा चुनें।",
@@ -3642,12 +3709,17 @@
         login_title: "मोबाइल लॉगिन",
         login_sub: "सुरक्षित 6-अंकीय SMS सत्यापन कोड प्राप्त करने के लिए अपना मोबाइल नंबर दर्ज करें।",
         get_otp_btn: "OTP प्राप्त करें",
+        send_otp_btn: "OTP भेजें",
+        verify_login_btn: "सत्यापित करें और लॉगिन करें",
+        phone_label: "मोबाइल नंबर",
+        name_label: "पूरा नाम",
         otp_sent_to: "कोड भेजा गया:",
         change_number: "बदलें",
         didnt_receive: "कोड नहीं मिला?",
         resend_otp: "पुनः भेजें",
         verify_proceed_btn: "सत्यापित करें और आगे बढ़ें",
         terms_notice: "आगे बढ़कर आप गांवबाजार की ग्रामीण डिलीवरी शर्तों व गोपनीयता नीति से सहमत होते हैं।",
+        terms_title: "नियम, शर्तें व ग्रामीण गोपनीयता",
         delivering_to: "डिलीवरी स्थान",
         search_placeholder: "दुकान (शर्मा किराना) या आटा, दूध खोजें...",
         categories_title: "श्रेणियाँ",
@@ -3657,8 +3729,39 @@
         cat_dairy: "दूध व डेयरी",
         cat_veggies: "सब्जियां",
         cat_general: "जनरल स्टोर",
+        cat_snacks: "स्नैक्स",
+        section_veggies_title: "ताजा सब्जियां",
+        section_groceries_title: "दैनिक किराना",
+        section_snacks_title: "पैकेज्ड स्नैक्स",
+        veggies_count_badge: "4 ताजा सब्जियां",
+        groceries_count_badge: "6 दैनिक आवश्यकताएं",
+        snacks_count_badge: "4 लोकप्रिय स्नैक्स",
+        bill_cod_fee: "COD सुविधा शुल्क",
+        login_badge: "गांवबाजार त्वरित सत्यापन",
+        sms_dispatched_note: "आपके फोन पर तुरंत SMS OTP भेजा जाएगा",
+        kyc_badge: "Cashfree SecureID • कागज रहित सत्यापन",
+        kyc_title: "कागज रहित KYC सत्यापन",
+        kyc_sub: "प्रामाणिक ग्रामीण डिलीवरी और प्राथमिकता सहायता के लिए त्वरित पहचान सत्यापन।",
+        pan_card_title: "चरण 3A: पैन कार्ड सत्यापन",
+        pan_card_sub: "सरकारी पहचान मिलान",
+        pan_input_label: "10-अंकीय पैन नंबर",
+        verify_pan_btn: "Cashfree से पैन सत्यापित करें",
+        pan_verified_title: "पैन सफलतापूर्वक सत्यापित",
+        aadhaar_card_title: "चरण 3B: ऑफलाइन आधार OTP",
+        aadhaar_card_sub: "कागज रहित UIDAI OTP सत्यापन",
+        aadhaar_input_label: "12-अंकीय आधार नंबर",
+        send_aadhaar_otp_btn: "आधार OTP भेजें",
+        enter_aadhaar_otp_label: "6-अंकीय आधार OTP दर्ज करें",
+        verify_aadhaar_btn: "आधार सत्यापित करें और KYC पूरा करें",
+        aadhaar_verified_title: "आधार सत्यापित और फोटो सिंक",
+        kyc_complete_title: "KYC 100% पूरा हुआ!",
+        kyc_complete_sub: "सत्यापित ग्रामीण ग्राहक खाता",
+        proceed_to_dashboard_btn: "गांव की खरीदारी शुरू करें",
+        skip_kyc_btn: "बाद में खाता में सत्यापित करें",
+        subtext_cod: "कैश ऑन डिलीवरी पर ₹10 अतिरिक्त सुविधा शुल्क।",
+        subtext_upi: "UPI से भुगतान करने पर ₹10 डिलीवरी छूट।",
         featured_stores_title: "आस-पास की दुकानें",
-        essentials_title: "गांव की आवश्यक वस्तुएं",
+        essentials_title: "सभी सामान",
         ai_assistant_title: "गांवबाजार AI सहायक",
         ai_assistant_sub: "वॉयस और स्मार्ट कार्ट शॉपिंग सहायक",
         ai_bot_name: "गांवबाजार सहायक",
@@ -3670,22 +3773,44 @@
         ai_input_placeholder: "सामान लिखें, जैसे 1kg चीनी चाहिए...",
         cart_title: "आपका शॉपिंग कार्ट",
         cart_sub: "सत्यापित ग्रामीण मूल्य",
+        empty_cart_title: "आपका कार्ट खाली है",
+        empty_cart_sub: "खरीदारी शुरू करने के लिए सामान जोड़ें।",
+        browse_products_btn: "सामान ब्राउज़ करें",
         delivery_address_title: "डिलीवरी का पता",
         detect_gps_btn: "GPS खोजें",
+        gps_detect_header: "डिवाइस GPS से पता लगाएं",
         village_label: "गांव / टोला",
-        landmark_label: "प्रमुख ग्रामीण लैंडमार्क (डिलीवरी पार्टनर के लिए अनिवार्य)",
+        landmark_label: "घर / गली / प्रमुख ग्रामीण लैंडमार्क",
+        district_label: "जिला व राज्य",
+        pincode_label: "पिनकोड",
+        address_type_label: "पता का प्रकार",
+        address_modal_title: "डिलीवरी का पता जोड़ें",
+        save_address_btn: "पता सहेजें",
+        map_picker_title: "डिलीवरी स्थान चुनें",
+        map_picker_header: "नक्शे पर सटीक पिन चुनें",
+        open_map_btn: "नक्शा खोलें",
+        open_in_google_maps: "Google Maps नेविगेशन शुरू करें",
         bill_summary_title: "बिल विवरण",
         bill_item_total: "सामान का कुल मूल्य",
         bill_delivery_fee: "डिलीवरी शुल्क",
         bill_platform_fee: "प्लेटफ़ॉर्म शुल्क",
         bill_grand_total: "कुल देय राशि",
         payment_mode_title: "भुगतान का तरीका",
-        pay_cod: "कैश ऑन डिलीवरी (सामान मिलने पर दें)",
-        pay_upi: "ऑनलाइन / UPI",
+        pay_cod: "कैश ऑन डिलीवरी (COD)",
+        pay_upi: "ऑनलाइन / UPI भुगतान",
         place_order_btn: "ऑर्डर दें",
         orders_title: "आपके ऑर्डर",
         orders_sub: "लाइव ग्रामीण ट्रैकिंग व इतिहास",
         active_mission: "सक्रिय डिलीवरी",
+        active_order_chat: "सक्रिय ऑर्डर सहायता",
+        support_chat_header: "गांवबाजार AI सहायता",
+        chat_msg_runner_1: "नमस्ते! मैंने शर्मा किराना से आपका सामान ले लिया है। अब आपके गांव की तरफ आ रहा हूँ।",
+        no_active_orders_title: "कोई सक्रिय डिलीवरी नहीं है",
+        no_active_orders_sub: "लाइव डिलीवरी, समय और राइडर की स्थिति देखने के लिए ऑर्डर दें।",
+        browse_stores_btn: "गांव की दुकानें देखें",
+        monthly_ration_title: "मेरी मासिक राशन सूची",
+        monthly_ration_sub: "नियमित किराना सामान सहेजें और दोबारा मंगवाएं",
+        manage_ration_btn: "प्रबंधित करें और ऑर्डर दें",
         otp_handover_title: "डिलीवरी सत्यापन OTP",
         otp_handover_sub: "सामान जांचने के बाद ही राइडर को OTP बताएं",
         runner_badge: "हीरो स्प्लेंडर • गांवबाजार पार्टनर",
@@ -3695,17 +3820,29 @@
         view_receipt_btn: "रसीद",
         reorder_btn: "फिर से मंगवाएं",
         report_issue_btn: "शिकायत दर्ज करें",
+        tracking_stepper_title: "लाइव डिलीवरी प्रगति",
+        est_delivery_title: "अनुमानित डिलीवरी समय:",
+        route_map_title: "लाइव डिलीवरी रूट",
+        customer_dest: "ग्राहक का पता",
+        store_pickup: "दुकान से उठाएं",
+        recipient_name_label: "प्राप्तकर्ता का नाम",
+        recipient_phone_label: "मोबाइल नंबर",
         account_title: "ग्राहक खाता",
         account_sub: "प्रोफाइल, पते व सहायता",
         verified_customer: "सत्यापित ग्राहक",
         saved_addresses_title: "सहेजे गए पते",
         add_new_address_btn: "नया पता जोड़ें",
+        edit_profile_title: "व्यक्तिगत प्रोफाइल संपादित करें",
+        save_profile_btn: "बदलाव सहेजें",
+        email_label: "ईमेल पता (वैकल्पिक)",
         menu_profile: "व्यक्तिगत प्रोफाइल",
         menu_payment: "भुगतान सेटिंग्स",
         menu_app_settings: "ऐप सेटिंग्स",
         menu_faq: "अक्सर पूछे जाने वाले सवाल (FAQ)",
+        faq_title: "अक्सर पूछे जाने वाले सवाल (FAQ)",
         menu_ai_support: "गांवबाजार AI सपोर्ट चैट",
         menu_my_tickets: "मेरी सपोर्ट टिकटें",
+        tickets_modal_title: "मेरी सहायता टिकटें",
         menu_refund_policy: "रिफंड व रिप्लेसमेंट नीति",
         menu_terms: "नियम, शर्तें व गोपनीयता",
         logout_btn: "लॉग आउट",
@@ -5386,6 +5523,14 @@ function createProductCardElement(p) {
           const isDelivered = order.status === 'DELIVERED';
           const isCancelled = order.status === 'CANCELLED';
 
+          const statusMapHi = {
+            'DELIVERED': 'डिलीवर हुआ',
+            'CANCELLED': 'रद्द हुआ',
+            'OUT_FOR_DELIVERY': 'डिलीवरी के लिए निकला',
+            'CONFIRMED': 'स्वीकृत हुआ',
+            'PREPARING': 'तैयार हो रहा है'
+          };
+          const statusText = currentLang === 'hi' && statusMapHi[order.status] ? statusMapHi[order.status] : (order.status || 'DELIVERED');
           const statusColor = isDelivered ? 'bg-emerald-100 text-emerald-800' : (isCancelled ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800');
           const orderShortId = (order.id && typeof order.id === 'string' && order.id.length >= 6) ? order.id.slice(-6) : (order.id || '9821');
 
@@ -5395,25 +5540,25 @@ function createProductCardElement(p) {
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
               <div>
                 <h4 class="font-bold text-slate-900">${order.store_name || 'Sharma Kirana Store'}</h4>
-                <p class="text-[10px] text-slate-400 font-mono">Order #${orderShortId} • ${dateStr}</p>
+                <p class="text-[10px] text-slate-400 font-mono">${currentLang === 'hi' ? 'ऑर्डर' : 'Order'} #${orderShortId} • ${dateStr}</p>
               </div>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor}">${order.status || 'DELIVERED'}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColor}">${statusText}</span>
             </div>
 
-            <p class="text-[11px] text-slate-700 line-clamp-1"><b>Items:</b> ${itemsSummary}</p>
+            <p class="text-[11px] text-slate-700 line-clamp-1"><b>${currentLang === 'hi' ? 'सामान' : 'Items'}:</b> ${itemsSummary}</p>
 
             <div class="flex items-center justify-between pt-1">
               <span class="text-xs font-extrabold text-slate-900 font-mono">₹${(Number(order.total_amount) || 0).toFixed(2)}</span>
               <div class="flex items-center space-x-1.5">
                 <button onclick="openReceiptModal('${order.id}', '${(order.store_name || 'Sharma Kirana').replace(/'/g, "\'")}', ${Number(order.total_amount) || 0})" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition active:scale-95">
-                  Receipt
+                  ${currentLang === 'hi' ? 'रसीद' : 'Receipt'}
                 </button>
                 <button onclick="openIssueModal('${order.id}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition active:scale-95">
-                  Need Help?
+                  ${currentLang === 'hi' ? 'सहायता' : 'Need Help?'}
                 </button>
                 <button onclick="handleBuyAgain('${order.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold shadow-2xs transition active:scale-95 flex items-center space-x-1">
                   <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
-                  <span>Buy Again</span>
+                  <span>${currentLang === 'hi' ? 'फिर से मंगवाएं' : 'Buy Again'}</span>
                 </button>
               </div>
             </div>
@@ -9880,29 +10025,60 @@ function createProductCardElement(p) {
       if (confirm(currentLang === 'hi' ? "क्या आप सच में लॉग आउट करना चाहते हैं?" : "Are you sure you want to log out of GaonBazaar?")) {
         setCustomerAuthToken(null);
         localStorage.removeItem('gb_customer_authenticated');
+        localStorage.removeItem('gb_customer_logged_in');
+        localStorage.removeItem('gb_auth_authenticated');
+        localStorage.removeItem('gb_customer_token');
         localStorage.removeItem('gb_customer_jwt');
+        localStorage.removeItem('gb_customer_phone');
+        localStorage.removeItem('gb_user_phone');
+        localStorage.removeItem('gb_auth_phone');
+        localStorage.removeItem('gb_customer_uid');
         localStorage.removeItem('gb_order_placed_time');
-        window.location.reload();
+        if (window.top && window.top !== window) {
+          window.top.location.href = '/language';
+        } else {
+          window.location.href = '/language';
+        }
       }
     }
 
     // ---------------------------------------------------------------------------
-    // INITIALIZATION
+    // INITIALIZATION (Single-Step Seamless Auth & Language Persistence)
     // ---------------------------------------------------------------------------
     window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramLang = urlParams.get('lang');
+      if (paramLang === 'en' || paramLang === 'hi') {
+        currentLang = paramLang;
+        localStorage.setItem('gb_customer_lang', paramLang);
+      } else {
+        currentLang = localStorage.getItem('gb_customer_lang') || 'en';
+      }
       setAppLanguage(currentLang);
 
-      const isAuth = localStorage.getItem('gb_customer_authenticated');
-      if (isAuth === 'true') {
-        document.getElementById('page-language').classList.add('hidden');
-        document.getElementById('page-login').classList.add('hidden');
-        document.getElementById('dashboard-container').classList.remove('hidden');
+      const isAuth =
+        localStorage.getItem('gb_customer_authenticated') === 'true' ||
+        localStorage.getItem('gb_customer_logged_in') === 'true' ||
+        localStorage.getItem('gb_auth_authenticated') === 'true' ||
+        !!localStorage.getItem('gb_customer_token') ||
+        !!localStorage.getItem('gb_customer_jwt') ||
+        urlParams.get('embedded') === 'true';
+
+      const pageLangEl = document.getElementById('page-language');
+      const pageLoginEl = document.getElementById('page-login');
+      const dashboardEl = document.getElementById('dashboard-container');
+
+      if (isAuth) {
+        if (pageLangEl) pageLangEl.classList.add('hidden');
+        if (pageLoginEl) pageLoginEl.classList.add('hidden');
+        if (dashboardEl) dashboardEl.classList.remove('hidden');
         switchTab('home', false);
         loadUserProfile();
         checkPaymentGatewayStatus();
         loadUserSavedAddresses();
       } else {
-        document.getElementById('page-language').classList.remove('hidden');
+        if (pageLangEl) pageLangEl.classList.remove('hidden');
+        if (dashboardEl) dashboardEl.classList.add('hidden');
       }
 
       startOrderCancellationTimer();

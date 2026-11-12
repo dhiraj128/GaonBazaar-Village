@@ -43,8 +43,8 @@ export function LanguageSelectionScreen({
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 font-sans select-none">
-      <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col justify-between min-h-[580px] p-6 sm:p-8">
+    <div className="min-h-[100dvh] w-full bg-slate-50 flex items-center justify-center font-sans select-none p-0 sm:p-4">
+      <div className="w-full max-w-md min-h-[100dvh] sm:min-h-[620px] bg-white sm:rounded-3xl sm:shadow-2xl sm:border border-slate-100 overflow-hidden flex flex-col justify-between p-6 sm:p-8 pt-[calc(1.5rem+env(safe-area-inset-top,0px))] pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
         <div className="space-y-6">
           {/* Header Brand Badge */}
           <div className="flex items-center space-x-3.5 pt-2">

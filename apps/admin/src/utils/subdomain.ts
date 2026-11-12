@@ -1,6 +1,27 @@
 export type AppTarget = 'admin' | 'dukaan' | 'mitra' | 'customer' | 'splash' | 'language' | 'login';
 
 /**
+ * Checks whether the customer has already completed onboarding and has an active verified session.
+ * Prevents redundant language selection or login loops when refreshing the website.
+ */
+export function isCustomerAuthenticated(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const isAuth =
+      localStorage.getItem('gb_customer_authenticated') === 'true' ||
+      localStorage.getItem('gb_customer_logged_in') === 'true' ||
+      localStorage.getItem('gb_auth_authenticated') === 'true';
+    const hasTokenOrPhone =
+      !!(localStorage.getItem('gb_customer_token') ||
+         localStorage.getItem('gb_customer_jwt') ||
+         localStorage.getItem('gb_customer_phone'));
+    return isAuth || hasTokenOrPhone;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Resolves which GaonBazaar application to render based on the current hostname,
  * search parameters, and pathname.
  *

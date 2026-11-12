@@ -189,12 +189,26 @@ export function MobileLogin({
           uid: authUid
         };
 
-        // Persist session tokens to grant full access to inner pages
+        // Persist session tokens to grant full access to inner pages and customer portal
         try {
+          localStorage.setItem('gb_customer_authenticated', 'true');
+          localStorage.setItem('gb_customer_logged_in', 'true');
+          localStorage.setItem('gb_auth_authenticated', 'true');
           localStorage.setItem('gaonbazaar_admin_jwt_token', token);
           localStorage.setItem('gb_customer_token', token);
+          localStorage.setItem('gb_customer_jwt', token);
           localStorage.setItem('gb_customer_phone', formattedPhoneNumber);
-          localStorage.setItem('gb_customer_logged_in', 'true');
+          localStorage.setItem('gb_user_phone', clean);
+          localStorage.setItem('gb_auth_phone', clean);
+          localStorage.setItem('gb_customer_uid', authUid);
+          localStorage.setItem('gb_customer_name', complianceUser.name);
+          localStorage.setItem('gb_user_name', complianceUser.name);
+          localStorage.setItem('gb_customer_profile', JSON.stringify({
+            uid: authUid,
+            phone: clean,
+            name: complianceUser.name,
+            preferred_language: lang
+          }));
           localStorage.setItem('gaonbazaar_admin_user_info', JSON.stringify(complianceUser));
         } catch (storageErr) {
           console.warn('[Auth] LocalStorage set notice:', storageErr);
@@ -245,10 +259,24 @@ export function MobileLogin({
           uid: authUser.uid
         };
         try {
+          localStorage.setItem('gb_customer_authenticated', 'true');
+          localStorage.setItem('gb_customer_logged_in', 'true');
+          localStorage.setItem('gb_auth_authenticated', 'true');
           localStorage.setItem('gaonbazaar_admin_jwt_token', token);
           localStorage.setItem('gb_customer_token', token);
+          localStorage.setItem('gb_customer_jwt', token);
           localStorage.setItem('gb_customer_phone', formattedPhoneNumber);
-          localStorage.setItem('gb_customer_logged_in', 'true');
+          localStorage.setItem('gb_user_phone', clean);
+          localStorage.setItem('gb_auth_phone', clean);
+          localStorage.setItem('gb_customer_uid', authUser.uid);
+          localStorage.setItem('gb_customer_name', name.trim() || 'Customer');
+          localStorage.setItem('gb_user_name', name.trim() || 'Customer');
+          localStorage.setItem('gb_customer_profile', JSON.stringify({
+            uid: authUser.uid,
+            phone: clean,
+            name: name.trim() || 'Customer',
+            preferred_language: lang
+          }));
         } catch {}
         onSuccess(sessionUser);
       }
@@ -307,13 +335,14 @@ export function MobileLogin({
   };
 
   return (
-    <PullToRefresh className="w-full flex items-center justify-center">
-      <div className="max-w-md w-full mx-auto bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden font-sans relative select-none">
-        {/* Invisible container for Firebase test phone auth reCAPTCHA */}
-        <div id="recaptcha-test-container" style={{ position: 'fixed', bottom: 0, opacity: 0, pointerEvents: 'none', zIndex: -1 }} />
+    <div className="min-h-[100dvh] w-full bg-slate-50 flex items-center justify-center font-sans select-none p-0 sm:p-4">
+      <PullToRefresh className="w-full flex items-center justify-center">
+        <div className="w-full max-w-md min-h-[100dvh] sm:min-h-[620px] mx-auto bg-white sm:rounded-3xl sm:shadow-2xl sm:border border-slate-100 overflow-hidden font-sans relative flex flex-col justify-between">
+          {/* Invisible container for Firebase test phone auth reCAPTCHA */}
+          <div id="recaptcha-test-container" style={{ position: 'fixed', bottom: 0, opacity: 0, pointerEvents: 'none', zIndex: -1 }} />
 
-        {/* Brand Header */}
-        <div className="bg-[#0F9D58] p-6 text-white text-center relative border-b border-emerald-700/50">
+          {/* Brand Header with Safe Area Inset Top */}
+          <div className="bg-[#0F9D58] p-6 text-white text-center relative border-b border-emerald-700/50 pt-[calc(1.5rem+env(safe-area-inset-top,0px))]">
           {/* Logo Monogram */}
           <div className="w-14 h-14 mx-auto rounded-2xl bg-white shadow-lg shadow-black/10 flex items-center justify-center mb-3">
             <svg
@@ -338,7 +367,7 @@ export function MobileLogin({
           </p>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 flex-1 flex flex-col justify-between pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
           {/* Human-Readable Error Message Display */}
           {error && (
             <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-start space-x-2 leading-relaxed">
@@ -486,6 +515,7 @@ export function MobileLogin({
       </div>
       </div>
     </PullToRefresh>
+  </div>
   );
 }
 
