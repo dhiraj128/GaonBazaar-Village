@@ -91,12 +91,38 @@
     #location-picker-canvas img {
       max-width: none !important;
     }
+    .customer-authenticated #page-language,
+    .customer-authenticated #page-login {
+      display: none !important;
+    }
+    .customer-authenticated #dashboard-container {
+      display: flex !important;
+    }
   </style>
+  <script>
+    (function() {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var pLang = params.get('lang');
+        if (pLang === 'en' || pLang === 'hi') {
+          localStorage.setItem('gb_customer_lang', pLang);
+        }
+        var isAuth = localStorage.getItem('gb_customer_authenticated') === 'true' ||
+                     localStorage.getItem('gb_customer_logged_in') === 'true' ||
+                     localStorage.getItem('gb_auth_authenticated') === 'true' ||
+                     !!localStorage.getItem('gb_customer_token') ||
+                     params.get('embedded') === 'true';
+        if (isAuth) {
+          document.documentElement.classList.add('customer-authenticated');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex justify-center selection:bg-emerald-500 selection:text-white">
 
   <!-- Mobile Container (Max Width 448px) -->
-  <div class="w-full max-w-md bg-white min-h-screen flex flex-col shadow-2xl relative pb-20 overflow-x-hidden">
+  <div class="w-full max-w-md bg-white min-h-[100dvh] flex flex-col sm:shadow-2xl relative pb-[calc(5rem+env(safe-area-inset-bottom,0px))] overflow-x-hidden">
 
     
     <!-- ===================================================================== -->
@@ -405,7 +431,7 @@
     <!-- ===================================================================== -->
     <!-- 1. LANGUAGE SELECTION ONBOARDING SCREEN -->
     <!-- ===================================================================== -->
-    <section id="page-language" class="flex-1 flex flex-col p-6 justify-between bg-gradient-to-b from-emerald-50/50 to-white">
+    <section id="page-language" class="hidden flex-1 flex flex-col p-6 justify-between bg-gradient-to-b from-emerald-50/50 to-white">
       <div class="pt-8 space-y-6">
         <div class="flex items-center space-x-3">
           <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-emerald-600/30">
@@ -1458,7 +1484,7 @@
       <!-- ===================================================================== -->
       <!-- FIXED BOTTOM NAVIGATION BAR (5 TABS) -->
       <!-- ===================================================================== -->
-      <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 px-2 py-1.5 flex justify-around items-center shadow-lg">
+      <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 px-2 py-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex justify-around items-center shadow-lg">
         
         <!-- Tab 1: Home -->
         <button onclick="switchTab('home')" id="nav-btn-home" class="flex-1 py-1 flex flex-col items-center justify-center text-emerald-700 font-bold transition active:scale-95">
