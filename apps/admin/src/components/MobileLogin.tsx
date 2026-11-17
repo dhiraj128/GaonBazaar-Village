@@ -335,187 +335,187 @@ export function MobileLogin({
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-slate-50 flex items-center justify-center font-sans select-none p-0 sm:p-4">
+    <div className="min-h-[100dvh] w-full bg-gradient-to-b from-slate-100 via-emerald-50/20 to-slate-100 flex flex-col justify-center items-center font-sans select-none p-4 sm:p-6 py-6 sm:py-10 overflow-y-auto">
       <PullToRefresh className="w-full flex items-center justify-center">
-        <div className="w-full max-w-md min-h-[100dvh] sm:min-h-[620px] mx-auto bg-white sm:rounded-3xl sm:shadow-2xl sm:border border-slate-100 overflow-hidden font-sans relative flex flex-col justify-between">
+        <div className="w-full max-w-md my-auto bg-white rounded-3xl shadow-2xl shadow-emerald-950/10 border border-slate-100 overflow-hidden font-sans relative flex flex-col transition-all duration-300">
           {/* Invisible container for Firebase test phone auth reCAPTCHA */}
           <div id="recaptcha-test-container" style={{ position: 'fixed', bottom: 0, opacity: 0, pointerEvents: 'none', zIndex: -1 }} />
 
-          {/* Brand Header with Safe Area Inset Top */}
-          <div className="bg-[#0F9D58] p-6 text-white text-center relative border-b border-emerald-700/50 pt-[calc(1.5rem+env(safe-area-inset-top,0px))]">
-          {/* Logo Monogram */}
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-white shadow-lg shadow-black/10 flex items-center justify-center mb-3">
-            <svg
-              className="w-9 h-9 text-[#0F9D58]"
-              viewBox="0 0 64 64"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M32 6L8 24H56L32 6Z" fill="#0F9D58" />
-              <rect x="14" y="24" width="36" height="28" rx="2" fill="#E8F5E9" />
-              <rect x="18" y="28" width="6" height="20" rx="1" fill="#0F9D58" />
-              <rect x="29" y="32" width="6" height="16" rx="1" fill="#0F9D58" />
-              <rect x="40" y="28" width="6" height="20" rx="1" fill="#0F9D58" />
-              <circle cx="20" cy="54" r="4" fill="#1B5E20" />
-              <circle cx="44" cy="54" r="4" fill="#1B5E20" />
-              <path d="M12 54H52" stroke="#1B5E20" strokeWidth="3" strokeLinecap="round" />
-            </svg>
+          {/* Brand Header with Safe Area Inset Top & Balanced Padding */}
+          <div className="bg-gradient-to-b from-[#0F9D58] via-[#0E9352] to-[#0B8043] p-6 sm:p-8 landscape:p-4 text-white text-center relative border-b border-emerald-700/50 pt-[calc(1.75rem+env(safe-area-inset-top,0px))] landscape:pt-4">
+            {/* Logo Monogram */}
+            <div className="w-16 h-16 landscape:w-11 landscape:h-11 mx-auto rounded-2xl bg-white shadow-xl shadow-black/15 flex items-center justify-center mb-3.5 landscape:mb-1.5 p-2 transition-transform hover:scale-105 active:scale-95">
+              <svg
+                className="w-10 h-10 landscape:w-7 landscape:h-7 text-[#0F9D58]"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M32 6L8 24H56L32 6Z" fill="#0F9D58" />
+                <rect x="14" y="24" width="36" height="28" rx="2" fill="#E8F5E9" />
+                <rect x="18" y="28" width="6" height="20" rx="1" fill="#0F9D58" />
+                <rect x="29" y="32" width="6" height="16" rx="1" fill="#0F9D58" />
+                <rect x="40" y="28" width="6" height="20" rx="1" fill="#0F9D58" />
+                <circle cx="20" cy="54" r="4" fill="#1B5E20" />
+                <circle cx="44" cy="54" r="4" fill="#1B5E20" />
+                <path d="M12 54H52" stroke="#1B5E20" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+            </div>
+            <h2 className="text-2xl sm:text-[26px] landscape:text-lg font-black tracking-tight text-white">{t.title}</h2>
+            <p className="text-xs sm:text-[13px] landscape:text-[11px] text-emerald-100/90 mt-1.5 max-w-xs mx-auto leading-relaxed">
+              {t.subtitle}
+            </p>
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-white">{t.title}</h2>
-          <p className="text-xs text-emerald-100 mt-1 max-w-xs mx-auto leading-relaxed">
-            {t.subtitle}
-          </p>
-        </div>
 
-        <div className="p-6 space-y-5 flex-1 flex flex-col justify-between pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
-          {/* Human-Readable Error Message Display */}
-          {error && (
-            <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-xs flex items-start space-x-2 leading-relaxed">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-              <div className="flex-1 font-medium">{error}</div>
-            </div>
-          )}
-
-          {statusMessage && !error && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-[#0F9D58] shrink-0" />
-              <span>{statusMessage}</span>
-            </div>
-          )}
-
-        {step === 'phone' ? (
-          <form onSubmit={handleSendOtp} autoComplete="off" className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                {t.phoneLabel}
-              </label>
-                <div className="relative flex items-center">
-                  <div className="absolute left-3.5 flex items-center space-x-1 text-xs font-bold text-slate-700 border-r border-slate-200 pr-2 select-none">
-                    <span>🇮🇳</span>
-                    <span className="font-mono text-[#0F9D58] font-extrabold">+91</span>
-                  </div>
-                  <input
-                    type="tel"
-                    name="gb_usr_reg_phone"
-                    id="customer-phone-field"
-                    maxLength={10}
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck={false}
-                    data-lpignore="true"
-                    data-form-type="other"
-                    placeholder={t.phonePlaceholder}
-                    required
-                    className="w-full pl-20 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-semibold text-slate-800 outline-none focus:border-[#0F9D58] focus:bg-white transition"
-                  />
-                </div>
-              <p className="text-[10px] text-slate-400 mt-1">
-                {t.phoneHelper}
-              </p>
-            </div>
-
-            {/* Send OTP Button with Visual Loading State */}
-            <button
-              id="send-otp-btn"
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3.5 bg-[#0F9D58] hover:bg-[#0D874C] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-sm cursor-pointer active:scale-98"
-            >
-              {isLoading ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  <span>{t.sendingBtn}</span>
-                </>
-              ) : (
-                <>
-                  <span>{t.sendBtn}</span>
-                  <Send className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleVerifyOtp} autoComplete="off" className="space-y-4">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-slate-600">
-                {t.codeSentTo} <strong className="text-slate-900">+91 {phone}</strong>
-              </span>
-              <button
-                type="button"
-                onClick={() => setStep('phone')}
-                className="text-[#0F9D58] font-bold hover:underline"
-              >
-                {t.changeBtn}
-              </button>
-            </div>
-
-            <div>
-              <label className="block text-center text-xs font-semibold text-slate-600 mb-2">
-                {t.otpTitle}
-              </label>
-              <div className="flex justify-center items-center gap-2">
-                {otp.map((digit, idx) => (
-                  <input
-                    key={idx}
-                    id={`react-otp-${idx}`}
-                    type="tel"
-                    maxLength={1}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck={false}
-                    data-lpignore="true"
-                    value={digit}
-                    onChange={(e) => handleOtpChange(idx, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                    className="w-11 h-12 text-center text-lg font-bold font-mono bg-slate-50 border border-slate-200 rounded-xl focus:border-[#0F9D58] focus:bg-white outline-none transition"
-                  />
-                ))}
+          <div className="p-6 sm:p-8 landscape:p-5 space-y-5 sm:space-y-6 flex-1 flex flex-col justify-center bg-white pb-[calc(1.75rem+env(safe-area-inset-bottom,0px))] landscape:pb-4">
+            {/* Human-Readable Error Message Display */}
+            {error && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl text-xs flex items-start space-x-2.5 leading-relaxed shadow-xs">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="flex-1 font-medium">{error}</div>
               </div>
+            )}
+
+            {statusMessage && !error && (
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs flex items-center space-x-2.5 shadow-xs">
+                <CheckCircle2 className="w-4 h-4 text-[#0F9D58] shrink-0" />
+                <span className="font-medium">{statusMessage}</span>
+              </div>
+            )}
+
+            {step === 'phone' ? (
+              <form onSubmit={handleSendOtp} autoComplete="off" className="space-y-4 sm:space-y-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    {t.phoneLabel}
+                  </label>
+                  <div className="relative flex items-center rounded-2xl border-2 border-slate-200 bg-slate-50/70 focus-within:border-[#0F9D58] focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all shadow-xs">
+                    <div className="pl-3.5 pr-2.5 py-3.5 flex items-center space-x-1.5 text-xs font-bold text-slate-700 border-r border-slate-200 select-none">
+                      <span className="text-sm">🇮🇳</span>
+                      <span className="font-mono text-[#0F9D58] font-black">+91</span>
+                    </div>
+                    <input
+                      type="tel"
+                      name="gb_usr_reg_phone"
+                      id="customer-phone-field"
+                      maxLength={10}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                      data-lpignore="true"
+                      data-form-type="other"
+                      placeholder={t.phonePlaceholder}
+                      required
+                      className="w-full px-3.5 py-3.5 bg-transparent text-sm sm:text-base font-mono font-bold text-slate-900 outline-none placeholder:text-slate-400 placeholder:font-normal tracking-wider"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-2 flex items-center space-x-1">
+                    <span>{t.phoneHelper}</span>
+                  </p>
+                </div>
+
+                {/* Send OTP Button with Visual Loading State */}
+                <button
+                  id="send-otp-btn"
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-4 bg-[#0F9D58] hover:bg-[#0D874C] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black rounded-2xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center space-x-2 text-sm sm:text-base cursor-pointer tracking-wide"
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      <span>{t.sendingBtn}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{t.sendBtn}</span>
+                      <Send className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} autoComplete="off" className="space-y-5">
+                <div className="flex justify-between items-center text-xs p-3 bg-emerald-50 rounded-2xl border border-emerald-100">
+                  <span className="text-slate-600 font-medium">
+                    {t.codeSentTo} <strong className="text-slate-900 font-bold font-mono">+91 {phone}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setStep('phone')}
+                    className="text-[#0F9D58] font-bold hover:underline"
+                  >
+                    {t.changeBtn}
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-center text-xs font-semibold text-slate-600 mb-2.5">
+                    {t.otpTitle}
+                  </label>
+                  <div className="flex justify-center items-center gap-1.5 sm:gap-2.5 max-w-full mx-auto">
+                    {otp.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        id={`react-otp-${idx}`}
+                        type="tel"
+                        maxLength={1}
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck={false}
+                        data-lpignore="true"
+                        value={digit}
+                        onChange={(e) => handleOtpChange(idx, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                        className="w-11 sm:w-12 h-14 text-center text-xl font-bold font-mono bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-[#0F9D58] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-xs"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading || otp.join('').length !== 6}
+                  className="w-full py-4 bg-[#0F9D58] hover:bg-[#0D874C] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black rounded-2xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center space-x-2 text-sm sm:text-base cursor-pointer tracking-wide"
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                      <span>{t.verifyingBtn}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{t.verifyBtn}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+
+                <div className="text-center pt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleSendOtp()}
+                    disabled={isLoading}
+                    className="text-xs text-slate-500 hover:text-[#0F9D58] font-semibold underline transition-colors"
+                  >
+                    {t.resendBtn}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Upgraded Trust Badge: Strict i18n & Tailwind Typography */}
+            <div className="pt-2 text-xs font-medium text-slate-400 tracking-wide flex items-center justify-center gap-1.5 select-none text-center">
+              <span>{t.trustBadge}</span>
             </div>
-
-            <button
-              type="submit"
-              disabled={isLoading || otp.join('').length !== 6}
-              className="w-full py-3.5 bg-[#0F9D58] hover:bg-[#0D874C] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition flex items-center justify-center space-x-2 text-sm cursor-pointer active:scale-98"
-            >
-              {isLoading ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                  <span>{t.verifyingBtn}</span>
-                </>
-              ) : (
-                <>
-                  <span>{t.verifyBtn}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-
-            <div className="text-center pt-1">
-              <button
-                type="button"
-                onClick={() => handleSendOtp()}
-                disabled={isLoading}
-                className="text-xs text-slate-500 hover:text-[#0F9D58] font-semibold underline"
-              >
-                {t.resendBtn}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Upgraded Trust Badge: Strict i18n & Tailwind Typography */}
-        <div className="text-xs font-medium text-gray-500 tracking-wide mt-4 flex items-center justify-center gap-1 select-none">
-          <span>{t.trustBadge}</span>
+          </div>
         </div>
-      </div>
-      </div>
-    </PullToRefresh>
-  </div>
+      </PullToRefresh>
+    </div>
   );
 }
 

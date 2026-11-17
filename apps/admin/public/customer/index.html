@@ -513,8 +513,11 @@
     <!-- ===================================================================== -->
     <!-- 1. LANGUAGE SELECTION ONBOARDING SCREEN -->
     <!-- ===================================================================== -->
-    <section id="page-language" class="hidden flex-1 flex flex-col p-6 justify-between bg-gradient-to-b from-emerald-50/50 to-white">
-      <div class="pt-8 space-y-6">
+        <!-- ===================================================================== -->
+    <!-- 1. LANGUAGE SELECTION ONBOARDING SCREEN -->
+    <!-- ===================================================================== -->
+    <section id="page-language" class="hidden flex-1 flex flex-col p-4 sm:p-6 justify-center items-center bg-gradient-to-b from-slate-100 via-emerald-50/20 to-slate-100 overflow-y-auto">
+      <div class="w-full max-w-md my-auto bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 space-y-6 landscape:p-5 landscape:space-y-3">
         <div class="flex items-center space-x-3">
           <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-emerald-600/30">
             GB
@@ -525,7 +528,7 @@
           </div>
         </div>
 
-        <div class="space-y-2 pt-4">
+        <div class="space-y-2 pt-1">
           <h2 class="text-2xl font-extrabold text-slate-900" data-i18n="select_language_title">Choose Language</h2>
           <p class="text-xs text-slate-600 leading-relaxed" data-i18n="select_language_sub">
             Select your preferred language for grocery shopping and voice assistant.
@@ -533,7 +536,7 @@
         </div>
 
         <!-- Language Choice Cards (Fully Controlled State) -->
-        <div class="space-y-3 pt-2">
+        <div class="space-y-3 pt-1 landscape:grid landscape:grid-cols-2 landscape:gap-3 landscape:space-y-0">
           <!-- English -->
           <button type="button" onclick="selectLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between transition-all duration-200 shadow-sm active:scale-98">
             <div class="flex items-center space-x-3.5">
@@ -561,21 +564,24 @@
             </div>
           </button>
         </div>
-      </div>
 
-      <div class="pb-6">
-        <button onclick="proceedFromLanguage()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
-          <span data-i18n="continue_btn">Continue / आगे बढ़ें</span>
-          <i data-lucide="arrow-right" class="w-4 h-4"></i>
-        </button>
+        <div class="pt-4">
+          <button onclick="proceedFromLanguage()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
+            <span data-i18n="continue_btn">Continue / आगे बढ़ें</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </div>
       </div>
     </section>
 
     <!-- ===================================================================== -->
     <!-- 2. LOGIN & OTP VERIFICATION SCREEN -->
     <!-- ===================================================================== -->
-    <section id="page-login" class="hidden flex-1 flex flex-col p-6 justify-between bg-white overflow-y-auto">
-      <div class="pt-4 space-y-5">
+        <!-- ===================================================================== -->
+    <!-- 2. LOGIN & OTP VERIFICATION SCREEN -->
+    <!-- ===================================================================== -->
+    <section id="page-login" class="hidden flex-1 flex flex-col p-4 sm:p-6 justify-center items-center bg-gradient-to-b from-slate-100 via-emerald-50/20 to-slate-100 overflow-y-auto">
+      <div class="w-full max-w-md my-auto bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 space-y-5 landscape:p-5 landscape:space-y-3">
         <button onclick="historyBack()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition active:scale-95" aria-label="Back">
           <i data-lucide="arrow-left" class="w-4 h-4"></i>
         </button>
@@ -656,10 +662,10 @@
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
         </div>
-      </div>
 
-      <div class="py-6 text-center text-[11px] text-slate-400">
-        <p data-i18n="terms_notice">By continuing, you agree to GaonBazaar Rural Delivery Terms & Privacy Policy.</p>
+        <div class="pt-4 text-center text-[11px] text-slate-400">
+          <p data-i18n="terms_notice">By continuing, you agree to GaonBazaar Rural Delivery Terms & Privacy Policy.</p>
+        </div>
       </div>
     </section>
 

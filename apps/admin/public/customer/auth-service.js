@@ -316,7 +316,6 @@ export async function sendCustomerOTP() {
     }
   }
 }
-}
 
 /**
  * Step 2: Verify OTP with Firebase and Synchronize with Supabase

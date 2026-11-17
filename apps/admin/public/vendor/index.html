@@ -164,117 +164,121 @@
       <!-- ONBOARDING FLOW (PHASE 1: 7 STRICT SCREENS) -->
       <!-- ======================================================================= -->
       
-      <!-- PAGE 1: LANGUAGE SELECTION -->
-      <div id="screen-onboarding-1" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
-        <div class="pt-6 text-center">
-          <div class="w-20 h-20 bg-emerald-100 text-emerald-700 rounded-3xl mx-auto flex items-center justify-center shadow-inner mb-5">
-            <i data-lucide="store" class="w-10 h-10"></i>
-          </div>
-          <h2 class="text-2xl font-extrabold text-slate-900 mb-2" data-i18n="select_language_title">Choose Your Language</h2>
-          <p class="text-sm text-slate-500 mb-8" data-i18n="select_language_sub">अपनी पसंदीदा भाषा चुनें / Select preferred language to continue</p>
-          
-          <div class="space-y-4 max-w-xs mx-auto">
-            <button type="button" onclick="setLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
-              <div class="flex items-center space-x-3">
-                <span class="text-xl">🇬🇧</span>
-                <span class="text-base font-bold">English</span>
-              </div>
-              <div id="check-icon-en" class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                <i data-lucide="check" class="w-3.5 h-3.5"></i>
-              </div>
-            </button>
-
-            <button type="button" onclick="setLanguage('hi')" id="lang-btn-hi" class="w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
-              <div class="flex items-center space-x-3">
-                <span class="text-xl">🇮🇳</span>
-                <span class="text-base font-bold">हिन्दी (Hindi)</span>
-              </div>
-              <div id="check-icon-hi" class="w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold">
-              </div>
-            </button>
-          </div>
-        </div>
-
-        <div class="pt-6">
-          <button onclick="navigateTo('onboarding-2')" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
-            <span data-i18n="continue_btn">Continue</span>
-            <i data-lucide="arrow-right" class="w-4 h-4"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- PAGE 2: MOBILE REGISTRATION & OTP -->
-      <div id="screen-onboarding-2" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
-        <div>
-          <button onclick="handleHistoryBack()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition active:scale-95 mb-4" aria-label="Back">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i>
-          </button>
-
-          <div class="space-y-1.5 mb-5">
-            <h2 class="text-2xl font-extrabold text-slate-900" data-i18n="login_title">Mobile Login</h2>
-            <p class="text-xs text-slate-500 leading-relaxed" data-i18n="login_sub">Enter your mobile number to receive a secure 6-digit SMS verification code on your phone.</p>
-          </div>
-
-          <!-- Step 1: Mobile Input Section -->
-          <div id="phone-input-section" class="space-y-4 pt-1">
-            <div>
-              <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="phone_number_label">Mobile Number (India)</label>
-              <div class="relative flex items-center">
-                <div class="absolute left-3.5 flex items-center space-x-1.5 text-xs font-bold text-slate-700 border-r border-slate-300 pr-2.5 select-none">
-                  <span>🇮🇳</span>
-                  <span class="font-mono text-emerald-800 font-extrabold">+91</span>
+            <!-- PAGE 1: LANGUAGE SELECTION -->
+      <div id="screen-onboarding-1" class="app-screen flex-1 p-4 sm:p-6 flex flex-col justify-center items-center overflow-y-auto hidden">
+        <div class="w-full max-w-md my-auto bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 text-center space-y-6 landscape:p-5 landscape:space-y-3">
+          <div>
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-2xl mx-auto flex items-center justify-center shadow-inner mb-4">
+              <i data-lucide="store" class="w-8 h-8"></i>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 mb-1.5" data-i18n="select_language_title">Choose Your Language</h2>
+            <p class="text-xs text-slate-500 mb-6" data-i18n="select_language_sub">अपनी पसंदीदा भाषा चुनें / Select preferred language to continue</p>
+            
+            <div class="space-y-3 max-w-xs mx-auto landscape:max-w-md landscape:grid landscape:grid-cols-2 landscape:gap-3 landscape:space-y-0">
+              <button type="button" onclick="setLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-xs transition active:scale-98">
+                <div class="flex items-center space-x-3">
+                  <span class="text-xl">🇬🇧</span>
+                  <span class="text-base font-bold">English</span>
                 </div>
-                <input type="tel" id="vendor-phone-input" maxlength="10" placeholder="Enter 10-digit mobile number" value="" autocomplete="off" class="w-full pl-20 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs font-mono font-bold">
-              </div>
-              <p class="text-[10px] text-slate-400 mt-1" data-i18n="sms_dispatched_note">Instant SMS OTP delivered to your mobile phone</p>
-            </div>
+                <div id="check-icon-en" class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                </div>
+              </button>
 
-            <!-- Invisible reCAPTCHA container -->
-            <div id="recaptcha-container"></div>
-
-            <button id="send-otp-btn" onclick="sendMobileOTP()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
-              <span id="send-otp-text" data-i18n="send_otp_btn">Send OTP</span>
-              <i data-lucide="send" class="w-4 h-4"></i>
-            </button>
-          </div>
-
-          <!-- Step 2: 6-Digit OTP Container -->
-          <div id="otp-container" class="space-y-4 pt-4 hidden">
-            <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-between">
-              <div class="text-xs text-emerald-900">
-                <span class="font-medium" data-i18n="otp_sent_to">Code sent to:</span> <span id="otp-phone-display" class="font-bold font-mono">+91 ----------</span>
-              </div>
-              <button onclick="resetVendorPhone()" class="text-xs text-emerald-700 font-bold hover:underline" data-i18n="change_number">Change</button>
-            </div>
-
-            <div class="space-y-2">
-              <label class="block text-center text-[11px] font-semibold text-slate-600" data-i18n="enter_otp_label">Enter 6-Digit OTP</label>
-              <div class="flex justify-center items-center gap-1.5 sm:gap-2 max-w-full mx-auto px-1">
-                <input type="text" maxlength="1" id="otp-1" autocomplete="off" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
-                <input type="text" maxlength="1" id="otp-2" autocomplete="off" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
-                <input type="text" maxlength="1" id="otp-3" autocomplete="off" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
-                <input type="text" maxlength="1" id="otp-4" autocomplete="off" oninput="handleOtpInput(4, event)" onkeydown="handleOtpKey(4, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
-                <input type="text" maxlength="1" id="otp-5" autocomplete="off" oninput="handleOtpInput(5, event)" onkeydown="handleOtpKey(5, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
-                <input type="text" maxlength="1" id="otp-6" autocomplete="off" oninput="handleOtpInput(6, event)" onkeydown="handleOtpKey(6, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
-              </div>
-            </div>
-
-            <div class="flex justify-between items-center text-xs text-slate-500 pt-1">
-              <span></span>
-              <button onclick="sendMobileOTP()" class="text-emerald-600 font-semibold hover:underline" data-i18n="resend_otp">Resend OTP</button>
-            </div>
-
-            <div class="pt-4">
-              <button id="verify-otp-btn" onclick="verifyMobileOTP()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
-                <span id="verify-btn-text" data-i18n="verify_proceed">Verify & Proceed</span>
-                <i data-lucide="check" class="w-4 h-4"></i>
+              <button type="button" onclick="setLanguage('hi')" id="lang-btn-hi" class="w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-xs transition active:scale-98">
+                <div class="flex items-center space-x-3">
+                  <span class="text-xl">🇮🇳</span>
+                  <span class="text-base font-bold">हिन्दी (Hindi)</span>
+                </div>
+                <div id="check-icon-hi" class="w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold">
+                </div>
               </button>
             </div>
           </div>
-        </div>
 
-        <div class="py-6 text-center text-[11px] text-slate-400">
-          <p data-i18n="terms_notice">By continuing, you agree to GaonBazaar Terms & Conditions.</p>
+          <div class="pt-2">
+            <button onclick="navigateTo('onboarding-2')" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+              <span data-i18n="continue_btn">Continue</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+            <!-- PAGE 2: MOBILE REGISTRATION & OTP -->
+      <div id="screen-onboarding-2" class="app-screen flex-1 p-4 sm:p-6 flex flex-col justify-center items-center overflow-y-auto hidden">
+        <div class="w-full max-w-md my-auto bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 space-y-5 landscape:p-5 landscape:space-y-3">
+          <div>
+            <button onclick="handleHistoryBack()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition active:scale-95 mb-4" aria-label="Back">
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </button>
+
+            <div class="space-y-1.5 mb-5">
+              <h2 class="text-2xl font-extrabold text-slate-900" data-i18n="login_title">Mobile Login</h2>
+              <p class="text-xs text-slate-500 leading-relaxed" data-i18n="login_sub">Enter your mobile number to receive a secure 6-digit SMS verification code on your phone.</p>
+            </div>
+
+            <!-- Step 1: Mobile Input Section -->
+            <div id="phone-input-section" class="space-y-4 pt-1">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="phone_number_label">Mobile Number (India)</label>
+                <div class="relative flex items-center">
+                  <div class="absolute left-3.5 flex items-center space-x-1.5 text-xs font-bold text-slate-700 border-r border-slate-300 pr-2.5 select-none">
+                    <span>🇮🇳</span>
+                    <span class="font-mono text-emerald-800 font-extrabold">+91</span>
+                  </div>
+                  <input type="tel" id="vendor-phone-input" maxlength="10" placeholder="Enter 10-digit mobile number" value="" autocomplete="off" class="w-full pl-20 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs font-mono font-bold">
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1" data-i18n="sms_dispatched_note">Instant SMS OTP delivered to your mobile phone</p>
+              </div>
+
+              <!-- Invisible reCAPTCHA container -->
+              <div id="recaptcha-container"></div>
+
+              <button id="send-otp-btn" onclick="sendMobileOTP()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
+                <span id="send-otp-text" data-i18n="send_otp_btn">Send OTP</span>
+                <i data-lucide="send" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <!-- Step 2: 6-Digit OTP Container -->
+            <div id="otp-container" class="space-y-4 pt-4 hidden">
+              <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-between">
+                <div class="text-xs text-emerald-900">
+                  <span class="font-medium" data-i18n="otp_sent_to">Code sent to:</span> <span id="otp-phone-display" class="font-bold font-mono">+91 ----------</span>
+                </div>
+                <button onclick="resetVendorPhone()" class="text-xs text-emerald-700 font-bold hover:underline" data-i18n="change_number">Change</button>
+              </div>
+
+              <div class="space-y-2">
+                <label class="block text-center text-[11px] font-semibold text-slate-600" data-i18n="enter_otp_label">Enter 6-Digit OTP</label>
+                <div class="flex justify-center items-center gap-1.5 sm:gap-2 max-w-full mx-auto px-1">
+                  <input type="text" maxlength="1" id="otp-1" autocomplete="off" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
+                  <input type="text" maxlength="1" id="otp-2" autocomplete="off" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
+                  <input type="text" maxlength="1" id="otp-3" autocomplete="off" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
+                  <input type="text" maxlength="1" id="otp-4" autocomplete="off" oninput="handleOtpInput(4, event)" onkeydown="handleOtpKey(4, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
+                  <input type="text" maxlength="1" id="otp-5" autocomplete="off" oninput="handleOtpInput(5, event)" onkeydown="handleOtpKey(5, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
+                  <input type="text" maxlength="1" id="otp-6" autocomplete="off" oninput="handleOtpInput(6, event)" onkeydown="handleOtpKey(6, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center text-xs text-slate-500 pt-1">
+                <span></span>
+                <button onclick="sendMobileOTP()" class="text-emerald-600 font-semibold hover:underline" data-i18n="resend_otp">Resend OTP</button>
+              </div>
+
+              <div class="pt-4">
+                <button id="verify-otp-btn" onclick="verifyMobileOTP()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
+                  <span id="verify-btn-text" data-i18n="verify_proceed">Verify & Proceed</span>
+                  <i data-lucide="check" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 text-center text-[11px] text-slate-400">
+            <p data-i18n="terms_notice">By continuing, you agree to GaonBazaar Terms & Conditions.</p>
+          </div>
         </div>
       </div>
 
