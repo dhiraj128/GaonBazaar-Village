@@ -3198,13 +3198,127 @@
     // ---------------------------------------------------------------------------
     // PAGE 2: MOBILE & OTP LOGIC
     // ---------------------------------------------------------------------------
-    function resetVendorPhone() {
-      document.getElementById('otp-container')?.classList.add('hidden');
-      document.getElementById('phone-input-section')?.classList.remove('hidden');
-      document.getElementById('vendor-phone-input')?.focus();
+    let resendTimerInterval = null;
+
+    function startResendCooldown(seconds = 30) {
+      const resendBtn = document.getElementById('resend-otp-btn');
+      const timerEl = document.getElementById('resend-countdown');
+      if (resendBtn) {
+        resendBtn.disabled = true;
+        resendBtn.classList.add('pointer-events-none', 'text-slate-400');
+        resendBtn.classList.remove('text-emerald-600', 'hover:underline');
+      }
+
+      if (resendTimerInterval) clearInterval(resendTimerInterval);
+
+      let remaining = seconds;
+      const updateText = () => {
+        if (timerEl) {
+          timerEl.innerText = remaining > 0 ? (currentLang === 'hi' ? `${remaining}s में पुनः भेजें` : `Resend in ${remaining}s`) : '';
+        }
+      };
+      updateText();
+
+      resendTimerInterval = setInterval(() => {
+        remaining--;
+        updateText();
+        if (remaining <= 0) {
+          clearInterval(resendTimerInterval);
+          resendTimerInterval = null;
+          if (resendBtn) {
+            resendBtn.disabled = false;
+            resendBtn.classList.remove('pointer-events-none', 'text-slate-400');
+            resendBtn.classList.add('text-emerald-600', 'hover:underline');
+          }
+        }
+      }, 1000);
     }
 
-    async function sendMobileOTP() {
+    function updateAuthHeadings(step) {
+      const heading = document.getElementById('auth-heading');
+      const sub = document.getElementById('auth-subtext');
+      if (step === 'otp') {
+        if (heading) heading.innerText = currentLang === 'hi' ? "सत्यापन OTP दर्ज करें" : "Enter Verification OTP";
+        if (sub) sub.innerText = currentLang === 'hi' ? "हमने आपके मोबाइल नंबर पर 4-अंकीय OTP भेजा है।" : "We've sent a 4-digit OTP to your mobile number.";
+      } else {
+        if (heading) heading.innerText = currentLang === 'hi' ? "अपना मोबाइल नंबर सत्यापित करें" : "Verify Your Mobile Number";
+        if (sub) sub.innerText = currentLang === 'hi' ? "वन-टाइम पासवर्ड (OTP) प्राप्त करने के लिए अपना मोबाइल नंबर दर्ज करें।" : "Enter your mobile number to receive a one-time password (OTP).";
+      }
+    }
+
+    function resetVendorPhone() {
+      if (resendTimerInterval) {
+        clearInterval(resendTimerInterval);
+        resendTimerInterval = null;
+      }
+      window.__gb_verification_id = null;
+      for (let i = 1; i <= 4; i++) {
+        const b = document.getElementById('otp-' + i);
+        if (b) b.value = '';
+      }
+      document.getElementById('otp-container')?.classList.add('hidden');
+      document.getElementById('phone-input-section')?.classList.remove('hidden');
+      updateAuthHeadings('phone');
+
+      const sendBtn = document.getElementById('send-otp-btn');
+      if (sendBtn) sendBtn.disabled = false;
+      const sendBtnText = document.getElementById('send-otp-text');
+      if (sendBtnText) {
+        sendBtnText.innerText = currentLang === 'hi' ? "OTP भेजें" : "Send OTP";
+      }
+      const phoneInput = document.getElementById('vendor-phone-input');
+      if (phoneInput) {
+        phoneInput.focus();
+        phoneInput.select();
+      }
+    }
+
+    function handleOtpKey(index, event) {
+      if (event.key === 'Backspace') {
+        const current = event.target;
+        if (!current.value && index > 1) {
+          const prev = document.getElementById('otp-' + (index - 1));
+          if (prev) {
+            prev.focus();
+            prev.value = '';
+          }
+        }
+      } else if (event.key === 'ArrowLeft' && index > 1) {
+        document.getElementById('otp-' + (index - 1))?.focus();
+      } else if (event.key === 'ArrowRight' && index < 4) {
+        document.getElementById('otp-' + (index + 1))?.focus();
+      }
+    }
+
+    function handleOtpInput(index, event) {
+      const input = event.target;
+      let val = input.value.replace(/\D/g, '');
+      input.value = val ? val.slice(-1) : '';
+
+      if (input.value && index < 4) {
+        const next = document.getElementById('otp-' + (index + 1));
+        if (next) {
+          next.focus();
+          next.select();
+        }
+      }
+    }
+
+    function handleOtpPaste(event) {
+      event.preventDefault();
+      const pasteData = (event.clipboardData || window.clipboardData)?.getData('text') || '';
+      const digits = pasteData.replace(/\D/g, '').slice(0, 4);
+      if (!digits) return;
+
+      for (let i = 0; i < 4; i++) {
+        const b = document.getElementById('otp-' + (i + 1));
+        if (b) b.value = digits[i] || '';
+      }
+      const targetIdx = Math.min(digits.length, 4);
+      document.getElementById('otp-' + targetIdx)?.focus();
+    }
+
+    async function sendMobileOTP(isResend = false) {
       try {
         const phoneInput = document.getElementById('vendor-phone-input');
         let raw = (phoneInput?.value || '').trim();
@@ -3220,17 +3334,23 @@
           return;
         }
 
-        const formattedPhoneNumber = `+91${clean}`;
+        const formattedPhoneNumber = `+91 ${clean.slice(0, 5)} ${clean.slice(5)}`;
         state.userProfile.phone = clean;
 
         const sendBtn = document.getElementById('send-otp-btn');
         const sendBtnText = document.getElementById('send-otp-text');
-        if (sendBtn) {
+        const resendBtn = document.getElementById('resend-otp-btn');
+
+        if (sendBtn && !isResend) {
           sendBtn.disabled = true;
           if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "भेजा जा रहा है..." : "Sending...";
         }
+        if (resendBtn && isResend) {
+          resendBtn.disabled = true;
+          resendBtn.innerText = currentLang === 'hi' ? "भेजा जा रहा है..." : "Sending...";
+        }
 
-        console.log("[Message Central] Dispatching 4-digit SMS OTP to:", formattedPhoneNumber);
+        console.log("[Message Central] Dispatching 4-digit SMS OTP to vendor:", formattedPhoneNumber);
         const res = await fetch('/api/send-otp', {
           method: 'POST',
           headers: {
@@ -3245,65 +3365,51 @@
 
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.success) {
-          throw new Error(data.message || data.error || "Failed to send SMS verification code");
+          const errMsg = data.message || data.error || (currentLang === 'hi' ? "SMS OTP भेजने में विफल। कृपया पुनः प्रयास करें।" : "Failed to dispatch SMS verification code");
+          throw new Error(errMsg);
         }
 
         window.__gb_verification_id = data.verificationId || null;
 
         if (sendBtn) {
           sendBtn.disabled = false;
-          if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "पुनः भेजें (30s)" : "Resend (30s)";
+          if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "OTP भेजें" : "Send OTP";
         }
+        if (resendBtn) {
+          resendBtn.innerText = currentLang === 'hi' ? "पुनः OTP भेजें" : "Resend OTP";
+        }
+
         const phoneDisplay = document.getElementById('otp-phone-display');
         if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
 
         document.getElementById('phone-input-section')?.classList.add('hidden');
         document.getElementById('otp-container')?.classList.remove('hidden');
+        updateAuthHeadings('otp');
 
         for (let i = 1; i <= 4; i++) {
           const b = document.getElementById('otp-' + i);
           if (b) b.value = '';
         }
-        toastSuccess(currentLang === 'hi' ? `4-अंकीय OTP ${formattedPhoneNumber} पर भेजा गया` : `4-digit OTP sent to ${formattedPhoneNumber}!`);
+
+        startResendCooldown(30);
+
+        toastSuccess(currentLang === 'hi' ? `4-अंकीय OTP ${formattedPhoneNumber} पर सफलतापूर्वक भेजा गया` : `4-digit OTP sent successfully to ${formattedPhoneNumber}!`);
         const otp1 = document.getElementById('otp-1');
         if (otp1) otp1.focus();
       } catch (err) {
         console.error("[Message Central Send Error]:", err);
         const sendBtn = document.getElementById('send-otp-btn');
         const sendBtnText = document.getElementById('send-otp-text');
+        const resendBtn = document.getElementById('resend-otp-btn');
         if (sendBtn) {
           sendBtn.disabled = false;
           if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "OTP भेजें" : "Send OTP";
         }
+        if (resendBtn) {
+          resendBtn.disabled = false;
+          resendBtn.innerText = currentLang === 'hi' ? "पुनः OTP भेजें" : "Resend OTP";
+        }
         toastError(err?.message || "Failed to dispatch SMS OTP");
-      }
-    }
-
-    function handleOtpKey(index, event) {
-      if (event.key === 'Backspace') {
-        const current = event.target;
-        if (!current.value && index > 1) {
-          const prev = document.getElementById('otp-' + (index - 1));
-          if (prev) prev.focus();
-        }
-      }
-    }
-
-    function handleOtpInput(index, event) {
-      const current = event.target;
-      if (current.value.length > 1) {
-        const pasted = current.value.replace(/\D/g, '').slice(0, 4);
-        for (let i = 0; i < pasted.length; i++) {
-          const box = document.getElementById('otp-' + (i + 1));
-          if (box) box.value = pasted[i];
-        }
-        const target = document.getElementById('otp-' + Math.min(pasted.length + 1, 4));
-        if (target) target.focus();
-        return;
-      }
-      if (current.value.length === 1 && index < 4) {
-        const nextInput = document.getElementById('otp-' + (index + 1));
-        if (nextInput) nextInput.focus();
       }
     }
 
@@ -3323,7 +3429,7 @@
       }
 
       if (btnText) btnText.innerText = currentLang === 'hi' ? "सत्यापित हो रहा है..." : "Verifying...";
-      if (btn) btn.classList.add('opacity-75');
+      if (btn) btn.disabled = true;
 
       const phone = state.userProfile.phone || (document.getElementById('vendor-phone-input')?.value || '').trim();
       const clean = phone.replace(/\D/g, '').slice(-10);
@@ -3346,33 +3452,34 @@
 
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.success) {
-          throw new Error(data.message || data.error || "Invalid or expired OTP");
+          let errMsg = data.message || data.error;
+          if (!errMsg) {
+            errMsg = currentLang === 'hi' ? "अमान्य या समाप्त OTP। कृपया पुनः प्रयास करें।" : "Invalid or expired OTP. Please try again.";
+          }
+          throw new Error(errMsg);
         }
 
         if (btnText) btnText.innerText = currentLang === 'hi' ? "सत्यापित!" : "Verified!";
-        if (btn) btn.classList.remove('opacity-75');
+        if (btn) btn.disabled = false;
 
-        localStorage.setItem('gb_user_phone', clean);
-        localStorage.setItem('gb_auth_phone', clean);
         localStorage.setItem('gb_vendor_phone', clean);
-        localStorage.setItem('gb_auth_authenticated', 'true');
+        localStorage.setItem('gb_vendor_authenticated', 'true');
         const userToken = data.token || data.accessToken || data.customToken;
         if (userToken) {
-          localStorage.setItem('gaonbazaar_admin_jwt_token', userToken);
-          localStorage.setItem('gb_auth_token', userToken);
+          localStorage.setItem('gaonbazaar_vendor_token', userToken);
           localStorage.setItem('gb_vendor_token', userToken);
+          localStorage.setItem('gb_auth_token', userToken);
         }
         toastSuccess(currentLang === 'hi' ? "मोबाइल नंबर सत्यापित! स्वागत है।" : "Mobile number verified successfully!");
         navigateTo('onboarding-3');
       } catch (err) {
         console.error("[Message Central Verify Error]:", err);
-        if (btnText) btnText.innerText = currentLang === 'hi' ? "सत्यापित करें और आगे बढ़ें" : "Verify & Continue";
-        if (btn) btn.classList.remove('opacity-75');
-        toastError(err?.message || "Invalid OTP code. Please try again.");
+        if (btnText) btnText.innerText = currentLang === 'hi' ? "OTP सत्यापित करें और आगे बढ़ें" : "Verify OTP & Continue";
+        if (btn) btn.disabled = false;
+        toastError(err?.message || (currentLang === 'hi' ? "गलत OTP कोड" : "Invalid OTP code"));
       }
     }
 
-    // PAGE 3: BASIC DETAILS LOGIC
     // ---------------------------------------------------------------------------
     function saveBasicDetailsAndProceed() {
       const shop = (document.getElementById('vendor-shopname')?.value || '').trim();
