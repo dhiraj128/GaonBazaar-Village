@@ -1,62 +1,3 @@
-import * as firebaseAdmin from 'firebase-admin';
-
-const admin = (firebaseAdmin as any).default || firebaseAdmin;
-
-function getFirebaseAdmin() {
-  try {
-    if (admin.apps && admin.apps.length > 0) {
-      return admin;
-    }
-
-    const projectId = process.env.FIREBASE_PROJECT_ID || 'gaon-bazaar-village';
-    const serviceAccountEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY
-      ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-      : undefined;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-
-    if (serviceAccountEnv) {
-      try {
-        const creds = typeof serviceAccountEnv === 'string' ? JSON.parse(serviceAccountEnv) : serviceAccountEnv;
-        admin.initializeApp({
-          credential: admin.credential.cert(creds),
-          projectId: creds.project_id || projectId,
-        });
-        return admin;
-      } catch (e) {
-        console.error('[Send OTP] Error parsing FIREBASE_SERVICE_ACCOUNT:', e);
-      }
-    }
-
-    if (privateKey && clientEmail) {
-      try {
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId,
-            clientEmail,
-            privateKey,
-          }),
-          projectId,
-        });
-        return admin;
-      } catch (e) {
-        console.error('[Send OTP] Error initializing with privateKey:', e);
-      }
-    }
-
-    try {
-      admin.initializeApp({ projectId });
-    } catch (e) {
-      console.warn('[Send OTP] Default initialization notice:', e);
-    }
-
-    return admin;
-  } catch (err) {
-    console.warn('[Send OTP] getFirebaseAdmin caught exception:', err);
-    return null;
-  }
-}
-
 // Cross-invocation in-memory cache for Vercel functions
 interface OtpRecord {
   verificationId: string;
@@ -206,16 +147,16 @@ export default async function handler(req: any, res: any) {
     const authToken = process.env.MESSAGE_CENTRAL_AUTH_TOKEN || '';
 
     if (!authToken) {
-      console.error('[Message Central VerifyNow] CRITICAL: MESSAGE_CENTRAL_AUTH_TOKEN not configured in Vercel environment.');
+      console.error('[CRITICAL] Missing MESSAGE_CENTRAL_AUTH_TOKEN in serverless environment.');
       return sendJson(res, 500, {
         success: false,
-        code: 'auth/gateway-not-configured',
-        error: 'SMS OTP Gateway credentials (MESSAGE_CENTRAL_AUTH_TOKEN) are not configured in the server environment.',
-        message: 'SMS OTP Gateway credentials (MESSAGE_CENTRAL_AUTH_TOKEN) are not configured in the server environment.',
+        code: 'auth/missing-credentials',
+        error: 'Server configuration error: SMS gateway authentication credentials are not configured.',
+        message: 'Server configuration error: SMS gateway authentication credentials are not configured.',
       });
     }
 
-    // Step 2: Request real 4-digit SMS OTP from Message Central VerifyNow
+    // Step 2: Dispatch real 4-digit SMS OTP via Message Central VerifyNow API v3
     const params = new URLSearchParams({
       countryCode: '91',
       flowType: 'SMS',
@@ -227,7 +168,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const mcSendUrl = `https://cpaas.messagecentral.com/verification/v3/send?${params.toString()}`;
-    console.log(`[Message Central VerifyNow] Dispatching real 4-digit SMS OTP to +91${clean}...`);
+    console.log(`[Message Central VerifyNow] Dispatching 4-digit OTP to +91${clean}...`);
 
     const mcResponse = await fetch(mcSendUrl, {
       method: 'POST',
@@ -245,18 +186,13 @@ export default async function handler(req: any, res: any) {
       mcData = { responseCode: mcResponse.status, message: mcText };
     }
 
-    console.log(`[Message Central VerifyNow] Response status for +91${clean}:`, mcResponse.status, mcData?.responseCode, mcData?.message);
+    console.log(`[Message Central VerifyNow] Send response status for +91${clean}:`, mcResponse.status, mcData?.responseCode);
 
-    // Step 3: Handle Provider Response & Verification ID
-    const isSuccess =
-      mcResponse.ok &&
-      (mcData.responseCode === 200 || mcData.responseCode === '200') &&
-      mcData.data?.verificationId;
-
-    if (!isSuccess) {
+    // Step 3: Handle provider response
+    if (!mcResponse.ok || (mcData.responseCode !== 200 && mcData.responseCode !== '200') || !mcData.data?.verificationId) {
       const errDetail =
-        mcData?.message ||
-        mcData?.data?.errorMessage ||
+        mcData.data?.errorMessage ||
+        mcData.message ||
         mcData?.error ||
         `Message Central returned status ${mcResponse.status}`;
 
@@ -273,7 +209,7 @@ export default async function handler(req: any, res: any) {
     const verificationId = String(mcData.data.verificationId);
     const expiresAt = now + 5 * 60 * 1000; // 5-minute validity
 
-    // Step 4: Persist verification session across memory, Supabase, and Firestore
+    // Step 4: Persist verification session across memory and Supabase
     getOtpCache().set(clean, {
       verificationId,
       expiresAt,
@@ -288,23 +224,6 @@ export default async function handler(req: any, res: any) {
       role: role,
       expires_at: new Date(expiresAt).toISOString(),
     });
-
-    try {
-      const fbAdmin = getFirebaseAdmin();
-      if (fbAdmin && fbAdmin.firestore) {
-        await fbAdmin.firestore().collection('otp_challenges').doc(clean).set({
-          verificationId,
-          phoneNumber: clean,
-          role: role,
-          provider: 'message_central_verifynow',
-          expiresAt: new Date(expiresAt).toISOString(),
-          createdAt: new Date().toISOString(),
-          isUsed: false,
-        });
-      }
-    } catch (fsErr) {
-      console.warn('[Send OTP] Firestore sync notice (continuing):', fsErr);
-    }
 
     // Step 5: Respond with success and verificationId
     return sendJson(res, 200, {

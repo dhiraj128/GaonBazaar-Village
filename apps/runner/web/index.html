@@ -82,57 +82,10 @@
       animation: alert-pulse 1.8s infinite;
     }
   </style>
-  <!-- Firebase Auth & Invisible reCAPTCHA SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBVwI7wmdylF7499nrIGJKJP9Nvfj761xA",
-      authDomain: "gaon-bazaar-village.firebaseapp.com",
-      projectId: "gaon-bazaar-village",
-      storageBucket: "gaon-bazaar-village.firebasestorage.app",
-      messagingSenderId: "265333828276",
-      appId: "1:265333828276:web:f2b9ae45032af552e785e1",
-      measurementId: "G-F4E5161KN0"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    window.firebaseAuth = auth;
-
-    window.initInvisibleRecaptcha = function() {
-      if (window.recaptchaVerifier) return window.recaptchaVerifier;
-      const container = document.getElementById('recaptcha-container');
-      if (!container) return null;
-      try {
-        const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible',
-          callback: () => console.log("Invisible reCAPTCHA verified successfully."),
-          'expired-callback': () => {
-            try { window.recaptchaVerifier.clear(); } catch(e){}
-            window.recaptchaVerifier = null;
-          }
-        });
-        verifier.render().then(wId => {
-          window.recaptchaWidgetId = wId;
-          console.log("Invisible reCAPTCHA rendered on mount, widgetId:", wId);
-        }).catch(e => console.warn("reCAPTCHA mount notice:", e));
-        window.recaptchaVerifier = verifier;
-        return verifier;
-      } catch (err) {
-        console.warn("reCAPTCHA verifier init notice:", err);
-        return null;
-      }
-    };
-
-    window.firebaseSignInWithPhone = function(phoneNumber, verifier) {
-      return signInWithPhoneNumber(auth, phoneNumber, verifier);
-    };
-
-    window.addEventListener('DOMContentLoaded', () => {
-      window.initInvisibleRecaptcha();
-    });
+  <!-- Secure Authentication Architecture (Zero Firebase Dependency) -->
+  <script>
+    window.recaptchaVerifier = null;
+    window.initInvisibleRecaptcha = function() { return null; };
   </script>
 </head>
 <body class="bg-slate-900 flex justify-center min-h-screen text-slate-800 antialiased">
@@ -2695,9 +2648,11 @@
         localStorage.setItem('gb_auth_phone', clean);
         localStorage.setItem('gb_runner_phone', clean);
         localStorage.setItem('gb_auth_authenticated', 'true');
-        if (data.customToken) {
-          localStorage.setItem('gaonbazaar_admin_jwt_token', data.customToken);
-          localStorage.setItem('gb_auth_token', data.customToken);
+        const userToken = data.token || data.accessToken || data.customToken;
+        if (userToken) {
+          localStorage.setItem('gaonbazaar_admin_jwt_token', userToken);
+          localStorage.setItem('gb_auth_token', userToken);
+          localStorage.setItem('gb_runner_token', userToken);
         }
         toastSuccess(currentLang === 'hi' ? "मोबाइल नंबर सत्यापित! स्वागत है।" : "Mobile verified! Welcome Runner Partner.");
         navigateTo('onboarding-3');

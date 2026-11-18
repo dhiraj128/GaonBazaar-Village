@@ -21,16 +21,7 @@
     COD_SURCHARGE: env.COD_SURCHARGE || 10.0,
     FREE_DELIVERY_THRESHOLD: env.FREE_DELIVERY_THRESHOLD || 499.0,
 
-    // Firebase Configuration (SMS OTP Authentication)
-    FIREBASE_CONFIG: {
-      apiKey: env.FIREBASE_API_KEY || "AIzaSyBVwI7wmdylF7499nrIGJKJP9Nvfj761xA",
-      authDomain: env.FIREBASE_AUTH_DOMAIN || "gaon-bazaar-village.firebaseapp.com",
-      projectId: env.FIREBASE_PROJECT_ID || "gaon-bazaar-village",
-      storageBucket: env.FIREBASE_STORAGE_BUCKET || "gaon-bazaar-village.firebasestorage.app",
-      messagingSenderId: env.FIREBASE_MESSAGING_SENDER_ID || "265333828276",
-      appId: env.FIREBASE_APP_ID || "1:265333828276:web:f2b9ae45032af552e785e1",
-      measurementId: env.FIREBASE_MEASUREMENT_ID || "G-F4E5161KN0"
-    },
+    
 
     // Supabase Configuration (Primary Relational Database)
     SUPABASE_URL: env.SUPABASE_URL || "https://vxewgvrjhjpntfvsmuez.supabase.co",

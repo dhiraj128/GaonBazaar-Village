@@ -1,214 +1,9 @@
-/**
- * GaonBazaar Customer Authentication & Database Sync Service
- * 
- * Architecture:
- * - Frontend OTP Delivery: Firebase Authentication (SMS via signInWithPhoneNumber & RecaptchaVerifier)
- * - Primary Relational Database: Supabase (public.users table sync)
- * - Paperless KYC: Cashfree SecureID Test API (PAN & Offline Aadhaar OTP verification)
- */
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { 
-  getAuth, 
-  RecaptchaVerifier, 
-  signInWithPhoneNumber 
-} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-// 1. Firebase Configuration (Technical Directive Requirement)
-export const firebaseConfig = (window.APP_CONFIG && window.APP_CONFIG.FIREBASE_CONFIG) || {
-  apiKey: "AIzaSyBVwI7wmdylF7499nrIGJKJP9Nvfj761xA",
-  authDomain: "gaon-bazaar-village.firebaseapp.com",
-  projectId: "gaon-bazaar-village",
-  storageBucket: "gaon-bazaar-village.firebasestorage.app",
-  messagingSenderId: "265333828276",
-  appId: "1:265333828276:web:f2b9ae45032af552e785e1",
-  measurementId: "G-F4E5161KN0"
-};
-
-// Initialize Firebase App & Auth
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-
-// 2. Supabase Configuration & Client Initialization
-export const SUPABASE_URL = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
-export const SUPABASE_ANON_KEY = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
-
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// 3. Cashfree SecureID Configuration
-export const CASHFREE_CLIENT_ID = (window.APP_CONFIG && window.APP_CONFIG.CASHFREE_CLIENT_ID) || "CF11351373DBOMC8KHUJMC73EBPFLG";
-export const CASHFREE_CLIENT_SECRET = (window.APP_CONFIG && window.APP_CONFIG.CASHFREE_CLIENT_SECRET) || (typeof atob !== "undefined" ? atob("Y2Zza19tYV90ZXN0XzI1YTEzMDBmN2MxZTZlZTM5MzA5NDhhZjMyYTRkMDM3X2NlNzA1Yjhi") : "");
-export const CASHFREE_BASE_URL = (window.APP_CONFIG && window.APP_CONFIG.CASHFREE_BASE_URL) || "https://sandbox.cashfree.com/verification";
-
-// State variables
-let confirmationResult = null;
-let recaptchaVerifier = null;
-let resendTimerInterval = null;
-let resendCountdownSeconds = 30;
-let currentAadhaarRefId = null;
-
-/**
- * Initialize invisible reCAPTCHA verifier for Firebase SMS abuse prevention
- */
-export function getOrCreateRecaptchaVerifier() {
-  if (window.recaptchaVerifier) {
-    return window.recaptchaVerifier;
-  }
-
-  let container = document.getElementById('recaptcha-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'recaptcha-container';
-    document.body.appendChild(container);
-  }
-
-  try {
-    recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      size: 'invisible',
-      callback: (response) => {
-        console.log("Invisible reCAPTCHA verified successfully.");
-      },
-      'expired-callback': () => {
-        console.warn("Invisible reCAPTCHA expired, resetting...");
-        resetRecaptcha();
-      }
-    });
-
-    // Pre-render on mount to stabilize widget DOM
-    recaptchaVerifier.render().then((widgetId) => {
-      window.recaptchaWidgetId = widgetId;
-      console.log("Invisible reCAPTCHA pre-rendered on mount, widgetId:", widgetId);
-    }).catch(err => {
-      console.warn("reCAPTCHA pre-render notice:", err);
-    });
-
-    window.recaptchaVerifier = recaptchaVerifier;
-    return recaptchaVerifier;
-  } catch (err) {
-    console.error("Failed to instantiate RecaptchaVerifier:", err);
-    return null;
-  }
-}
-
-export function resetRecaptcha() {
-  if (window.recaptchaVerifier) {
-    try {
-      window.recaptchaVerifier.clear();
-    } catch (e) {}
-    window.recaptchaVerifier = null;
-    recaptchaVerifier = null;
-  }
+export function getOrCreateRecaptchaVerifier() { return null; }
+export function resetRecaptcha() {}
 }
 
 /**
- * Step 1: Send SMS OTP via Message Central VerifyNow (/api/send-otp)
- */
-export async function sendCustomerOTP() {
-  hideAuthError();
-  const phoneInput = document.getElementById('cust-phone-input');
-  const nameInput = document.getElementById('cust-name-input');
-  const rawInput = (phoneInput?.value || '').trim();
-  const name = (nameInput?.value || '').trim();
-
-  // 1. Enforce "+91" Country Code Formatting
-  let clean = rawInput.replace(/[^\d+]/g, '');
-  if (clean.startsWith('+91')) {
-    clean = clean.slice(3);
-  } else if (clean.startsWith('91') && clean.length === 12) {
-    clean = clean.slice(2);
-  } else if (clean.startsWith('0') && clean.length === 11) {
-    clean = clean.slice(1);
-  }
-  clean = clean.replace(/\D/g, '').slice(-10);
-
-  // Validate 10-digit Indian Mobile format (starts with 6-9)
-  if (!/^[6-9]\d{9}$/.test(clean)) {
-    const invalidMsg = window.currentLang === 'hi'
-      ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें (6-9 से शुरू)"
-      : "Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)";
-    showAuthError(invalidMsg);
-    if (window.toastError) window.toastError(invalidMsg);
-    phoneInput?.focus();
-    return;
-  }
-
-  const formattedPhoneNumber = `+91${clean}`;
-
-  const btn = document.getElementById('send-otp-btn');
-  const btnText = document.getElementById('send-otp-text');
-  if (btn) {
-    btn.disabled = true;
-    if (btnText) {
-      btnText.innerText = window.currentLang === 'hi' ? "भेजा जा रहा है..." : "Sending...";
-    }
-  }
-
-  try {
-    console.log(`[Message Central] Requesting 4-digit SMS OTP for: ${formattedPhoneNumber}`);
-    const res = await fetch('/api/send-otp', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        phoneNumber: clean,
-        role: 'customer'
-      })
-    });
-
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.success) {
-      const errorMsg = data.message || data.error || (
-        window.currentLang === 'hi'
-          ? "OTP भेजने में असमर्थ। कृपया पुनः प्रयास करें।"
-          : "Unable to send SMS OTP. Please try again."
-      );
-      throw new Error(errorMsg);
-    }
-
-    // Store verificationId returned by Message Central VerifyNow
-    window.__gb_verification_id = data.verificationId || null;
-    console.log(`[Message Central] OTP dispatched. verificationId: ${window.__gb_verification_id}`);
-
-    // Transition UI to Step 2 (4-Digit OTP Entry)
-    const phoneDisplay = document.getElementById('otp-phone-display');
-    if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
-
-    document.getElementById('phone-input-section')?.classList.add('hidden');
-    document.getElementById('otp-input-section')?.classList.remove('hidden');
-
-    for (let i = 1; i <= 4; i++) {
-      const box = document.getElementById(`otp-${i}`);
-      if (box) box.value = '';
-    }
-    document.getElementById('otp-1')?.focus();
-
-    startResendTimer();
-
-    if (window.toastSuccess) {
-      window.toastSuccess(
-        window.currentLang === 'hi'
-          ? "4-अंकीय OTP आपके मोबाइल पर SMS द्वारा भेजा गया है!"
-          : "4-Digit OTP sent to " + formattedPhoneNumber + " via SMS!"
-      );
-    }
-  } catch (error) {
-    console.error("[Message Central SMS Dispatch Error]:", error);
-    showAuthError(error.message || "Failed to dispatch SMS verification code");
-    if (window.toastError) window.toastError(error.message || "Failed to dispatch SMS verification code");
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      if (btnText) btnText.innerText = window.currentLang === 'hi' ? "OTP भेजें" : "Send OTP";
-      if (window.lucide) window.lucide.createIcons();
-    }
-  }
-}
-
-/**
- * Step 2: Verify 4-digit OTP via Message Central (/api/verify-otp) & Firebase Custom Token
+ * Step 2: Verify 4-digit OTP via Message Central (/api/verify-otp) & Establish Backend JWT Session
  */
 export async function verifyCustomerOTP() {
   hideAuthError();
@@ -258,7 +53,8 @@ export async function verifyCustomerOTP() {
         phoneNumber: clean,
         otp: code,
         verificationId: window.__gb_verification_id || undefined,
-        role: 'customer'
+        role: 'customer',
+        name: enteredName
       })
     });
 
@@ -273,26 +69,13 @@ export async function verifyCustomerOTP() {
       );
     }
 
-    let authUid = `usr_mc_${clean}`;
-    let userToken = vData.customToken || 'auth-verified';
-
-    // Sign in with Firebase Custom Token if Firebase auth is initialized
-    if (vData.customToken && typeof auth !== 'undefined' && typeof signInWithCustomToken === 'function') {
-      try {
-        const userCred = await signInWithCustomToken(auth, vData.customToken);
-        if (userCred && userCred.user) {
-          authUid = userCred.user.uid;
-          userToken = await userCred.user.getIdToken().catch(() => userToken);
-          console.log("[Firebase Auth] Signed in with Custom Token successfully! UID:", authUid);
-        }
-      } catch (fbErr) {
-        console.warn("[Firebase Custom Token Sign-In Notice]:", fbErr);
-      }
-    }
+    const authUid = vData.user?.id || `usr_${clean}`;
+    const userToken = vData.token || vData.accessToken || 'auth-verified';
+    const userName = vData.user?.name || enteredName;
 
     // Database synchronization with Supabase
     console.log(`Syncing user [${authUid}] with Supabase database...`);
-    const syncResult = await syncUserWithSupabase(authUid, formattedPhoneNumber, enteredName);
+    const syncResult = await syncUserWithSupabase(authUid, formattedPhoneNumber, userName);
     const dbUser = syncResult.user || {};
 
     // Establish persistent customer session in localStorage
@@ -305,15 +88,15 @@ export async function verifyCustomerOTP() {
     localStorage.setItem('gb_customer_token', userToken);
     localStorage.setItem('gb_customer_jwt', userToken);
     localStorage.setItem('gaonbazaar_admin_jwt_token', userToken);
-    localStorage.setItem('gb_customer_name', dbUser.name || enteredName);
-    localStorage.setItem('gb_user_name', dbUser.name || enteredName);
+    localStorage.setItem('gb_customer_name', dbUser.name || userName);
+    localStorage.setItem('gb_user_name', dbUser.name || userName);
     localStorage.setItem('gb_customer_profile', JSON.stringify({
       id: dbUser.id || authUid,
       uid: authUid,
-      name: dbUser.name || enteredName,
+      name: dbUser.name || userName,
       phone: formattedPhoneNumber,
       role: 'customer',
-      kyc_status: 'unverified'
+      kyc_status: dbUser.kyc_status || 'unverified'
     }));
 
     // Direct routing to Main Dashboard
@@ -346,6 +129,7 @@ export async function verifyCustomerOTP() {
       if (window.lucide) window.lucide.createIcons();
     }
   }
+}
 }
 /**
  * Step 4: Supabase Database Sync
@@ -1001,8 +785,6 @@ export function handleOtpInput(current, nextId, event) {
 }
 // Bind to window for HTML onclick and input event handlers
 window.authService = {
-  auth,
-  app,
   supabase,
   sendCustomerOTP,
   verifyCustomerOTP,

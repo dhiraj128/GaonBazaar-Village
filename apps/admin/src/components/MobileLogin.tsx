@@ -132,7 +132,7 @@ export function MobileLogin({
       const clean = phone.replace(/\D/g, '').slice(-10);
       const formattedPhoneNumber = `+91${clean}`;
 
-      console.log('[Auth] Verifying 4-digit OTP via Message Central & Firebase Custom Token...');
+      console.log('[Auth] Verifying 4-digit OTP via Message Central & Backend JWT Session...');
       const userCred = await verifyMessageCentralOtp(clean, code, verificationId || undefined, 'customer');
       const authUser = userCred.user;
       console.log('[Auth] OTP successfully verified for UID:', authUser.uid);

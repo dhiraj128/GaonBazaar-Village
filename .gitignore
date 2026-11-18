@@ -37,6 +37,7 @@ apps/admin/build/
 
 # Web builds
 public_web/
+artifacts/
 
 # Flutter / Dart
 .dart_tool/

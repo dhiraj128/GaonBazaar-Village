@@ -71,10 +71,9 @@ async def send_otp(
         )
 
     # 2. Challenge generation:
-    # Razorpay Compliance Backdoor: 9999999999 strictly bypasses SMS dispatch with static 123456
-    # Whitelisted staging personas get predictable challenge in dev/staging;
-    # Real public users get a live crypto-random 6-digit challenge dispatched via SMS.
-    if payload.phone == "9999999999":
+    # Staging/development test persona handling (strictly disabled in production)
+    is_non_prod = getattr(settings, "ENVIRONMENT", "").lower() != "production"
+    if is_non_prod and payload.phone == "9999999999":
         otp_code = "123456"
         delivery_channel = "razorpay_compliance"
     elif is_whitelisted_test_phone(payload.phone):
@@ -113,8 +112,7 @@ async def send_otp(
     }
 
     # 5. Dispatch SMS via configured provider (Fast2SMS, MSG91, Twilio)
-    # Razorpay compliance backdoor NEVER dispatches an SMS
-    if payload.phone == "9999999999":
+    if is_non_prod and payload.phone == "9999999999":
         delivery_status = "delivered"
     else:
         sms_res = await send_sms_otp(payload.phone, otp_code, payload.role)
@@ -136,7 +134,8 @@ async def verify_otp(
 ):
     now = datetime.now(timezone.utc)
     now_ts = now.timestamp()
-    is_razorpay_backdoor = (payload.phone == "9999999999" and payload.otp in ["123456", "1234"])
+    is_non_prod = getattr(settings, "ENVIRONMENT", "").lower() != "production"
+    is_razorpay_backdoor = (is_non_prod and payload.phone == "9999999999" and payload.otp in ["123456", "1234"])
 
     # 1. Lookup active persistent OTP challenge from database
     query = select(OtpChallenge).where(
