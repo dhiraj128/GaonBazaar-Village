@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Send, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import {
-  sendFast2SmsOtp,
-  verifyFast2SmsOtp,
-  sendFirebaseTestPhoneOtp,
-  type ConfirmationResult
+  sendMessageCentralOtp,
+  verifyMessageCentralOtp
 } from '../utils/firebase';
 import { PullToRefresh } from './PullToRefresh';
 
@@ -36,12 +34,12 @@ export function MobileLogin({
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '']);
+  const [verificationId, setVerificationId] = useState<string | null>(null);
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   // Guarantee strictly empty inputs on mount
   useEffect(() => {
@@ -61,8 +59,8 @@ export function MobileLogin({
   const t = {
     title: propTitle || (isHindi ? "मोबाइल लॉगिन" : "Mobile Login"),
     subtitle: propSubtitle || (isHindi
-      ? "सुरक्षित 6-अंकीय OTP प्राप्त करने के लिए अपना मोबाइल नंबर दर्ज करें।"
-      : "Enter your mobile number to receive a secure 6-digit OTP."),
+      ? "सुरक्षित 4-अंकीय OTP प्राप्त करने के लिए अपना मोबाइल नंबर दर्ज करें।"
+      : "Enter your mobile number to receive a secure 4-digit OTP."),
     nameLabel: isHindi ? "पूरा नाम" : "Full Name",
     nameSublabel: isHindi ? "(नए ग्राहकों के लिए)" : "(for new customers)",
     namePlaceholder: isHindi ? "उदा. रमेश कुमार" : "e.g. Ramesh Kumar",
@@ -73,13 +71,13 @@ export function MobileLogin({
     sendingBtn: isHindi ? "भेजा जा रहा है..." : "Sending...",
     codeSentTo: isHindi ? "कोड भेजा गया:" : "Code sent to:",
     changeBtn: isHindi ? "बदलें" : "Change",
-    otpTitle: isHindi ? "6-अंकीय SMS सत्यापन कोड दर्ज करें" : "Enter 6-Digit SMS Verification Code",
+    otpTitle: isHindi ? "4-अंकीय SMS सत्यापन कोड दर्ज करें" : "Enter 4-Digit SMS Verification Code",
     verifyBtn: isHindi ? "सत्यापित करें और आगे बढ़ें" : "Verify & Proceed",
     verifyingBtn: isHindi ? "सत्यापित हो रहा है..." : "Verifying...",
     resendBtn: isHindi ? "OTP पुनः भेजें" : "Resend OTP",
     trustBadge: isHindi ? "🔒 100% सुरक्षित और एन्क्रिप्टेड लॉगिन" : "🔒 256-bit Encrypted & Secure Authentication",
     invalidPhone: isHindi ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें" : "Please enter a valid 10-digit Indian mobile number",
-    invalidOtp: isHindi ? "कृपया पूरा 6-अंकीय OTP कोड दर्ज करें" : "Please enter complete 6-digit OTP",
+    invalidOtp: isHindi ? "कृपया पूरा 4-अंकीय OTP कोड दर्ज करें" : "Please enter complete 4-digit OTP",
   };
 
   const handleSendOtp = async (e?: React.FormEvent) => {
@@ -88,7 +86,7 @@ export function MobileLogin({
     setStatusMessage(null);
 
     const clean = phone.replace(/\D/g, '').slice(-10);
-    if (!/^[6-9]\d{9}$/.test(clean) && clean !== '9999999999') {
+    if (!/^[6-9]\d{9}$/.test(clean)) {
       setError(t.invalidPhone);
       return;
     }
@@ -97,39 +95,16 @@ export function MobileLogin({
     setIsLoading(true);
 
     try {
-      // 1. Whitelisted Razorpay Compliance Numbers: Bypass external SMS (Fast2SMS)
-      const isComplianceTestNumber = (clean === '9905361711' || clean === '9999999999');
-      if (isComplianceTestNumber) {
-        console.log('[Auth] Compliance test number whitelisted for static review:', clean);
-
-        // Route into Firebase Phone Auth test flow (recognizes test numbers with static 123456)
-        try {
-          const conf = await sendFirebaseTestPhoneOtp(clean);
-          if (conf) {
-            setConfirmationResult(conf);
-          }
-        } catch (testFlowErr) {
-          console.warn('[Auth] Test flow verifier notice:', testFlowErr);
-        }
-
-        setStep('otp');
-        setOtp(['1', '2', '3', '4', '5', '6']);
-        setStatusMessage(
-          isHindi
-            ? "रेज़रपे समीक्षा मोड: स्थिर कोड 123456 सक्रिय है"
-            : "Razorpay Review Mode: Static code 123456 active"
-        );
-        return;
+      console.log('[Auth] Initiating Message Central 4-digit OTP dispatch for:', formattedPhoneNumber);
+      const res = await sendMessageCentralOtp(clean, 'customer');
+      if (res && res.verificationId) {
+        setVerificationId(res.verificationId);
       }
-
-      // 2. Standard Public Number: Trigger Fast2SMS Smart OTP flow
-      console.log('[Auth] Initiating Fast2SMS OTP dispatch for:', formattedPhoneNumber);
-      await sendFast2SmsOtp(clean);
       setStep('otp');
       setStatusMessage(
         isHindi
-          ? `सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया`
-          : `Verification code sent to ${formattedPhoneNumber}`
+          ? `4-अंकीय सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया`
+          : `4-digit verification code sent to ${formattedPhoneNumber}`
       );
     } catch (err: any) {
       console.error("SMS DISPATCH ERROR:", err);
@@ -147,7 +122,7 @@ export function MobileLogin({
     setError(null);
 
     const code = otp.join('');
-    if (code.length !== 6) {
+    if (code.length !== 4) {
       setError(t.invalidOtp);
       return;
     }
@@ -157,79 +132,14 @@ export function MobileLogin({
       const clean = phone.replace(/\D/g, '').slice(-10);
       const formattedPhoneNumber = `+91${clean}`;
 
-      // 1. Razorpay Compliance Static Verification (9905361711 or 9999999999 with 123456)
-      const isComplianceTestNumber = (clean === '9905361711' || clean === '9999999999');
-      const isStaticOtpValid = (code === '123456' || code === '1234');
-
-      if (isComplianceTestNumber && isStaticOtpValid) {
-        console.log('[Auth] Compliance test OTP verified successfully for:', formattedPhoneNumber);
-
-        let token = 'razorpay-compliance-verified-session-token';
-        let authUid = `usr_test_${clean}`;
-
-        // If native Firebase test ConfirmationResult exists, verify with Firebase
-        if (confirmationResult) {
-          try {
-            const cred = await confirmationResult.confirm(code);
-            if (cred && cred.user) {
-              authUid = cred.user.uid;
-              token = await cred.user.getIdToken().catch(() => token);
-              console.log('[Auth] Native Firebase test user confirmed, UID:', authUid);
-            }
-          } catch (confErr) {
-            console.warn('[Auth] ConfirmationResult notice:', confErr);
-          }
-        }
-
-        const complianceUser = {
-          phone: formattedPhoneNumber,
-          name: name.trim() || (clean === '9905361711' ? 'Dhiraj Kumar' : 'Razorpay Compliance Reviewer'),
-          role: 'customer',
-          token: token,
-          uid: authUid
-        };
-
-        // Persist session tokens to grant full access to inner pages and customer portal
-        try {
-          localStorage.setItem('gb_customer_authenticated', 'true');
-          localStorage.setItem('gb_customer_logged_in', 'true');
-          localStorage.setItem('gb_auth_authenticated', 'true');
-          localStorage.setItem('gaonbazaar_admin_jwt_token', token);
-          localStorage.setItem('gb_customer_token', token);
-          localStorage.setItem('gb_customer_jwt', token);
-          localStorage.setItem('gb_customer_phone', formattedPhoneNumber);
-          localStorage.setItem('gb_user_phone', clean);
-          localStorage.setItem('gb_auth_phone', clean);
-          localStorage.setItem('gb_customer_uid', authUid);
-          localStorage.setItem('gb_customer_name', complianceUser.name);
-          localStorage.setItem('gb_user_name', complianceUser.name);
-          localStorage.setItem('gb_customer_profile', JSON.stringify({
-            uid: authUid,
-            phone: clean,
-            name: complianceUser.name,
-            preferred_language: lang
-          }));
-          localStorage.setItem('gaonbazaar_admin_user_info', JSON.stringify(complianceUser));
-        } catch (storageErr) {
-          console.warn('[Auth] LocalStorage set notice:', storageErr);
-        }
-
-        // Grant full access
-        if (onSuccess) {
-          onSuccess(complianceUser);
-        }
-        return;
-      }
-
-      // 2. Standard Public Number: Verify OTP via Fast2SMS API & authenticate with Firebase Custom Token
-      console.log('[Auth] Verifying OTP and signing in via Firebase Custom Token...');
-      const userCred = await verifyFast2SmsOtp(clean, code);
+      console.log('[Auth] Verifying 4-digit OTP via Message Central & Firebase Custom Token...');
+      const userCred = await verifyMessageCentralOtp(clean, code, verificationId || undefined, 'customer');
       const authUser = userCred.user;
       console.log('[Auth] OTP successfully verified for UID:', authUser.uid);
 
       // Attempt optional backend sync
       try {
-        const res = await fetch('/api/v1/auth/otp/verify', {
+        await fetch('/api/v1/auth/otp/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -239,12 +149,6 @@ export function MobileLogin({
             name: name.trim() || undefined
           })
         });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (onSuccess) onSuccess(data);
-          return;
-        }
       } catch (backendSyncErr) {
         console.warn('[Backend Sync Notice]:', backendSyncErr);
       }
@@ -281,15 +185,13 @@ export function MobileLogin({
         onSuccess(sessionUser);
       }
     } catch (err: any) {
-      console.error("FIREBASE FATAL ERROR:", err?.code, err?.message);
-      console.error("FIREBASE FULL ERROR:", err);
-
+      console.error("MESSAGE CENTRAL VERIFY ERROR:", err?.code, err?.message);
       const code = err?.code || '';
 
       if (code === 'auth/invalid-verification-code') {
         setError(isHindi
-          ? "अमान्य OTP कोड। कृपया सही 6-अंकीय कोड दर्ज करें।"
-          : "Invalid OTP code. Please enter the correct 6-digit code.");
+          ? "अमान्य OTP कोड। कृपया सही 4-अंकीय कोड दर्ज करें।"
+          : "Invalid OTP code. Please enter the correct 4-digit code.");
       } else if (code === 'auth/code-expired') {
         setError(isHindi
           ? "सत्यापन कोड समाप्त हो गया है। कृपया नया OTP अनुरोध करें।"
@@ -308,20 +210,20 @@ export function MobileLogin({
     const cleaned = val.replace(/\D/g, '');
     const newOtp = [...otp];
     if (cleaned.length > 1) {
-      // Pasted full 6-digit code
-      const pasted = cleaned.slice(0, 6).split('');
-      for (let i = 0; i < 6; i++) {
+      // Pasted full 4-digit code
+      const pasted = cleaned.slice(0, 4).split('');
+      for (let i = 0; i < 4; i++) {
         newOtp[i] = pasted[i] || '';
       }
       setOtp(newOtp);
-      const nextEl = document.getElementById(`react-otp-5`);
+      const nextEl = document.getElementById('react-otp-3');
       nextEl?.focus();
       return;
     }
     newOtp[index] = cleaned;
     setOtp(newOtp);
 
-    if (cleaned && index < 5) {
+    if (cleaned && index < 3) {
       const nextEl = document.getElementById(`react-otp-${index + 1}`);
       nextEl?.focus();
     }
@@ -338,9 +240,6 @@ export function MobileLogin({
     <div className="min-h-[100dvh] w-full bg-gradient-to-b from-slate-100 via-emerald-50/20 to-slate-100 flex flex-col justify-center items-center font-sans select-none p-4 sm:p-6 py-6 sm:py-10 overflow-y-auto">
       <PullToRefresh className="w-full flex items-center justify-center">
         <div className="w-full max-w-md my-auto bg-white rounded-3xl shadow-2xl shadow-emerald-950/10 border border-slate-100 overflow-hidden font-sans relative flex flex-col transition-all duration-300">
-          {/* Invisible container for Firebase test phone auth reCAPTCHA */}
-          <div id="recaptcha-test-container" style={{ position: 'fixed', bottom: 0, opacity: 0, pointerEvents: 'none', zIndex: -1 }} />
-
           {/* Brand Header with Safe Area Inset Top & Balanced Padding */}
           <div className="bg-gradient-to-b from-[#0F9D58] via-[#0E9352] to-[#0B8043] p-6 sm:p-8 landscape:p-4 text-white text-center relative border-b border-emerald-700/50 pt-[calc(1.75rem+env(safe-area-inset-top,0px))] landscape:pt-4">
             {/* Logo Monogram */}
@@ -456,7 +355,7 @@ export function MobileLogin({
                   <label className="block text-center text-xs font-semibold text-slate-600 mb-2.5">
                     {t.otpTitle}
                   </label>
-                  <div className="flex justify-center items-center gap-1.5 sm:gap-2.5 max-w-full mx-auto">
+                  <div className="flex justify-center items-center gap-2 sm:gap-3 max-w-full mx-auto">
                     {otp.map((digit, idx) => (
                       <input
                         key={idx}
@@ -471,7 +370,7 @@ export function MobileLogin({
                         value={digit}
                         onChange={(e) => handleOtpChange(idx, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                        className="w-11 sm:w-12 h-14 text-center text-xl font-bold font-mono bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-[#0F9D58] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-xs"
+                        className="w-14 sm:w-16 h-16 text-center text-2xl font-bold font-mono bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-[#0F9D58] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-xs"
                       />
                     ))}
                   </div>
@@ -479,7 +378,7 @@ export function MobileLogin({
 
                 <button
                   type="submit"
-                  disabled={isLoading || otp.join('').length !== 6}
+                  disabled={isLoading || otp.join('').length !== 4}
                   className="w-full py-4 bg-[#0F9D58] hover:bg-[#0D874C] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black rounded-2xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center space-x-2 text-sm sm:text-base cursor-pointer tracking-wide"
                 >
                   {isLoading ? (

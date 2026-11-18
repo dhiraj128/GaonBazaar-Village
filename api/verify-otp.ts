@@ -21,7 +21,6 @@ function getFirebaseAdmin() {
         credential: admin.credential.cert(creds),
         projectId: creds.project_id || projectId,
       });
-      console.log('[Firebase Admin] Initialized with FIREBASE_SERVICE_ACCOUNT');
       return admin;
     } catch (e) {
       console.error('[Verify OTP] Error parsing FIREBASE_SERVICE_ACCOUNT:', e);
@@ -38,19 +37,14 @@ function getFirebaseAdmin() {
         }),
         projectId,
       });
-      console.log('[Firebase Admin] Initialized with privateKey and clientEmail');
       return admin;
     } catch (e) {
       console.error('[Verify OTP] Error initializing with privateKey:', e);
     }
   }
 
-  // Initialize with application default or projectId
   try {
-    admin.initializeApp({
-      projectId,
-    });
-    console.log('[Firebase Admin] Initialized with project ID fallback');
+    admin.initializeApp({ projectId });
   } catch (e) {
     console.warn('[Firebase Admin] Default initialization warning:', e);
   }
@@ -59,8 +53,9 @@ function getFirebaseAdmin() {
 }
 
 interface OtpRecord {
-  otp: string;
+  verificationId: string;
   expiresAt: number; // timestamp ms
+  lastSentAt: number;
   attempts: number;
 }
 
@@ -83,6 +78,68 @@ const sendJson = (res: any, statusCode: number, data: any) => {
     console.error('[Verify OTP sendJson error]:', e);
   }
 };
+
+// Retrieve active challenge from Supabase
+async function getActiveChallengeFromSupabase(phone: string): Promise<any | null> {
+  try {
+    const supabaseUrl =
+      process.env.SUPABASE_URL ||
+      process.env.VITE_SUPABASE_URL ||
+      'https://vxewgvrjhjpntfvsmuez.supabase.co';
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.VITE_SUPABASE_ANON_KEY ||
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ';
+
+    const resp = await fetch(
+      `${supabaseUrl}/rest/v1/otp_challenges?phone=eq.${phone}&is_used=eq.false&order=created_at.desc&limit=1`,
+      {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    if (resp.ok) {
+      const rows = await resp.json();
+      if (Array.isArray(rows) && rows.length > 0) {
+        return rows[0];
+      }
+    }
+  } catch (err) {
+    console.warn('[Verify OTP] Supabase fetch challenge notice:', err);
+  }
+  return null;
+}
+
+// Mark challenge as used in Supabase
+async function markChallengeUsedInSupabase(verificationId: string) {
+  try {
+    const supabaseUrl =
+      process.env.SUPABASE_URL ||
+      process.env.VITE_SUPABASE_URL ||
+      'https://vxewgvrjhjpntfvsmuez.supabase.co';
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.VITE_SUPABASE_ANON_KEY ||
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ';
+
+    await fetch(`${supabaseUrl}/rest/v1/otp_challenges?session_id=eq.${encodeURIComponent(verificationId)}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ is_used: true }),
+    });
+  } catch (err) {
+    console.warn('[Verify OTP] Supabase mark used notice:', err);
+  }
+}
 
 export default async function handler(req: any, res: any) {
   // CORS configuration
@@ -113,108 +170,192 @@ export default async function handler(req: any, res: any) {
         return sendJson(res, 400, {
           success: false,
           error: 'Invalid JSON request body',
-          message: 'Invalid JSON request body'
+          message: 'Invalid JSON request body',
         });
       }
     }
     body = body || {};
 
     const rawPhone = body.phoneNumber || body.phone || '';
-    const clean = rawPhone.replace(/\D/g, '').slice(-10);
+    let clean = String(rawPhone || '').replace(/[^\d+]/g, '').trim();
+    if (clean.startsWith('+91')) {
+      clean = clean.slice(3);
+    } else if (clean.startsWith('91') && clean.length === 12) {
+      clean = clean.slice(2);
+    } else if (clean.startsWith('0') && clean.length === 11) {
+      clean = clean.slice(1);
+    }
+    clean = clean.replace(/\D/g, '');
     const enteredOtp = String(body.otp || '').trim();
+    const role = body.role || 'customer';
 
     if (!clean || !enteredOtp) {
       return sendJson(res, 400, {
         success: false,
         code: 'auth/missing-fields',
-        error: 'Phone number and 6-digit OTP code are required',
-        message: 'Phone number and 6-digit OTP code are required'
+        error: 'Phone number and 4-digit OTP code are required',
+        message: 'Phone number and 4-digit OTP code are required',
       });
     }
 
-    let isVerified = false;
-
-    // 1. Razorpay Compliance Review Backdoor (9999999999 and Whitelisted Test Number 9905361711)
-    if ((clean === '9999999999' || clean === '9905361711') && (enteredOtp === '123456' || enteredOtp === '1234')) {
-      isVerified = true;
+    // Strictly validate 4-digit OTP format (Message Central VerifyNow standard)
+    if (!/^\d{4}$/.test(enteredOtp)) {
+      return sendJson(res, 400, {
+        success: false,
+        code: 'auth/invalid-otp-format',
+        error: 'Please enter a valid 4-digit OTP code',
+        message: 'Please enter a valid 4-digit OTP code',
+      });
     }
 
-    // 2. Check In-Memory Cache
-    const cached = getOtpCache().get(clean);
-    if (!isVerified && cached) {
-      if (Date.now() > cached.expiresAt) {
-        getOtpCache().delete(clean);
-        return sendJson(res, 400, {
-          success: false,
-          code: 'auth/code-expired',
-          error: 'Verification code has expired. Please request a new OTP.',
-          message: 'Verification code has expired. Please request a new OTP.'
-        });
-      }
+    // Step 1: Retrieve Message Central credentials securely
+    const customerId = process.env.MESSAGE_CENTRAL_CUSTOMER_ID || '';
+    const authToken = process.env.MESSAGE_CENTRAL_AUTH_TOKEN || '';
 
-      if (cached.otp === enteredOtp) {
-        isVerified = true;
-        getOtpCache().delete(clean);
-      } else {
-        cached.attempts += 1;
-        if (cached.attempts >= 5) {
-          getOtpCache().delete(clean);
-          return sendJson(res, 429, {
-            success: false,
-            code: 'auth/too-many-requests',
-            error: 'Too many incorrect attempts. Please request a new OTP.',
-            message: 'Too many incorrect attempts. Please request a new OTP.'
-          });
-        }
+    if (!authToken) {
+      console.error('[Message Central VerifyNow] CRITICAL: MESSAGE_CENTRAL_AUTH_TOKEN not configured in environment.');
+      return sendJson(res, 500, {
+        success: false,
+        code: 'auth/gateway-not-configured',
+        error: 'SMS OTP Gateway credentials (MESSAGE_CENTRAL_AUTH_TOKEN) are not configured in the server environment.',
+        message: 'SMS OTP Gateway credentials (MESSAGE_CENTRAL_AUTH_TOKEN) are not configured in the server environment.',
+      });
+    }
+
+    // Step 2: Resolve Verification ID
+    let verificationId = body.verificationId ? String(body.verificationId) : '';
+
+    if (!verificationId) {
+      // Look up in memory cache first
+      const memRecord = getOtpCache().get(clean);
+      if (memRecord && memRecord.verificationId) {
+        verificationId = memRecord.verificationId;
       }
     }
 
-    // 3. Fallback: Check Firestore if in-memory cache missed (e.g. cold lambda instance)
-    if (!isVerified && clean !== '9999999999') {
+    if (!verificationId) {
+      // Look up in Supabase persistent challenges
+      const sbRecord = await getActiveChallengeFromSupabase(clean);
+      if (sbRecord && sbRecord.session_id) {
+        verificationId = sbRecord.session_id;
+      }
+    }
+
+    if (!verificationId) {
+      // Look up in Firestore
       try {
         const fbAdmin = getFirebaseAdmin();
         if (fbAdmin && fbAdmin.firestore) {
-          const docRef = fbAdmin.firestore().collection('otp_challenges').doc(clean);
-          const docSnap = await docRef.get();
+          const docSnap = await fbAdmin.firestore().collection('otp_challenges').doc(clean).get();
           if (docSnap.exists) {
             const data = docSnap.data();
-            const expiresAtMs = new Date(data?.expiresAt).getTime();
-            if (Date.now() <= expiresAtMs && !data?.isUsed && data?.otp === enteredOtp) {
-              isVerified = true;
-              await docRef.update({ isUsed: true });
+            if (data?.verificationId && !data?.isUsed) {
+              verificationId = data.verificationId;
             }
           }
         }
       } catch (fsErr) {
-        console.warn('[Verify OTP] Firestore fallback check notice:', fsErr);
+        console.warn('[Verify OTP] Firestore lookup notice:', fsErr);
       }
     }
 
-    if (!isVerified) {
+    if (!verificationId) {
       return sendJson(res, 400, {
         success: false,
-        code: 'auth/invalid-verification-code',
-        error: 'Invalid OTP code. Please enter the correct 6-digit code.',
-        message: 'Invalid OTP code. Please enter the correct 6-digit code.'
+        code: 'auth/session-not-found',
+        error: 'No active OTP verification session found for this number. Please request an OTP.',
+        message: 'No active OTP verification session found for this number. Please request an OTP.',
       });
     }
 
-    // 4. Crucial Step: Generate Firebase Custom Token
+    // Step 3: Validate with Message Central VerifyNow API
+    const params = new URLSearchParams({
+      countryCode: '91',
+      mobileNumber: clean,
+      verificationId: verificationId,
+      code: enteredOtp,
+    });
+    if (customerId) {
+      params.append('customerId', customerId);
+    }
+
+    const mcValidateUrl = `https://cpaas.messagecentral.com/verification/v3/validateOtp?${params.toString()}`;
+    console.log(`[Message Central VerifyNow] Validating 4-digit OTP for +91${clean} (Verification ID: ${verificationId})...`);
+
+    const mcResponse = await fetch(mcValidateUrl, {
+      method: 'GET',
+      headers: {
+        authToken: authToken,
+        accept: '*/*',
+      },
+    });
+
+    const mcText = await mcResponse.text();
+    let mcData: any = {};
+    try {
+      mcData = JSON.parse(mcText);
+    } catch {
+      mcData = { responseCode: mcResponse.status, message: mcText };
+    }
+
+    console.log(`[Message Central VerifyNow] Validation result for +91${clean}:`, mcResponse.status, mcData?.responseCode, mcData?.data?.verificationStatus);
+
+    // Step 4: Strict Verification Check (Message Central status code 200 and VERIFICATION_COMPLETED)
+    const isVerified =
+      mcResponse.ok &&
+      (mcData.responseCode === 200 || mcData.responseCode === '200') &&
+      (mcData.data?.verificationStatus === 'VERIFICATION_COMPLETED' || mcData.data?.responseCode === '200' || mcData.data?.responseCode === 200);
+
+    if (!isVerified) {
+      const errMessage =
+        mcData.data?.errorMessage ||
+        mcData.message ||
+        'Invalid 4-digit verification code. Please check your SMS and try again.';
+
+      return sendJson(res, 400, {
+        success: false,
+        code: 'auth/invalid-verification-code',
+        error: errMessage,
+        message: errMessage,
+        details: mcData?.data,
+      });
+    }
+
+    // Step 5: Mark challenge as used to prevent replay
+    getOtpCache().delete(clean);
+    await markChallengeUsedInSupabase(verificationId);
+
+    try {
+      const fbAdmin = getFirebaseAdmin();
+      if (fbAdmin && fbAdmin.firestore) {
+        await fbAdmin.firestore().collection('otp_challenges').doc(clean).update({
+          isUsed: true,
+          verifiedAt: new Date().toISOString(),
+        });
+      }
+    } catch (fsErr) {
+      console.warn('[Verify OTP] Firestore mark used notice:', fsErr);
+    }
+
+    // Step 6: Mint Firebase Custom Token for authenticated session
     const formattedPhone = `+91${clean}`;
-    console.log(`[Verify OTP] Minting Firebase Custom Token for: ${formattedPhone}`);
+    console.log(`[Verify OTP] Message Central confirmed valid. Minting Firebase Custom Token for: ${formattedPhone}`);
 
     try {
       const fbAdmin = getFirebaseAdmin();
       const customToken = await fbAdmin.auth().createCustomToken(formattedPhone, {
         phone_number: formattedPhone,
-        verified_via: 'fast2sms'
+        role: role,
+        verified_via: 'message_central_verifynow',
       });
 
       console.log(`[Verify OTP] Custom token successfully minted for: ${formattedPhone}`);
       return sendJson(res, 200, {
         success: true,
+        message: 'OTP verified successfully via Message Central',
         customToken,
-        phoneNumber: formattedPhone
+        phoneNumber: formattedPhone,
+        role,
       });
     } catch (tokenErr: any) {
       console.error('[VERIFY-OTP TOKEN ERROR]:', tokenErr);
@@ -223,7 +364,7 @@ export default async function handler(req: any, res: any) {
         code: 'auth/custom-token-failed',
         error: tokenErr?.message || 'Failed to mint Firebase Custom Token. Ensure Firebase service account credentials are configured.',
         message: tokenErr?.message || 'Failed to mint Firebase Custom Token. Ensure Firebase service account credentials are configured.',
-        details: tokenErr?.code
+        details: tokenErr?.code,
       });
     }
   } catch (error: any) {
@@ -232,7 +373,7 @@ export default async function handler(req: any, res: any) {
       success: false,
       code: 'auth/internal-error',
       error: error?.message || 'Internal server error verifying OTP',
-      message: error?.message || 'Internal server error verifying OTP'
+      message: error?.message || 'Internal server error verifying OTP',
     });
   }
 }

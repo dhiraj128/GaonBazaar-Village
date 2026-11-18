@@ -102,7 +102,7 @@ export function resetRecaptcha() {
 }
 
 /**
- * Step 1: Send SMS OTP via Firebase Auth (White-labeled)
+ * Step 1: Send SMS OTP via Message Central VerifyNow (/api/send-otp)
  */
 export async function sendCustomerOTP() {
   hideAuthError();
@@ -122,18 +122,17 @@ export async function sendCustomerOTP() {
   }
   clean = clean.replace(/\D/g, '').slice(-10);
 
-  // Validate 10-digit Indian Mobile format (starts with 6-9) or Razorpay backdoor 9999999999
-  if (!/^[6-9]\d{9}$/.test(clean) && clean !== '9999999999') {
+  // Validate 10-digit Indian Mobile format (starts with 6-9)
+  if (!/^[6-9]\d{9}$/.test(clean)) {
     const invalidMsg = window.currentLang === 'hi'
       ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें (6-9 से शुरू)"
-      : "Please enter a valid 10-digit Indian mobile number (e.g. 9905361711)";
+      : "Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)";
     showAuthError(invalidMsg);
     if (window.toastError) window.toastError(invalidMsg);
     phoneInput?.focus();
     return;
   }
 
-  // Rigorous E.164 string: strictly prepends +91, NO SPACES, NO DASHES
   const formattedPhoneNumber = `+91${clean}`;
 
   const btn = document.getElementById('send-otp-btn');
@@ -141,136 +140,46 @@ export async function sendCustomerOTP() {
   if (btn) {
     btn.disabled = true;
     if (btnText) {
-      btnText.innerText = "Sending...";
-    } else {
-      btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> <span>Sending...</span>`;
+      btnText.innerText = window.currentLang === 'hi' ? "भेजा जा रहा है..." : "Sending...";
     }
   }
 
   try {
-    // Razorpay Compliance Review Backdoor: ONLY 9999999999 is bypassed
-    const isRazorpayBackdoor = (clean === "9999999999");
-    if (isRazorpayBackdoor) {
-      console.log("[Telecom Gateway] Razorpay Compliance Review Backdoor active for [9999999999].");
-      window.confirmationResult = {
-        confirm: async (enteredCode) => {
-          if (enteredCode === "123456" || enteredCode === "1234") {
-            return {
-              user: {
-                uid: "usr_razorpay_compliance_reviewer",
-                phoneNumber: formattedPhoneNumber
-              }
-            };
-          }
-          throw { code: "auth/invalid-verification-code", message: "Invalid compliance review OTP" };
-        }
-      };
+    console.log(`[Message Central] Requesting 4-digit SMS OTP for: ${formattedPhoneNumber}`);
+    const res = await fetch('/api/send-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        phoneNumber: clean,
+        role: 'customer'
+      })
+    });
 
-      const phoneDisplay = document.getElementById('otp-phone-display');
-      if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
-
-      document.getElementById('phone-input-section')?.classList.add('hidden');
-      document.getElementById('otp-input-section')?.classList.remove('hidden');
-
-      const testDigits = ['1', '2', '3', '4', '5', '6'];
-      for (let i = 1; i <= 6; i++) {
-        const box = document.getElementById(`otp-${i}`);
-        if (box) box.value = testDigits[i - 1];
-      }
-      document.getElementById('otp-1')?.focus();
-
-      startResendTimer();
-
-      if (window.toastSuccess) {
-        window.toastSuccess(
-          window.currentLang === 'hi'
-            ? "रेज़रपे अनुपालन समीक्षा मोड: ओटीपी 123456 सक्रिय है"
-            : "Razorpay Compliance Review: Static code 123456 active"
-        );
-      }
-      return;
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      const errorMsg = data.message || data.error || (
+        window.currentLang === 'hi'
+          ? "OTP भेजने में असमर्थ। कृपया पुनः प्रयास करें।"
+          : "Unable to send SMS OTP. Please try again."
+      );
+      throw new Error(errorMsg);
     }
 
-    // 2. Mandatory Telecom Network Trigger (Firebase + Supabase + Backend)
-    // NO mock interceptors: live numbers (including 9905361711) must ping the network!
-    let smsDispatched = false;
-    let telecomError = null;
+    // Store verificationId returned by Message Central VerifyNow
+    window.__gb_verification_id = data.verificationId || null;
+    console.log(`[Message Central] OTP dispatched. verificationId: ${window.__gb_verification_id}`);
 
-    // --- Provider A: Firebase Phone Auth (Invisible reCAPTCHA) ---
-    try {
-      console.log(`[Telecom Gateway] Pinging Firebase Auth telecom API for: ${formattedPhoneNumber}`);
-      const verifier = getOrCreateRecaptchaVerifier();
-      if (!verifier) {
-        throw new Error("reCAPTCHA verifier initialization failed on device");
-      }
-      await verifier.render();
-      const confirmationResult = await signInWithPhoneNumber(auth, formattedPhoneNumber, verifier);
-      window.confirmationResult = confirmationResult;
-      smsDispatched = true;
-      console.log(`[Telecom Gateway] Firebase SMS confirmation received for: ${formattedPhoneNumber}`);
-    } catch (fbErr) {
-      console.error(`[Telecom Gateway] Firebase SMS dispatch failed:`, fbErr);
-      telecomError = fbErr;
-      resetRecaptcha();
-    }
-
-    // --- Provider B: Supabase Auth OTP Fallback / Dual Trigger ---
-    if (!smsDispatched) {
-      try {
-        console.log(`[Telecom Gateway] Pinging Supabase Auth telecom API for: ${formattedPhoneNumber}`);
-        const client = typeof getSupabaseCustomerClient === 'function' ? getSupabaseCustomerClient() : supabase;
-        if (client && client.auth) {
-          const { data, error } = await client.auth.signInWithOtp({
-            phone: formattedPhoneNumber
-          });
-          if (error) {
-            console.error(`[Telecom Gateway] Supabase signInWithOtp rejected:`, error);
-            if (!telecomError) telecomError = error;
-          } else {
-            console.log(`[Telecom Gateway] Supabase OTP dispatched:`, data);
-            smsDispatched = true;
-          }
-        }
-      } catch (supaErr) {
-        console.error(`[Telecom Gateway] Supabase SMS request exception:`, supaErr);
-        if (!telecomError) telecomError = supaErr;
-      }
-    }
-
-    // --- Provider C: Backend Transactional SMS Fallback API trigger ---
-    try {
-      const apiBase = (window.APP_CONFIG && window.APP_CONFIG.BACKEND_URL) || '';
-      const beRes = await fetch(`${apiBase}/api/v1/auth/otp/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: clean,
-          role: 'customer',
-          name: name || undefined
-        })
-      });
-      if (beRes.ok) {
-        const beData = await beRes.json();
-        console.log(`[Telecom Gateway] Backend transactional challenge created:`, beData);
-        smsDispatched = true;
-      }
-    } catch (beErr) {
-      console.warn(`[Telecom Gateway] Backend OTP call notice:`, beErr);
-    }
-
-    // 4. Error Surfacing: If all providers failed, throw to catch block for explicit user-facing display
-    if (!smsDispatched && telecomError) {
-      throw telecomError;
-    }
-
-    // Transition UI to Step 2 (OTP Entry)
+    // Transition UI to Step 2 (4-Digit OTP Entry)
     const phoneDisplay = document.getElementById('otp-phone-display');
     if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
 
     document.getElementById('phone-input-section')?.classList.add('hidden');
     document.getElementById('otp-input-section')?.classList.remove('hidden');
 
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= 4; i++) {
       const box = document.getElementById(`otp-${i}`);
       if (box) box.value = '';
     }
@@ -281,42 +190,40 @@ export async function sendCustomerOTP() {
     if (window.toastSuccess) {
       window.toastSuccess(
         window.currentLang === 'hi'
-          ? "OTP आपके मोबाइल पर भेज दिया गया है!"
-          : "OTP sent to " + formattedPhoneNumber + "!"
+          ? "4-अंकीय OTP आपके मोबाइल पर SMS द्वारा भेजा गया है!"
+          : "4-Digit OTP sent to " + formattedPhoneNumber + " via SMS!"
       );
     }
   } catch (error) {
-    console.error("[Telecom Gateway Fatal Error]:", error);
-    resetRecaptcha();
-    handleAuthError(error);
+    console.error("[Message Central SMS Dispatch Error]:", error);
+    showAuthError(error.message || "Failed to dispatch SMS verification code");
+    if (window.toastError) window.toastError(error.message || "Failed to dispatch SMS verification code");
   } finally {
     if (btn) {
       btn.disabled = false;
-      if (btnText) btnText.innerText = "Send OTP";
+      if (btnText) btnText.innerText = window.currentLang === 'hi' ? "OTP भेजें" : "Send OTP";
       if (window.lucide) window.lucide.createIcons();
     }
   }
 }
-}
 
 /**
- * Step 2: Verify OTP with Firebase and Synchronize with Supabase
- * Upon success: Automatically routes the user to Step 3 (Paperless KYC)
+ * Step 2: Verify 4-digit OTP via Message Central (/api/verify-otp) & Firebase Custom Token
  */
 export async function verifyCustomerOTP() {
   hideAuthError();
 
   let code = '';
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 4; i++) {
     const box = document.getElementById(`otp-${i}`);
     if (box) code += box.value.trim();
   }
 
-  if (code.length !== 6) {
+  if (code.length !== 4) {
     showAuthError(
       window.currentLang === 'hi'
-        ? "कृपया पूरा 6-अंकीय OTP कोड दर्ज करें"
-        : "Please enter the complete 6-digit OTP code"
+        ? "कृपया पूरा 4-अंकीय OTP कोड दर्ज करें"
+        : "Please enter the complete 4-digit OTP code"
     );
     return;
   }
@@ -338,64 +245,78 @@ export async function verifyCustomerOTP() {
 
   const formattedPhoneNumber = `+91${clean}`;
   const enteredName = (nameInput?.value || '').trim() || 'Customer';
-  const isRazorpayBackdoor = (clean === "9999999999");
-  const isTestPhone = (clean === "9905361711" || clean === "9876543210" || isRazorpayBackdoor);
-  const isTestOtp = (code === "123456" || code === "1234");
 
   try {
-    let authUser = null;
-    if (isRazorpayBackdoor && isTestOtp) {
-      authUser = { uid: "usr_razorpay_compliance_reviewer", phoneNumber: formattedPhoneNumber };
-    } else if (isTestPhone && isTestOtp) {
-      authUser = { uid: `usr_test_${clean}`, phoneNumber: formattedPhoneNumber };
-    } else if (window.confirmationResult) {
-      try {
-        const userCredential = await window.confirmationResult.confirm(code);
-        authUser = userCredential.user;
-        console.log("Auth confirmed via Firebase:", authUser.uid, authUser.phoneNumber);
-      } catch (confErr) {
-        if (isTestOtp) {
-          console.warn("Falling back to test OTP confirmation:", confErr);
-          authUser = { uid: `usr_test_${clean || "9905361711"}`, phoneNumber: formattedPhoneNumber };
-        } else {
-          throw confErr;
-        }
-      }
-    } else if (isTestOtp) {
-      authUser = { uid: `usr_test_${clean || "9905361711"}`, phoneNumber: formattedPhoneNumber };
-    } else {
-      throw { code: 'auth/session-expired', message: 'No active OTP session. Please tap Send OTP again.' };
+    console.log(`[Message Central] Verifying 4-digit OTP for: ${formattedPhoneNumber}`);
+    const vRes = await fetch('/api/verify-otp', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        phoneNumber: clean,
+        otp: code,
+        verificationId: window.__gb_verification_id || undefined,
+        role: 'customer'
+      })
+    });
+
+    const vData = await vRes.json().catch(() => ({}));
+    if (!vRes.ok || !vData.success) {
+      throw new Error(
+        vData.message || vData.error || (
+          window.currentLang === 'hi'
+            ? "अमान्य या समाप्त OTP कोड। कृपया पुनः प्रयास करें।"
+            : "Invalid or expired OTP code. Please check your SMS."
+        )
+      );
     }
 
-    const uid = authUser.uid;
-    const phoneNumber = authUser.phoneNumber || formattedPhoneNumber;
+    let authUid = `usr_mc_${clean}`;
+    let userToken = vData.customToken || 'auth-verified';
+
+    // Sign in with Firebase Custom Token if Firebase auth is initialized
+    if (vData.customToken && typeof auth !== 'undefined' && typeof signInWithCustomToken === 'function') {
+      try {
+        const userCred = await signInWithCustomToken(auth, vData.customToken);
+        if (userCred && userCred.user) {
+          authUid = userCred.user.uid;
+          userToken = await userCred.user.getIdToken().catch(() => userToken);
+          console.log("[Firebase Auth] Signed in with Custom Token successfully! UID:", authUid);
+        }
+      } catch (fbErr) {
+        console.warn("[Firebase Custom Token Sign-In Notice]:", fbErr);
+      }
+    }
 
     // Database synchronization with Supabase
-    console.log(`Syncing user [${uid}] with Supabase database...`);
-    const syncResult = await syncUserWithSupabase(uid, phoneNumber, enteredName);
+    console.log(`Syncing user [${authUid}] with Supabase database...`);
+    const syncResult = await syncUserWithSupabase(authUid, formattedPhoneNumber, enteredName);
     const dbUser = syncResult.user || {};
 
     // Establish persistent customer session in localStorage
     localStorage.setItem('gb_customer_authenticated', 'true');
     localStorage.setItem('gb_auth_authenticated', 'true');
-    localStorage.setItem('gb_customer_uid', uid);
+    localStorage.setItem('gb_customer_uid', authUid);
     localStorage.setItem('gb_customer_phone', clean);
     localStorage.setItem('gb_user_phone', clean);
     localStorage.setItem('gb_auth_phone', clean);
+    localStorage.setItem('gb_customer_token', userToken);
+    localStorage.setItem('gb_customer_jwt', userToken);
+    localStorage.setItem('gaonbazaar_admin_jwt_token', userToken);
     localStorage.setItem('gb_customer_name', dbUser.name || enteredName);
     localStorage.setItem('gb_user_name', dbUser.name || enteredName);
     localStorage.setItem('gb_customer_profile', JSON.stringify({
-      id: dbUser.id || uid,
-      uid: uid,
-      name: (clean === "9999999999" ? "Razorpay Reviewer" : (dbUser.name || enteredName)),
+      id: dbUser.id || authUid,
+      uid: authUid,
+      name: dbUser.name || enteredName,
       phone: formattedPhoneNumber,
       role: 'customer',
       kyc_status: 'unverified'
     }));
 
-    // STRICT ROLE-BASED ROUTING FOR CUSTOMER:
-    // Pipeline: Step 1 (Language) -> Step 2 (Mobile OTP) -> MAIN DASHBOARD
-    // Customers NEVER see or execute KYC, Location Onboarding, or Payout Setup.
+    // Direct routing to Main Dashboard
     console.log("Customer authenticated successfully! Navigating directly to Main Dashboard...");
     document.getElementById('page-login')?.classList.add('hidden');
     document.getElementById('page-language')?.classList.add('hidden');
@@ -417,7 +338,7 @@ export async function verifyCustomerOTP() {
     }
   } catch (error) {
     console.error("verifyCustomerOTP error:", error);
-    handleAuthError(error);
+    showAuthError(error.message || "Failed to verify OTP");
   } finally {
     if (verifyBtn) {
       verifyBtn.innerHTML = `<span>${window.currentLang === 'hi' ? 'सत्यापित करें और आगे बढ़ें' : 'Verify & Proceed'}</span> <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>`;
@@ -426,7 +347,6 @@ export async function verifyCustomerOTP() {
     }
   }
 }
-
 /**
  * Step 4: Supabase Database Sync
  */
@@ -1048,7 +968,7 @@ export function startResendTimer() {
 }
 
 /**
- * 6-Digit OTP Box auto-advance and backspace navigation
+ * 4-Digit OTP Box auto-advance and backspace navigation
  */
 export function handleOtpInput(current, nextId, event) {
   hideAuthError();
@@ -1062,14 +982,14 @@ export function handleOtpInput(current, nextId, event) {
     return;
   }
 
-  // Paste handler: if user pastes full 6-digit code into first box
+  // Paste handler: if user pastes full 4-digit code into first box
   if (current.value.length > 1) {
-    const pasted = current.value.replace(/\D/g, '').slice(0, 6);
+    const pasted = current.value.replace(/\D/g, '').slice(0, 4);
     for (let i = 0; i < pasted.length; i++) {
       const box = document.getElementById(`otp-${i + 1}`);
       if (box) box.value = pasted[i];
     }
-    const target = document.getElementById(`otp-${Math.min(pasted.length + 1, 6)}`);
+    const target = document.getElementById(`otp-${Math.min(pasted.length + 1, 4)}`);
     if (target) target.focus();
     return;
   }
@@ -1079,7 +999,6 @@ export function handleOtpInput(current, nextId, event) {
     if (next) next.focus();
   }
 }
-
 // Bind to window for HTML onclick and input event handlers
 window.authService = {
   auth,

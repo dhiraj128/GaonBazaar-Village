@@ -212,7 +212,7 @@
 
           <div class="space-y-1.5 mb-5">
             <h2 class="text-2xl font-extrabold text-slate-900" data-i18n="login_title">Mobile Login</h2>
-            <p class="text-xs text-slate-500 leading-relaxed" data-i18n="login_sub">Enter your mobile number to receive a secure 6-digit SMS verification code on your phone.</p>
+            <p class="text-xs text-slate-500 leading-relaxed" data-i18n="login_sub">Enter your mobile number to receive a secure 4-digit SMS verification code on your phone.</p>
           </div>
 
           <!-- Step 1: Mobile Input Section -->
@@ -242,21 +242,19 @@
           <div id="otp-container" class="space-y-4 pt-4 hidden">
             <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-between">
               <div class="text-xs text-emerald-900">
-                <span class="font-medium" data-i18n="otp_sent_to">Code sent to:</span> <span id="otp-phone-display" class="font-bold font-mono">+91 9905361711</span>
+                <span class="font-medium" data-i18n="otp_sent_to">Code sent to:</span> <span id="otp-phone-display" class="font-bold font-mono"></span>
               </div>
               <button onclick="resetVendorPhone()" class="text-xs text-emerald-700 font-bold hover:underline" data-i18n="change_number">Change</button>
             </div>
 
             <div class="space-y-2">
-              <label class="block text-center text-[11px] font-semibold text-slate-600" data-i18n="enter_otp_label">Enter 6-Digit OTP</label>
-              <div class="flex justify-center items-center gap-1.5 sm:gap-2 max-w-full mx-auto px-1">
-                <input type="text" maxlength="1" id="otp-1" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="1">
-                <input type="text" maxlength="1" id="otp-2" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="2">
-                <input type="text" maxlength="1" id="otp-3" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="3">
-                <input type="text" maxlength="1" id="otp-4" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(4, event)" onkeydown="handleOtpKey(4, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="4">
-                <input type="text" maxlength="1" id="otp-5" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(5, event)" onkeydown="handleOtpKey(5, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="5">
-                <input type="text" maxlength="1" id="otp-6" autocomplete="one-time-code" autocomplete="one-time-code" oninput="handleOtpInput(6, event)" onkeydown="handleOtpKey(6, event)" class="w-11 h-14 text-center text-xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="6">
-              </div>
+              <label class="block text-center text-[11px] font-semibold text-slate-600" data-i18n="enter_otp_label">Enter 4-Digit OTP</label>
+                <div class="flex justify-center items-center gap-2 sm:gap-3 max-w-full mx-auto px-1">
+                  <input type="tel" maxlength="1" id="otp-1" autocomplete="off" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" class="w-13 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
+                  <input type="tel" maxlength="1" id="otp-2" autocomplete="off" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" class="w-13 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
+                  <input type="tel" maxlength="1" id="otp-3" autocomplete="off" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" class="w-13 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
+                  <input type="tel" maxlength="1" id="otp-4" autocomplete="off" oninput="handleOtpInput(4, event)" onkeydown="handleOtpKey(4, event)" class="w-13 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 focus:outline-none shadow-xs font-mono" value="">
+                </div>
             </div>
 
             <div class="flex justify-between items-center text-xs text-slate-500 pt-1">
@@ -3003,7 +3001,7 @@
       document.getElementById('vendor-phone-input')?.focus();
     }
 
-    function sendMobileOTP() {
+    async function sendMobileOTP() {
       try {
         const phoneInput = document.getElementById('vendor-phone-input');
         let raw = (phoneInput?.value || '').trim();
@@ -3013,126 +3011,68 @@
         else if (clean.startsWith('0') && clean.length === 11) clean = clean.slice(1);
         clean = clean.replace(/\D/g, '').slice(-10);
 
-        if (!/^[6-9]\d{9}$/.test(clean) && clean !== '9999999999') {
-          toastError("Please enter a valid 10-digit Indian mobile number (e.g. 9905361711)");
+        if (!/^[6-9]\d{9}$/.test(clean)) {
+          toastError(currentLang === 'hi' ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें" : "Please enter a valid 10-digit Indian mobile number");
           phoneInput?.focus();
           return;
         }
 
-        // 1. Enforce +91 Country Code Formatting
         const formattedPhoneNumber = `+91${clean}`;
         state.userProfile.phone = clean;
-        const isRazorpay = (clean === "9999999999");
 
         const sendBtn = document.getElementById('send-otp-btn');
         const sendBtnText = document.getElementById('send-otp-text');
         if (sendBtn) {
           sendBtn.disabled = true;
-          if (sendBtnText) sendBtnText.innerText = "Sending...";
+          if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "भेजा जा रहा है..." : "Sending...";
         }
 
-        const proceedToOtpInput = () => {
-          if (sendBtn) {
-            sendBtn.disabled = false;
-            if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "पुनः भेजें (30s)" : "Resend (30s)";
-          }
-          const phoneDisplay = document.getElementById('otp-phone-display');
-          if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
-          
-          document.getElementById('phone-input-section')?.classList.add('hidden');
-          document.getElementById('otp-container')?.classList.remove('hidden');
+        console.log("[Message Central] Dispatching 4-digit SMS OTP to:", formattedPhoneNumber);
+        const res = await fetch('/api/send-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            phoneNumber: clean,
+            role: 'vendor'
+          })
+        });
 
-          if (isRazorpay) {
-            ['1','2','3','4','5','6'].forEach((d, i) => {
-              const b = document.getElementById('otp-' + (i + 1));
-              if (b) b.value = d;
-            });
-            toastSuccess(currentLang === 'hi' ? "रेज़रपे अनुपालन समीक्षा मोड: परीक्षण ओटीपी 123456" : "Razorpay Compliance Review Mode: Test OTP 123456");
-          } else {
-            for (let i = 1; i <= 6; i++) {
-              const b = document.getElementById('otp-' + i);
-              if (b) b.value = '';
-            }
-            toastSuccess("OTP sent to " + formattedPhoneNumber + "!");
-          }
-          const otp1 = document.getElementById('otp-1');
-          if (otp1) otp1.focus();
-        };
-
-        // Razorpay Compliance Review Backdoor bypass
-        if (isRazorpay) {
-          proceedToOtpInput();
-          return;
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || data.error || "Failed to send SMS verification code");
         }
 
-        // 2. Mandatory Network Trigger (Firebase & Backend Transactional SMS)
-        console.log("[Telecom Gateway] Pinging Firebase Auth telecom API for:", formattedPhoneNumber);
-        let verifier = window.recaptchaVerifier;
-        if (!verifier && typeof window.initInvisibleRecaptcha === 'function') {
-          verifier = window.initInvisibleRecaptcha();
-        }
+        window.__gb_verification_id = data.verificationId || null;
 
-        if (window.firebaseSignInWithPhone && verifier) {
-          window.firebaseSignInWithPhone(formattedPhoneNumber, verifier)
-            .then(confirmation => {
-              window.confirmationResult = confirmation;
-              console.log("[Telecom Gateway] Firebase SMS confirmation received successfully for:", formattedPhoneNumber);
-              proceedToOtpInput();
-            })
-            .catch(fbErr => {
-              console.error("[Telecom Gateway Error]: Firebase rejected SMS:", fbErr);
-              // Fallback to backend live SMS dispatch
-              fetch('/api/v1/auth/otp/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone: clean, role: 'vendor' })
-              }).then(res => {
-                if (res.ok) {
-                  console.log("[Telecom Gateway] Backend transactional SMS dispatched to:", formattedPhoneNumber);
-                  proceedToOtpInput();
-                } else {
-                  throw fbErr;
-                }
-              }).catch(finalErr => {
-                if (sendBtn) {
-                  sendBtn.disabled = false;
-                  if (sendBtnText) sendBtnText.innerText = "Send OTP";
-                }
-                const errDetail = finalErr?.message || finalErr?.code || "Network error dispatching SMS";
-                toastError("SMS Gateway Error: " + errDetail);
-              });
-            });
-        } else {
-          // Direct backend SMS API trigger
-          fetch('/api/v1/auth/otp/send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: clean, role: 'vendor' })
-          }).then(res => {
-            if (res.ok) {
-              console.log("[Telecom Gateway] Backend transactional SMS dispatched to:", formattedPhoneNumber);
-              proceedToOtpInput();
-            } else {
-              throw new Error("Telecom Gateway API rejected request");
-            }
-          }).catch(err => {
-            if (sendBtn) {
-              sendBtn.disabled = false;
-              if (sendBtnText) sendBtnText.innerText = "Send OTP";
-            }
-            console.error("[Telecom Gateway Error]:", err);
-            toastError("SMS Gateway Error: " + (err?.message || "Failed to dispatch SMS"));
-          });
+        if (sendBtn) {
+          sendBtn.disabled = false;
+          if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "पुनः भेजें (30s)" : "Resend (30s)";
         }
+        const phoneDisplay = document.getElementById('otp-phone-display');
+        if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
+
+        document.getElementById('phone-input-section')?.classList.add('hidden');
+        document.getElementById('otp-container')?.classList.remove('hidden');
+
+        for (let i = 1; i <= 4; i++) {
+          const b = document.getElementById('otp-' + i);
+          if (b) b.value = '';
+        }
+        toastSuccess(currentLang === 'hi' ? `4-अंकीय OTP ${formattedPhoneNumber} पर भेजा गया` : `4-digit OTP sent to ${formattedPhoneNumber}!`);
+        const otp1 = document.getElementById('otp-1');
+        if (otp1) otp1.focus();
       } catch (err) {
-        console.error("[Telecom Gateway Fatal Error]:", err);
+        console.error("[Message Central Send Error]:", err);
         const sendBtn = document.getElementById('send-otp-btn');
         const sendBtnText = document.getElementById('send-otp-text');
         if (sendBtn) {
           sendBtn.disabled = false;
-          if (sendBtnText) sendBtnText.innerText = "Send OTP";
+          if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "OTP भेजें" : "Send OTP";
         }
-        toastError("SMS Gateway Error: " + (err?.message || "Network error"));
+        toastError(err?.message || "Failed to dispatch SMS OTP");
       }
     }
 
@@ -3149,24 +3089,24 @@
     function handleOtpInput(index, event) {
       const current = event.target;
       if (current.value.length > 1) {
-        const pasted = current.value.replace(/\D/g, '').slice(0, 6);
+        const pasted = current.value.replace(/\D/g, '').slice(0, 4);
         for (let i = 0; i < pasted.length; i++) {
           const box = document.getElementById('otp-' + (i + 1));
           if (box) box.value = pasted[i];
         }
-        const target = document.getElementById('otp-' + Math.min(pasted.length + 1, 6));
+        const target = document.getElementById('otp-' + Math.min(pasted.length + 1, 4));
         if (target) target.focus();
         return;
       }
-      if (current.value.length === 1 && index < 6) {
+      if (current.value.length === 1 && index < 4) {
         const nextInput = document.getElementById('otp-' + (index + 1));
         if (nextInput) nextInput.focus();
       }
     }
 
-    function verifyMobileOTP() {
+    async function verifyMobileOTP() {
       let entered = '';
-      for (let i = 1; i <= 6; i++) {
+      for (let i = 1; i <= 4; i++) {
         const b = document.getElementById('otp-' + i);
         if (b) entered += b.value.trim();
       }
@@ -3174,25 +3114,57 @@
       const btn = document.getElementById('verify-otp-btn');
       const btnText = document.getElementById('verify-btn-text');
 
-      if (entered.length !== 6) {
-        toastError(currentLang === 'hi' ? "कृपया 6-अंकीय OTP कोड दर्ज करें" : "Please enter complete 6-digit OTP");
+      if (entered.length !== 4) {
+        toastError(currentLang === 'hi' ? "कृपया 4-अंकीय OTP कोड दर्ज करें" : "Please enter complete 4-digit OTP");
         return;
       }
 
       if (btnText) btnText.innerText = currentLang === 'hi' ? "सत्यापित हो रहा है..." : "Verifying...";
       if (btn) btn.classList.add('opacity-75');
 
-      setTimeout(() => {
+      const phone = state.userProfile.phone || (document.getElementById('vendor-phone-input')?.value || '').trim();
+      const clean = phone.replace(/\D/g, '').slice(-10);
+
+      try {
+        console.log("[Message Central] Verifying 4-digit OTP for vendor:", clean);
+        const res = await fetch('/api/verify-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            phoneNumber: clean,
+            otp: entered,
+            verificationId: window.__gb_verification_id || undefined,
+            role: 'vendor'
+          })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || data.error || "Invalid or expired OTP");
+        }
+
         if (btnText) btnText.innerText = currentLang === 'hi' ? "सत्यापित!" : "Verified!";
         if (btn) btn.classList.remove('opacity-75');
-        const phone = state.userProfile.phone || (document.getElementById('vendor-phone-input')?.value || '').trim();
-        localStorage.setItem('gb_user_phone', phone);
-        localStorage.setItem('gb_auth_phone', phone);
-        localStorage.setItem('gb_vendor_phone', phone);
+
+        localStorage.setItem('gb_user_phone', clean);
+        localStorage.setItem('gb_auth_phone', clean);
+        localStorage.setItem('gb_vendor_phone', clean);
         localStorage.setItem('gb_auth_authenticated', 'true');
+        if (data.customToken) {
+          localStorage.setItem('gaonbazaar_admin_jwt_token', data.customToken);
+          localStorage.setItem('gb_auth_token', data.customToken);
+        }
         toastSuccess(currentLang === 'hi' ? "मोबाइल नंबर सत्यापित! स्वागत है।" : "Mobile number verified successfully!");
         navigateTo('onboarding-3');
-      }, 600);
+      } catch (err) {
+        console.error("[Message Central Verify Error]:", err);
+        if (btnText) btnText.innerText = currentLang === 'hi' ? "सत्यापित करें और आगे बढ़ें" : "Verify & Continue";
+        if (btn) btn.classList.remove('opacity-75');
+        toastError(err?.message || "Invalid OTP code. Please try again.");
+      }
     }
 
     // PAGE 3: BASIC DETAILS LOGIC

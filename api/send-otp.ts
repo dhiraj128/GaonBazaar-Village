@@ -59,8 +59,9 @@ function getFirebaseAdmin() {
 
 // Cross-invocation in-memory cache for Vercel functions
 interface OtpRecord {
-  otp: string;
+  verificationId: string;
   expiresAt: number; // timestamp ms
+  lastSentAt: number;
   attempts: number;
 }
 
@@ -83,6 +84,50 @@ const sendJson = (res: any, statusCode: number, data: any) => {
     console.error('[Send OTP sendJson error]:', e);
   }
 };
+
+// Store verification challenge in Supabase PostgreSQL table
+async function saveChallengeToSupabase(record: {
+  id: string;
+  phone: string;
+  session_id: string;
+  role: string;
+  expires_at: string;
+}) {
+  try {
+    const supabaseUrl =
+      process.env.SUPABASE_URL ||
+      process.env.VITE_SUPABASE_URL ||
+      'https://vxewgvrjhjpntfvsmuez.supabase.co';
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.VITE_SUPABASE_ANON_KEY ||
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ';
+
+    await fetch(`${supabaseUrl}/rest/v1/otp_challenges`, {
+      method: 'POST',
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({
+        id: record.id,
+        phone: record.phone,
+        session_id: record.session_id,
+        otp_hash: 'VERIFYNOW',
+        role: record.role || 'customer',
+        attempts: 0,
+        is_used: false,
+        expires_at: record.expires_at,
+        created_at: new Date().toISOString(),
+      }),
+    });
+  } catch (err) {
+    console.warn('[Send OTP] Supabase challenge sync notice:', err);
+  }
+}
 
 export default async function handler(req: any, res: any) {
   // CORS configuration
@@ -113,121 +158,168 @@ export default async function handler(req: any, res: any) {
         return sendJson(res, 400, {
           success: false,
           error: 'Invalid JSON request body',
-          message: 'Invalid JSON request body'
+          message: 'Invalid JSON request body',
         });
       }
     }
     body = body || {};
 
     const rawPhone = body.phoneNumber || body.phone || '';
-    const clean = rawPhone.replace(/\D/g, '').slice(-10);
+    const role = body.role || 'customer';
+    let clean = String(rawPhone || '').replace(/[^\d+]/g, '').trim();
+    if (clean.startsWith('+91')) {
+      clean = clean.slice(3);
+    } else if (clean.startsWith('91') && clean.length === 12) {
+      clean = clean.slice(2);
+    } else if (clean.startsWith('0') && clean.length === 11) {
+      clean = clean.slice(1);
+    }
+    clean = clean.replace(/\D/g, '');
 
-    // Validate 10-digit Indian Mobile format (starts with 6-9) or Razorpay backdoor 9999999999
-    if (!/^[6-9]\d{9}$/.test(clean) && clean !== '9999999999') {
+    // Validate 10-digit Indian Mobile format (strictly starts with 6-9)
+    // No hardcoded numbers or static bypasses allowed
+    if (!/^[6-9]\d{9}$/.test(clean)) {
       return sendJson(res, 400, {
         success: false,
         code: 'auth/invalid-phone-number',
         error: 'Please enter a valid 10-digit Indian mobile number',
-        message: 'Please enter a valid 10-digit Indian mobile number'
+        message: 'Please enter a valid 10-digit Indian mobile number',
       });
     }
 
-    // Razorpay Compliance Review Backdoor: 9999999999 and Whitelisted Test Number 9905361711
-    if (clean === '9999999999' || clean === '9905361711') {
-      const otp = '123456';
-      const expiresAt = Date.now() + 5 * 60 * 1000;
-      getOtpCache().set(clean, { otp, expiresAt, attempts: 0 });
-      return sendJson(res, 200, {
-        success: true,
-        message: 'Razorpay Compliance Review: Static code 123456 active',
-        phoneNumber: clean
+    // Rate Limiting: 30-second cooldown per phone number
+    const now = Date.now();
+    const cachedRecord = getOtpCache().get(clean);
+    if (cachedRecord && now - cachedRecord.lastSentAt < 30 * 1000) {
+      const waitSeconds = Math.ceil((30 * 1000 - (now - cachedRecord.lastSentAt)) / 1000);
+      return sendJson(res, 429, {
+        success: false,
+        code: 'auth/too-many-requests',
+        error: `Please wait ${waitSeconds} seconds before requesting another OTP`,
+        message: `Please wait ${waitSeconds} seconds before requesting another OTP`,
+        retryAfter: waitSeconds,
       });
     }
 
-    // Generate secure 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 5 * 60 * 1000;
+    // Step 1: Retrieve Message Central credentials securely from server-side environment
+    const customerId = process.env.MESSAGE_CENTRAL_CUSTOMER_ID || '';
+    const authToken = process.env.MESSAGE_CENTRAL_AUTH_TOKEN || '';
 
-    // 1. Store in memory cache
-    getOtpCache().set(clean, { otp, expiresAt, attempts: 0 });
+    if (!authToken) {
+      console.error('[Message Central VerifyNow] CRITICAL: MESSAGE_CENTRAL_AUTH_TOKEN not configured in Vercel environment.');
+      return sendJson(res, 500, {
+        success: false,
+        code: 'auth/gateway-not-configured',
+        error: 'SMS OTP Gateway credentials (MESSAGE_CENTRAL_AUTH_TOKEN) are not configured in the server environment.',
+        message: 'SMS OTP Gateway credentials (MESSAGE_CENTRAL_AUTH_TOKEN) are not configured in the server environment.',
+      });
+    }
 
-    // 2. Optional: Store in Firestore collection 'otp_challenges' if available
+    // Step 2: Request real 4-digit SMS OTP from Message Central VerifyNow
+    const params = new URLSearchParams({
+      countryCode: '91',
+      flowType: 'SMS',
+      mobileNumber: clean,
+      otpLength: '4',
+    });
+    if (customerId) {
+      params.append('customerId', customerId);
+    }
+
+    const mcSendUrl = `https://cpaas.messagecentral.com/verification/v3/send?${params.toString()}`;
+    console.log(`[Message Central VerifyNow] Dispatching real 4-digit SMS OTP to +91${clean}...`);
+
+    const mcResponse = await fetch(mcSendUrl, {
+      method: 'POST',
+      headers: {
+        authToken: authToken,
+        accept: '*/*',
+      },
+    });
+
+    const mcText = await mcResponse.text();
+    let mcData: any = {};
+    try {
+      mcData = JSON.parse(mcText);
+    } catch {
+      mcData = { responseCode: mcResponse.status, message: mcText };
+    }
+
+    console.log(`[Message Central VerifyNow] Response status for +91${clean}:`, mcResponse.status, mcData?.responseCode, mcData?.message);
+
+    // Step 3: Handle Provider Response & Verification ID
+    const isSuccess =
+      mcResponse.ok &&
+      (mcData.responseCode === 200 || mcData.responseCode === '200') &&
+      mcData.data?.verificationId;
+
+    if (!isSuccess) {
+      const errDetail =
+        mcData?.message ||
+        mcData?.data?.errorMessage ||
+        mcData?.error ||
+        `Message Central returned status ${mcResponse.status}`;
+
+      console.error(`[Message Central VerifyNow Delivery Failure]:`, errDetail);
+      return sendJson(res, 502, {
+        success: false,
+        code: 'auth/sms-delivery-failed',
+        error: `Message Central SMS dispatch failed: ${errDetail}`,
+        message: `Message Central SMS dispatch failed: ${errDetail}`,
+        providerStatus: mcData?.responseCode || mcResponse.status,
+      });
+    }
+
+    const verificationId = String(mcData.data.verificationId);
+    const expiresAt = now + 5 * 60 * 1000; // 5-minute validity
+
+    // Step 4: Persist verification session across memory, Supabase, and Firestore
+    getOtpCache().set(clean, {
+      verificationId,
+      expiresAt,
+      lastSentAt: now,
+      attempts: 0,
+    });
+
+    await saveChallengeToSupabase({
+      id: verificationId,
+      phone: clean,
+      session_id: verificationId,
+      role: role,
+      expires_at: new Date(expiresAt).toISOString(),
+    });
+
     try {
       const fbAdmin = getFirebaseAdmin();
       if (fbAdmin && fbAdmin.firestore) {
         await fbAdmin.firestore().collection('otp_challenges').doc(clean).set({
-          otp,
+          verificationId,
           phoneNumber: clean,
+          role: role,
+          provider: 'message_central_verifynow',
           expiresAt: new Date(expiresAt).toISOString(),
           createdAt: new Date().toISOString(),
-          isUsed: false
+          isUsed: false,
         });
-        console.log(`[Send OTP] Challenge synced to Firestore for +91${clean}`);
       }
     } catch (fsErr) {
-      console.warn('[Send OTP] Firestore sync notice (continuing without Firestore):', fsErr);
+      console.warn('[Send OTP] Firestore sync notice (continuing):', fsErr);
     }
 
-    // 3. Fast2SMS Smart OTP Dispatch (Generic Pre-Approved Route: route=otp)
-    const fast2smsApiKey = process.env.FAST2SMS_API_KEY || 'XsoSYvBFIKVteH8tVfguXYkVcFsxVrVLFDbeH3sTPPv0vyErS6yuPzySrgai1ir1lVg31OVM8CnyXiio';
-
-    console.log(`[Fast2SMS Smart OTP] Dispatching pre-approved OTP to +91${clean}...`);
-    
-    // Fast2SMS Generic Smart OTP endpoint
-    const f2sResponse = await fetch('https://www.fast2sms.com/dev/bulkV2', {
-      method: 'POST',
-      headers: {
-        'authorization': fast2smsApiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        route: 'otp',
-        variables_values: otp,
-        numbers: clean
-      })
+    // Step 5: Respond with success and verificationId
+    return sendJson(res, 200, {
+      success: true,
+      message: '4-digit SMS OTP dispatched successfully via Message Central VerifyNow',
+      verificationId: verificationId,
+      phoneNumber: clean,
     });
-
-    const f2sText = await f2sResponse.text();
-    let f2sData: any = {};
-    try {
-      f2sData = JSON.parse(f2sText);
-    } catch {
-      f2sData = { return: false, message: f2sText };
-    }
-
-    console.log(`[Fast2SMS Smart OTP] Response for +91${clean}:`, f2sData);
-
-    if (f2sResponse.ok && f2sData.return) {
-      return sendJson(res, 200, {
-        success: true,
-        message: 'Smart OTP sent successfully via Fast2SMS',
-        phoneNumber: clean
-      });
-    } else {
-      let errDetail = Array.isArray(f2sData.message)
-        ? f2sData.message.join(', ')
-        : (f2sData.message || 'SMS Gateway rejection');
-
-      if (f2sData.status_code === 996) {
-        errDetail = "Fast2SMS Notice: Please complete website verification under 'OTP Message' in your Fast2SMS dashboard to activate API sending.";
-      }
-
-      console.error('[Fast2SMS Smart OTP Delivery Error]:', errDetail);
-      return sendJson(res, 502, {
-        success: false,
-        code: 'auth/sms-delivery-failed',
-        error: `Fast2SMS delivery error: ${errDetail}`,
-        message: `Fast2SMS delivery error: ${errDetail}`,
-        details: f2sData
-      });
-    }
   } catch (error: any) {
     console.error('[SEND-OTP FATAL ERROR]:', error);
     return sendJson(res, 500, {
       success: false,
       code: 'auth/internal-error',
       error: error?.message || 'Internal server error dispatching OTP',
-      message: error?.message || 'Internal server error dispatching OTP'
+      message: error?.message || 'Internal server error dispatching OTP',
     });
   }
 }

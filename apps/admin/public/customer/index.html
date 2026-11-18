@@ -589,7 +589,7 @@
         <div class="space-y-1.5">
           <h2 class="text-2xl font-extrabold text-slate-900" data-i18n="login_title">Mobile Login</h2>
           <p class="text-xs text-slate-600 leading-relaxed" data-i18n="login_sub">
-            Enter your mobile number to receive a secure 6-digit SMS verification code on your phone.
+            Enter your mobile number to receive a secure 4-digit SMS verification code on your phone.
           </p>
         </div>
 
@@ -638,14 +638,12 @@
           </div>
 
           <div class="space-y-2">
-            <label class="block text-center text-[11px] font-semibold text-slate-600">Enter 6-Digit SMS Verification Code</label>
-            <div class="flex justify-center items-center gap-1.5 sm:gap-2 max-w-full mx-auto px-1">
-              <input type="tel" maxlength="1" id="otp-1" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-2', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-2" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-3', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-3" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-4', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-4" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-5', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-5" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-6', event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-6" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, null, event)" class="w-11 h-14 text-center text-xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+            <label class="block text-center text-[11px] font-semibold text-slate-600">Enter 4-Digit SMS Verification Code</label>
+            <div class="flex justify-center items-center gap-2 sm:gap-3 max-w-full mx-auto px-1">
+              <input type="tel" maxlength="1" id="otp-1" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-2', event)" class="w-13 h-14 text-center text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-2" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-3', event)" class="w-13 h-14 text-center text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-3" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-4', event)" class="w-13 h-14 text-center text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-4" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, null, event)" class="w-13 h-14 text-center text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
             </div>
           </div>
 
@@ -3654,7 +3652,7 @@
         select_language_sub: "Select your preferred language for grocery shopping and voice assistant.",
         continue_btn: "Continue / आगे बढ़ें",
         login_title: "Mobile Login",
-        login_sub: "Enter your mobile number to receive a secure 6-digit SMS verification code on your phone.",
+        login_sub: "Enter your mobile number to receive a secure 4-digit SMS verification code on your phone.",
         get_otp_btn: "Get OTP",
         send_otp_btn: "Send OTP",
         verify_login_btn: "Verify & Login",
@@ -4208,7 +4206,7 @@
       else if (clean.startsWith('0') && clean.length === 11) clean = clean.slice(1);
       clean = clean.replace(/\D/g, '').slice(-10);
 
-      if (!/^[6-9]\d{9}$/.test(clean) && clean !== '9999999999') {
+      if (!/^[6-9]\d{9}$/.test(clean)) {
         const err = "Please enter a valid 10-digit Indian mobile number (e.g. 9905361711)";
         if (typeof toastError === 'function') toastError(err);
         else alert(err);
@@ -4231,34 +4229,19 @@
           await window.authService.sendCustomerOTP();
         } else {
           console.warn("[Telecom Gateway] authService not ready, using direct network trigger...");
-          const isRazorpay = (clean === "9999999999");
-
-          if (isRazorpay) {
-            const phoneDisplay = document.getElementById('otp-phone-display');
-            if (phoneDisplay) phoneDisplay.innerText = formatted;
-            document.getElementById('phone-input-section')?.classList.add('hidden');
-            document.getElementById('otp-input-section')?.classList.remove('hidden');
-            ['1','2','3','4','5','6'].forEach((d, i) => {
-              const b = document.getElementById(`otp-${i+1}`);
-              if (b) b.value = d;
-            });
-            if (typeof toastSuccess === 'function') toastSuccess("Razorpay Compliance Review: Test OTP 123456");
-            document.getElementById('otp-1')?.focus();
-            return;
-          }
-
-          // Direct live backend SMS dispatch
-          const apiBase = (window.APP_CONFIG && window.APP_CONFIG.BACKEND_URL) || '';
-          const res = await fetch(`${apiBase}/api/v1/auth/otp/send`, {
+          const res = await fetch('/api/send-otp', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone: clean, role: 'customer' })
+            body: JSON.stringify({ phoneNumber: clean, role: 'customer' })
           });
 
           if (!res.ok) {
             const body = await res.json().catch(() => ({}));
-            throw new Error(body.detail || "Firebase Auth dispatch delayed. Please ensure domain is authorized.");
+            throw new Error(body.message || body.error || "SMS dispatch failed. Please try again.");
           }
+
+          const resData = await res.json();
+          window.__gb_verification_id = resData.verificationId || null;
 
           const phoneDisplay = document.getElementById('otp-phone-display');
           if (phoneDisplay) phoneDisplay.innerText = formatted;
@@ -4266,7 +4249,7 @@
           document.getElementById('phone-input-section')?.classList.add('hidden');
           document.getElementById('otp-input-section')?.classList.remove('hidden');
 
-          for (let i = 1; i <= 6; i++) {
+          for (let i = 1; i <= 4; i++) {
             const b = document.getElementById(`otp-${i}`);
             if (b) b.value = '';
           }

@@ -2,8 +2,6 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   getAuth,
   signInWithCustomToken,
-  signInWithPhoneNumber,
-  RecaptchaVerifier,
   type Auth,
   type UserCredential,
   type ConfirmationResult
@@ -24,83 +22,27 @@ export const firebaseConfig = {
 export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 
-/**
- * No-op stub for backwards compatibility
- */
 export function resetRecaptchaVerifier(): void {
-  // Recaptcha reset hook
-  if (typeof window !== 'undefined' && (window as any).recaptchaVerifier) {
-    try {
-      (window as any).recaptchaVerifier.clear();
-    } catch {}
-    (window as any).recaptchaVerifier = null;
-  }
+  // Legacy no-op stub: reCAPTCHA is permanently removed in favor of Message Central VerifyNow
 }
 
 /**
- * Initiates Firebase Phone Auth specifically for whitelisted test phone numbers
- * (e.g., +919905361711 or +919999999999) with static OTP 123456.
- * Configured in Firebase Console under "Phone numbers for testing".
+ * Sends a real 4-digit SMS OTP via Message Central VerifyNow (/api/send-otp).
+ * Zero hardcoded phone numbers or static OTP bypasses.
  */
-export async function sendFirebaseTestPhoneOtp(rawPhone: string): Promise<ConfirmationResult | null> {
+export async function sendMessageCentralOtp(
+  rawPhone: string,
+  role: string = 'customer'
+): Promise<{ success: boolean; verificationId: string; message?: string }> {
   const clean10 = rawPhone.replace(/\D/g, '').slice(-10);
-  const formattedPhone = `+91${clean10}`;
-  console.log('[Firebase Test Flow] Initiating Phone Auth for whitelisted test number:', formattedPhone);
-
-  if (typeof window === 'undefined') return null;
-
-  try {
-    let container = document.getElementById('recaptcha-test-container');
-    if (!container) {
-      container = document.createElement('div');
-      container.id = 'recaptcha-test-container';
-      container.style.position = 'fixed';
-      container.style.bottom = '0';
-      container.style.opacity = '0';
-      container.style.pointerEvents = 'none';
-      container.style.zIndex = '-1';
-      document.body.appendChild(container);
-    }
-
-    const appVerifier = new RecaptchaVerifier(auth, 'recaptcha-test-container', {
-      size: 'invisible',
-      callback: () => {
-        console.log('[Firebase Test Recaptcha] Verified automatically for test number');
-      }
-    });
-
-    const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-    console.log('[Firebase Test Flow] confirmationResult obtained successfully for:', formattedPhone);
-    return confirmationResult;
-  } catch (err: any) {
-    console.warn('[Firebase Test Flow Notice]: Could not create native confirmationResult, proceeding with compliance bypass:', err);
-    return null;
-  }
-}
-
-/**
- * Sends a 6-digit OTP via Fast2SMS API through Vercel Serverless Function (/api/send-otp).
- * Whitelisted test numbers (9905361711, 9999999999) bypass external SMS APIs.
- */
-export async function sendFast2SmsOtp(rawPhone: string): Promise<{ success: boolean; message?: string }> {
-  const clean10 = rawPhone.replace(/\D/g, '').slice(-10);
-  if (!/^[6-9]\d{9}$/.test(clean10) && clean10 !== '9999999999') {
+  if (!/^[6-9]\d{9}$/.test(clean10)) {
     throw {
       code: 'auth/invalid-phone-number',
       message: 'Please enter a valid 10-digit Indian mobile number'
     };
   }
 
-  // Whitelisted Compliance Test Numbers: DO NOT trigger external SMS APIs
-  if (clean10 === '9905361711' || clean10 === '9999999999') {
-    console.log('[Fast2SMS Client] Test number bypassed from external SMS:', clean10);
-    return {
-      success: true,
-      message: 'Razorpay Compliance Review: Static code 123456 active'
-    };
-  }
-
-  console.log('[Fast2SMS Client] Requesting OTP dispatch for:', clean10);
+  console.log('[Message Central Client] Requesting 4-digit OTP dispatch for:', clean10);
 
   let response: Response;
   try {
@@ -110,10 +52,10 @@ export async function sendFast2SmsOtp(rawPhone: string): Promise<{ success: bool
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({ phoneNumber: clean10 })
+      body: JSON.stringify({ phoneNumber: clean10, role })
     });
   } catch (netErr: any) {
-    console.error('[Fast2SMS Client Network Exception]:', netErr);
+    console.error('[Message Central Client Network Exception]:', netErr);
     throw {
       code: 'auth/network-error',
       message: 'Network connection error. Please verify your internet connection.'
@@ -125,7 +67,7 @@ export async function sendFast2SmsOtp(rawPhone: string): Promise<{ success: bool
   try {
     data = JSON.parse(rawText);
   } catch (parseErr) {
-    console.error('[Fast2SMS Client Non-JSON Server Response]:', response.status, rawText);
+    console.error('[Message Central Client Non-JSON Server Response]:', response.status, rawText);
     throw {
       code: 'auth/server-error',
       message: `Server returned HTTP ${response.status}: ${rawText.slice(0, 100) || 'Service temporarily unavailable'}`
@@ -143,21 +85,26 @@ export async function sendFast2SmsOtp(rawPhone: string): Promise<{ success: bool
 }
 
 /**
- * Verifies the 6-digit OTP code with /api/verify-otp, receives a Firebase Custom Token,
- * and signs in with Firebase via signInWithCustomToken.
+ * Verifies the 4-digit OTP code with Message Central VerifyNow (/api/verify-otp),
+ * receives a Firebase Custom Token, and signs in with Firebase via signInWithCustomToken.
  */
-export async function verifyFast2SmsOtp(rawPhone: string, otp: string): Promise<UserCredential> {
+export async function verifyMessageCentralOtp(
+  rawPhone: string,
+  otp: string,
+  verificationId?: string,
+  role: string = 'customer'
+): Promise<UserCredential> {
   const clean10 = rawPhone.replace(/\D/g, '').slice(-10);
   const cleanOtp = String(otp || '').trim();
 
-  if (!cleanOtp || cleanOtp.length < 4) {
+  if (!cleanOtp || cleanOtp.length !== 4) {
     throw {
       code: 'auth/invalid-verification-code',
-      message: 'Please enter the complete verification code'
+      message: 'Please enter the complete 4-digit verification code'
     };
   }
 
-  console.log('[Fast2SMS Client] Verifying OTP and requesting Custom Token for:', clean10);
+  console.log('[Message Central Client] Verifying OTP and requesting Custom Token for:', clean10);
 
   let response: Response;
   try {
@@ -167,10 +114,15 @@ export async function verifyFast2SmsOtp(rawPhone: string, otp: string): Promise<
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({ phoneNumber: clean10, otp: cleanOtp })
+      body: JSON.stringify({
+        phoneNumber: clean10,
+        otp: cleanOtp,
+        verificationId: verificationId || undefined,
+        role
+      })
     });
   } catch (netErr: any) {
-    console.error('[Fast2SMS Verify Network Exception]:', netErr);
+    console.error('[Message Central Verify Network Exception]:', netErr);
     throw {
       code: 'auth/network-error',
       message: 'Network connection error. Please verify your internet connection.'
@@ -182,7 +134,7 @@ export async function verifyFast2SmsOtp(rawPhone: string, otp: string): Promise<
   try {
     data = JSON.parse(rawText);
   } catch (parseErr) {
-    console.error('[Fast2SMS Verify Non-JSON Server Response]:', response.status, rawText);
+    console.error('[Message Central Verify Non-JSON Server Response]:', response.status, rawText);
     throw {
       code: 'auth/server-error',
       message: `Server returned HTTP ${response.status}: ${rawText.slice(0, 100) || 'Service temporarily unavailable'}`
@@ -192,12 +144,20 @@ export async function verifyFast2SmsOtp(rawPhone: string, otp: string): Promise<
   if (!response.ok || !data.success || !data.customToken) {
     throw {
       code: data.code || 'auth/invalid-verification-code',
-      message: data.message || data.error || 'Invalid or expired OTP code'
+      message: data.message || data.error || 'Invalid or expired OTP code. Please check your SMS.'
     };
   }
 
-  console.log('[Firebase Auth] Signing in seamlessly with Custom Token...');
+  console.log('[Firebase Auth] Message Central verified! Signing in with Custom Token...');
   const userCredential = await signInWithCustomToken(auth, data.customToken);
   console.log('[Firebase Auth] User authenticated successfully:', userCredential.user.uid);
   return userCredential;
 }
+
+// Backwards-compatible aliases
+export const sendFast2SmsOtp = sendMessageCentralOtp;
+export const verifyFast2SmsOtp = (rawPhone: string, otp: string) => verifyMessageCentralOtp(rawPhone, otp);
+export const sendFirebaseTestPhoneOtp = async (rawPhone: string) => {
+  // Disallow old test bypass; route directly into genuine provider
+  return null;
+};
