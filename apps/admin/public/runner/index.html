@@ -81,6 +81,60 @@
     .pulse-mission {
       animation: alert-pulse 1.8s infinite;
     }
+  
+    /* Precision 4-Digit OTP Input Styles */
+    .otp-digit-group {
+      display: flex !important;
+      justify-content: center !important;
+      align-items: center !important;
+      gap: 12px !important;
+      width: 100% !important;
+      max-width: 290px !important;
+      margin: 0 auto !important;
+    }
+    .otp-digit-box {
+      width: 54px !important;
+      height: 58px !important;
+      min-width: 54px !important;
+      max-width: 54px !important;
+      flex: 0 0 54px !important;
+      text-align: center !important;
+      font-size: 24px !important;
+      font-weight: 800 !important;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+      color: #0f172a !important;
+      background-color: #ffffff !important;
+      border: 2px solid #cbd5e1 !important;
+      border-radius: 14px !important;
+      outline: none !important;
+      transition: all 0.15s ease-in-out !important;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+      -webkit-appearance: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-sizing: border-box !important;
+    }
+    .otp-digit-box:focus {
+      border-color: #2563eb !important;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18) !important;
+      background-color: #ffffff !important;
+    }
+    @media (max-width: 360px) {
+      .otp-digit-group {
+        gap: 8px !important;
+        max-width: 240px !important;
+      }
+      .otp-digit-box {
+        width: 46px !important;
+        height: 50px !important;
+        min-width: 46px !important;
+        max-width: 46px !important;
+        flex: 0 0 46px !important;
+        font-size: 20px !important;
+        border-radius: 10px !important;
+      }
+    }
+
   </style>
   <!-- Secure Authentication Architecture (Zero Firebase Dependency) -->
   <script>
@@ -175,13 +229,13 @@
       <div id="screen-onboarding-2" class="app-screen flex-1 p-4 sm:p-6 flex flex-col justify-center items-center overflow-y-auto hidden">
         <div class="w-full max-w-md my-auto bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 space-y-5 landscape:p-5 landscape:space-y-3">
           <div>
-            <button onclick="handleHistoryBack()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition active:scale-95 mb-4" aria-label="Back">
+            <button type="button" onclick="handleHistoryBack()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition active:scale-95 mb-4" aria-label="Back">
               <i data-lucide="arrow-left" class="w-4 h-4"></i>
             </button>
 
             <div class="space-y-1.5 mb-5">
-              <h2 class="text-2xl font-extrabold text-slate-900" data-i18n="login_title">Mobile Login</h2>
-              <p class="text-xs text-slate-500 leading-relaxed" data-i18n="login_sub">Enter your mobile number to receive a secure 4-digit SMS verification code on your phone.</p>
+              <h2 id="auth-heading" class="text-2xl font-extrabold text-slate-900" data-i18n="verify_mobile_heading">Verify Your Mobile Number</h2>
+              <p id="auth-subtext" class="text-xs text-slate-500 leading-relaxed" data-i18n="verify_mobile_sub">Enter your mobile number to receive a one-time password (OTP).</p>
             </div>
 
             <!-- Step 1: Mobile Input Section -->
@@ -193,7 +247,7 @@
                     <span>🇮🇳</span>
                     <span class="font-mono text-blue-700 font-extrabold">+91</span>
                   </div>
-                  <input type="tel" id="runner-phone-input" maxlength="10" placeholder="Enter 10-digit mobile number" value="" autocomplete="off" class="w-full pl-20 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs font-mono font-bold">
+                  <input type="tel" id="runner-phone-input" maxlength="10" placeholder="Enter 10-digit mobile number" value="" autocomplete="tel-national" class="w-full pl-20 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-blue-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs font-mono font-bold">
                 </div>
                 <p class="text-[10px] text-slate-400 mt-1" data-i18n="sms_dispatched_note">Instant SMS OTP delivered to your mobile phone</p>
               </div>
@@ -201,39 +255,39 @@
               <!-- Invisible reCAPTCHA container -->
               <div id="recaptcha-container"></div>
 
-              <button id="send-otp-btn" onclick="sendMobileOTP()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
+              <button type="button" id="send-otp-btn" onclick="sendMobileOTP()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
                 <span id="send-otp-text" data-i18n="send_otp_btn">Send OTP</span>
                 <i data-lucide="send" class="w-4 h-4"></i>
               </button>
             </div>
 
-            <!-- Step 2: 6-Digit OTP Container -->
-            <div id="otp-container" class="space-y-4 pt-4 hidden">
+            <!-- Step 2: 4-Digit OTP Container -->
+            <div id="otp-container" class="space-y-4 pt-2 hidden">
               <div class="p-3 bg-blue-50 rounded-2xl border border-blue-200 flex items-center justify-between">
                 <div class="text-xs text-blue-900">
                   <span class="font-medium" data-i18n="otp_sent_to">Code sent to:</span> <span id="otp-phone-display" class="font-bold font-mono">+91 ----------</span>
                 </div>
-                <button onclick="resetRunnerPhone()" class="text-xs text-blue-700 font-bold hover:underline" data-i18n="change_number">Change</button>
+                <button type="button" onclick="resetRunnerPhone()" class="text-xs text-blue-700 font-bold hover:underline" data-i18n="change_number">Change Number</button>
               </div>
 
               <div class="space-y-2">
-                <label class="block text-center text-[11px] font-semibold text-slate-600" data-i18n="enter_otp_label">Enter 4-Digit OTP</label>
-                <div class="flex justify-center items-center gap-2 sm:gap-3 max-w-full mx-auto px-1">
-                  <input type="tel" maxlength="1" id="otp-1" autocomplete="off" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" class="w-13 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="">
-                  <input type="tel" maxlength="1" id="otp-2" autocomplete="off" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" class="w-13 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="">
-                  <input type="tel" maxlength="1" id="otp-3" autocomplete="off" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" class="w-13 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="">
-                  <input type="tel" maxlength="1" id="otp-4" autocomplete="off" oninput="handleOtpInput(4, event)" onkeydown="handleOtpKey(4, event)" class="w-13 h-14 text-center text-2xl font-bold rounded-xl border border-slate-300 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs font-mono" value="">
+                <label class="block text-center text-xs font-semibold text-slate-700" data-i18n="enter_otp_label">Enter 4-Digit OTP</label>
+                <div class="otp-digit-group">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-1" autocomplete="one-time-code" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-2" autocomplete="off" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-3" autocomplete="off" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-4" autocomplete="off" oninput="handleOtpInput(4, event)" onkeydown="handleOtpKey(4, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
                 </div>
               </div>
 
               <div class="flex justify-between items-center text-xs text-slate-500 pt-1">
-                <span></span>
-                <button onclick="sendMobileOTP()" class="text-blue-600 font-semibold hover:underline" data-i18n="resend_otp">Resend OTP</button>
+                <span id="resend-countdown" class="text-slate-400 font-mono text-[11px]"></span>
+                <button type="button" id="resend-otp-btn" onclick="sendMobileOTP(true)" class="text-blue-600 font-semibold hover:underline" data-i18n="resend_otp">Resend OTP</button>
               </div>
 
-              <div class="pt-4">
-                <button id="verify-otp-btn" onclick="verifyMobileOTP()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
-                  <span id="verify-btn-text" data-i18n="verify_proceed">Verify & Proceed</span>
+              <div class="pt-2">
+                <button type="button" id="verify-otp-btn" onclick="verifyMobileOTP()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
+                  <span id="verify-btn-text" data-i18n="verify_proceed">Verify OTP & Continue</span>
                   <i data-lucide="check" class="w-4 h-4"></i>
                 </button>
               </div>
@@ -385,66 +439,170 @@
             <button onclick="hideKycError()" class="text-rose-400 hover:text-rose-700 font-bold text-sm leading-none ml-1">✕</button>
           </div>
 
-          <!-- AADHAAR CARD PANEL (DEFAULT & ONLY KYC METHOD) -->
+          <!-- AADHAAR SECURE QR VERIFICATION PANEL (UIDAI OFFLINE CRYPTOGRAPHIC KYC) -->
           <div id="panel-aadhaar" class="space-y-4">
-            <!-- Aadhaar Number Input Section -->
-            <div id="aadhaar-number-section" class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-xs">
+
+            <!-- Notice Banner -->
+            <div class="p-3.5 bg-blue-50/90 rounded-2xl border border-blue-200 flex items-start space-x-3 text-xs text-blue-900 shadow-2xs">
+              <i data-lucide="shield-check" class="w-5 h-5 text-blue-600 shrink-0 mt-0.5"></i>
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="aadhaar_input_label">
-                  12-Digit Aadhaar Number <span class="text-rose-500">*</span>
-                </label>
-                <input type="tel" id="kyc-aadhaar-input" maxlength="14" placeholder="XXXX XXXX XXXX" value="5489 1204 9012" oninput="formatAadhaarInput(this)" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono font-bold text-xs tracking-wider focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
-                <p class="text-[10px] text-slate-400 mt-1" data-i18n="aadhaar_otp_hint">We will send a 6-digit OTP to your Aadhaar-linked mobile</p>
+                <span class="font-bold text-sm block mb-0.5" data-i18n="verify_aadhaar_title">Verify Your Aadhaar</span>
+                <p class="text-[11px] text-blue-700 leading-relaxed" data-i18n="verify_aadhaar_sub">
+                  Verify your identity securely using the QR code on your Aadhaar card or e-Aadhaar document.
+                </p>
               </div>
-
-              <!-- Statutory UIDAI Voluntary Consent -->
-              <label class="flex items-start space-x-2 text-xs text-slate-600 cursor-pointer p-2.5 bg-slate-50 rounded-xl border border-slate-200">
-                <input type="checkbox" id="kyc-aadhaar-consent-checkbox" checked class="mt-0.5 w-4 h-4 text-blue-600 rounded">
-                <span class="text-[10px] leading-relaxed">I voluntarily provide consent to Apna GaonBazaar to verify my identity via Aadhaar UIDAI OTP for delivery runner onboarding.</span>
-              </label>
-
-              <button onclick="submitAadhaarOtpRequest()" id="btn-send-aadhaar-otp" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
-                <span data-i18n="send_aadhaar_otp_btn">Send Aadhaar OTP</span>
-                <i data-lucide="send" class="w-4 h-4"></i>
-              </button>
             </div>
 
-            <!-- Aadhaar OTP Input Section -->
-            <div id="aadhaar-otp-section" class="hidden p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-xs">
-              <div class="flex items-center justify-between text-xs">
-                <span class="text-slate-500">Ref: <strong id="aadhaar-ref-display" class="font-mono text-slate-900">-</strong></span>
-                <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold">OTP Sent</span>
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="enter_aadhaar_otp_label">
-                  Enter 6-Digit Aadhaar OTP <span class="text-rose-500">*</span>
-                </label>
-                <input type="tel" id="kyc-aadhaar-otp-input" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="6" value="123456" placeholder="123456" class="w-full min-h-[48px] h-12 text-center py-3 rounded-xl border-2 border-slate-300 bg-white text-slate-900 font-mono font-extrabold text-xl tracking-widest focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+            <!-- Voluntary Statutory UIDAI Consent Checkbox -->
+            <label class="flex items-start space-x-2.5 text-xs text-slate-600 cursor-pointer p-3 bg-slate-50/90 rounded-xl border border-slate-200 shadow-2xs">
+              <input type="checkbox" id="kyc-aadhaar-consent-checkbox" checked class="mt-0.5 w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+              <span class="text-[11px] leading-relaxed text-slate-700">
+                I voluntarily provide consent to Apna GaonBazaar to verify my identity via UIDAI digitally signed Aadhaar Secure QR offline verification for runner delivery partner onboarding under IT Act guidelines.
+              </span>
+            </label>
+
+            <!-- Verification Action Cards (Option 1 & Option 2) -->
+            <div id="aadhaar-choice-section" class="space-y-3">
+              <!-- Option 1: Scan Aadhaar QR Code -->
+              <div onclick="startAadhaarCameraScanner()" class="p-4 rounded-2xl border-2 border-blue-500/80 bg-white hover:bg-blue-50/40 active:scale-[0.99] transition cursor-pointer shadow-xs group">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3.5">
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition">
+                      <i data-lucide="qr-code" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-xs font-bold text-slate-900" data-i18n="option_scan_title">Option 1: Scan Aadhaar QR Code</h4>
+                      <p class="text-[10px] text-slate-500 mt-0.5 leading-relaxed" data-i18n="option_scan_desc">
+                        Open back camera to scan the Secure QR code printed on your physical card
+                      </p>
+                    </div>
+                  </div>
+                  <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 group-hover:text-blue-600 transition shrink-0"></i>
+                </div>
               </div>
 
-              <!-- OTP Resend & Timer Row -->
-              <div class="flex items-center justify-between text-xs text-slate-500 px-1">
-                <span>Resend OTP in: <strong id="aadhaar-resend-timer" class="font-mono text-blue-700">00:30</strong></span>
-                <button type="button" id="btn-resend-aadhaar-otp" onclick="resendAadhaarOtp()" disabled class="text-xs font-bold text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed">Resend OTP</button>
+              <!-- Option 2: Upload Aadhaar Document -->
+              <div onclick="triggerAadhaarDocUpload()" class="p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50 active:scale-[0.99] transition cursor-pointer shadow-xs group">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3.5">
+                    <div class="w-12 h-12 rounded-xl bg-slate-100 text-blue-700 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition">
+                      <i data-lucide="file-up" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-xs font-bold text-slate-900" data-i18n="option_upload_title">Option 2: Upload Aadhaar Document</h4>
+                      <p class="text-[10px] text-slate-500 mt-0.5 leading-relaxed" data-i18n="option_upload_desc">
+                        Upload photo (JPG, PNG) or e-Aadhaar PDF containing the Secure QR code
+                      </p>
+                    </div>
+                  </div>
+                  <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 group-hover:text-blue-600 transition shrink-0"></i>
+                </div>
+                <input type="file" id="aadhaar-doc-input" accept="image/*,application/pdf" class="hidden" onchange="handleAadhaarFileUpload(event)">
               </div>
-
-              <button onclick="submitAadhaarVerification()" id="btn-verify-aadhaar-otp" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
-                <span data-i18n="verify_aadhaar_btn">Verify Aadhaar</span>
-                <i data-lucide="check-circle" class="w-4 h-4"></i>
-              </button>
             </div>
 
-            <!-- Aadhaar Verified Success Section -->
-            <div id="aadhaar-verified-section" class="hidden p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-3">
-              <div class="flex items-center space-x-2 text-emerald-800 font-bold text-xs">
-                <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
-                <span data-i18n="aadhaar_verified_title">Aadhaar Successfully Verified</span>
+            <!-- CAMERA SCANNER VIEWPORT (HIDDEN BY DEFAULT) -->
+            <div id="aadhaar-camera-section" class="hidden p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-sm">
+              <div class="flex items-center justify-between text-xs pb-1 border-b border-slate-100">
+                <div class="flex items-center space-x-1.5 text-blue-800 font-bold">
+                  <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                  <span>Point camera at Aadhaar Secure QR</span>
+                </div>
+                <button type="button" onclick="stopAadhaarCameraScanner()" class="px-2.5 py-1 text-[11px] font-bold text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition">
+                  Cancel
+                </button>
               </div>
-              <div class="space-y-1 text-xs">
-                <p class="text-slate-600"><span class="text-slate-400">Cardholder Name:</span> <strong id="aadhaar-name-display" class="text-slate-900">SONU KUMAR VERMA</strong></p>
-                <p class="text-slate-600"><span class="text-slate-400">Aadhaar Number:</span> <strong id="aadhaar-masked-display" class="font-mono text-slate-900">XXXX-XXXX-9012</strong></p>
+
+              <!-- Camera Preview Container -->
+              <div id="aadhaar-qr-reader" class="w-full overflow-hidden rounded-xl bg-black min-h-[260px] relative"></div>
+
+              <p class="text-[10px] text-center text-slate-400">
+                Align the square Secure QR code inside the camera box. Detection is automatic.
+              </p>
+            </div>
+
+            <!-- UPLOAD & VERIFICATION PROGRESS STATE (HIDDEN BY DEFAULT) -->
+            <div id="aadhaar-loading-section" class="hidden p-6 rounded-2xl border border-blue-200 bg-blue-50/60 text-center space-y-3">
+              <div class="w-14 h-14 mx-auto rounded-full bg-blue-100 text-blue-700 flex items-center justify-center animate-pulse">
+                <i data-lucide="shield" class="w-7 h-7"></i>
               </div>
-              <button onclick="proceedToNextStep()" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+              <h4 class="text-xs font-bold text-slate-900" id="aadhaar-loading-title">Verifying UIDAI Digital Signature...</h4>
+              <p class="text-[11px] text-slate-600 max-w-xs mx-auto leading-relaxed" id="aadhaar-loading-sub">
+                Cryptographically verifying RSA-2048 SHA-256 digital signature against official UIDAI trust certificates.
+              </p>
+              <div class="w-48 h-1.5 bg-blue-200 rounded-full mx-auto overflow-hidden">
+                <div class="h-full bg-blue-600 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+
+            <!-- VERIFIED SUCCESS SECTION (Aadhaar Secure QR Valid) -->
+            <div id="aadhaar-verified-section" class="hidden p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 space-y-4 shadow-sm">
+              <div class="flex items-center justify-between border-b border-emerald-200/80 pb-3">
+                <div class="flex items-center space-x-2">
+                  <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                    <i data-lucide="check" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-xs font-extrabold text-emerald-950 uppercase tracking-wide">Aadhaar Secure QR Valid</h3>
+                    <p class="text-[10px] text-emerald-700 font-medium">UIDAI Digitally Signed & Authenticated Offline</p>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-mono text-[9px] font-bold">RSA-2048</span>
+              </div>
+
+              <!-- Identity Card with Photo & Demographics -->
+              <div class="bg-white p-3.5 rounded-xl border border-emerald-200/80 shadow-2xs space-y-3">
+                <div class="flex items-start space-x-3">
+                  <div id="aadhaar-photo-container" class="w-16 h-20 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                    <img id="aadhaar-photo-img" src="" alt="Aadhaar Photo" class="w-full h-full object-cover hidden">
+                    <i id="aadhaar-photo-fallback" data-lucide="user" class="w-8 h-8 text-slate-400"></i>
+                  </div>
+                  <div class="flex-1 min-w-0 space-y-1">
+                    <div class="text-[10px] text-slate-400 font-semibold uppercase">Resident Name</div>
+                    <div id="aadhaar-name-display" class="text-xs font-extrabold text-slate-900 truncate">-</div>
+
+                    <div class="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                      <div>
+                        <span class="text-[10px] text-slate-400 block">DOB / YOB</span>
+                        <strong id="aadhaar-dob-display" class="text-slate-800 text-[11px]">-</strong>
+                      </div>
+                      <div>
+                        <span class="text-[10px] text-slate-400 block">Gender</span>
+                        <strong id="aadhaar-gender-display" class="text-slate-800 text-[11px]">-</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Reference & Masked Aadhaar -->
+                <div class="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-[10px]">
+                  <div>
+                    <span class="text-slate-400 block font-medium">Aadhaar Reference ID:</span>
+                    <strong id="aadhaar-ref-display" class="font-mono text-slate-800 text-[10px] block truncate">-</strong>
+                  </div>
+                  <div>
+                    <span class="text-slate-400 block font-medium">Masked Digits:</span>
+                    <strong id="aadhaar-masked-display" class="font-mono text-slate-800 text-[10px] block">-</strong>
+                  </div>
+                </div>
+
+                <!-- Address -->
+                <div class="pt-2 border-t border-slate-100 text-[10px]">
+                  <span class="text-slate-400 block font-medium mb-0.5">Verified Address:</span>
+                  <p id="aadhaar-address-display" class="text-slate-700 text-[11px] leading-relaxed break-words font-medium">-</p>
+                </div>
+              </div>
+
+              <!-- Regulatory & Next Step Notice -->
+              <div class="p-2.5 rounded-lg bg-amber-50/80 border border-amber-200 text-[10px] text-amber-800 flex items-start space-x-2">
+                <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                <p class="leading-relaxed">
+                  This confirms the authenticity of the signed Aadhaar document. Final runner activation remains subject to Admin review and approval.
+                </p>
+              </div>
+
+              <!-- Continue Button -->
+              <button type="button" onclick="proceedToNextStep()" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
                 <span data-i18n="continue_to_location">Continue to Payout Setup</span>
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
               </button>
@@ -453,7 +611,7 @@
         </div>
 
         <div class="pt-4 text-center">
-          <p class="text-[11px] text-slate-400" data-i18n="gov_secure_badge">100% Secure • Official Government Regulated Identity Verification</p>
+          <p class="text-[11px] text-slate-400" data-i18n="gov_secure_badge">100% Secure • Official UIDAI Digitally Signed Verification</p>
         </div>
       </div>
 
@@ -1685,6 +1843,11 @@
         mobile_reg_title: "Enter Mobile Number",
         mobile_reg_sub: "We will send a 4-digit verification code to your phone",
         phone_number_label: "Phone Number",
+        verify_mobile_heading: "Verify Your Mobile Number",
+        verify_mobile_sub: "Enter your mobile number to receive a one-time password (OTP).",
+        otp_screen_heading: "Enter Verification OTP",
+        otp_screen_sub: "We've sent a 4-digit OTP to your mobile number.",
+        change_number: "Change Number",
         send_otp_btn: "Send OTP",
         enter_otp_label: "Enter 4-Digit OTP",
         resend_otp: "Resend OTP",
@@ -1890,6 +2053,11 @@
         mobile_reg_title: "मोबाइल नंबर दर्ज करें",
         mobile_reg_sub: "हम आपके फ़ोन पर 4-अंकों का सत्यापन कोड भेजेंगे",
         phone_number_label: "फ़ोन नंबर",
+        verify_mobile_heading: "अपना मोबाइल नंबर सत्यापित करें",
+        verify_mobile_sub: "वन-टाइम पासवर्ड (OTP) प्राप्त करने के लिए अपना मोबाइल नंबर दर्ज करें।",
+        otp_screen_heading: "सत्यापन OTP दर्ज करें",
+        otp_screen_sub: "हमने आपके मोबाइल नंबर पर 4-अंकीय OTP भेजा है।",
+        change_number: "नंबर बदलें",
         send_otp_btn: "OTP भेजें",
         enter_otp_label: "4 अंकों का OTP दर्ज करें",
         resend_otp: "OTP पुनः भेजें",
@@ -2999,136 +3167,269 @@
     }
     window.resolveIfscBranch = resolveIfscBranch;
 
-    async function submitAadhaarOtpRequest() {
-      hideKycError();
-      const input = document.getElementById('kyc-aadhaar-input');
-      const cleanAadhaar = (input?.value || '').replace(/\D/g, '');
+    let aadhaarQrScanner = null;
 
-      if (cleanAadhaar.length !== 12) {
-        showKycError(currentLang === 'hi' ? "कृपया 12-अंकीय मान्य आधार नंबर दर्ज करें" : "Please enter a valid 12-digit Aadhaar number");
-        input?.focus();
+    function triggerAadhaarDocUpload() {
+      const consent = document.getElementById('kyc-aadhaar-consent-checkbox');
+      if (consent && !consent.checked) {
+        showKycError(currentLang === 'hi' ? "कृपया आगे बढ़ने के लिए आधार सत्यापन सहमति पर टिक करें" : "Please tick the Aadhaar verification consent checkbox");
         return;
       }
+      hideKycError();
+      document.getElementById('aadhaar-doc-input')?.click();
+    }
 
-      const btn = document.getElementById('btn-send-aadhaar-otp');
-      const origHtml = btn ? btn.innerHTML : '';
-      if (btn) {
-        btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? 'OTP भेजा जा रहा है...' : 'Sending OTP...'}`;
-        btn.disabled = true;
+    async function startAadhaarCameraScanner() {
+      const consent = document.getElementById('kyc-aadhaar-consent-checkbox');
+      if (consent && !consent.checked) {
+        showKycError(currentLang === 'hi' ? "कृपया आगे बढ़ने के लिए आधार सत्यापन सहमति पर टिक करें" : "Please tick the Aadhaar verification consent checkbox");
+        return;
       }
+      hideKycError();
+
+      const choiceSec = document.getElementById('aadhaar-choice-section');
+      const camSec = document.getElementById('aadhaar-camera-section');
+      if (choiceSec) choiceSec.classList.add('hidden');
+      if (camSec) camSec.classList.remove('hidden');
 
       try {
-        let refId = "cf_ref_" + Math.random().toString(36).substring(2, 10);
-        const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "https://gaonbazaar-village.onrender.com/api/v1";
-
-        try {
-          const res = await safeApiCall(`${backendUrl}/kyc/aadhaar/otp`, 'POST', { aadhaar_number: cleanAadhaar }, 8000);
-          if (res && res.ref_id) refId = res.ref_id;
-        } catch (beErr) {
-          console.warn("Backend Aadhaar OTP notice:", beErr.message);
+        if (!window.Html5Qrcode) {
+          throw new Error("QR scanning library is loading. Please try again in a moment.");
         }
-
-        const consent = document.getElementById('kyc-aadhaar-consent-checkbox');
-        if (consent && !consent.checked) {
-          showKycError(currentLang === 'hi' ? "कृपया आधार सत्यापन सहमति पर टिक करें" : "Please provide consent to proceed with Aadhaar verification");
-          return;
+        if (!aadhaarQrScanner) {
+          aadhaarQrScanner = new Html5Qrcode("aadhaar-qr-reader");
         }
-        currentAadhaarRefId = refId;
-        document.getElementById('aadhaar-number-section')?.classList.add('hidden');
-        document.getElementById('aadhaar-otp-section')?.classList.remove('hidden');
-        startAadhaarTimer();
-
-        const refDisplay = document.getElementById('aadhaar-ref-display');
-        if (refDisplay) refDisplay.innerText = refId;
-
-        document.getElementById('kyc-aadhaar-otp-input')?.focus();
-        toastSuccess(currentLang === 'hi' ? "आधार ओटीपी आपके पंजीकृत मोबाइल पर भेजा गया है!" : "Aadhaar OTP dispatched to your registered mobile!");
-      } catch (err) {
-        showKycError(err.message || (currentLang === 'hi' ? "OTP भेजने में विफल, कृपया पुनः प्रयास करें" : "Failed to send OTP, please try again"));
-      } finally {
-        if (btn) {
-          btn.innerHTML = origHtml;
-          btn.disabled = false;
-          lucide.createIcons();
-        }
+        const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+        await aadhaarQrScanner.start(
+          { facingMode: "environment" },
+          config,
+          (decodedText) => {
+            console.log("[Aadhaar QR Detected via Camera]");
+            stopAadhaarCameraScanner();
+            processAadhaarQrPayload(decodedText);
+          },
+          () => {} // frame error callback ignored
+        );
+      } catch (camErr) {
+        console.error("Camera scanner error:", camErr);
+        stopAadhaarCameraScanner();
+        showKycError(currentLang === 'hi'
+          ? "कैमरा खोलने में असमर्थ। कृपया ब्राउज़र सेटिंग्स में कैमरा अनुमति जांचें या विकल्प 2 से दस्तावेज़ अपलोड करें।"
+          : "Unable to access back camera. Please grant camera permission or use Option 2 to upload your Aadhaar document.");
       }
     }
 
-    async function submitAadhaarVerification() {
-      hideKycError();
-      const otpInput = document.getElementById('kyc-aadhaar-otp-input');
-      const otp = (otpInput?.value || '').trim();
+    async function stopAadhaarCameraScanner() {
+      if (aadhaarQrScanner) {
+        try {
+          await aadhaarQrScanner.stop();
+        } catch (e) {}
+      }
+      document.getElementById('aadhaar-camera-section')?.classList.add('hidden');
+      document.getElementById('aadhaar-choice-section')?.classList.remove('hidden');
+      if (window.lucide) window.lucide.createIcons();
+    }
 
-      if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
-        showKycError(currentLang === 'hi' ? "कृपया पूरा 6-अंकीय आधार OTP दर्ज करें" : "Please enter the complete 6-digit Aadhaar OTP");
-        otpInput?.focus();
+    async function handleAadhaarFileUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const consent = document.getElementById('kyc-aadhaar-consent-checkbox');
+      if (consent && !consent.checked) {
+        showKycError(currentLang === 'hi' ? "कृपया आधार सत्यापन सहमति पर टिक करें" : "Please provide Aadhaar verification consent");
+        event.target.value = '';
         return;
       }
 
-      const btn = document.getElementById('btn-verify-aadhaar-otp');
-      const origHtml = btn ? btn.innerHTML : '';
-      if (btn) {
-        btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? 'सत्यापित हो रहा है...' : 'Verifying Aadhaar...'}`;
-        btn.disabled = true;
-      }
-
-      const cleanAadhaar = (document.getElementById('kyc-aadhaar-input')?.value || '').replace(/\D/g, '') || "548912049012";
-      const maskedAadhaar = "XXXX-XXXX-" + cleanAadhaar.slice(-4);
-      const name = state.userProfile.name || 'Sonu Kumar Verma';
+      hideKycError();
+      showAadhaarLoading(currentLang === 'hi' ? "दस्तावेज़ से QR कोड निकाला जा रहा है..." : "Extracting QR code from document...");
 
       try {
-        const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "https://gaonbazaar-village.onrender.com/api/v1";
-        try {
-          await safeApiCall(`${backendUrl}/kyc/aadhaar/verify`, 'POST', {
-            otp: otp,
-            ref_id: currentAadhaarRefId || "cf_ref_demo",
-            aadhaar_number: cleanAadhaar,
-            role: 'runner'
-          }, 8000);
-        } catch (beErr) {
-          console.warn("Backend Aadhaar verify notice:", beErr.message);
-        }
-
-        const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
-        const supabaseKey = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
-        const cleanPhone = (state.userProfile.phone || localStorage.getItem('gb_user_phone') || '').replace(/\D/g, '').slice(-10);
-
-        if (cleanPhone) {
+        // Step A: If image file, try client-side Html5Qrcode.scanFile
+        if (file.type.startsWith('image/')) {
           try {
-            await safeApiCall(`${supabaseUrl}/rest/v1/users?phone=eq.${cleanPhone}`, 'PATCH', {
-              aadhaar_number: maskedAadhaar,
-              kyc_status: 'verified'
-            }, 8000);
-            await safeApiCall(`${supabaseUrl}/rest/v1/runners?phone=eq.${cleanPhone}`, 'PATCH', {
-              aadhaar_number: maskedAadhaar
-            }, 8000);
-          } catch (sbErr) {
-            console.warn("Supabase Aadhaar update notice:", sbErr);
+            if (!aadhaarQrScanner) aadhaarQrScanner = new Html5Qrcode("aadhaar-qr-reader");
+            const decoded = await aadhaarQrScanner.scanFile(file, true);
+            if (decoded) {
+              await processAadhaarQrPayload(decoded);
+              event.target.value = '';
+              return;
+            }
+          } catch (scanErr) {
+            console.warn("Client-side image QR scan notice:", scanErr);
           }
         }
 
-        // Render Verified Success State
-        document.getElementById('aadhaar-otp-section')?.classList.add('hidden');
+        // Step B: If PDF file and pdfjsLib available, render page 1 to canvas
+        if (file.type === 'application/pdf' && window.pdfjsLib) {
+          try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 2.0 });
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+            await page.render({ canvasContext: ctx, viewport }).promise;
+
+            const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg'));
+            if (blob) {
+              const testFile = new File([blob], "page1.jpg", { type: "image/jpeg" });
+              if (!aadhaarQrScanner) aadhaarQrScanner = new Html5Qrcode("aadhaar-qr-reader");
+              const decoded = await aadhaarQrScanner.scanFile(testFile, true);
+              if (decoded) {
+                await processAadhaarQrPayload(decoded);
+                event.target.value = '';
+                return;
+              }
+            }
+          } catch (pdfErr) {
+            console.warn("Client-side PDF render notice:", pdfErr);
+          }
+        }
+
+        // Step C: Fallback to server-side extraction
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const base64Data = e.target.result;
+          await processAadhaarQrPayload(null, base64Data, file.name);
+          event.target.value = '';
+        };
+        reader.readAsDataURL(file);
+
+      } catch (err) {
+        hideAadhaarLoading();
+        showKycError(err.message || (currentLang === 'hi' ? "QR कोड पढ़ने में असमर्थ। कृपया साफ फ़ोटो अपलोड करें।" : "Unable to read QR code. Please upload a clearer image."));
+        event.target.value = '';
+      }
+    }
+
+    function showAadhaarLoading(msg) {
+      document.getElementById('aadhaar-choice-section')?.classList.add('hidden');
+      document.getElementById('aadhaar-camera-section')?.classList.add('hidden');
+      document.getElementById('aadhaar-verified-section')?.classList.add('hidden');
+      const loadSec = document.getElementById('aadhaar-loading-section');
+      if (loadSec) {
+        loadSec.classList.remove('hidden');
+        if (msg) {
+          const title = document.getElementById('aadhaar-loading-title');
+          if (title) title.innerText = msg;
+        }
+      }
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function hideAadhaarLoading() {
+      document.getElementById('aadhaar-loading-section')?.classList.add('hidden');
+      document.getElementById('aadhaar-choice-section')?.classList.remove('hidden');
+    }
+
+    async function processAadhaarQrPayload(qrString, fileBase64 = null, fileName = null) {
+      showAadhaarLoading(currentLang === 'hi' ? "UIDAI डिजिटल हस्ताक्षर सत्यापित हो रहा है..." : "Cryptographically Verifying UIDAI Digital Signature...");
+
+      const userId = state.userProfile.phone || localStorage.getItem('gb_user_phone') || 'usr_runner';
+
+      try {
+        let verifyRes = null;
+        let verifyData = null;
+
+        // Try primary Vercel serverless /api/verify-aadhaar-qr endpoint
+        try {
+          verifyRes = await fetch('/api/verify-aadhaar-qr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              qr_data: qrString || undefined,
+              file_base64: fileBase64 || undefined,
+              file_name: fileName || undefined,
+              user_id: userId,
+              role: 'runner',
+              consent_accepted: true
+            })
+          });
+          if (verifyRes.ok) {
+            verifyData = await verifyRes.json();
+          }
+        } catch (vErr) {
+          console.warn("Primary QR verify notice:", vErr);
+        }
+
+        // Fallback to FastAPI backend endpoint
+        if (!verifyData || !verifyData.valid) {
+          const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "https://gaonbazaar-village.onrender.com/api/v1";
+          const res = await safeApiCall(`${backendUrl}/kyc/aadhaar/verify-qr`, 'POST', {
+            qr_data: qrString || undefined,
+            file_base64: fileBase64 || undefined,
+            file_name: fileName || undefined,
+            user_id: userId,
+            role: 'runner',
+            consent_accepted: true
+          }, 15000);
+          if (res && res.valid) {
+            verifyData = res;
+          }
+        }
+
+        if (!verifyData || !verifyData.valid) {
+          throw new Error(verifyData?.error || verifyData?.detail || (
+            currentLang === 'hi'
+              ? "अमान्य या संशोधित आधार QR कोड। UIDAI डिजिटल हस्ताक्षर मेल नहीं खाता।"
+              : "Invalid or altered Aadhaar QR. UIDAI cryptographic signature verification failed."
+          ));
+        }
+
+        // Cryptographic signature verified successfully
+        hideAadhaarLoading();
+        document.getElementById('aadhaar-choice-section')?.classList.add('hidden');
+        document.getElementById('aadhaar-camera-section')?.classList.add('hidden');
         document.getElementById('aadhaar-verified-section')?.classList.remove('hidden');
 
+        // Populate verified fields
         const nameEl = document.getElementById('aadhaar-name-display');
-        if (nameEl) nameEl.innerText = name;
+        if (nameEl) nameEl.innerText = verifyData.name || state.userProfile.name || 'Resident';
+
+        const dobEl = document.getElementById('aadhaar-dob-display');
+        if (dobEl) dobEl.innerText = verifyData.dob || 'Available';
+
+        const genderEl = document.getElementById('aadhaar-gender-display');
+        if (genderEl) genderEl.innerText = verifyData.gender === 'M' ? 'Male' : (verifyData.gender === 'F' ? 'Female' : (verifyData.gender || 'Available'));
+
+        const refEl = document.getElementById('aadhaar-ref-display');
+        if (refEl) refEl.innerText = verifyData.reference_id || `REF-${verifyData.last_4_digits}`;
+
         const maskEl = document.getElementById('aadhaar-masked-display');
-        if (maskEl) maskEl.innerText = maskedAadhaar;
+        if (maskEl) maskEl.innerText = verifyData.masked_aadhaar || `XXXX-XXXX-${verifyData.last_4_digits}`;
+
+        const addrEl = document.getElementById('aadhaar-address-display');
+        if (addrEl) addrEl.innerText = verifyData.address || 'Verified via UIDAI Signature';
+
+        // Photo display
+        if (verifyData.photo_url || verifyData.kyc_photo_url) {
+          const img = document.getElementById('aadhaar-photo-img');
+          const fallback = document.getElementById('aadhaar-photo-fallback');
+          if (img) {
+            img.src = verifyData.photo_url || verifyData.kyc_photo_url;
+            img.classList.remove('hidden');
+          }
+          if (fallback) fallback.classList.add('hidden');
+        }
 
         state.kycVerified = true;
-        localStorage.setItem('gb_kyc_aadhaar', maskedAadhaar);
-        localStorage.setItem('gb_kyc_type', 'aadhaar');
+        localStorage.setItem('gb_kyc_aadhaar', verifyData.masked_aadhaar);
+        localStorage.setItem('gb_kyc_type', 'aadhaar_qr');
         localStorage.setItem('gb_kyc_verified', 'true');
-        toastSuccess(currentLang === 'hi' ? "आधार कार्ड सफलतापूर्वक सत्यापित!" : "Aadhaar verified successfully!");
+
+        toastSuccess(currentLang === 'hi'
+          ? "आधार सुरक्षित QR डिजिटल रूप से सत्यापित! UIDAI हस्ताक्षर मान्य।"
+          : "Aadhaar Secure QR cryptographically verified! UIDAI digital signature authentic.");
+
+        if (window.lucide) window.lucide.createIcons();
+
       } catch (err) {
-        showKycError(err.message || (currentLang === 'hi' ? "सत्यापन विफल रहा, कृपया पुनः प्रयास करें" : "Verification failed, please try again"));
-      } finally {
-        if (btn) {
-          btn.innerHTML = origHtml;
-          btn.disabled = false;
-          lucide.createIcons();
-        }
+        hideAadhaarLoading();
+        console.error("processAadhaarQrPayload error:", err);
+        showKycError(err.message || (currentLang === 'hi' ? "आधार सत्यापन विफल रहा" : "Aadhaar verification failed"));
       }
     }
 
@@ -5408,29 +5709,31 @@
       const savedLang = localStorage.getItem('gaonbazaar_runner_lang') || localStorage.getItem('gb_customer_lang') || 'en';
       setLanguage(savedLang);
 
-      // Cross-App Auth Persistence Restoration
-      const savedPhone = localStorage.getItem('gb_user_phone') || localStorage.getItem('gb_auth_phone') || localStorage.getItem('gb_runner_phone') || localStorage.getItem('gb_vendor_phone') || localStorage.getItem('gb_customer_phone');
-      if (savedPhone) {
-        state.userProfile.phone = savedPhone;
-        const phoneInput = document.getElementById('runner-phone-input');
-        if (phoneInput) phoneInput.value = savedPhone;
+      // Session initialization without prefilling phone for new users
+      const phoneInput = document.getElementById('runner-phone-input');
+      if (phoneInput) {
+        phoneInput.value = '';
       }
-      const savedName = localStorage.getItem('gb_user_name') || localStorage.getItem('gb_runner_name') || localStorage.getItem('gb_customer_name');
-      if (savedName) {
-        state.userProfile.name = savedName;
-        const nameInput = document.getElementById('runner-fullname');
-        if (nameInput) nameInput.value = savedName;
+      state.userProfile.phone = '';
+
+      const runnerToken = getAuthToken();
+      const isRunnerAuth = localStorage.getItem('gb_runner_authenticated') === 'true';
+
+      if (runnerToken && isRunnerAuth) {
+        const savedPhone = localStorage.getItem('gb_runner_phone');
+        if (savedPhone) {
+          state.userProfile.phone = savedPhone;
+        }
       }
 
       const hash = (window.location.hash || '').replace('#', '');
-      const token = getAuthToken();
 
       if (hash.startsWith('dashboard-')) {
         const tab = hash.replace('dashboard-', '');
         openDashboard(tab || 'missions', false);
       } else if (hash.startsWith('onboarding-')) {
         navigateTo(hash, false);
-      } else if (token) {
+      } else if (runnerToken && isRunnerAuth) {
         openDashboard('missions', false);
       } else {
         navigateTo('onboarding-1', false);

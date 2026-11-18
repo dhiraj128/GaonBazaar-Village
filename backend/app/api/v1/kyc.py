@@ -3,6 +3,7 @@ import json
 import base64
 import secrets
 import logging
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -12,6 +13,14 @@ from sqlalchemy.future import select
 from app.db.session import get_db
 from app.models.base import User
 from app.core.config import settings
+from app.services.aadhaar_secure_qr import (
+    AadhaarSecureQrParser,
+    extract_qr_from_image_bytes,
+    extract_qr_from_pdf_bytes,
+    InvalidAadhaarSignatureError,
+    MalformedQrPayloadError,
+    NoCertificateConfiguredError
+)
 
 logger = logging.getLogger("gaonbazaar.kyc")
 
@@ -60,6 +69,33 @@ class AadhaarVerifyResponse(BaseModel):
     kyc_photo_url: Optional[str] = None
     message: str
 
+
+
+class AadhaarQrVerifyRequest(BaseModel):
+    qr_data: Optional[str] = Field(None, description="Scanned Aadhaar Secure QR code string (decimal or base64)")
+    file_base64: Optional[str] = Field(None, description="Uploaded image or PDF document in base64")
+    file_name: Optional[str] = Field(None, description="Uploaded document file name (e.g. e-aadhaar.pdf)")
+    user_id: Optional[str] = Field(None, description="Authenticated User ID")
+    role: Optional[str] = Field("vendor", description="User role: vendor or runner")
+    consent_accepted: bool = Field(True, description="Resident voluntary Aadhaar verification consent")
+
+
+class AadhaarQrVerifyResponse(BaseModel):
+    valid: bool
+    status: str
+    kyc_status: str
+    verification_method: str
+    name: str
+    gender: str
+    dob: str
+    address: str
+    last_4_digits: str
+    masked_aadhaar: str
+    reference_id: str
+    kyc_photo_url: Optional[str] = None
+    digital_signature_verified: bool
+    algorithm: str
+    message: str
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -372,6 +408,145 @@ async def verify_aadhaar_otp(
 # ---------------------------------------------------------------------------
 # 4. KYC Status Probe Endpoint
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# 3C. UIDAI Secure QR Code Cryptographic Verification Endpoint
+# ---------------------------------------------------------------------------
+@router.post("/aadhaar/verify-qr", response_model=AadhaarQrVerifyResponse)
+async def verify_aadhaar_qr(
+    payload: AadhaarQrVerifyRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    if not payload.consent_accepted:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Voluntary resident consent is legally mandatory for Aadhaar Secure QR verification under UIDAI regulations."
+        )
+
+    user_id = payload.user_id or "usr_demo"
+    qr_string = (payload.qr_data or "").strip()
+
+    # If file upload (image or PDF) is provided instead of direct QR string
+    if not qr_string and payload.file_base64:
+        try:
+            raw_b64 = payload.file_base64
+            if "," in raw_b64:
+                raw_b64 = raw_b64.split(",", 1)[1]
+            file_bytes = base64.b64decode(raw_b64)
+
+            fname = (payload.file_name or "").lower()
+            if fname.endswith(".pdf") or file_bytes.startswith(b"%PDF"):
+                qr_string = extract_qr_from_pdf_bytes(file_bytes) or ""
+            else:
+                qr_string = extract_qr_from_image_bytes(file_bytes) or ""
+        except Exception as exc:
+            logger.warning("Document decode error: %s", exc)
+
+    if not qr_string:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No valid QR code detected in the uploaded file or camera stream. Please upload a clear photo or e-Aadhaar PDF."
+        )
+
+    parser = AadhaarSecureQrParser()
+    allow_test = getattr(settings, "ENVIRONMENT", "").lower() != "production"
+
+    try:
+        result = parser.parse_and_verify(qr_string, allow_test_identity=allow_test)
+    except InvalidAadhaarSignatureError as exc:
+        logger.warning("UIDAI signature verification failed: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"UIDAI Digital Signature Verification Failed: {exc}"
+        )
+    except MalformedQrPayloadError as exc:
+        logger.warning("Malformed Aadhaar QR payload: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid Aadhaar QR Format: {exc}"
+        )
+    except NoCertificateConfiguredError as exc:
+        logger.error("No UIDAI certificate configured: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Aadhaar verification service configuration error: Trusted certificate unavailable."
+        )
+
+    last_4 = result.get("last_4_digits") or "XXXX"
+    masked_aadhaar = f"XXXX-XXXX-{last_4}"
+    photo_data_url = result.get("photo_base64")
+    kyc_photo_url = None
+
+    if photo_data_url and "," in photo_data_url:
+        try:
+            p_bytes = base64.b64decode(photo_data_url.split(",", 1)[1])
+            kyc_photo_url = await upload_photo_to_supabase(user_id, p_bytes)
+        except Exception as exc:
+            logger.debug("Photo upload notice: %s", exc)
+
+    if not kyc_photo_url:
+        kyc_photo_url = f"{settings.SUPABASE_URL}/storage/v1/object/public/kyc-documents/{user_id}_aadhaar_photo.png"
+
+    verification_metadata = {
+        "name": result.get("name"),
+        "dob": result.get("dob"),
+        "gender": result.get("gender"),
+        "address": result.get("address"),
+        "split_address": result.get("split_address"),
+        "reference_id": result.get("reference_id"),
+        "last_4_digits": last_4,
+        "verification_method": "UIDAI_SECURE_QR",
+        "digital_signature_verified": True,
+        "algorithm": result.get("algorithm", "SHA256withRSA-2048"),
+        "matching_certificate": result.get("matching_certificate", "UIDAI_CERT"),
+        "verified_at": result.get("verified_at", datetime.now(timezone.utc).isoformat()),
+        "consent_timestamp": datetime.now(timezone.utc).isoformat(),
+        "approval_status": "PENDING_ADMIN_APPROVAL"
+    }
+
+    # Sync with Supabase public.users
+    supabase_updates = {
+        "kyc_status": "aadhaar_qr_verified",
+        "aadhaar_number": masked_aadhaar,
+        "aadhaar_data": verification_metadata,
+        "kyc_photo_url": kyc_photo_url,
+        "avatar_url": kyc_photo_url
+    }
+    await update_supabase_user(user_id, supabase_updates)
+
+    # Sync with local DB User model
+    try:
+        user_res = await db.execute(select(User).where((User.id == user_id) | (User.phone == user_id)))
+        local_user = user_res.scalars().first()
+        if local_user:
+            local_user.kyc_status = "aadhaar_qr_verified"
+            local_user.aadhaar_number = masked_aadhaar
+            local_user.aadhaar_data = verification_metadata
+            local_user.kyc_photo_url = kyc_photo_url
+            local_user.avatar_url = kyc_photo_url
+            await db.commit()
+    except Exception as exc:
+        logger.debug("Local user update notice: %s", exc)
+
+    return AadhaarQrVerifyResponse(
+        valid=True,
+        status="VALID",
+        kyc_status="aadhaar_qr_verified",
+        verification_method="UIDAI_SECURE_QR",
+        name=result.get("name") or "Resident",
+        gender=result.get("gender") or "",
+        dob=result.get("dob") or "",
+        address=result.get("address") or "",
+        last_4_digits=last_4,
+        masked_aadhaar=masked_aadhaar,
+        reference_id=result.get("reference_id") or "",
+        kyc_photo_url=kyc_photo_url,
+        digital_signature_verified=True,
+        algorithm=result.get("algorithm", "SHA256withRSA-2048"),
+        message="Aadhaar Secure QR digital signature verified successfully"
+    )
+
+
 @router.get("/status/{user_id}")
 async def get_kyc_status(user_id: str):
     url = f"{settings.SUPABASE_URL}/rest/v1/users"
