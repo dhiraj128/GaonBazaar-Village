@@ -38,7 +38,9 @@
 
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- HTML5 QR / Barcode Scanner CDN -->
+  
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <!-- QR & Barcode Tools -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
@@ -3495,7 +3497,12 @@
       }
     }
 
+    // =========================================================================
+    // HIGH-ACCURACY DUAL-ENGINE UIDAI SECURE QR CODE SCANNER (jsQR + Html5Qrcode)
+    // =========================================================================
     let aadhaarQrScanner = null;
+    let currentCameraFacingMode = "environment";
+    let pendingPdfPasswordResolver = null;
 
     function triggerAadhaarDocUpload() {
       const consent = document.getElementById('kyc-aadhaar-consent-checkbox');
@@ -3524,27 +3531,44 @@
         if (!window.Html5Qrcode) {
           throw new Error("QR scanning library is loading. Please try again in a moment.");
         }
-        if (!aadhaarQrScanner) {
-          aadhaarQrScanner = new Html5Qrcode("aadhaar-qr-reader");
+        if (aadhaarQrScanner) {
+          try { await aadhaarQrScanner.stop(); } catch (e) {}
         }
-        const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+        aadhaarQrScanner = new Html5Qrcode("aadhaar-qr-reader");
+        const config = { fps: 12, qrbox: { width: 240, height: 240 } };
         await aadhaarQrScanner.start(
-          { facingMode: "environment" },
+          { facingMode: currentCameraFacingMode },
           config,
           (decodedText) => {
             console.log("[Aadhaar QR Detected via Camera]");
             stopAadhaarCameraScanner();
             processAadhaarQrPayload(decodedText);
           },
-          () => {} // frame error callback ignored
+          () => {} // Frame error callback ignored
         );
       } catch (camErr) {
         console.error("Camera scanner error:", camErr);
         stopAadhaarCameraScanner();
-        showKycError(currentLang === 'hi'
-          ? "कैमरा खोलने में असमर्थ। कृपया ब्राउज़र सेटिंग्स में कैमरा अनुमति जांचें या विकल्प 2 से दस्तावेज़ अपलोड करें।"
-          : "Unable to access back camera. Please grant camera permission or use Option 2 to upload your Aadhaar document.");
+        const errStr = String(camErr || '');
+        if (camErr.name === 'NotAllowedError' || camErr.name === 'PermissionDeniedError' || errStr.includes('NotAllowedError') || errStr.includes('Permission denied')) {
+          showKycError(currentLang === 'hi'
+            ? "कैमरा अनुमति अस्वीकृत है। कृपया ब्राउज़र सेटिंग्स में कैमरा अनुमति दें या विकल्प 2 से दस्तावेज़ अपलोड करें।"
+            : "Camera permission was denied. Please allow camera access in browser settings or use Option 2 to upload your Aadhaar document.");
+        } else if (camErr.name === 'NotFoundError' || errStr.includes('NotFoundError')) {
+          showKycError(currentLang === 'hi'
+            ? "डिवाइस पर कोई कैमरा नहीं मिला। कृपया विकल्प 2 से दस्तावेज़ अपलोड करें।"
+            : "No camera found on this device. Please use Option 2 to upload your Aadhaar document.");
+        } else {
+          showKycError(currentLang === 'hi'
+            ? "कैमरा खोलने में असमर्थ। कृपया ब्राउज़र सेटिंग्स में कैमरा अनुमति जांचें या विकल्प 2 से दस्तावेज़ अपलोड करें।"
+            : "Unable to access camera. Please grant camera permission or use Option 2 to upload your Aadhaar document.");
+        }
       }
+    }
+
+    async function flipAadhaarCamera() {
+      currentCameraFacingMode = (currentCameraFacingMode === "environment") ? "user" : "environment";
+      await startAadhaarCameraScanner();
     }
 
     async function stopAadhaarCameraScanner() {
@@ -3558,6 +3582,272 @@
       if (window.lucide) window.lucide.createIcons();
     }
 
+    // -------------------------------------------------------------------------
+    // MULTI-PASS CANVAS SCANNER (jsQR: Orientations, Crops, Contrast)
+    // -------------------------------------------------------------------------
+    function scanAadhaarCanvasWithPasses(sourceCanvas) {
+      if (!window.jsQR) {
+        console.warn("jsQR library not available on window");
+        return null;
+      }
+
+      // Pass 1: Direct scan at current dimensions
+      try {
+        const ctx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+        const imgData = ctx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
+        const code = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: "attemptBoth" });
+        if (code && code.data && code.data.trim()) return code.data.trim();
+      } catch (e) {
+        console.warn("Pass 1 error:", e);
+      }
+
+      // Pass 2: Rotations (90, 180, 270 degrees)
+      const angles = [90, 180, 270];
+      for (const angle of angles) {
+        try {
+          const rotCanvas = document.createElement('canvas');
+          if (angle === 90 || angle === 270) {
+            rotCanvas.width = sourceCanvas.height;
+            rotCanvas.height = sourceCanvas.width;
+          } else {
+            rotCanvas.width = sourceCanvas.width;
+            rotCanvas.height = sourceCanvas.height;
+          }
+          const rCtx = rotCanvas.getContext('2d', { willReadFrequently: true });
+          rCtx.translate(rotCanvas.width / 2, rotCanvas.height / 2);
+          rCtx.rotate((angle * Math.PI) / 180);
+          rCtx.drawImage(sourceCanvas, -sourceCanvas.width / 2, -sourceCanvas.height / 2);
+
+          const rData = rCtx.getImageData(0, 0, rotCanvas.width, rotCanvas.height);
+          const code = jsQR(rData.data, rData.width, rData.height, { inversionAttempts: "attemptBoth" });
+          if (code && code.data && code.data.trim()) return code.data.trim();
+        } catch (e) {
+          console.warn(`Pass 2 (${angle}deg) error:`, e);
+        }
+      }
+
+      // Pass 3: Quadrant & Regional crops (UIDAI QR usually in bottom-half or bottom-right or top-right)
+      const regions = [
+        // Bottom half (standard for e-Aadhaar cards)
+        { x: 0, y: Math.floor(sourceCanvas.height * 0.4), w: sourceCanvas.width, h: Math.floor(sourceCanvas.height * 0.6) },
+        // Bottom right quadrant (UIDAI card front/back)
+        { x: Math.floor(sourceCanvas.width * 0.35), y: Math.floor(sourceCanvas.height * 0.35), w: Math.floor(sourceCanvas.width * 0.65), h: Math.floor(sourceCanvas.height * 0.65) },
+        // Bottom left quadrant
+        { x: 0, y: Math.floor(sourceCanvas.height * 0.35), w: Math.floor(sourceCanvas.width * 0.65), h: Math.floor(sourceCanvas.height * 0.65) },
+        // Top right quadrant
+        { x: Math.floor(sourceCanvas.width * 0.35), y: 0, w: Math.floor(sourceCanvas.width * 0.65), h: Math.floor(sourceCanvas.height * 0.65) }
+      ];
+
+      for (const reg of regions) {
+        if (reg.w > 60 && reg.h > 60) {
+          try {
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = reg.w;
+            cropCanvas.height = reg.h;
+            const cCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
+            cCtx.drawImage(sourceCanvas, reg.x, reg.y, reg.w, reg.h, 0, 0, reg.w, reg.h);
+
+            const cData = cCtx.getImageData(0, 0, cropCanvas.width, cropCanvas.height);
+            const code = jsQR(cData.data, cData.width, cData.height, { inversionAttempts: "attemptBoth" });
+            if (code && code.data && code.data.trim()) return code.data.trim();
+          } catch (e) {
+            console.warn("Pass 3 crop error:", e);
+          }
+        }
+      }
+
+      // Pass 4: High-contrast binarization pass (for faint prints or uneven lighting)
+      try {
+        const contrastCanvas = document.createElement('canvas');
+        contrastCanvas.width = sourceCanvas.width;
+        contrastCanvas.height = sourceCanvas.height;
+        const cCtx = contrastCanvas.getContext('2d', { willReadFrequently: true });
+        cCtx.drawImage(sourceCanvas, 0, 0);
+        const cImgData = cCtx.getImageData(0, 0, contrastCanvas.width, contrastCanvas.height);
+        const d = cImgData.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const avg = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+          const val = avg > 128 ? 255 : 0;
+          d[i] = val;
+          d[i + 1] = val;
+          d[i + 2] = val;
+        }
+        const code = jsQR(d, cImgData.width, cImgData.height, { inversionAttempts: "attemptBoth" });
+        if (code && code.data && code.data.trim()) return code.data.trim();
+      } catch (e) {
+        console.warn("Pass 4 contrast error:", e);
+      }
+
+      return null;
+    }
+
+    // -------------------------------------------------------------------------
+    // IMAGE SCANNER (JPG, JPEG, PNG with downscaling / detail preservation)
+    // -------------------------------------------------------------------------
+    async function scanAadhaarImageFile(file) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          try {
+            const maxDim = 1600;
+            let w = img.naturalWidth || img.width;
+            let h = img.naturalHeight || img.height;
+            let scale = 1.0;
+            if (w > maxDim || h > maxDim) {
+              scale = Math.min(maxDim / w, maxDim / h);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(w * scale);
+            canvas.height = Math.round(h * scale);
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            let decoded = scanAadhaarCanvasWithPasses(canvas);
+            if (decoded) return resolve(decoded);
+
+            // If not found and scaled, test original scale
+            if (scale < 1.0) {
+              const fullCanvas = document.createElement('canvas');
+              fullCanvas.width = w;
+              fullCanvas.height = h;
+              const fCtx = fullCanvas.getContext('2d', { willReadFrequently: true });
+              fCtx.drawImage(img, 0, 0);
+              decoded = scanAadhaarCanvasWithPasses(fullCanvas);
+              if (decoded) return resolve(decoded);
+            }
+
+            resolve(null);
+          } catch (err) {
+            console.warn("Image scan processing error:", err);
+            resolve(null);
+          }
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve(null);
+        };
+        img.src = url;
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // PASSWORD-PROTECTED e-AADHAAR PDF MODAL & SCANNER
+    // -------------------------------------------------------------------------
+    function promptPdfPasswordModal(isRetry = false) {
+      return new Promise((resolve, reject) => {
+        pendingPdfPasswordResolver = { resolve, reject };
+        const modal = document.getElementById('modal-pdf-password');
+        const input = document.getElementById('input-pdf-password');
+        const errEl = document.getElementById('pdf-pw-error');
+        if (modal) modal.classList.remove('hidden');
+        if (input) {
+          input.value = '';
+          input.focus();
+        }
+        if (errEl) {
+          if (isRetry) {
+            errEl.innerText = currentLang === 'hi'
+              ? "गलत पासवर्ड! कृपया नाम के पहले 4 बड़े अक्षर + 4 अंकों का जन्म वर्ष दर्ज करें (जैसे: RAME1988)"
+              : "Incorrect password! Format: 4 letters of name in CAPITAL + Birth year (e.g. RAME1988)";
+            errEl.classList.remove('hidden');
+          } else {
+            errEl.classList.add('hidden');
+          }
+        }
+        if (window.lucide) window.lucide.createIcons();
+      });
+    }
+
+    function submitPdfPassword() {
+      const input = document.getElementById('input-pdf-password');
+      const val = (input ? input.value : '').trim().toUpperCase();
+      if (!val) {
+        const errEl = document.getElementById('pdf-pw-error');
+        if (errEl) {
+          errEl.innerText = currentLang === 'hi' ? "कृपया पासवर्ड दर्ज करें" : "Please enter the password";
+          errEl.classList.remove('hidden');
+        }
+        return;
+      }
+      const modal = document.getElementById('modal-pdf-password');
+      if (modal) modal.classList.add('hidden');
+      if (pendingPdfPasswordResolver) {
+        pendingPdfPasswordResolver.resolve(val);
+        pendingPdfPasswordResolver = null;
+      }
+    }
+
+    function cancelPdfPasswordPrompt() {
+      const modal = document.getElementById('modal-pdf-password');
+      if (modal) modal.classList.add('hidden');
+      if (pendingPdfPasswordResolver) {
+        pendingPdfPasswordResolver.reject(new Error("PDF unlock cancelled by user."));
+        pendingPdfPasswordResolver = null;
+      }
+    }
+
+    async function scanAadhaarPdfFile(file) {
+      if (!window.pdfjsLib) {
+        throw new Error("PDF processing engine is loading. Please try again.");
+      }
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+      const arrayBuffer = await file.arrayBuffer();
+      let typedArray = new Uint8Array(arrayBuffer);
+
+      let pdfDoc = null;
+      let attempts = 0;
+      let password = '';
+
+      while (!pdfDoc && attempts < 3) {
+        try {
+          const loadingTask = window.pdfjsLib.getDocument({
+            data: typedArray,
+            password: password || undefined
+          });
+          pdfDoc = await loadingTask.promise;
+        } catch (pdfErr) {
+          if (pdfErr.name === 'PasswordException' || (pdfErr.message && pdfErr.message.toLowerCase().includes('password'))) {
+            attempts++;
+            if (attempts >= 3) {
+              throw new Error(currentLang === 'hi'
+                ? "e-Aadhaar पासवर्ड गलत था। कृपया सही पासवर्ड (नाम के 4 बड़े अक्षर + जन्म वर्ष) से पुनः प्रयास करें।"
+                : "e-Aadhaar password was incorrect. Please verify format (First 4 letters of name + Birth year) and retry.");
+            }
+            password = await promptPdfPasswordModal(attempts > 1);
+          } else {
+            throw pdfErr;
+          }
+        }
+      }
+
+      if (!pdfDoc) {
+        throw new Error("Unable to open PDF document.");
+      }
+
+      const maxPages = Math.min(pdfDoc.numPages, 2);
+      for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+        showAadhaarLoading(currentLang === 'hi' ? `पृष्ठ ${pageNum} से QR कोड स्कैन हो रहा है...` : `Scanning Page ${pageNum} for Secure QR...`);
+        const page = await pdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 2.5 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        const decoded = scanAadhaarCanvasWithPasses(canvas);
+        if (decoded) return decoded;
+      }
+
+      return null;
+    }
+
+    // -------------------------------------------------------------------------
+    // FILE UPLOAD CONTROLLER (Image or PDF)
+    // -------------------------------------------------------------------------
     async function handleAadhaarFileUpload(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
@@ -3573,62 +3863,39 @@
       showAadhaarLoading(currentLang === 'hi' ? "दस्तावेज़ से QR कोड निकाला जा रहा है..." : "Extracting QR code from document...");
 
       try {
-        // Step A: If image file, try client-side Html5Qrcode.scanFile
+        let decoded = null;
+
         if (file.type.startsWith('image/')) {
-          try {
-            if (!aadhaarQrScanner) aadhaarQrScanner = new Html5Qrcode("aadhaar-qr-reader");
-            const decoded = await aadhaarQrScanner.scanFile(file, true);
-            if (decoded) {
-              await processAadhaarQrPayload(decoded);
-              event.target.value = '';
-              return;
-            }
-          } catch (scanErr) {
-            console.warn("Client-side image QR scan notice:", scanErr);
-          }
-        }
-
-        // Step B: If PDF file and pdfjsLib available, render page 1 to canvas
-        if (file.type === 'application/pdf' && window.pdfjsLib) {
-          try {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
-            const page = await pdf.getPage(1);
-            const viewport = page.getViewport({ scale: 2.0 });
-            const canvas = document.createElement('canvas');
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            const ctx = canvas.getContext('2d');
-            await page.render({ canvasContext: ctx, viewport }).promise;
-
-            const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg'));
-            if (blob) {
-              const testFile = new File([blob], "page1.jpg", { type: "image/jpeg" });
+          decoded = await scanAadhaarImageFile(file);
+          if (!decoded && window.Html5Qrcode) {
+            try {
               if (!aadhaarQrScanner) aadhaarQrScanner = new Html5Qrcode("aadhaar-qr-reader");
-              const decoded = await aadhaarQrScanner.scanFile(testFile, true);
-              if (decoded) {
-                await processAadhaarQrPayload(decoded);
-                event.target.value = '';
-                return;
-              }
+              decoded = await aadhaarQrScanner.scanFile(file, true);
+            } catch (h5Err) {
+              console.warn("Html5Qrcode fallback notice:", h5Err);
             }
-          } catch (pdfErr) {
-            console.warn("Client-side PDF render notice:", pdfErr);
           }
+        } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+          decoded = await scanAadhaarPdfFile(file);
+        } else {
+          throw new Error(currentLang === 'hi'
+            ? "कृपया मान्य इमेज (JPG, PNG) या e-Aadhaar PDF अपलोड करें।"
+            : "Please upload a valid image (JPG, PNG) or e-Aadhaar PDF.");
         }
 
-        // Step C: Fallback to server-side extraction
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-          const base64Data = e.target.result;
-          await processAadhaarQrPayload(null, base64Data, file.name);
-          event.target.value = '';
-        };
-        reader.readAsDataURL(file);
-
+        if (decoded) {
+          await processAadhaarQrPayload(decoded);
+        } else {
+          hideAadhaarLoading();
+          showKycError(currentLang === 'hi'
+            ? "दस्तावेज़ में आधार सुरक्षित QR कोड नहीं मिला। कृपया अच्छी रोशनी में साफ और स्पष्ट फ़ोटो या e-Aadhaar PDF अपलोड करें।"
+            : "Aadhaar Secure QR code could not be detected. Please ensure good lighting, avoid glare, and upload a clear, uncropped document.");
+        }
       } catch (err) {
         hideAadhaarLoading();
+        console.error("handleAadhaarFileUpload error:", err);
         showKycError(err.message || (currentLang === 'hi' ? "QR कोड पढ़ने में असमर्थ। कृपया साफ फ़ोटो अपलोड करें।" : "Unable to read QR code. Please upload a clearer image."));
+      } finally {
         event.target.value = '';
       }
     }
@@ -3653,58 +3920,43 @@
       document.getElementById('aadhaar-choice-section')?.classList.remove('hidden');
     }
 
-    async function processAadhaarQrPayload(qrString, fileBase64 = null, fileName = null) {
+    // -------------------------------------------------------------------------
+    // SECURE QR CRYPTOGRAPHIC VERIFICATION (Calling /api/verify-aadhaar-qr)
+    // -------------------------------------------------------------------------
+    async function processAadhaarQrPayload(qrString) {
+      if (!qrString || typeof qrString !== 'string' || !qrString.trim()) {
+        hideAadhaarLoading();
+        showKycError(currentLang === 'hi'
+          ? "दस्तावेज़ में आधार सुरक्षित QR कोड नहीं मिला। कृपया पुनः प्रयास करें।"
+          : "Aadhaar Secure QR code could not be detected. Please try again.");
+        return;
+      }
+
       showAadhaarLoading(currentLang === 'hi' ? "UIDAI डिजिटल हस्ताक्षर सत्यापित हो रहा है..." : "Cryptographically Verifying UIDAI Digital Signature...");
 
-      const userId = state.userProfile.phone || localStorage.getItem('gb_user_phone') || 'usr_vendor';
+      const userId = (state.userProfile && state.userProfile.phone) || localStorage.getItem('gb_user_phone') || 'usr_party';
 
       try {
-        let verifyRes = null;
-        let verifyData = null;
-
-        // Try primary Vercel serverless /api/verify-aadhaar-qr endpoint
-        try {
-          verifyRes = await fetch('/api/verify-aadhaar-qr', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              qr_data: qrString || undefined,
-              file_base64: fileBase64 || undefined,
-              file_name: fileName || undefined,
-              user_id: userId,
-              role: 'vendor',
-              consent_accepted: true
-            })
-          });
-          if (verifyRes.ok) {
-            verifyData = await verifyRes.json();
-          }
-        } catch (vErr) {
-          console.warn("Primary QR verify notice:", vErr);
-        }
-
-        // Fallback to FastAPI backend endpoint
-        if (!verifyData || !verifyData.valid) {
-          const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "https://gaonbazaar-village.onrender.com/api/v1";
-          const res = await safeApiCall(`${backendUrl}/kyc/aadhaar/verify-qr`, 'POST', {
-            qr_data: qrString || undefined,
-            file_base64: fileBase64 || undefined,
-            file_name: fileName || undefined,
+        const verifyRes = await fetch('/api/verify-aadhaar-qr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            qr_data: qrString.trim(),
             user_id: userId,
             role: 'vendor',
             consent_accepted: true
-          }, 15000);
-          if (res && res.valid) {
-            verifyData = res;
-          }
-        }
+          })
+        });
 
-        if (!verifyData || !verifyData.valid) {
-          throw new Error(verifyData?.error || verifyData?.detail || (
+        const verifyData = await verifyRes.json().catch(() => null);
+
+        if (!verifyRes.ok || !verifyData || !verifyData.valid) {
+          const errMsg = verifyData?.error || verifyData?.message || (
             currentLang === 'hi'
-              ? "अमान्य या संशोधित आधार QR कोड। UIDAI डिजिटल हस्ताक्षर मेल नहीं खाता।"
-              : "Invalid or altered Aadhaar QR. UIDAI cryptographic signature verification failed."
-          ));
+              ? "UIDAI डिजिटल हस्ताक्षर सत्यापन विफल। QR कोड अमान्य या छेड़छाड़ किया गया है।"
+              : "UIDAI cryptographic digital signature verification failed. The QR payload has been tampered with or is invalid."
+          );
+          throw new Error(errMsg);
         }
 
         // Cryptographic signature verified successfully
@@ -3715,7 +3967,7 @@
 
         // Populate verified fields
         const nameEl = document.getElementById('aadhaar-name-display');
-        if (nameEl) nameEl.innerText = verifyData.name || state.userProfile.name || 'Resident';
+        if (nameEl) nameEl.innerText = verifyData.name || (state.userProfile && state.userProfile.name) || 'Resident';
 
         const dobEl = document.getElementById('aadhaar-dob-display');
         if (dobEl) dobEl.innerText = verifyData.dob || 'Available';
