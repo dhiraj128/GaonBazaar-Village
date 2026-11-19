@@ -19,6 +19,8 @@ from app.services.aadhaar_secure_qr import (
     extract_qr_from_pdf_bytes,
     InvalidAadhaarSignatureError,
     MalformedQrPayloadError,
+    UnsupportedAadhaarFormatError,
+    UnsupportedLegacyAadhaarFormatError,
     NoCertificateConfiguredError
 )
 
@@ -453,17 +455,23 @@ async def verify_aadhaar_qr(
 
     try:
         result = parser.parse_and_verify(qr_string, allow_test_identity=allow_test)
+    except (UnsupportedAadhaarFormatError, UnsupportedLegacyAadhaarFormatError) as exc:
+        logger.warning("Unsupported Aadhaar QR format: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This QR format isn't supported."
+        )
     except InvalidAadhaarSignatureError as exc:
         logger.warning("UIDAI signature verification failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"UIDAI Digital Signature Verification Failed: {exc}"
+            detail="Aadhaar QR verification failed."
         )
     except MalformedQrPayloadError as exc:
         logger.warning("Malformed Aadhaar QR payload: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid Aadhaar QR Format: {exc}"
+            detail="QR detected but couldn't be read. Please retry."
         )
     except NoCertificateConfiguredError as exc:
         logger.error("No UIDAI certificate configured: %s", exc)

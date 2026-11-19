@@ -70,6 +70,16 @@ class MalformedQrPayloadError(AadhaarQrError):
     pass
 
 
+class UnsupportedAadhaarFormatError(MalformedQrPayloadError):
+    """Raised when an unsupported QR format (e.g. UPI, URL) is scanned"""
+    pass
+
+
+class UnsupportedLegacyAadhaarFormatError(MalformedQrPayloadError):
+    """Raised when an old XML Aadhaar QR format without signature is scanned"""
+    pass
+
+
 class InvalidAadhaarSignatureError(AadhaarQrError):
     """Raised when UIDAI cryptographic signature verification fails"""
     pass
@@ -252,13 +262,20 @@ class AadhaarSecureQrParser:
         """
         clean_input = re.sub(r"[\s\r\n]", "", raw_input)
 
+        # Check for legacy XML or non-Aadhaar QR formats
+        if "<PrintLetterBarcodeData" in raw_input or "<?xml" in raw_input:
+            raise UnsupportedLegacyAadhaarFormatError("This QR format isn't supported.")
+
+        if raw_input.startswith(("upi://", "http://", "https://", "WIFI:", "BEGIN:VCARD")):
+            raise UnsupportedAadhaarFormatError("This QR format isn't supported.")
+
         # Case A: Scanned as standard Base-10 integer string
         if clean_input.isdigit():
             val = int(clean_input)
             byte_len = (val.bit_length() + 7) // 8
             raw_bytes = val.to_bytes(byte_len, byteorder="big")
         # Case B: Base-64 encoded gzip stream
-        elif re.match(r"^[A-Za-z0-9+/=]+$", clean_input) and len(clean_input) > 100:
+        elif re.match(r"^[A-Za-z0-9+/=]+$", clean_input) and len(clean_input) > 50:
             try:
                 raw_bytes = base64.b64decode(clean_input)
             except Exception:
@@ -267,20 +284,30 @@ class AadhaarSecureQrParser:
         else:
             raw_bytes = raw_input.encode("latin-1")
 
-        # Decompress GZIP or ZLIB
+        # Decompress GZIP or ZLIB with offset resilience
+        gzip_idx = raw_bytes.find(b"\x1f\x8b")
+        if gzip_idx != -1 and gzip_idx < 16:
+            try:
+                return gzip.decompress(raw_bytes[gzip_idx:])
+            except Exception:
+                pass
+
         if raw_bytes.startswith(b"\x1f\x8b"):
             try:
                 return gzip.decompress(raw_bytes)
             except Exception as exc:
-                raise MalformedQrPayloadError(f"Failed to decompress GZIP Aadhaar payload: {exc}")
+                raise MalformedQrPayloadError(f"QR detected but couldn't be read. Please retry.")
         else:
             try:
                 return zlib.decompress(raw_bytes, 16 + zlib.MAX_WBITS)
             except Exception:
                 try:
                     return zlib.decompress(raw_bytes)
-                except Exception as exc:
-                    raise MalformedQrPayloadError(f"Failed to decompress ZLIB Aadhaar payload: {exc}")
+                except Exception:
+                    try:
+                        return zlib.decompress(raw_bytes, -zlib.MAX_WBITS)
+                    except Exception as exc:
+                        raise MalformedQrPayloadError(f"QR detected but couldn't be read. Please retry.")
 
     def _verify_signature(
         self,

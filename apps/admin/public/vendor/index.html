@@ -125,6 +125,24 @@
       }
     }
 
+      @keyframes scanlaser {
+      0%, 100% {
+        top: 8%;
+        opacity: 0.3;
+      }
+      50% {
+        top: 90%;
+        opacity: 1;
+      }
+    }
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
+    *, *:before, *:after {
+      box-sizing: border-box;
+    }
   </style>
   <!-- Secure Authentication Architecture (Zero Firebase Dependency) -->
   <script>
@@ -403,241 +421,315 @@
       </div>
 
       <!-- PAGE 5: IDENTITY VERIFICATION (SINGLE ID SELECTION) -->
-      <div id="screen-onboarding-5" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
-        <div class="space-y-4">
-          <!-- Header (Clean & White-labeled) -->
+      <!-- ======================================================================= -->
+      <!-- PAGE 5: IDENTITY VERIFICATION (CLEAN, MINIMAL, MOBILE-FIRST) -->
+      <!-- ======================================================================= -->
+      <div id="screen-onboarding-5" class="app-screen flex-1 p-4 sm:p-6 flex flex-col justify-between hidden">
+        <div class="space-y-4 max-w-md mx-auto w-full">
+          <!-- Clean Minimal Header -->
           <div>
-            <div class="flex items-center space-x-2 text-emerald-600 text-xs font-bold uppercase tracking-wider mb-2"><span class="px-2 py-0.5 bg-emerald-100 rounded">Step 5 of 7</span><span>Identity Verification</span></div>
-            <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="id_verification_title">Identity Verification</h2>
-            <p class="text-xs text-slate-500 leading-relaxed" data-i18n="id_verification_sub">
-              Choose any one government ID to verify your identity instantly
-            </p>
-          </div>
-
-          <!-- Aadhaar KYC Mandatory Notice -->
-          <div class="mb-3 p-3 bg-emerald-50/80 rounded-2xl border border-emerald-200 flex items-center space-x-2.5 text-xs text-emerald-900">
-            <i data-lucide="shield-check" class="w-5 h-5 text-emerald-600 shrink-0"></i>
-            <div>
-              <span class="font-bold">Aadhaar-Only Paperless KYC</span>
-              <p class="text-[10px] text-emerald-700">Official UIDAI OTP verification. No PAN card required for village onboarding.</p>
+            <div class="flex items-center space-x-2 text-emerald-600 text-xs font-bold uppercase tracking-wider mb-1.5">
+              <span class="px-2 py-0.5 bg-emerald-100 rounded">Step 5 of 7</span>
+              <span>Identity Verification</span>
             </div>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900 mb-1" data-i18n="id_verification_title">Identity Verification</h2>
+            <p class="text-xs text-slate-500 leading-relaxed" data-i18n="id_verification_sub">
+              Verify your identity securely using your Aadhaar QR code.
+            </p>
           </div>
 
           <!-- Error Alert Banner -->
           <div id="kyc-error-banner" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start space-x-2 shadow-2xs">
             <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0 mt-0.5"></i>
             <span id="kyc-error-text" class="flex-1 font-medium leading-relaxed"></span>
-            <button onclick="hideKycError()" class="text-rose-400 hover:text-rose-700 font-bold text-sm leading-none ml-1">✕</button>
+            <button type="button" onclick="hideKycError()" class="text-rose-400 hover:text-rose-700 font-bold text-sm leading-none ml-1">✕</button>
           </div>
 
-          <!-- AADHAAR SECURE QR VERIFICATION PANEL (UIDAI OFFLINE CRYPTOGRAPHIC KYC) -->
-          <div id="panel-aadhaar" class="space-y-4">
-
-            <!-- Notice Banner -->
-            <div class="p-3.5 bg-emerald-50/90 rounded-2xl border border-emerald-200 flex items-start space-x-3 text-xs text-emerald-900 shadow-2xs">
-              <i data-lucide="shield-check" class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5"></i>
-              <div>
-                <span class="font-bold text-sm block mb-0.5" data-i18n="verify_aadhaar_title">Verify Your Aadhaar</span>
-                <p class="text-[11px] text-emerald-700 leading-relaxed" data-i18n="verify_aadhaar_sub">
-                  Verify your identity securely using the QR code on your Aadhaar card or e-Aadhaar document.
-                </p>
-              </div>
+          <!-- Verification Method Indicator -->
+          <div class="flex items-center justify-between px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+            <div class="flex items-center space-x-2">
+              <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+              <span class="text-xs font-bold text-slate-800">Verification Method</span>
             </div>
+            <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+              Aadhaar Secure QR Verification
+            </span>
+          </div>
 
-            <!-- Voluntary Statutory UIDAI Consent Checkbox -->
-            <label class="flex items-start space-x-2.5 text-xs text-slate-600 cursor-pointer p-3 bg-slate-50/90 rounded-xl border border-slate-200 shadow-2xs">
+          <!-- Two Main Action Cards -->
+          <div id="aadhaar-choice-section" class="space-y-3">
+            <!-- Option 1: Scan Aadhaar QR -->
+            <button type="button" onclick="startAadhaarCameraScanner()" class="w-full text-left p-4 rounded-2xl border-2 border-emerald-500/80 bg-white hover:bg-emerald-50/40 active:scale-[0.99] transition shadow-xs group block">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3.5">
+                  <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition">
+                    <i data-lucide="qr-code" class="w-6 h-6"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-bold text-slate-900" data-i18n="option_scan_title">Option 1: Scan Aadhaar QR</h4>
+                    <p class="text-xs text-slate-500 mt-0.5 leading-relaxed" data-i18n="option_scan_desc">
+                      Use your camera to scan the QR code on your Aadhaar.
+                    </p>
+                  </div>
+                </div>
+                <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 group-hover:text-emerald-600 transition shrink-0"></i>
+              </div>
+            </button>
+
+            <!-- Option 2: Upload Aadhaar -->
+            <button type="button" onclick="triggerAadhaarDocUpload()" class="w-full text-left p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-emerald-400 hover:bg-slate-50 active:scale-[0.99] transition shadow-xs group block">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3.5">
+                  <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition">
+                    <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-bold text-slate-900" data-i18n="option_upload_title">Option 2: Upload Aadhaar</h4>
+                    <p class="text-xs text-slate-500 mt-0.5 leading-relaxed" data-i18n="option_upload_desc">
+                      Upload a clear Aadhaar image or e-Aadhaar PDF.
+                    </p>
+                  </div>
+                </div>
+                <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 group-hover:text-emerald-600 transition shrink-0"></i>
+              </div>
+            </button>
+            <input type="file" id="aadhaar-doc-input" accept="image/*,application/pdf" class="hidden" onchange="handleAadhaarFileUpload(event)">
+          </div>
+
+          <!-- Consent Checkbox with Expandable Learn More -->
+          <div class="p-3 bg-slate-50/90 rounded-xl border border-slate-200 space-y-2">
+            <label class="flex items-start space-x-2.5 text-xs text-slate-700 cursor-pointer">
               <input type="checkbox" id="kyc-aadhaar-consent-checkbox" checked class="mt-0.5 w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
-              <span class="text-[11px] leading-relaxed text-slate-700">
-                I voluntarily provide consent to Apna GaonBazaar to verify my identity via UIDAI digitally signed Aadhaar Secure QR offline verification under the Aadhaar Act, 2016 and IT Act guidelines.
+              <span class="text-xs font-medium text-slate-700 leading-snug">
+                I consent to secure offline verification of my Aadhaar QR code.
               </span>
             </label>
-
-            <!-- Verification Action Cards (Option 1 & Option 2) -->
-            <div id="aadhaar-choice-section" class="space-y-3">
-              <!-- Option 1: Scan Aadhaar QR Code -->
-              <div onclick="startAadhaarCameraScanner()" class="p-4 rounded-2xl border-2 border-emerald-500/80 bg-white hover:bg-emerald-50/40 active:scale-[0.99] transition cursor-pointer shadow-xs group">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-3.5">
-                    <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition">
-                      <i data-lucide="qr-code" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                      <h4 class="text-xs font-bold text-slate-900" data-i18n="option_scan_title">Option 1: Scan Aadhaar QR Code</h4>
-                      <p class="text-[10px] text-slate-500 mt-0.5 leading-relaxed" data-i18n="option_scan_desc">
-                        Open back camera to scan the Secure QR code printed on your physical card
-                      </p>
-                    </div>
-                  </div>
-                  <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 group-hover:text-emerald-600 transition shrink-0"></i>
-                </div>
+            
+            <details class="text-[11px] text-slate-500 pl-6 group">
+              <summary class="cursor-pointer text-emerald-700 font-semibold hover:underline select-none">
+                Learn more
+              </summary>
+              <div class="mt-2 pt-2 border-t border-slate-200 text-slate-600 leading-relaxed space-y-1">
+                <p>Under the Aadhaar Act, 2016 and IT regulations, offline digital signature verification extracts only demographic details directly signed by UIDAI without accessing central UIDAI databases or storing full Aadhaar numbers.</p>
+                <p class="font-medium text-slate-700">Zero full 12-digit Aadhaar numbers are stored or transmitted. Only masked details (XXXX-XXXX-last4) are retained.</p>
               </div>
+            </details>
+          </div>
 
-              <!-- Option 2: Upload Aadhaar Document -->
-              <div onclick="triggerAadhaarDocUpload()" class="p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-emerald-300 hover:bg-slate-50 active:scale-[0.99] transition cursor-pointer shadow-xs group">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-3.5">
-                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition">
-                      <i data-lucide="file-up" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                      <h4 class="text-xs font-bold text-slate-900" data-i18n="option_upload_title">Option 2: Upload Aadhaar Document</h4>
-                      <p class="text-[10px] text-slate-500 mt-0.5 leading-relaxed" data-i18n="option_upload_desc">
-                        Upload photo (JPG, PNG) or e-Aadhaar PDF containing the Secure QR code
-                      </p>
-                    </div>
-                  </div>
-                  <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 group-hover:text-blue-600 transition shrink-0"></i>
-                </div>
-                <input type="file" id="aadhaar-doc-input" accept="image/*,application/pdf" class="hidden" onchange="handleAadhaarFileUpload(event)">
+          <!-- LIVE CAMERA SCANNER VIEWPORT (TASK 3) -->
+          <div id="aadhaar-camera-section" class="hidden rounded-2xl border border-slate-200 bg-slate-950 overflow-hidden shadow-xl space-y-0 relative">
+            <!-- Top Camera Controls Header -->
+            <div class="p-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-xs text-white">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="camera-status-badge" class="font-bold text-[11px] tracking-wide text-emerald-300">Camera Ready</span>
               </div>
-            </div>
-
-            <!-- CAMERA SCANNER VIEWPORT (HIDDEN BY DEFAULT) -->
-            <div id="aadhaar-camera-section" class="hidden p-4 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-sm">
-              <div class="flex items-center justify-between text-xs pb-1 border-b border-slate-100">
-                <div class="flex items-center space-x-1.5 text-emerald-800 font-bold">
-                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>Point camera at Aadhaar Secure QR</span>
-                </div>
-                <div class="flex items-center space-x-1.5">
-                  <button type="button" onclick="flipAadhaarCamera()" class="px-2.5 py-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-900 rounded-lg bg-emerald-50 hover:bg-emerald-100 transition flex items-center space-x-1">
-                    <i data-lucide="refresh-cw" class="w-3 h-3"></i>
-                    <span>Flip</span>
-                  </button>
-                  <button type="button" onclick="stopAadhaarCameraScanner()" class="px-2.5 py-1 text-[11px] font-bold text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition">
-                  Cancel
+              <div class="flex items-center space-x-2">
+                <button type="button" id="btn-toggle-torch" onclick="toggleAadhaarTorch()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Toggle Flashlight">
+                  <i data-lucide="zap" class="w-4 h-4"></i>
                 </button>
-                </div>
-              </div>
-
-              <!-- Camera Preview Container -->
-              <div id="aadhaar-qr-reader" class="w-full overflow-hidden rounded-xl bg-black min-h-[260px] relative"></div>
-
-              <p class="text-[10px] text-center text-slate-400">
-                Align the square Secure QR code inside the camera box. Detection is automatic.
-              </p>
-            </div>
-            <!-- PDF PASSWORD MODAL -->
-            <div id="modal-pdf-password" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden">
-              <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center border border-slate-100">
-                <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-3">
-                  <i data-lucide="lock" class="w-6 h-6"></i>
-                </div>
-                <h3 class="text-sm font-bold text-slate-900 mb-1" id="pdf-pw-title">e-Aadhaar Password Required</h3>
-                <p class="text-[11px] text-slate-600 mb-4 leading-relaxed" id="pdf-pw-hint">
-                  This e-Aadhaar PDF is protected. UIDAI format: <b>First 4 letters of your Name in CAPITAL + 4-digit Year of Birth</b> (e.g. <b>RAME1988</b>).
-                </p>
-                <div class="space-y-3">
-                  <input type="text" id="input-pdf-password" maxlength="16" placeholder="e.g. RAME1988" style="text-transform: uppercase;"
-                    class="w-full px-4 py-2.5 text-center tracking-widest font-mono text-base font-bold rounded-xl border-2 border-slate-300 focus:border-emerald-600 focus:outline-hidden uppercase" />
-                  <div id="pdf-pw-error" class="text-[11px] font-semibold text-rose-600 hidden"></div>
-                  <div class="grid grid-cols-2 gap-2 pt-1">
-                    <button type="button" onclick="cancelPdfPasswordPrompt()" class="py-2.5 px-3 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition">Cancel</button>
-                    <button type="button" onclick="submitPdfPassword()" class="py-2.5 px-3 rounded-xl bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-xs transition flex items-center justify-center space-x-1.5">
-                      <span>Unlock & Scan</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-        
-
-            <!-- UPLOAD & VERIFICATION PROGRESS STATE (HIDDEN BY DEFAULT) -->
-            <div id="aadhaar-loading-section" class="hidden p-6 rounded-2xl border border-emerald-200 bg-emerald-50/60 text-center space-y-3">
-              <div class="w-14 h-14 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center animate-pulse">
-                <i data-lucide="shield" class="w-7 h-7"></i>
-              </div>
-              <h4 class="text-xs font-bold text-slate-900" id="aadhaar-loading-title">Verifying UIDAI Digital Signature...</h4>
-              <p class="text-[11px] text-slate-600 max-w-xs mx-auto leading-relaxed" id="aadhaar-loading-sub">
-                Cryptographically verifying RSA-2048 SHA-256 digital signature against official UIDAI trust certificates.
-              </p>
-              <div class="w-48 h-1.5 bg-emerald-200 rounded-full mx-auto overflow-hidden">
-                <div class="h-full bg-emerald-600 rounded-full animate-pulse"></div>
+                <button type="button" onclick="flipAadhaarCamera()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Flip Camera">
+                  <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                </button>
+                <button type="button" onclick="stopAadhaarCameraScanner()" class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/40 text-slate-300 hover:text-rose-400 transition" title="Close Camera">
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
               </div>
             </div>
 
-            <!-- VERIFIED SUCCESS SECTION (Aadhaar Secure QR Valid) -->
-            <div id="aadhaar-verified-section" class="hidden p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 space-y-4 shadow-sm">
-              <div class="flex items-center justify-between border-b border-emerald-200/80 pb-3">
-                <div class="flex items-center space-x-2">
-                  <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-                    <i data-lucide="check" class="w-5 h-5"></i>
-                  </div>
-                  <div>
-                    <h3 class="text-xs font-extrabold text-emerald-950 uppercase tracking-wide">Aadhaar Secure QR Valid</h3>
-                    <p class="text-[10px] text-emerald-700 font-medium">UIDAI Digitally Signed & Authenticated Offline</p>
-                  </div>
-                </div>
-                <span class="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-mono text-[9px] font-bold">RSA-2048</span>
+            <!-- Alignment Instruction Header -->
+            <div class="py-2 px-3 bg-slate-900 text-center">
+              <p class="text-xs font-semibold text-white tracking-wide">Place the Aadhaar QR code inside the frame.</p>
+            </div>
+
+            <!-- Camera Video & Scanning Reticle Container -->
+            <div class="relative w-full aspect-[3/4] sm:aspect-square bg-black overflow-hidden flex items-center justify-center">
+              <div id="aadhaar-qr-reader" class="w-full h-full absolute inset-0"></div>
+
+              <!-- Reticle Overlay with 4 Corner Markers -->
+              <div id="qr-reticle-box" class="relative z-10 w-64 h-64 border-2 border-emerald-400/40 rounded-2xl flex items-center justify-center pointer-events-none shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]">
+                <!-- Corner 1: Top-Left -->
+                <span class="absolute -top-1 -left-1 w-7 h-7 border-t-4 border-l-4 border-emerald-500 rounded-tl-xl"></span>
+                <!-- Corner 2: Top-Right -->
+                <span class="absolute -top-1 -right-1 w-7 h-7 border-t-4 border-r-4 border-emerald-500 rounded-tr-xl"></span>
+                <!-- Corner 3: Bottom-Left -->
+                <span class="absolute -bottom-1 -left-1 w-7 h-7 border-b-4 border-l-4 border-emerald-500 rounded-bl-xl"></span>
+                <!-- Corner 4: Bottom-Right -->
+                <span class="absolute -bottom-1 -right-1 w-7 h-7 border-b-4 border-r-4 border-emerald-500 rounded-br-xl"></span>
+
+                <!-- Animated Live Scanning Laser Line -->
+                <div class="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_8px_#10b981] animate-pulse" style="animation: scanlaser 2.2s infinite ease-in-out;"></div>
               </div>
 
-              <!-- Identity Card with Photo & Demographics -->
-              <div class="bg-white p-3.5 rounded-xl border border-emerald-200/80 shadow-2xs space-y-3">
-                <div class="flex items-start space-x-3">
-                  <div id="aadhaar-photo-container" class="w-16 h-20 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
-                    <img id="aadhaar-photo-img" src="" alt="Aadhaar Photo" class="w-full h-full object-cover hidden">
-                    <i id="aadhaar-photo-fallback" data-lucide="user" class="w-8 h-8 text-slate-400"></i>
-                  </div>
-                  <div class="flex-1 min-w-0 space-y-1">
-                    <div class="text-[10px] text-slate-400 font-semibold uppercase">Resident Name</div>
-                    <div id="aadhaar-name-display" class="text-xs font-extrabold text-slate-900 truncate">-</div>
-
-                    <div class="grid grid-cols-2 gap-2 pt-1 text-[11px]">
-                      <div>
-                        <span class="text-[10px] text-slate-400 block">DOB / YOB</span>
-                        <strong id="aadhaar-dob-display" class="text-slate-800 text-[11px]">-</strong>
-                      </div>
-                      <div>
-                        <span class="text-[10px] text-slate-400 block">Gender</span>
-                        <strong id="aadhaar-gender-display" class="text-slate-800 text-[11px]">-</strong>
-                      </div>
-                    </div>
-                  </div>
+              <!-- In-place retry overlay if QR detected but unreadable -->
+              <div id="qr-unreadable-overlay" class="hidden absolute inset-0 z-20 bg-slate-950/85 flex flex-col items-center justify-center p-4 text-center space-y-3">
+                <div class="w-12 h-12 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <i data-lucide="alert-triangle" class="w-6 h-6"></i>
                 </div>
-
-                <!-- Reference & Masked Aadhaar -->
-                <div class="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-[10px]">
-                  <div>
-                    <span class="text-slate-400 block font-medium">Aadhaar Reference ID:</span>
-                    <strong id="aadhaar-ref-display" class="font-mono text-slate-800 text-[10px] block truncate">-</strong>
-                  </div>
-                  <div>
-                    <span class="text-slate-400 block font-medium">Masked Digits:</span>
-                    <strong id="aadhaar-masked-display" class="font-mono text-slate-800 text-[10px] block">-</strong>
-                  </div>
-                </div>
-
-                <!-- Address -->
-                <div class="pt-2 border-t border-slate-100 text-[10px]">
-                  <span class="text-slate-400 block font-medium mb-0.5">Verified Address:</span>
-                  <p id="aadhaar-address-display" class="text-slate-700 text-[11px] leading-relaxed break-words font-medium">-</p>
-                </div>
+                <h5 class="text-sm font-bold text-white">QR detected, but couldn't be read. Please try again.</h5>
+                <p class="text-xs text-slate-400 max-w-xs">Hold your phone steady and ensure there is no glare on the QR code.</p>
+                <button type="button" onclick="resumeCameraSearching()" class="py-2 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition">
+                  Retry Scan
+                </button>
               </div>
+            </div>
 
-              <!-- Regulatory & Next Step Notice -->
-              <div class="p-2.5 rounded-lg bg-amber-50/80 border border-amber-200 text-[10px] text-amber-800 flex items-start space-x-2">
-                <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
-                <p class="leading-relaxed">
-                  This confirms the authenticity of the signed Aadhaar document. Final merchant activation remains subject to Admin review and approval.
-                </p>
+            <!-- Below Preview Instructions -->
+            <div class="p-3 bg-slate-900 text-center border-t border-slate-800">
+              <p class="text-[11px] text-slate-300">Hold your phone steady. Scanning starts automatically.</p>
+            </div>
+          </div>
+
+          <!-- DOCUMENT UPLOAD PREVIEW & CROP/ZOOM SECTION (TASK 4) -->
+          <div id="aadhaar-crop-section" class="hidden rounded-2xl border border-slate-200 bg-white p-4 space-y-3 shadow-md">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="crop" class="w-4 h-4 text-emerald-600"></i>
+                <h4 class="text-xs font-bold text-slate-900">Crop / Zoom into Aadhaar QR</h4>
               </div>
+              <button type="button" onclick="cancelDocCrop()" class="text-xs font-bold text-slate-400 hover:text-slate-700">Cancel</button>
+            </div>
+            <p class="text-[11px] text-slate-500">Automatic detection needed assistance. Please zoom or adjust the frame directly over the square QR code:</p>
+            
+            <div class="relative w-full aspect-square bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center border border-slate-300">
+              <canvas id="crop-preview-canvas" class="max-w-full max-h-full object-contain"></canvas>
+            </div>
 
-              <!-- Continue Button -->
-              <button type="button" onclick="proceedToNextStep()" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
-                <span data-i18n="continue_to_location">Continue to Payout Setup</span>
-                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            <div class="flex items-center justify-between space-x-2 pt-1">
+              <div class="flex items-center space-x-1">
+                <button type="button" onclick="adjustCropZoom(1.2)" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold" title="Zoom In">+</button>
+                <button type="button" onclick="adjustCropZoom(0.8)" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold" title="Zoom Out">-</button>
+                <button type="button" onclick="resetCropZoom()" class="px-2.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold">Reset</button>
+              </div>
+              <button type="button" onclick="executeCroppedScan()" class="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition flex items-center justify-center space-x-1.5">
+                <span>Scan Cropped Area</span>
+                <i data-lucide="scan" class="w-3.5 h-3.5"></i>
               </button>
             </div>
           </div>
+
+          <!-- PDF PASSWORD MODAL -->
+          <div id="modal-pdf-password" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center border border-slate-100">
+              <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-3">
+                <i data-lucide="lock" class="w-6 h-6"></i>
+              </div>
+              <h3 class="text-sm font-bold text-slate-900 mb-1" id="pdf-pw-title">e-Aadhaar Password Required</h3>
+              <p class="text-[11px] text-slate-600 mb-4 leading-relaxed" id="pdf-pw-hint">
+                This e-Aadhaar PDF is protected. UIDAI format: <b>First 4 letters of your Name in CAPITAL + 4-digit Year of Birth</b> (e.g. <b>RAME1988</b>).
+              </p>
+              <div class="space-y-3">
+                <input type="text" id="input-pdf-password" maxlength="16" placeholder="e.g. RAME1988" style="text-transform: uppercase;"
+                  class="w-full px-4 py-2.5 text-center tracking-widest font-mono text-base font-bold rounded-xl border-2 border-slate-300 focus:border-emerald-600 focus:outline-hidden uppercase" />
+                <div id="pdf-pw-error" class="text-[11px] font-semibold text-rose-600 hidden"></div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                  <button type="button" onclick="cancelPdfPasswordPrompt()" class="py-2.5 px-3 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition">Cancel</button>
+                  <button type="button" onclick="submitPdfPassword()" class="py-2.5 px-3 rounded-xl bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-xs transition flex items-center justify-center space-x-1.5">
+                    <span>Unlock & Scan</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- UPLOAD & VERIFICATION PROGRESS STATE -->
+          <div id="aadhaar-loading-section" class="hidden p-6 rounded-2xl border border-emerald-200 bg-emerald-50/60 text-center space-y-3">
+            <div class="w-14 h-14 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center animate-pulse">
+              <i data-lucide="shield" class="w-7 h-7"></i>
+            </div>
+            <h4 class="text-xs font-bold text-slate-900" id="aadhaar-loading-title">Verifying UIDAI Digital Signature...</h4>
+            <p class="text-[11px] text-slate-600 max-w-xs mx-auto leading-relaxed" id="aadhaar-loading-sub">
+              Cryptographically verifying RSA-2048 SHA-256 digital signature against official UIDAI trust certificates.
+            </p>
+            <div class="w-48 h-1.5 bg-emerald-200 rounded-full mx-auto overflow-hidden">
+              <div class="h-full bg-emerald-600 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+
+          <!-- VERIFIED SUCCESS SECTION (Aadhaar Secure QR Valid) -->
+          <div id="aadhaar-verified-section" class="hidden p-5 rounded-2xl bg-emerald-50 border-2 border-emerald-300 space-y-4 shadow-sm">
+            <div class="flex items-center justify-between border-b border-emerald-200/80 pb-3">
+              <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                  <i data-lucide="check" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="text-xs font-extrabold text-slate-950 uppercase tracking-wide">Aadhaar Secure QR Valid</h3>
+                  <p class="text-[10px] text-emerald-800 font-medium">UIDAI Digitally Signed & Authenticated Offline</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-950 font-mono text-[9px] font-bold">RSA-2048</span>
+            </div>
+
+            <!-- Identity Card with Photo & Demographics -->
+            <div class="bg-white p-3.5 rounded-xl border border-emerald-200/80 shadow-2xs space-y-3">
+              <div class="flex items-start space-x-3">
+                <div id="aadhaar-photo-container" class="w-16 h-20 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                  <img id="aadhaar-photo-img" src="" alt="Aadhaar Photo" class="w-full h-full object-cover hidden">
+                  <i id="aadhaar-photo-fallback" data-lucide="user" class="w-8 h-8 text-slate-400"></i>
+                </div>
+                <div class="flex-1 min-w-0 space-y-1">
+                  <div class="text-[10px] text-slate-400 font-semibold uppercase">Resident Name</div>
+                  <div id="aadhaar-name-display" class="text-xs font-extrabold text-slate-900 truncate">-</div>
+
+                  <div class="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                    <div>
+                      <span class="text-[10px] text-slate-400 block">DOB / YOB</span>
+                      <strong id="aadhaar-dob-display" class="text-slate-800 text-[11px]">-</strong>
+                    </div>
+                    <div>
+                      <span class="text-[10px] text-slate-400 block">Gender</span>
+                      <strong id="aadhaar-gender-display" class="text-slate-800 text-[11px]">-</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reference & Masked Aadhaar -->
+              <div class="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-[10px]">
+                <div>
+                  <span class="text-slate-400 block font-medium">Aadhaar Reference ID:</span>
+                  <strong id="aadhaar-ref-display" class="font-mono text-slate-800 text-[10px] block truncate">-</strong>
+                </div>
+                <div>
+                  <span class="text-slate-400 block font-medium">Masked Digits:</span>
+                  <strong id="aadhaar-masked-display" class="font-mono text-slate-800 text-[10px] block">-</strong>
+                </div>
+              </div>
+
+              <!-- Address -->
+              <div class="pt-2 border-t border-slate-100 text-[10px]">
+                <span class="text-slate-400 block font-medium mb-0.5">Verified Address:</span>
+                <p id="aadhaar-address-display" class="text-slate-700 text-[11px] leading-relaxed break-words font-medium">-</p>
+              </div>
+            </div>
+
+            <!-- Regulatory & Next Step Notice -->
+            <div class="p-2.5 rounded-lg bg-amber-50/80 border border-amber-200 text-[10px] text-amber-800 flex items-start space-x-2">
+              <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+              <p class="leading-relaxed">
+                This confirms the authenticity of the signed Aadhaar document. Final activation remains subject to Admin review and approval.
+              </p>
+            </div>
+
+            <!-- Continue Button -->
+            <button type="button" onclick="proceedToNextStep()" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+              <span data-i18n="continue_to_location">Continue to Payout Setup</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
         </div>
 
-        <div class="pt-4 text-center">
-          <p class="text-[11px] text-slate-400" data-i18n="gov_secure_badge">100% Secure • Official UIDAI Digitally Signed Verification</p>
+        <!-- Clean Minimal Footer per Task 1 -->
+        <div class="pt-4 pb-2 text-center">
+          <p class="text-xs font-semibold text-slate-400 flex items-center justify-center space-x-1.5">
+            <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-600"></i>
+            <span>Secure Offline QR Verification</span>
+          </p>
         </div>
       </div>
 
-      <!-- PAGE 6: BANK / UPI PAYOUT SETUP (ACTIVE & INTERACTIVE) -->
-      <div id="screen-onboarding-6" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
+      id="screen-onboarding-6" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
         <div>
           <div class="flex items-center space-x-2 text-emerald-600 text-xs font-bold uppercase tracking-wider mb-2">
             <span class="px-2 py-0.5 bg-emerald-100 rounded" data-i18n="step_6_badge">Step 6 of 7</span>
@@ -3759,14 +3851,36 @@
     // =========================================================================
     // HIGH-ACCURACY DUAL-ENGINE UIDAI SECURE QR CODE SCANNER (jsQR + Html5Qrcode)
     // =========================================================================
+    // =========================================================================
+    // PRODUCTION-READY DUAL-ENGINE AADHAAR SECURE QR SCANNER (jsQR + Html5Qrcode)
+    // =========================================================================
     let aadhaarQrScanner = null;
     let currentCameraFacingMode = "environment";
+    let isTorchActive = false;
     let pendingPdfPasswordResolver = null;
+    let cropSourceImage = null;
+    let currentCropZoom = 1.0;
+
+    // Camera 7-Stage Detection Flow Status Indicator
+    function updateCameraStatus(stage) {
+      const badge = document.getElementById('camera-status-badge');
+      if (!badge) return;
+      const stages = {
+        1: "Camera Starting...",
+        2: "Camera Ready",
+        3: "Searching for QR...",
+        4: "QR Detected",
+        5: "Reading Aadhaar QR...",
+        6: "Verifying Digital Signature...",
+        7: "Verification Successful"
+      };
+      badge.innerText = stages[stage] || "Scanning...";
+    }
 
     function triggerAadhaarDocUpload() {
       const consent = document.getElementById('kyc-aadhaar-consent-checkbox');
       if (consent && !consent.checked) {
-        showKycError(currentLang === 'hi' ? "कृपया आगे बढ़ने के लिए आधार सत्यापन सहमति पर टिक करें" : "Please tick the Aadhaar verification consent checkbox");
+        showKycError("Please tick the Aadhaar verification consent checkbox to proceed.");
         return;
       }
       hideKycError();
@@ -3776,52 +3890,134 @@
     async function startAadhaarCameraScanner() {
       const consent = document.getElementById('kyc-aadhaar-consent-checkbox');
       if (consent && !consent.checked) {
-        showKycError(currentLang === 'hi' ? "कृपया आगे बढ़ने के लिए आधार सत्यापन सहमति पर टिक करें" : "Please tick the Aadhaar verification consent checkbox");
+        showKycError("Please tick the Aadhaar verification consent checkbox to proceed.");
         return;
       }
       hideKycError();
 
       const choiceSec = document.getElementById('aadhaar-choice-section');
       const camSec = document.getElementById('aadhaar-camera-section');
+      const cropSec = document.getElementById('aadhaar-crop-section');
       if (choiceSec) choiceSec.classList.add('hidden');
+      if (cropSec) cropSec.classList.add('hidden');
       if (camSec) camSec.classList.remove('hidden');
+
+      updateCameraStatus(1); // 1. Camera Starting
 
       try {
         if (!window.Html5Qrcode) {
-          throw new Error("QR scanning library is loading. Please try again in a moment.");
+          throw new Error("QR scanning engine is loading. Please try again.");
         }
         if (aadhaarQrScanner) {
           try { await aadhaarQrScanner.stop(); } catch (e) {}
         }
         aadhaarQrScanner = new Html5Qrcode("aadhaar-qr-reader");
-        const config = { fps: 12, qrbox: { width: 240, height: 240 } };
+
+        // Request HD camera stream with environment facing mode
+        const qrConfig = {
+          fps: 15,
+          qrbox: (viewfinderWidth, viewfinderHeight) => {
+            const minDim = Math.min(viewfinderWidth, viewfinderHeight);
+            const edge = Math.floor(minDim * 0.75);
+            return { width: edge, height: edge };
+          },
+          aspectRatio: 1.0
+        };
+
         await aadhaarQrScanner.start(
           { facingMode: currentCameraFacingMode },
-          config,
-          (decodedText) => {
-            console.log("[Aadhaar QR Detected via Camera]");
-            stopAadhaarCameraScanner();
-            processAadhaarQrPayload(decodedText);
+          qrConfig,
+          (decodedText, decodedResult) => {
+            updateCameraStatus(4); // 4. QR Detected
+            handleCameraQrDecoded(decodedText, decodedResult);
           },
-          () => {} // Frame error callback ignored
+          (errorMessage) => {
+            // Periodic frame scan notice (searching)
+            updateCameraStatus(3); // 3. Searching for QR
+          }
         );
+
+        updateCameraStatus(2); // 2. Camera Ready
+        isTorchActive = false;
+        checkTorchCapability();
+
       } catch (camErr) {
-        console.error("Camera scanner error:", camErr);
+        console.error("Camera scanner initialization error:", camErr);
         stopAadhaarCameraScanner();
         const errStr = String(camErr || '');
         if (camErr.name === 'NotAllowedError' || camErr.name === 'PermissionDeniedError' || errStr.includes('NotAllowedError') || errStr.includes('Permission denied')) {
-          showKycError(currentLang === 'hi'
-            ? "कैमरा अनुमति अस्वीकृत है। कृपया ब्राउज़र सेटिंग्स में कैमरा अनुमति दें या विकल्प 2 से दस्तावेज़ अपलोड करें।"
-            : "Camera permission was denied. Please allow camera access in browser settings or use Option 2 to upload your Aadhaar document.");
+          showKycError("Allow camera access to continue.");
         } else if (camErr.name === 'NotFoundError' || errStr.includes('NotFoundError')) {
-          showKycError(currentLang === 'hi'
-            ? "डिवाइस पर कोई कैमरा नहीं मिला। कृपया विकल्प 2 से दस्तावेज़ अपलोड करें।"
-            : "No camera found on this device. Please use Option 2 to upload your Aadhaar document.");
+          showKycError("No camera detected on this device. Please use Option 2 to upload your Aadhaar document.");
         } else {
-          showKycError(currentLang === 'hi'
-            ? "कैमरा खोलने में असमर्थ। कृपया ब्राउज़र सेटिंग्स में कैमरा अनुमति जांचें या विकल्प 2 से दस्तावेज़ अपलोड करें।"
-            : "Unable to access camera. Please grant camera permission or use Option 2 to upload your Aadhaar document.");
+          showKycError("Connection failed. Please retry.");
         }
+      }
+    }
+
+    function handleCameraQrDecoded(decodedText, decodedResult) {
+      updateCameraStatus(5); // 5. Reading Aadhaar QR
+      let payload = decodedText ? decodedText.trim() : "";
+
+      // Check if rawBytes is available on decodedResult to preserve binary integrity
+      if (decodedResult && decodedResult.result && decodedResult.result.rawBytes) {
+        const bytes = decodedResult.result.rawBytes;
+        if (!/^\d+$/.test(payload) && bytes && bytes.length > 50) {
+          let binary = '';
+          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+          payload = btoa(binary);
+        }
+      }
+
+      if (!payload) {
+        document.getElementById('qr-unreadable-overlay')?.classList.remove('hidden');
+        return;
+      }
+
+      stopAadhaarCameraScanner();
+      updateCameraStatus(6); // 6. Verifying Digital Signature
+      processAadhaarQrPayload(payload);
+    }
+
+    function resumeCameraSearching() {
+      document.getElementById('qr-unreadable-overlay')?.classList.add('hidden');
+      updateCameraStatus(3);
+    }
+
+    async function checkTorchCapability() {
+      const btn = document.getElementById('btn-toggle-torch');
+      if (!btn) return;
+      try {
+        if (aadhaarQrScanner && aadhaarQrScanner.getRunningTrackCapabilities) {
+          const caps = aadhaarQrScanner.getRunningTrackCapabilities();
+          if (caps && caps.torch) {
+            btn.classList.remove('hidden');
+            return;
+          }
+        }
+      } catch (e) {}
+      btn.classList.add('hidden');
+    }
+
+    async function toggleAadhaarTorch() {
+      if (!aadhaarQrScanner) return;
+      try {
+        isTorchActive = !isTorchActive;
+        await aadhaarQrScanner.applyVideoConstraints({
+          advanced: [{ torch: isTorchActive }]
+        });
+        const btn = document.getElementById('btn-toggle-torch');
+        if (btn) {
+          if (isTorchActive) {
+            btn.classList.add('bg-amber-400', 'text-slate-950');
+            btn.classList.remove('bg-slate-800', 'text-slate-300');
+          } else {
+            btn.classList.remove('bg-amber-400', 'text-slate-950');
+            btn.classList.add('bg-slate-800', 'text-slate-300');
+          }
+        }
+      } catch (e) {
+        console.warn("Torch toggle not supported:", e);
       }
     }
 
@@ -3835,8 +4031,10 @@
         try {
           await aadhaarQrScanner.stop();
         } catch (e) {}
+        aadhaarQrScanner = null;
       }
       document.getElementById('aadhaar-camera-section')?.classList.add('hidden');
+      document.getElementById('qr-unreadable-overlay')?.classList.add('hidden');
       document.getElementById('aadhaar-choice-section')?.classList.remove('hidden');
       if (window.lucide) window.lucide.createIcons();
     }
@@ -3844,6 +4042,26 @@
     // -------------------------------------------------------------------------
     // MULTI-PASS CANVAS SCANNER (jsQR: Orientations, Crops, Contrast)
     // -------------------------------------------------------------------------
+    function extractCodePayload(code) {
+      if (!code) return null;
+      // Case 1: Numeric decimal string (UIDAI BigInt format)
+      if (code.data && /^\d+$/.test(code.data.trim())) {
+        return code.data.trim();
+      }
+      // Case 2: Binary mode QR: raw gzip bytes
+      if (code.binaryData && code.binaryData.length > 50) {
+        const bytes = new Uint8Array(code.binaryData);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        return btoa(binary);
+      }
+      // Case 3: Legacy XML or text
+      if (code.data && code.data.trim()) {
+        return code.data.trim();
+      }
+      return null;
+    }
+
     function scanAadhaarCanvasWithPasses(sourceCanvas) {
       if (!window.jsQR) {
         console.warn("jsQR library not available on window");
@@ -3855,10 +4073,9 @@
         const ctx = sourceCanvas.getContext('2d', { willReadFrequently: true });
         const imgData = ctx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
         const code = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: "attemptBoth" });
-        if (code && code.data && code.data.trim()) return code.data.trim();
-      } catch (e) {
-        console.warn("Pass 1 error:", e);
-      }
+        const p = extractCodePayload(code);
+        if (p) return p;
+      } catch (e) {}
 
       // Pass 2: Rotations (90, 180, 270 degrees)
       const angles = [90, 180, 270];
@@ -3879,21 +4096,16 @@
 
           const rData = rCtx.getImageData(0, 0, rotCanvas.width, rotCanvas.height);
           const code = jsQR(rData.data, rData.width, rData.height, { inversionAttempts: "attemptBoth" });
-          if (code && code.data && code.data.trim()) return code.data.trim();
-        } catch (e) {
-          console.warn(`Pass 2 (${angle}deg) error:`, e);
-        }
+          const p = extractCodePayload(code);
+          if (p) return p;
+        } catch (e) {}
       }
 
-      // Pass 3: Quadrant & Regional crops (UIDAI QR usually in bottom-half or bottom-right or top-right)
+      // Pass 3: Quadrant & Regional crops
       const regions = [
-        // Bottom half (standard for e-Aadhaar cards)
         { x: 0, y: Math.floor(sourceCanvas.height * 0.4), w: sourceCanvas.width, h: Math.floor(sourceCanvas.height * 0.6) },
-        // Bottom right quadrant (UIDAI card front/back)
         { x: Math.floor(sourceCanvas.width * 0.35), y: Math.floor(sourceCanvas.height * 0.35), w: Math.floor(sourceCanvas.width * 0.65), h: Math.floor(sourceCanvas.height * 0.65) },
-        // Bottom left quadrant
         { x: 0, y: Math.floor(sourceCanvas.height * 0.35), w: Math.floor(sourceCanvas.width * 0.65), h: Math.floor(sourceCanvas.height * 0.65) },
-        // Top right quadrant
         { x: Math.floor(sourceCanvas.width * 0.35), y: 0, w: Math.floor(sourceCanvas.width * 0.65), h: Math.floor(sourceCanvas.height * 0.65) }
       ];
 
@@ -3908,14 +4120,13 @@
 
             const cData = cCtx.getImageData(0, 0, cropCanvas.width, cropCanvas.height);
             const code = jsQR(cData.data, cData.width, cData.height, { inversionAttempts: "attemptBoth" });
-            if (code && code.data && code.data.trim()) return code.data.trim();
-          } catch (e) {
-            console.warn("Pass 3 crop error:", e);
-          }
+            const p = extractCodePayload(code);
+            if (p) return p;
+          } catch (e) {}
         }
       }
 
-      // Pass 4: High-contrast binarization pass (for faint prints or uneven lighting)
+      // Pass 4: High-contrast binarization pass
       try {
         const contrastCanvas = document.createElement('canvas');
         contrastCanvas.width = sourceCanvas.width;
@@ -3932,10 +4143,9 @@
           d[i + 2] = val;
         }
         const code = jsQR(d, cImgData.width, cImgData.height, { inversionAttempts: "attemptBoth" });
-        if (code && code.data && code.data.trim()) return code.data.trim();
-      } catch (e) {
-        console.warn("Pass 4 contrast error:", e);
-      }
+        const p = extractCodePayload(code);
+        if (p) return p;
+      } catch (e) {}
 
       return null;
     }
@@ -3949,6 +4159,7 @@
         const url = URL.createObjectURL(file);
         img.onload = () => {
           URL.revokeObjectURL(url);
+          cropSourceImage = img;
           try {
             const maxDim = 1600;
             let w = img.naturalWidth || img.width;
@@ -3966,7 +4177,6 @@
             let decoded = scanAadhaarCanvasWithPasses(canvas);
             if (decoded) return resolve(decoded);
 
-            // If not found and scaled, test original scale
             if (scale < 1.0) {
               const fullCanvas = document.createElement('canvas');
               fullCanvas.width = w;
@@ -3992,6 +4202,78 @@
     }
 
     // -------------------------------------------------------------------------
+    // INTERACTIVE CROP / ZOOM FOR UPLOADED DOCUMENTS (TASK 4)
+    // -------------------------------------------------------------------------
+    function showDocumentCropView(sourceImgOrCanvas) {
+      hideAadhaarLoading();
+      document.getElementById('aadhaar-choice-section')?.classList.add('hidden');
+      document.getElementById('aadhaar-camera-section')?.classList.add('hidden');
+      const cropSec = document.getElementById('aadhaar-crop-section');
+      if (cropSec) cropSec.classList.remove('hidden');
+
+      const canvas = document.getElementById('crop-preview-canvas');
+      if (canvas && sourceImgOrCanvas) {
+        currentCropZoom = 1.0;
+        renderCropCanvas(sourceImgOrCanvas, currentCropZoom);
+      }
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function renderCropCanvas(img, zoom) {
+      const canvas = document.getElementById('crop-preview-canvas');
+      if (!canvas || !img) return;
+      canvas.width = 300;
+      canvas.height = 300;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, 300, 300);
+
+      const srcW = img.naturalWidth || img.width;
+      const srcH = img.naturalHeight || img.height;
+      const cropW = srcW / zoom;
+      const cropH = srcH / zoom;
+      const cropX = (srcW - cropW) / 2;
+      const cropY = (srcH - cropH) / 2;
+
+      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, 300, 300);
+    }
+
+    function adjustCropZoom(factor) {
+      if (!cropSourceImage) return;
+      currentCropZoom = Math.max(0.5, Math.min(4.0, currentCropZoom * factor));
+      renderCropCanvas(cropSourceImage, currentCropZoom);
+    }
+
+    function resetCropZoom() {
+      if (!cropSourceImage) return;
+      currentCropZoom = 1.0;
+      renderCropCanvas(cropSourceImage, currentCropZoom);
+    }
+
+    function cancelDocCrop() {
+      document.getElementById('aadhaar-crop-section')?.classList.add('hidden');
+      document.getElementById('aadhaar-choice-section')?.classList.remove('hidden');
+    }
+
+    async function executeCroppedScan() {
+      const canvas = document.getElementById('crop-preview-canvas');
+      if (!canvas) return;
+      showAadhaarLoading("Reading Aadhaar QR from selected area...");
+      try {
+        const decoded = scanAadhaarCanvasWithPasses(canvas);
+        if (decoded) {
+          cancelDocCrop();
+          await processAadhaarQrPayload(decoded);
+        } else {
+          hideAadhaarLoading();
+          showKycError("QR code not found. Try another image.");
+        }
+      } catch (e) {
+        hideAadhaarLoading();
+        showKycError("QR detected but couldn't be read. Please retry.");
+      }
+    }
+
+    // -------------------------------------------------------------------------
     // PASSWORD-PROTECTED e-AADHAAR PDF MODAL & SCANNER
     // -------------------------------------------------------------------------
     function promptPdfPasswordModal(isRetry = false) {
@@ -4007,9 +4289,7 @@
         }
         if (errEl) {
           if (isRetry) {
-            errEl.innerText = currentLang === 'hi'
-              ? "गलत पासवर्ड! कृपया नाम के पहले 4 बड़े अक्षर + 4 अंकों का जन्म वर्ष दर्ज करें (जैसे: RAME1988)"
-              : "Incorrect password! Format: 4 letters of name in CAPITAL + Birth year (e.g. RAME1988)";
+            errEl.innerText = "Incorrect password. Please try again.";
             errEl.classList.remove('hidden');
           } else {
             errEl.classList.add('hidden');
@@ -4025,7 +4305,7 @@
       if (!val) {
         const errEl = document.getElementById('pdf-pw-error');
         if (errEl) {
-          errEl.innerText = currentLang === 'hi' ? "कृपया पासवर्ड दर्ज करें" : "Please enter the password";
+          errEl.innerText = "Please enter the password.";
           errEl.classList.remove('hidden');
         }
         return;
@@ -4071,9 +4351,7 @@
           if (pdfErr.name === 'PasswordException' || (pdfErr.message && pdfErr.message.toLowerCase().includes('password'))) {
             attempts++;
             if (attempts >= 3) {
-              throw new Error(currentLang === 'hi'
-                ? "e-Aadhaar पासवर्ड गलत था। कृपया सही पासवर्ड (नाम के 4 बड़े अक्षर + जन्म वर्ष) से पुनः प्रयास करें।"
-                : "e-Aadhaar password was incorrect. Please verify format (First 4 letters of name + Birth year) and retry.");
+              throw new Error("Incorrect password. Please try again.");
             }
             password = await promptPdfPasswordModal(attempts > 1);
           } else {
@@ -4088,7 +4366,7 @@
 
       const maxPages = Math.min(pdfDoc.numPages, 2);
       for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
-        showAadhaarLoading(currentLang === 'hi' ? `पृष्ठ ${pageNum} से QR कोड स्कैन हो रहा है...` : `Scanning Page ${pageNum} for Secure QR...`);
+        showAadhaarLoading(`Scanning Page ${pageNum} for Secure QR...`);
         const page = await pdfDoc.getPage(pageNum);
         const viewport = page.getViewport({ scale: 2.5 });
         const canvas = document.createElement('canvas');
@@ -4097,6 +4375,7 @@
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         await page.render({ canvasContext: ctx, viewport }).promise;
 
+        cropSourceImage = canvas;
         const decoded = scanAadhaarCanvasWithPasses(canvas);
         if (decoded) return decoded;
       }
@@ -4113,13 +4392,13 @@
 
       const consent = document.getElementById('kyc-aadhaar-consent-checkbox');
       if (consent && !consent.checked) {
-        showKycError(currentLang === 'hi' ? "कृपया आधार सत्यापन सहमति पर टिक करें" : "Please provide Aadhaar verification consent");
+        showKycError("Please tick the Aadhaar verification consent checkbox to proceed.");
         event.target.value = '';
         return;
       }
 
       hideKycError();
-      showAadhaarLoading(currentLang === 'hi' ? "दस्तावेज़ से QR कोड निकाला जा रहा है..." : "Extracting QR code from document...");
+      showAadhaarLoading("Extracting QR code from document...");
 
       try {
         let decoded = null;
@@ -4130,30 +4409,28 @@
             try {
               if (!aadhaarQrScanner) aadhaarQrScanner = new Html5Qrcode("aadhaar-qr-reader");
               decoded = await aadhaarQrScanner.scanFile(file, true);
-            } catch (h5Err) {
-              console.warn("Html5Qrcode fallback notice:", h5Err);
-            }
+            } catch (h5Err) {}
           }
         } else if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
           decoded = await scanAadhaarPdfFile(file);
         } else {
-          throw new Error(currentLang === 'hi'
-            ? "कृपया मान्य इमेज (JPG, PNG) या e-Aadhaar PDF अपलोड करें।"
-            : "Please upload a valid image (JPG, PNG) or e-Aadhaar PDF.");
+          throw new Error("This QR format isn't supported.");
         }
 
         if (decoded) {
           await processAadhaarQrPayload(decoded);
         } else {
-          hideAadhaarLoading();
-          showKycError(currentLang === 'hi'
-            ? "दस्तावेज़ में आधार सुरक्षित QR कोड नहीं मिला। कृपया अच्छी रोशनी में साफ और स्पष्ट फ़ोटो या e-Aadhaar PDF अपलोड करें।"
-            : "Aadhaar Secure QR code could not be detected. Please ensure good lighting, avoid glare, and upload a clear, uncropped document.");
+          if (cropSourceImage) {
+            showDocumentCropView(cropSourceImage);
+          } else {
+            hideAadhaarLoading();
+            showKycError("QR code not found. Try another image.");
+          }
         }
       } catch (err) {
         hideAadhaarLoading();
         console.error("handleAadhaarFileUpload error:", err);
-        showKycError(err.message || (currentLang === 'hi' ? "QR कोड पढ़ने में असमर्थ। कृपया साफ फ़ोटो अपलोड करें।" : "Unable to read QR code. Please upload a clearer image."));
+        showKycError(err.message || "QR code not found. Try another image.");
       } finally {
         event.target.value = '';
       }
@@ -4162,6 +4439,7 @@
     function showAadhaarLoading(msg) {
       document.getElementById('aadhaar-choice-section')?.classList.add('hidden');
       document.getElementById('aadhaar-camera-section')?.classList.add('hidden');
+      document.getElementById('aadhaar-crop-section')?.classList.add('hidden');
       document.getElementById('aadhaar-verified-section')?.classList.add('hidden');
       const loadSec = document.getElementById('aadhaar-loading-section');
       if (loadSec) {
@@ -4185,13 +4463,19 @@
     async function processAadhaarQrPayload(qrString) {
       if (!qrString || typeof qrString !== 'string' || !qrString.trim()) {
         hideAadhaarLoading();
-        showKycError(currentLang === 'hi'
-          ? "दस्तावेज़ में आधार सुरक्षित QR कोड नहीं मिला। कृपया पुनः प्रयास करें।"
-          : "Aadhaar Secure QR code could not be detected. Please try again.");
+        showKycError("QR code not found. Try another image.");
         return;
       }
 
-      showAadhaarLoading(currentLang === 'hi' ? "UIDAI डिजिटल हस्ताक्षर सत्यापित हो रहा है..." : "Cryptographically Verifying UIDAI Digital Signature...");
+      // Quick client-side format validation
+      const clean = qrString.trim();
+      if (clean.includes('<PrintLetterBarcodeData') || clean.includes('<?xml') || /^(upi:\/\/|https?:\/\/|WIFI:|BEGIN:VCARD)/i.test(clean)) {
+        hideAadhaarLoading();
+        showKycError("This QR format isn't supported.");
+        return;
+      }
+
+      showAadhaarLoading("Verifying UIDAI digital signature...");
 
       const userId = (state.userProfile && state.userProfile.phone) || localStorage.getItem('gb_user_phone') || 'usr_party';
 
@@ -4200,7 +4484,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            qr_data: qrString.trim(),
+            qr_data: clean,
             user_id: userId,
             role: 'vendor',
             consent_accepted: true
@@ -4210,11 +4494,7 @@
         const verifyData = await verifyRes.json().catch(() => null);
 
         if (!verifyRes.ok || !verifyData || !verifyData.valid) {
-          const errMsg = verifyData?.error || verifyData?.message || (
-            currentLang === 'hi'
-              ? "UIDAI डिजिटल हस्ताक्षर सत्यापन विफल। QR कोड अमान्य या छेड़छाड़ किया गया है।"
-              : "UIDAI cryptographic digital signature verification failed. The QR payload has been tampered with or is invalid."
-          );
+          const errMsg = verifyData?.error || verifyData?.message || "Aadhaar QR verification failed.";
           throw new Error(errMsg);
         }
 
@@ -4222,6 +4502,7 @@
         hideAadhaarLoading();
         document.getElementById('aadhaar-choice-section')?.classList.add('hidden');
         document.getElementById('aadhaar-camera-section')?.classList.add('hidden');
+        document.getElementById('aadhaar-crop-section')?.classList.add('hidden');
         document.getElementById('aadhaar-verified-section')?.classList.remove('hidden');
 
         // Populate verified fields
@@ -4259,16 +4540,13 @@
         localStorage.setItem('gb_kyc_type', 'aadhaar_qr');
         localStorage.setItem('gb_kyc_verified', 'true');
 
-        toastSuccess(currentLang === 'hi'
-          ? "आधार सुरक्षित QR डिजिटल रूप से सत्यापित! UIDAI हस्ताक्षर मान्य।"
-          : "Aadhaar Secure QR cryptographically verified! UIDAI digital signature authentic.");
-
+        toastSuccess("Aadhaar Secure QR cryptographically verified! UIDAI digital signature authentic.");
         if (window.lucide) window.lucide.createIcons();
 
       } catch (err) {
         hideAadhaarLoading();
         console.error("processAadhaarQrPayload error:", err);
-        showKycError(err.message || (currentLang === 'hi' ? "आधार सत्यापन विफल रहा" : "Aadhaar verification failed"));
+        showKycError(err.message || "Aadhaar QR verification failed.");
       }
     }
 

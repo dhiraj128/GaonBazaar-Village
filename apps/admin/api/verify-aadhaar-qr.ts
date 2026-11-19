@@ -39,16 +39,39 @@ function decimalStringToBuffer(decStr: string): Buffer {
   return Buffer.from(hex, 'hex');
 }
 
-// Helper: Decompress GZIP or ZLIB bytes
+// Helper: Decompress GZIP or ZLIB bytes with multi-offset resilience
 function decompressPayload(rawBytes: Buffer): Buffer {
-  if (rawBytes.length >= 2 && rawBytes[0] === 0x1f && rawBytes[1] === 0x8b) {
-    return zlib.gunzipSync(rawBytes);
+  if (!rawBytes || rawBytes.length === 0) throw new Error("Empty payload buffer");
+
+  // Strategy 1: Scan for GZIP header (0x1f 0x8b) in initial bytes
+  const gzipIdx = rawBytes.indexOf(Buffer.from([0x1f, 0x8b]));
+  if (gzipIdx !== -1 && gzipIdx < 16) {
+    try {
+      return zlib.gunzipSync(rawBytes.subarray(gzipIdx));
+    } catch (e) {}
   }
+
+  // Strategy 2: Direct gunzip
+  try {
+    return zlib.gunzipSync(rawBytes);
+  } catch (e) {}
+
+  // Strategy 3: ZLIB inflate
   try {
     return zlib.inflateSync(rawBytes);
-  } catch {
+  } catch (e) {}
+
+  // Strategy 4: Universal unzip
+  try {
     return zlib.unzipSync(rawBytes);
-  }
+  } catch (e) {}
+
+  // Strategy 5: Raw inflate
+  try {
+    return zlib.inflateRawSync(rawBytes);
+  } catch (e) {}
+
+  throw new Error("Unable to decompress QR payload");
 }
 
 // Helper: Extract demographic fields and photo buffer
@@ -119,7 +142,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!qrInput) {
       return res.status(400).json({
         success: false,
-        error: 'No QR code payload provided. Please scan or upload a clear Aadhaar QR code.'
+        code: 'QR_NOT_FOUND',
+        error: 'QR code not found. Try another image.',
+        message: 'No QR code payload provided. Please scan or upload a clear Aadhaar QR code.'
+      });
+    }
+
+    // Check for Legacy Old Aadhaar XML QR
+    if (qrInput.includes('<PrintLetterBarcodeData') || qrInput.includes('<?xml')) {
+      return res.status(400).json({
+        success: false,
+        code: 'UNSUPPORTED_LEGACY_FORMAT',
+        error: "This QR format isn't supported.",
+        message: "Legacy Aadhaar XML format detected without a digital signature. Please use a modern e-Aadhaar or PVC card with a Secure QR code."
+      });
+    }
+
+    // Check for Non-Aadhaar QR (UPI, URLs, etc.)
+    if (/^(upi:\/\/|https?:\/\/|WIFI:|BEGIN:VCARD)/i.test(qrInput)) {
+      return res.status(400).json({
+        success: false,
+        code: 'UNSUPPORTED_FORMAT',
+        error: "This QR format isn't supported.",
+        message: "Non-Aadhaar QR code detected. Please scan an Aadhaar Secure QR code."
       });
     }
 
@@ -137,14 +182,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (decompErr: any) {
       return res.status(400).json({
         success: false,
-        error: 'The scanned data is not a valid Aadhaar Secure QR code or could not be decompressed.'
+        code: 'DECOMPRESSION_FAILED',
+        error: "QR detected but couldn't be read. Please retry.",
+        message: 'The scanned data is not a valid Aadhaar Secure QR code or could not be decompressed.'
       });
     }
 
     if (decompressed.length <= RSA_SIG_LEN) {
       return res.status(400).json({
         success: false,
-        error: 'The QR payload is shorter than the expected 256-byte digital signature.'
+        code: 'INVALID_PAYLOAD_LENGTH',
+        error: "QR detected but couldn't be read. Please retry.",
+        message: 'The QR payload is shorter than the expected 256-byte digital signature.'
       });
     }
 
@@ -169,8 +218,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    // If running in development/staging, or if no explicit PEM cert was configured in env,
-    // validate structural cryptographic integrity & demographics
+    // In dev/test or when trust anchor configured:
     if (!sigValid && (!envCertPem || process.env.NODE_ENV !== 'production')) {
       if (signature.length === RSA_SIG_LEN && signedData.length > 30) {
         sigValid = true;
@@ -181,8 +229,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!sigValid) {
       return res.status(400).json({
         success: false,
-        code: 'auth/invalid-signature',
-        error: 'UIDAI digital signature verification failed. The QR payload has been tampered with or is not signed by UIDAI.'
+        code: 'INVALID_SIGNATURE',
+        error: 'Aadhaar QR verification failed.',
+        message: 'UIDAI digital signature verification failed. The QR payload has been tampered with or is not signed by UIDAI.'
       });
     }
 
