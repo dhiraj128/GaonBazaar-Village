@@ -1,19 +1,31 @@
-// Cross-invocation in-memory cache for Vercel functions
-interface OtpRecord {
-  verificationId: string;
-  expiresAt: number; // timestamp ms
-  lastSentAt: number;
-  attempts: number;
-}
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const getOtpCache = (): Map<string, OtpRecord> => {
-  if (!(global as any).__gb_otp_cache) {
-    (global as any).__gb_otp_cache = new Map<string, OtpRecord>();
-  }
-  return (global as any).__gb_otp_cache;
-};
+/**
+ * Apna GaonBazaar - High-Speed Real SMS OTP Dispatch via Message Central VerifyNow API
+ *
+ * Security & Reliability Architecture:
+ * - Direct carrier delivery via Message Central VerifyNow API v3
+ * - Durable rate limiting (30s cooldown) backed by Supabase PostgreSQL (otp_challenges)
+ * - Cross-serverless instance synchronization (Zero dependence on volatile in-memory Map)
+ * - Strict role validation: Only self-registration roles permitted ('customer', 'vendor', 'runner')
+ * - Full PII masking in serverless logs (No raw phone numbers or credentials logged)
+ * - Guaranteed challenge persistence before response
+ */
 
-const sendJson = (res: any, statusCode: number, data: any) => {
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL ||
+  'https://vxewgvrjhjpntfvsmuez.supabase.co';
+
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.VITE_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ';
+
+const ALLOWED_SELF_REGISTER_ROLES = new Set(['customer', 'vendor', 'runner']);
+
+function sendJson(res: any, statusCode: number, data: any) {
   try {
     res.setHeader('Content-Type', 'application/json');
     if (typeof res.status === 'function') {
@@ -24,7 +36,40 @@ const sendJson = (res: any, statusCode: number, data: any) => {
   } catch (e) {
     console.error('[Send OTP sendJson error]:', e);
   }
-};
+}
+
+// Durable Rate Limit Check: Query Supabase for latest challenge for this phone
+async function checkDurableRateLimit(cleanPhone: string): Promise<{ limited: boolean; waitSeconds: number }> {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/otp_challenges?phone=eq.${encodeURIComponent(
+        cleanPhone
+      )}&order=created_at.desc&limit=1`,
+      {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (res.ok) {
+      const records = await res.json();
+      if (Array.isArray(records) && records.length > 0) {
+        const lastCreatedAt = new Date(records[0].created_at).getTime();
+        const elapsed = Date.now() - lastCreatedAt;
+        if (elapsed < 30 * 1000) {
+          const waitSeconds = Math.ceil((30 * 1000 - elapsed) / 1000);
+          return { limited: true, waitSeconds };
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[Send OTP] Rate limit query notice:', err);
+  }
+  return { limited: false, waitSeconds: 0 };
+}
 
 // Store verification challenge in Supabase PostgreSQL table
 async function saveChallengeToSupabase(record: {
@@ -33,23 +78,13 @@ async function saveChallengeToSupabase(record: {
   session_id: string;
   role: string;
   expires_at: string;
-}) {
+}): Promise<boolean> {
   try {
-    const supabaseUrl =
-      process.env.SUPABASE_URL ||
-      process.env.VITE_SUPABASE_URL ||
-      'https://vxewgvrjhjpntfvsmuez.supabase.co';
-    const supabaseKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      process.env.SUPABASE_ANON_KEY ||
-      process.env.VITE_SUPABASE_ANON_KEY ||
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ';
-
-    await fetch(`${supabaseUrl}/rest/v1/otp_challenges`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/otp_challenges`, {
       method: 'POST',
       headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
         'Content-Type': 'application/json',
         Prefer: 'resolution=merge-duplicates',
       },
@@ -58,15 +93,17 @@ async function saveChallengeToSupabase(record: {
         phone: record.phone,
         session_id: record.session_id,
         otp_hash: 'VERIFYNOW',
-        role: record.role || 'customer',
+        role: record.role,
         attempts: 0,
         is_used: false,
         expires_at: record.expires_at,
         created_at: new Date().toISOString(),
       }),
     });
+    return res.ok;
   } catch (err) {
-    console.warn('[Send OTP] Supabase challenge sync notice:', err);
+    console.error('[Send OTP] Supabase challenge persistence exception:', err);
+    return false;
   }
 }
 
@@ -95,7 +132,6 @@ export default async function handler(req: any, res: any) {
       try {
         body = JSON.parse(body);
       } catch (pErr) {
-        console.error('[Send OTP Body Parse Error]:', pErr);
         return sendJson(res, 400, {
           success: false,
           error: 'Invalid JSON request body',
@@ -106,7 +142,6 @@ export default async function handler(req: any, res: any) {
     body = body || {};
 
     const rawPhone = body.phoneNumber || body.phone || '';
-    const role = body.role || 'customer';
     let clean = String(rawPhone || '').replace(/[^\d+]/g, '').trim();
     if (clean.startsWith('+91')) {
       clean = clean.slice(3);
@@ -117,8 +152,7 @@ export default async function handler(req: any, res: any) {
     }
     clean = clean.replace(/\D/g, '');
 
-    // Validate 10-digit Indian Mobile format (strictly starts with 6-9)
-    // No hardcoded numbers or static bypasses allowed
+    // 1. Validate 10-digit Indian Mobile format (strictly starts with 6-9)
     if (!/^[6-9]\d{9}$/.test(clean)) {
       return sendJson(res, 400, {
         success: false,
@@ -128,21 +162,26 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // Rate Limiting: 30-second cooldown per phone number
-    const now = Date.now();
-    const cachedRecord = getOtpCache().get(clean);
-    if (cachedRecord && now - cachedRecord.lastSentAt < 30 * 1000) {
-      const waitSeconds = Math.ceil((30 * 1000 - (now - cachedRecord.lastSentAt)) / 1000);
+    // Masked phone for compliant logging (PII protection)
+    const maskedPhone = `+91 XXXXX ${clean.slice(-4)}`;
+
+    // 2. Strict Role Sanitization: Never allow untrusted escalation to 'admin' / 'super_admin'
+    const requestedRole = String(body.role || 'customer').toLowerCase().trim();
+    const safeRole = ALLOWED_SELF_REGISTER_ROLES.has(requestedRole) ? requestedRole : 'customer';
+
+    // 3. Durable Rate Limiting: 30-second cooldown per phone number via shared PostgreSQL state
+    const rateLimit = await checkDurableRateLimit(clean);
+    if (rateLimit.limited) {
       return sendJson(res, 429, {
         success: false,
         code: 'auth/too-many-requests',
-        error: `Please wait ${waitSeconds}s before requesting another OTP.`,
-        message: `Please wait ${waitSeconds}s before requesting another OTP.`,
-        retryAfter: waitSeconds,
+        error: `Please wait ${rateLimit.waitSeconds}s before requesting another OTP.`,
+        message: `Please wait ${rateLimit.waitSeconds}s before requesting another OTP.`,
+        retryAfter: rateLimit.waitSeconds,
       });
     }
 
-    // Step 1: Retrieve Message Central credentials securely from server-side environment
+    // 4. Retrieve Message Central credentials securely from server-side environment
     const customerId = process.env.MESSAGE_CENTRAL_CUSTOMER_ID || '';
     const authToken = process.env.MESSAGE_CENTRAL_AUTH_TOKEN || '';
 
@@ -156,7 +195,7 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // Step 2: Dispatch real 4-digit SMS OTP via Message Central VerifyNow API v3 with 4500ms timeout
+    // 5. Dispatch real 4-digit SMS OTP via Message Central VerifyNow API v3 with 4500ms timeout
     const params = new URLSearchParams({
       countryCode: '91',
       flowType: 'SMS',
@@ -168,7 +207,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const mcSendUrl = `https://cpaas.messagecentral.com/verification/v3/send?${params.toString()}`;
-    console.log(`[Message Central VerifyNow] Dispatching 4-digit OTP to +91${clean}...`);
+    console.log(`[Message Central VerifyNow] Dispatching 4-digit OTP to ${maskedPhone}...`);
 
     const abortController = new AbortController();
     const timeoutHandle = setTimeout(() => abortController.abort(), 4500);
@@ -189,7 +228,7 @@ export default async function handler(req: any, res: any) {
     } catch (fetchErr: any) {
       clearTimeout(timeoutHandle);
       if (fetchErr.name === 'AbortError') {
-        console.error(`[Message Central Timeout] Send OTP request timed out after 4500ms for +91${clean}`);
+        console.error(`[Message Central Timeout] Send OTP request timed out after 4500ms for ${maskedPhone}`);
         return sendJson(res, 504, {
           success: false,
           code: 'auth/gateway-timeout',
@@ -207,9 +246,9 @@ export default async function handler(req: any, res: any) {
       mcData = { responseCode: mcResponse.status, message: mcText };
     }
 
-    console.log(`[Message Central VerifyNow] Send response status for +91${clean}:`, mcResponse.status, mcData?.responseCode);
+    console.log(`[Message Central VerifyNow] Send response status for ${maskedPhone}:`, mcResponse.status, mcData?.responseCode);
 
-    // Step 3: Handle provider response
+    // 6. Handle provider response
     if (!mcResponse.ok || (mcData.responseCode !== 200 && mcData.responseCode !== '200') || !mcData.data?.verificationId) {
       const errDetail =
         mcData.data?.errorMessage ||
@@ -228,31 +267,29 @@ export default async function handler(req: any, res: any) {
     }
 
     const verificationId = String(mcData.data.verificationId);
-    const expiresAt = now + 5 * 60 * 1000; // 5-minute validity
+    const expiresAt = Date.now() + 5 * 60 * 1000; // 5-minute validity
 
-    // Step 4: Persist verification session across memory cache immediately
-    getOtpCache().set(clean, {
-      verificationId,
-      expiresAt,
-      lastSentAt: now,
-      attempts: 0,
+    // 7. Durably Persist Verification Challenge to Supabase
+    // Requirement: Must await durable insert to prevent lost verification sessions across serverless instances
+    const saved = await saveChallengeToSupabase({
+      id: verificationId,
+      phone: clean,
+      session_id: verificationId,
+      role: safeRole,
+      expires_at: new Date(expiresAt).toISOString(),
     });
 
-    // Fire challenge persistence to Supabase non-blockingly (max 350ms race to avoid blocking HTTP response)
-    Promise.race([
-      saveChallengeToSupabase({
-        id: verificationId,
-        phone: clean,
-        session_id: verificationId,
-        role: role,
-        expires_at: new Date(expiresAt).toISOString(),
-      }),
-      new Promise((resolve) => setTimeout(resolve, 350)),
-    ]).catch((err) => {
-      console.warn('[Send OTP] Async challenge sync notice:', err);
-    });
+    if (!saved) {
+      console.error(`[Send OTP] Failed to save verification challenge for ${maskedPhone} to Supabase`);
+      return sendJson(res, 502, {
+        success: false,
+        code: 'auth/storage-failed',
+        error: "Failed to persist verification challenge. Please try again.",
+        message: "Failed to persist verification challenge. Please try again.",
+      });
+    }
 
-    // Step 5: Respond immediately with success and verificationId
+    // 8. Respond with success and verificationId
     return sendJson(res, 200, {
       success: true,
       message: '4-digit SMS OTP dispatched successfully via Message Central VerifyNow',
@@ -260,12 +297,12 @@ export default async function handler(req: any, res: any) {
       phoneNumber: clean,
     });
   } catch (error: any) {
-    console.error('[SEND-OTP FATAL ERROR]:', error);
+    console.error('[SEND-OTP FATAL ERROR]:', error?.message || error);
     return sendJson(res, 500, {
       success: false,
       code: 'auth/internal-error',
-      error: error?.message || 'Internal server error dispatching OTP',
-      message: error?.message || 'Internal server error dispatching OTP',
+      error: 'Internal server error dispatching OTP',
+      message: 'Internal server error dispatching OTP',
     });
   }
 }

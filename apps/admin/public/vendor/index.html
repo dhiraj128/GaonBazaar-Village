@@ -4596,9 +4596,13 @@
       const userId = (state.userProfile && state.userProfile.phone) || localStorage.getItem('gb_user_phone') || 'usr_party';
 
       try {
+        const token = localStorage.getItem('gb_vendor_token') || localStorage.getItem('gb_auth_token') || localStorage.getItem('token') || '';
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
         const verifyRes = await fetch('/api/verify-aadhaar-qr', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers,
+          credentials: 'include',
           body: JSON.stringify({
             qr_data: clean,
             user_id: userId,

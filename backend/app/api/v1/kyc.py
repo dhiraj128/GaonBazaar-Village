@@ -11,8 +11,10 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.db.session import get_db
+from fastapi.security import HTTPAuthorizationCredentials
 from app.models.base import User
 from app.core.config import settings
+from app.core.security import security_bearer, decode_access_token, is_token_revoked
 from app.services.aadhaar_secure_qr import (
     AadhaarSecureQrParser,
     extract_qr_from_image_bytes,
@@ -156,7 +158,7 @@ async def upload_photo_to_supabase(user_id: str, photo_bytes: bytes) -> Optional
         logger.error("Failed to upload photo to Supabase storage: %s", exc)
     return None
 
-async def update_supabase_user(user_id: str, updates: Dict[str, Any]):
+async def update_supabase_user(user_id: str, updates: Dict[str, Any]) -> bool:
     """Syncs KYC attributes with Supabase public.users table via REST API"""
     url = f"{settings.SUPABASE_URL}/rest/v1/users"
     headers = {
@@ -171,10 +173,13 @@ async def update_supabase_user(user_id: str, updates: Dict[str, Any]):
             resp = await client.patch(url, params=params, json=updates, headers=headers)
             if resp.status_code in (200, 204):
                 logger.info("Successfully updated Supabase user %s with KYC data", user_id)
+                return True
             else:
                 logger.warning("Supabase user patch returned %d: %s", resp.status_code, resp.text)
+                return False
     except Exception as exc:
         logger.error("Failed to update Supabase user: %s", exc)
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -417,7 +422,8 @@ async def verify_aadhaar_otp(
 @router.post("/aadhaar/verify-qr", response_model=AadhaarQrVerifyResponse)
 async def verify_aadhaar_qr(
     payload: AadhaarQrVerifyRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    auth_creds: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer)
 ):
     if not payload.consent_accepted:
         raise HTTPException(
@@ -425,7 +431,32 @@ async def verify_aadhaar_qr(
             detail="Voluntary resident consent is legally mandatory for Aadhaar Secure QR verification under UIDAI regulations."
         )
 
-    user_id = payload.user_id or "usr_demo"
+    # Authenticate caller session & enforce KYC identity ownership
+    caller_id = None
+    caller_role = None
+    if auth_creds:
+        token_payload = decode_access_token(auth_creds.credentials)
+        if token_payload and not is_token_revoked(auth_creds.credentials):
+            caller_id = token_payload.get("sub")
+            caller_role = token_payload.get("role")
+
+    is_production = getattr(settings, "ENVIRONMENT", "").lower() == "production"
+    if is_production and not caller_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication token required to complete KYC verification."
+        )
+
+    if caller_id:
+        if payload.user_id and payload.user_id != caller_id and caller_role not in ["admin", "super_admin"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Forbidden: You cannot update another user's KYC record."
+            )
+        user_id = caller_id
+    else:
+        user_id = payload.user_id or "usr_demo"
+
     qr_string = (payload.qr_data or "").strip()
 
     # If file upload (image or PDF) is provided instead of direct QR string
