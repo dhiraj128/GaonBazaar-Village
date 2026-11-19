@@ -83,8 +83,14 @@ export interface KycSideBySideDetail {
     village: string;
     phone: string;
     bank_account_number: string;
+    bank_account_number_masked?: string;
     bank_ifsc: string;
+    bank_name?: string;
+    branch_name?: string;
+    account_holder_name?: string;
+    payment_method?: string;
     upi_id?: string;
+    submission_date?: string | null;
     selfie_url?: string;
     shop_photo_url?: string;
     aadhaar_document_url?: string;
@@ -94,6 +100,21 @@ export interface KycSideBySideDetail {
     driving_license_url?: string;
   };
   api_verified: {
+    payout_verification?: {
+      verification_status: string;
+      payment_method: string;
+      account_holder_name: string;
+      shop_name?: string;
+      verified_beneficiary_name: string;
+      bank_name: string;
+      branch_name: string;
+      ifsc_code: string;
+      bank_account_number_masked: string;
+      upi_id?: string;
+      submission_date?: string | null;
+      penny_drop_reference?: string | null;
+      match_status: string;
+    };
     penny_drop_bank_match: {
       verified_account_holder: string;
       bank_name: string;

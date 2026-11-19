@@ -19,6 +19,8 @@ import {
   FileCheck,
   MapPin,
   Phone,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import type {
   PendingKycApplicant,
@@ -61,6 +63,7 @@ export const KycUsersView: React.FC<KycUsersViewProps> = ({
     'Documents unclear. Please re-upload clear Aadhaar card and verified Bank Passbook.'
   );
   const [isActionSubmitting, setIsActionSubmitting] = useState(false);
+  const [showFullAccount, setShowFullAccount] = useState(false);
 
   const filteredApplicants = pendingApplicants.filter((app) => {
     if (applicantFilter === 'VENDOR') return app.type === 'VENDOR';
@@ -78,6 +81,7 @@ export const KycUsersView: React.FC<KycUsersViewProps> = ({
   });
 
   const handleReviewClick = async (type: 'VENDOR' | 'RUNNER', id: string) => {
+    setShowFullAccount(false);
     setIsLoadingDetail(true);
     try {
       const detail = await onOpenSideBySide(type.toLowerCase() as any, id);
@@ -477,21 +481,81 @@ export const KycUsersView: React.FC<KycUsersViewProps> = ({
                     </div>
                   </div>
 
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
-                    <span className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
-                      <CreditCard className="w-3.5 h-3.5 text-slate-500" /> {lang === 'hi' ? 'बैंक खाता विवरण' : 'Bank Account Details'}
-                    </span>
-                    <div className="text-xs font-mono font-bold text-slate-900">
-                      A/C: {selectedDetail.user_submitted.bank_account_number}
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+                        <CreditCard className="w-3.5 h-3.5 text-slate-500" /> {lang === 'hi' ? 'पेआउट विवरण (बैंक / UPI)' : 'Payout Account Details'}
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-600 bg-slate-200/70 px-2 py-0.5 rounded">
+                        {selectedDetail.user_submitted.payment_method === 'UPI' ? 'UPI' : 'Bank Account'}
+                      </span>
                     </div>
-                    <div className="text-xs font-mono text-slate-600">
-                      IFSC: {selectedDetail.user_submitted.bank_ifsc}
-                    </div>
-                    {selectedDetail.user_submitted.upi_id && (
-                      <div className="text-xs text-slate-500">
-                        UPI: {selectedDetail.user_submitted.upi_id}
+
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between items-center text-slate-600">
+                        <span>{lang === 'hi' ? 'खाताधारक का नाम:' : 'Account Holder:'}</span>
+                        <span className="font-bold text-slate-800">
+                          {selectedDetail.user_submitted.account_holder_name || selectedDetail.user_submitted.name}
+                        </span>
                       </div>
-                    )}
+
+                      {selectedDetail.user_submitted.shop_name && (
+                        <div className="flex justify-between items-center text-slate-600">
+                          <span>{lang === 'hi' ? 'दुकान का नाम:' : 'Shop Name:'}</span>
+                          <span className="font-medium text-slate-700">{selectedDetail.user_submitted.shop_name}</span>
+                        </div>
+                      )}
+
+                      {selectedDetail.user_submitted.bank_account_number && selectedDetail.user_submitted.bank_account_number !== 'NOT_CONFIGURED' && (
+                        <>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-600">{lang === 'hi' ? 'खाता संख्या:' : 'Account No:'}</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono font-bold text-slate-900">
+                                {showFullAccount
+                                  ? selectedDetail.user_submitted.bank_account_number
+                                  : (selectedDetail.user_submitted.bank_account_number_masked ||
+                                     ('•••• •••• ' + selectedDetail.user_submitted.bank_account_number.slice(-4)))}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setShowFullAccount(!showFullAccount)}
+                                title={showFullAccount ? "Hide full account" : "Reveal full account number"}
+                                className="p-1 hover:bg-slate-200 text-slate-600 rounded transition"
+                              >
+                                {showFullAccount ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-center text-slate-600">
+                            <span>IFSC:</span>
+                            <span className="font-mono font-bold text-slate-800">{selectedDetail.user_submitted.bank_ifsc}</span>
+                          </div>
+                          {(selectedDetail.user_submitted.bank_name || selectedDetail.user_submitted.branch_name) && (
+                            <div className="flex justify-between items-center text-slate-600">
+                              <span>{lang === 'hi' ? 'बैंक एवं शाखा:' : 'Bank & Branch:'}</span>
+                              <span className="text-[11px] font-medium text-slate-700 text-right max-w-[200px] truncate">
+                                {selectedDetail.user_submitted.bank_name} {selectedDetail.user_submitted.branch_name ? `(${selectedDetail.user_submitted.branch_name})` : ''}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {selectedDetail.user_submitted.upi_id && selectedDetail.user_submitted.upi_id !== 'NOT_CONFIGURED' && (
+                        <div className="flex justify-between items-center text-slate-600">
+                          <span>UPI ID:</span>
+                          <span className="font-mono font-bold text-slate-900">{selectedDetail.user_submitted.upi_id}</span>
+                        </div>
+                      )}
+
+                      {selectedDetail.user_submitted.submission_date && (
+                        <div className="flex justify-between items-center text-slate-400 text-[10px] pt-1 border-t border-slate-200/60">
+                          <span>{lang === 'hi' ? 'प्रस्तुत करने की तिथि:' : 'Submitted Date:'}</span>
+                          <span>{new Date(selectedDetail.user_submitted.submission_date).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Photo Previews */}
@@ -538,28 +602,44 @@ export const KycUsersView: React.FC<KycUsersViewProps> = ({
                   </h4>
                 </div>
 
-                {/* Penny Drop Bank Match */}
-                <div className="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-200 space-y-2">
+                {/* Payout Account Verification Status */}
+                <div className="bg-amber-50/70 p-3.5 rounded-xl border border-amber-200 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-950">
-                      {lang === 'hi' ? 'पेनी ड्रॉप बैंक खाता मिलान' : 'Penny Drop Bank Match'}
+                    <span className="text-xs font-bold text-amber-950">
+                      {lang === 'hi' ? 'पेआउट खाता सत्यापन स्थिति' : 'Payout Account Verification'}
                     </span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-600 text-white">
-                      VERIFIED
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-500 text-white tracking-wide">
+                      {selectedDetail.api_verified.payout_verification?.verification_status || 'PENDING_VERIFICATION'}
                     </span>
                   </div>
-                  <div className="space-y-1 text-xs">
+                  <div className="space-y-1.5 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-600">{lang === 'hi' ? 'सत्यापित खाताधारक:' : 'Verified Account Holder:'}</span>
-                      <strong className="text-emerald-950">
-                        {selectedDetail.api_verified.penny_drop_bank_match.verified_account_holder}
+                      <span className="text-slate-600">{lang === 'hi' ? 'सत्यापित लाभार्थी नाम:' : 'Verified Beneficiary:'}</span>
+                      <strong className="text-amber-950 font-medium">
+                        {selectedDetail.api_verified.payout_verification?.verified_beneficiary_name ||
+                         'Not Verified — Pending Verification'}
                       </strong>
                     </div>
+                    {selectedDetail.api_verified.payout_verification?.bank_name &&
+                     selectedDetail.api_verified.payout_verification.bank_name !== 'NOT_CONFIGURED' && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-600">{lang === 'hi' ? 'बैंक एवं शाखा:' : 'Bank & Branch:'}</span>
+                        <span className="text-slate-800 font-medium text-right max-w-[200px] truncate">
+                          {selectedDetail.api_verified.payout_verification.bank_name}
+                          {selectedDetail.api_verified.payout_verification.branch_name ? ` (${selectedDetail.api_verified.payout_verification.branch_name})` : ''}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-600">{lang === 'hi' ? 'बैंक:' : 'Bank:'}</span>
-                      <span className="text-slate-800">
-                        {selectedDetail.api_verified.penny_drop_bank_match.bank_name}
+                      <span className="text-slate-600">{lang === 'hi' ? 'समीक्षा मोड:' : 'Review Mode:'}</span>
+                      <span className="text-slate-700 font-semibold text-[11px]">
+                        MANUAL_ADMIN_REVIEW_REQUIRED
                       </span>
+                    </div>
+                    <div className="text-[10px] text-amber-800/80 bg-amber-100/50 p-1.5 rounded border border-amber-200/50 leading-relaxed">
+                      {lang === 'hi'
+                        ? 'नोट: वास्तविक पेनी ड्रॉप ट्रांसफर स्वचालित रूप से निष्पादित नहीं होता है। संवितरण से पहले विवरण की मैन्युअल पुष्टि करें।'
+                        : 'Notice: Automated penny drop is not executed. Verify bank/UPI credentials manually prior to approval.'}
                     </div>
                   </div>
                 </div>

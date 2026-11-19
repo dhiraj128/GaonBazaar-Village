@@ -28,6 +28,7 @@ from app.models.base import (
     Refund,
     Replacement,
     StoreProduct,
+    PayoutAccount,
 )
 from app.core.config import settings
 from app.core.security import (
@@ -570,6 +571,17 @@ async def get_all_pending_kyc(
     return results
 
 
+def mask_bank_account_number(acc_num: Optional[str]) -> str:
+    if not acc_num or acc_num in ("NOT_CONFIGURED", "NOT_PROVIDED"):
+        return "NOT_CONFIGURED"
+    clean = str(acc_num).strip()
+    if clean.startswith("••••") or clean.startswith("Ending in"):
+        return clean
+    if len(clean) <= 4:
+        return "•••• " + clean
+    return f"•••• •••• {clean[-4:]}"
+
+
 @router.get("/kyc/{applicant_type}/{applicant_id}")
 async def get_kyc_side_by_side_detail(
     applicant_type: str, # "vendor" or "runner"
@@ -592,25 +604,80 @@ async def get_kyc_side_by_side_detail(
         if not store:
             raise HTTPException(status_code=404, detail="Vendor store not found")
 
-        # Parse bank account info if available
+        owner_user = store.owner
+        # Fetch dedicated PayoutAccount record if present
+        payout_rec = None
+        if owner_user:
+            p_res = await db.execute(
+                select(PayoutAccount)
+                .where(PayoutAccount.user_id == owner_user.id, PayoutAccount.is_active == True)
+                .order_by(PayoutAccount.created_at.desc())
+            )
+            payout_rec = p_res.scalars().first()
+
         bank_ac = "NOT_CONFIGURED"
         ifsc = "NOT_CONFIGURED"
-        has_bank = False
-        if store.bank_account_info:
+        bank_name = "NOT_CONFIGURED"
+        branch_name = "NOT_CONFIGURED"
+        upi_id = store.upi_id or "NOT_CONFIGURED"
+        account_holder_name = store.owner_name
+        shop_name = store.shop_name
+        payment_method = "NOT_CONFIGURED"
+        verification_status = "PENDING_VERIFICATION"
+        submission_date = None
+        verified_beneficiary = "Not Verified — Pending Verification"
+        has_payout = False
+
+        if payout_rec:
+            has_payout = True
+            payment_method = payout_rec.payout_method or ("BANK" if payout_rec.account_number else "UPI")
+            account_holder_name = payout_rec.account_holder_name or store.owner_name
+            shop_name = payout_rec.shop_name or store.shop_name
+            if payout_rec.account_number:
+                bank_ac = payout_rec.account_number
+            if payout_rec.ifsc_code:
+                ifsc = payout_rec.ifsc_code
+            if payout_rec.bank_name:
+                bank_name = payout_rec.bank_name
+            if payout_rec.branch_name:
+                branch_name = payout_rec.branch_name
+            if payout_rec.upi_id:
+                upi_id = payout_rec.upi_id
+            if payout_rec.verified_beneficiary_name:
+                verified_beneficiary = payout_rec.verified_beneficiary_name
+            verification_status = payout_rec.verification_status or "PENDING_VERIFICATION"
+            if payout_rec.created_at:
+                submission_date = payout_rec.created_at.isoformat()
+        elif store.bank_account_info:
             try:
                 b_data = json.loads(store.bank_account_info)
                 raw_ac = b_data.get("account_number") or b_data.get("bank_account")
                 raw_ifsc = b_data.get("ifsc_code") or b_data.get("ifsc")
                 if raw_ac and raw_ac.strip():
                     bank_ac = raw_ac.strip()
-                    has_bank = True
+                    payment_method = "BANK"
+                    has_payout = True
                 if raw_ifsc and raw_ifsc.strip():
                     ifsc = raw_ifsc.strip().upper()
+                if b_data.get("bank_name"):
+                    bank_name = b_data.get("bank_name")
+                if b_data.get("branch_name"):
+                    branch_name = b_data.get("branch_name")
+                if b_data.get("account_holder_name"):
+                    account_holder_name = b_data.get("account_holder_name")
+                if b_data.get("upi_id"):
+                    upi_id = b_data.get("upi_id")
+                    if payment_method == "NOT_CONFIGURED":
+                        payment_method = "UPI"
+                        has_payout = True
             except Exception:
                 pass
+        elif store.upi_id and store.upi_id.strip():
+            payment_method = "UPI"
+            upi_id = store.upi_id.strip()
+            has_payout = True
 
         user_name_upper = store.owner_name.strip().upper()
-        owner_user = store.owner
         is_qr_verified = bool(owner_user and owner_user.aadhaar_data and isinstance(owner_user.aadhaar_data, dict) and owner_user.aadhaar_data.get("digital_signature_verified"))
         uidai_status = "VERIFIED_UIDAI_SECURE_QR" if is_qr_verified else "NOT_VERIFIED"
         aadhaar_photo = owner_user.kyc_photo_url if owner_user else None
@@ -621,23 +688,44 @@ async def get_kyc_side_by_side_detail(
             "is_approved": store.is_approved,
             "user_submitted": {
                 "name": store.owner_name,
-                "shop_name": store.shop_name,
+                "shop_name": shop_name,
+                "account_holder_name": account_holder_name,
+                "payment_method": payment_method,
                 "category": store.category,
                 "village": store.village,
                 "phone": store.owner.phone if store.owner else "",
                 "bank_account_number": bank_ac,
+                "bank_account_number_masked": mask_bank_account_number(bank_ac),
                 "bank_ifsc": ifsc,
-                "upi_id": store.upi_id or "NOT_CONFIGURED",
+                "bank_name": bank_name,
+                "branch_name": branch_name,
+                "upi_id": upi_id,
+                "submission_date": submission_date,
                 "selfie_url": aadhaar_photo,
                 "shop_photo_url": store.banner_url,
                 "aadhaar_document_url": aadhaar_photo
             },
             "api_verified": {
+                "payout_verification": {
+                    "verification_status": verification_status,
+                    "payment_method": payment_method,
+                    "account_holder_name": account_holder_name,
+                    "shop_name": shop_name,
+                    "verified_beneficiary_name": verified_beneficiary,
+                    "bank_name": bank_name,
+                    "branch_name": branch_name,
+                    "ifsc_code": ifsc,
+                    "bank_account_number_masked": mask_bank_account_number(bank_ac),
+                    "upi_id": upi_id,
+                    "submission_date": submission_date,
+                    "penny_drop_reference": None,
+                    "match_status": "MANUAL_REVIEW_REQUIRED" if has_payout else "NOT_CONFIGURED"
+                },
                 "penny_drop_bank_match": {
-                    "verified_account_holder": user_name_upper if has_bank else "NOT_CONFIGURED",
-                    "bank_name": "UNVERIFIED" if has_bank else "NOT_CONFIGURED",
-                    "account_status": "PENDING_VERIFICATION" if has_bank else "NOT_CONFIGURED",
-                    "match_status": "MANUAL_REVIEW_REQUIRED" if has_bank else "NOT_CONFIGURED",
+                    "verified_account_holder": verified_beneficiary if has_payout else "NOT_CONFIGURED",
+                    "bank_name": bank_name if has_payout else "NOT_CONFIGURED",
+                    "account_status": "PENDING_VERIFICATION" if has_payout else "NOT_CONFIGURED",
+                    "match_status": "MANUAL_REVIEW_REQUIRED" if has_payout else "NOT_CONFIGURED",
                     "penny_drop_reference": None,
                 },
                 "aadhaar_liveness": {
@@ -661,21 +749,88 @@ async def get_kyc_side_by_side_detail(
         if not runner:
             raise HTTPException(status_code=404, detail="Runner partner not found")
 
-        runner_name_upper = runner.full_name.strip().upper()
         runner_user = runner.user
-        is_qr_verified = bool(runner_user and runner_user.aadhaar_data and isinstance(runner_user.aadhaar_data, dict) and runner_user.aadhaar_data.get("digital_signature_verified"))
-        uidai_status = "VERIFIED_UIDAI_SECURE_QR" if is_qr_verified else "NOT_VERIFIED"
-        runner_photo = runner_user.kyc_photo_url if runner_user else None
+        # Fetch dedicated PayoutAccount record if present
+        payout_rec = None
+        if runner_user:
+            p_res = await db.execute(
+                select(PayoutAccount)
+                .where(PayoutAccount.user_id == runner_user.id, PayoutAccount.is_active == True)
+                .order_by(PayoutAccount.created_at.desc())
+            )
+            payout_rec = p_res.scalars().first()
 
         bank_ac = "NOT_CONFIGURED"
         ifsc = "NOT_CONFIGURED"
-        has_bank = False
-        if runner.upi_id and runner.upi_id.startswith("A/C:"):
+        bank_name = "NOT_CONFIGURED"
+        branch_name = "NOT_CONFIGURED"
+        upi_id = runner.upi_id or "NOT_CONFIGURED"
+        account_holder_name = runner.full_name
+        payment_method = "NOT_CONFIGURED"
+        verification_status = "PENDING_VERIFICATION"
+        submission_date = None
+        verified_beneficiary = "Not Verified — Pending Verification"
+        has_payout = False
+
+        if payout_rec:
+            has_payout = True
+            payment_method = payout_rec.payout_method or ("BANK" if payout_rec.account_number else "UPI")
+            account_holder_name = payout_rec.account_holder_name or runner.full_name
+            if payout_rec.account_number:
+                bank_ac = payout_rec.account_number
+            if payout_rec.ifsc_code:
+                ifsc = payout_rec.ifsc_code
+            if payout_rec.bank_name:
+                bank_name = payout_rec.bank_name
+            if payout_rec.branch_name:
+                branch_name = payout_rec.branch_name
+            if payout_rec.upi_id:
+                upi_id = payout_rec.upi_id
+            if payout_rec.verified_beneficiary_name:
+                verified_beneficiary = payout_rec.verified_beneficiary_name
+            verification_status = payout_rec.verification_status or "PENDING_VERIFICATION"
+            if payout_rec.created_at:
+                submission_date = payout_rec.created_at.isoformat()
+        elif getattr(runner, 'bank_account_info', None):
+            try:
+                b_data = json.loads(runner.bank_account_info)
+                raw_ac = b_data.get("account_number") or b_data.get("bank_account")
+                raw_ifsc = b_data.get("ifsc_code") or b_data.get("ifsc")
+                if raw_ac and raw_ac.strip():
+                    bank_ac = raw_ac.strip()
+                    payment_method = "BANK"
+                    has_payout = True
+                if raw_ifsc and raw_ifsc.strip():
+                    ifsc = raw_ifsc.strip().upper()
+                if b_data.get("bank_name"):
+                    bank_name = b_data.get("bank_name")
+                if b_data.get("branch_name"):
+                    branch_name = b_data.get("branch_name")
+                if b_data.get("account_holder_name"):
+                    account_holder_name = b_data.get("account_holder_name")
+                if b_data.get("upi_id"):
+                    upi_id = b_data.get("upi_id")
+                    if payment_method == "NOT_CONFIGURED":
+                        payment_method = "UPI"
+                        has_payout = True
+            except Exception:
+                pass
+        elif runner.upi_id and runner.upi_id.startswith("A/C:"):
             parts = runner.upi_id.split(":")
             if len(parts) >= 3:
                 bank_ac = f"Ending in {parts[1]}"
                 ifsc = parts[2]
-                has_bank = True
+                payment_method = "BANK"
+                has_payout = True
+        elif runner.upi_id and runner.upi_id.strip():
+            payment_method = "UPI"
+            upi_id = runner.upi_id.strip()
+            has_payout = True
+
+        runner_name_upper = runner.full_name.strip().upper()
+        is_qr_verified = bool(runner_user and runner_user.aadhaar_data and isinstance(runner_user.aadhaar_data, dict) and runner_user.aadhaar_data.get("digital_signature_verified"))
+        uidai_status = "VERIFIED_UIDAI_SECURE_QR" if is_qr_verified else "NOT_VERIFIED"
+        runner_photo = runner_user.kyc_photo_url if runner_user else None
 
         return {
             "applicant_type": "RUNNER",
@@ -683,23 +838,43 @@ async def get_kyc_side_by_side_detail(
             "is_approved": runner.is_approved,
             "user_submitted": {
                 "name": runner.full_name,
+                "account_holder_name": account_holder_name,
+                "payment_method": payment_method,
                 "vehicle_type": runner.vehicle_type,
                 "vehicle_number": runner.vehicle_number or "NOT_CONFIGURED",
                 "driving_license_no": runner.driving_licence_no or "NOT_CONFIGURED",
                 "phone": runner.user.phone if runner.user else "",
                 "village": "Rural Pilot Hub",
                 "bank_account_number": bank_ac,
+                "bank_account_number_masked": mask_bank_account_number(bank_ac),
                 "bank_ifsc": ifsc,
-                "upi_id": runner.upi_id or "NOT_CONFIGURED",
+                "bank_name": bank_name,
+                "branch_name": branch_name,
+                "upi_id": upi_id,
+                "submission_date": submission_date,
                 "selfie_url": runner_photo,
                 "driving_license_url": None
             },
             "api_verified": {
+                "payout_verification": {
+                    "verification_status": verification_status,
+                    "payment_method": payment_method,
+                    "account_holder_name": account_holder_name,
+                    "verified_beneficiary_name": verified_beneficiary,
+                    "bank_name": bank_name,
+                    "branch_name": branch_name,
+                    "ifsc_code": ifsc,
+                    "bank_account_number_masked": mask_bank_account_number(bank_ac),
+                    "upi_id": upi_id,
+                    "submission_date": submission_date,
+                    "penny_drop_reference": None,
+                    "match_status": "MANUAL_REVIEW_REQUIRED" if has_payout else "NOT_CONFIGURED"
+                },
                 "penny_drop_bank_match": {
-                    "verified_account_holder": runner_name_upper if has_bank else "NOT_CONFIGURED",
-                    "bank_name": "UNVERIFIED" if has_bank else "NOT_CONFIGURED",
-                    "account_status": "PENDING_VERIFICATION" if has_bank else "NOT_CONFIGURED",
-                    "match_status": "MANUAL_REVIEW_REQUIRED" if has_bank else "NOT_CONFIGURED",
+                    "verified_account_holder": verified_beneficiary if has_payout else "NOT_CONFIGURED",
+                    "bank_name": bank_name if has_payout else "NOT_CONFIGURED",
+                    "account_status": "PENDING_VERIFICATION" if has_payout else "NOT_CONFIGURED",
+                    "match_status": "MANUAL_REVIEW_REQUIRED" if has_payout else "NOT_CONFIGURED",
                     "penny_drop_reference": None,
                 },
                 "aadhaar_liveness": {

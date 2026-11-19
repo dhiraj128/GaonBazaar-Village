@@ -163,13 +163,24 @@ export const RunnersView: React.FC<RunnersViewProps> = ({ runners, onApprove, on
               <div className="flex items-start space-x-2">
                 <CreditCard className="w-4 h-4 text-slate-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <div className="font-bold text-slate-700">UPI Payout</div>
+                  <div className="font-bold text-slate-700">Payout Account</div>
                   <div className="text-[11px] text-slate-600 font-mono">
-                    {runner.payout_upi_id || 'Not registered'}
+                    {runner.payout_upi_id ? (
+                      runner.payout_upi_id.startsWith('A/C:') ? (
+                        (() => {
+                          const parts = runner.payout_upi_id.split(':');
+                          return `Bank A/C: •••• •••• ${parts[1]} (${parts[2] || ''})`;
+                        })()
+                      ) : (
+                        `UPI: ${runner.payout_upi_id}`
+                      )
+                    ) : (
+                      'Not registered'
+                    )}
                   </div>
-                  <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
+                  <div className="text-[10px] text-amber-600 font-semibold flex items-center gap-1 mt-0.5">
                     <ShieldCheck className="w-3 h-3" />
-                    DigiLocker Consent
+                    Pending Verification
                   </div>
                 </div>
               </div>

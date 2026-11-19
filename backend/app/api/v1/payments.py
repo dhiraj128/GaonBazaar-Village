@@ -1,3 +1,6 @@
+import json
+import logging
+logger = logging.getLogger(__name__)
 import re
 import hmac
 import hashlib
@@ -702,8 +705,10 @@ class PayoutSetupRequest(BaseModel):
     payout_method: str = "upi" # "upi" or "bank"
     upi_id: Optional[str] = None
     account_number: Optional[str] = None
+    confirm_account_number: Optional[str] = None
     ifsc_code: Optional[str] = None
     account_holder_name: Optional[str] = None
+    shop_name: Optional[str] = None
     role: Optional[str] = "vendor" # "vendor" or "runner"
     user_id: Optional[str] = None
 
@@ -713,6 +718,9 @@ class PayoutSetupResponse(BaseModel):
     reference_id: str
     payout_method: str
     registered_name: str
+    verification_status: Optional[str] = "PENDING_VERIFICATION"
+    account_holder_name: Optional[str] = None
+    shop_name: Optional[str] = None
 
 @router.post("/payout-setup", response_model=PayoutSetupResponse)
 async def setup_payout(
@@ -720,59 +728,145 @@ async def setup_payout(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Submits and verifies partner (Vendor/Runner) Bank or UPI payout details via Razorpay,
-    and updates the partner status in the Supabase database to 'pending_admin_approval'.
+    Submits and verifies partner (Vendor/Runner) Bank or UPI payout details,
+    verifying IFSC code against genuine bank directory, and persisting to
+    payout_accounts table and Supabase.
     """
     import secrets
+    import re
     method = req.payout_method.lower().strip()
-    holder_name = (req.account_holder_name or "Verified Partner").strip().upper()
+    holder_name = (req.account_holder_name or "").strip()
+    if not holder_name or len(holder_name) < 2:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Account holder name is required (minimum 2 characters)."
+        )
+
     user_id = req.user_id or "usr_demo"
     role = (req.role or "vendor").lower()
+    shop_name = (req.shop_name or "").strip() or None
+
+    bank_name = "Commercial Bank"
+    branch_name = "Authorized Branch"
 
     if method == "upi":
         vpa = (req.upi_id or "").strip().lower()
-        if "@" not in vpa or len(vpa) < 5:
+        upi_regex = r"^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$"
+        if not re.match(upi_regex, vpa):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid UPI ID format. Must contain @ and a valid domain (e.g. name@bank)"
+                detail="Invalid UPI ID format. (e.g. mobile@paytm or name@okaxis)"
             )
-        ref_id = f"RZP_VPA_{secrets.token_hex(4).upper()}"
-        payout_info = {"method": "upi", "upi_id": vpa}
+        ref_id = f"GB_UPI_{secrets.token_hex(4).upper()}"
+        payout_info = {
+            "method": "upi",
+            "upi_id": vpa,
+            "account_holder_name": holder_name,
+            "shop_name": shop_name,
+            "verification_status": "PENDING_VERIFICATION",
+            "submitted_at": datetime.now(timezone.utc).isoformat()
+        }
     elif method == "bank":
-        acc = (req.account_number or "").strip()
-        ifsc = (req.ifsc_code or "").strip().upper()
+        acc = re.sub(r"\D", "", str(req.account_number or "")).strip()
+        confirm_acc = re.sub(r"\D", "", str(req.confirm_account_number or "")).strip()
+
         if len(acc) < 9 or len(acc) > 18 or not acc.isdigit():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid bank account number (must be 9 to 18 digits)"
+                detail="Invalid bank account number format. Must contain 9 to 18 numeric digits."
             )
-        if len(ifsc) != 11 or ifsc[4] != '0':
+        if confirm_acc and acc != confirm_acc:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid IFSC Code (must be 11 characters with 5th character '0')"
+                detail="Account numbers do not match."
             )
-        ref_id = f"RZP_BANK_{secrets.token_hex(4).upper()}"
-        payout_info = {"method": "bank", "account_masked": f"****{acc[-4:]}", "ifsc": ifsc}
+
+        ifsc = (req.ifsc_code or "").strip().upper()
+        if not re.match(r"^[A-Z]{4}0[A-Z0-9]{6}$", ifsc):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid IFSC format. Must be 11 characters (5th character must be 0)."
+            )
+
+        # Genuine IFSC lookup
+        try:
+            async with httpx.AsyncClient(timeout=6.0) as client:
+                ifsc_resp = await client.get(f"https://ifsc.razorpay.com/{ifsc}")
+                if ifsc_resp.status_code == 200:
+                    ifsc_json = ifsc_resp.json()
+                    bank_name = ifsc_json.get("BANK") or bank_name
+                    branch_name = ifsc_json.get("BRANCH") or branch_name
+                elif ifsc_resp.status_code == 404:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="IFSC not found in official bank directory."
+                    )
+        except HTTPException:
+            raise
+        except Exception as ifsc_err:
+            logger.warning("IFSC directory lookup notice: %s", ifsc_err)
+
+        ref_id = f"GB_BANK_{secrets.token_hex(4).upper()}"
+        payout_info = {
+            "method": "bank",
+            "account_holder_name": holder_name,
+            "shop_name": shop_name,
+            "account_number": acc,
+            "account_masked": f"****{acc[-4:]}",
+            "ifsc": ifsc,
+            "bank_name": bank_name,
+            "branch_name": branch_name,
+            "verification_status": "PENDING_VERIFICATION",
+            "submitted_at": datetime.now(timezone.utc).isoformat()
+        }
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Payout method must be 'upi' or 'bank'"
         )
 
-    # 1. Update Supabase public.users status to 'pending_admin_approval'
+    # 1. Update Supabase public.payout_accounts & users table
     supabase_headers = {
         "apikey": settings.SUPABASE_ANON_KEY,
         "Authorization": f"Bearer {settings.SUPABASE_ANON_KEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates"
+    }
+
+    payout_record_id = f"payout_{user_id}_{secrets.token_hex(4)}"
+    payout_db_payload = {
+        "id": payout_record_id,
+        "user_id": user_id,
+        "role": role,
+        "shop_name": shop_name,
+        "account_holder_name": holder_name,
+        "payout_method": method,
+        "account_number": acc if method == "bank" else None,
+        "ifsc_code": ifsc if method == "bank" else None,
+        "bank_name": bank_name if method == "bank" else None,
+        "branch_name": branch_name if method == "bank" else None,
+        "upi_id": vpa if method == "upi" else None,
+        "verified_beneficiary_name": None,
+        "verification_status": "PENDING_VERIFICATION",
+        "is_active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
     }
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
+            # Save into payout_accounts table
+            await client.post(
+                f"{settings.SUPABASE_URL}/rest/v1/payout_accounts",
+                json=payout_db_payload,
+                headers=supabase_headers
+            )
+
             # Update user status
             await client.patch(
                 f"{settings.SUPABASE_URL}/rest/v1/users",
                 params={"or": f"(id.eq.{user_id},firebase_uid.eq.{user_id})"},
-                json={"status": "pending_admin_approval", "updated_at": datetime.now(timezone.utc).isoformat()},
+                json={"status": "pending_admin_approval", "payout_account_verified": False, "updated_at": datetime.now(timezone.utc).isoformat()},
                 headers=supabase_headers
             )
 
@@ -781,12 +875,12 @@ async def setup_payout(
                 store_payload = {
                     "status": "pending_admin_approval",
                     "is_approved": False,
-                    "upi_id": req.upi_id if method == "upi" else None,
+                    "upi_id": vpa if method == "upi" else None,
                     "bank_account_info": json.dumps(payout_info) if method == "bank" else None
                 }
                 await client.patch(
                     f"{settings.SUPABASE_URL}/rest/v1/stores",
-                    params={"owner_id": f"eq.{user_id}"},
+                    params={"or": f"(owner_id.eq.{user_id},id.eq.{user_id})"},
                     json=store_payload,
                     headers=supabase_headers
                 )
@@ -794,11 +888,12 @@ async def setup_payout(
                 runner_payload = {
                     "status": "pending_admin_approval",
                     "is_approved": False,
-                    "upi_id": req.upi_id if method == "upi" else None
+                    "upi_id": vpa if method == "upi" else None,
+                    "bank_account_info": json.dumps(payout_info) if method == "bank" else None
                 }
                 await client.patch(
                     f"{settings.SUPABASE_URL}/rest/v1/runners",
-                    params={"user_id": f"eq.{user_id}"},
+                    params={"or": f"(user_id.eq.{user_id},id.eq.{user_id})"},
                     json=runner_payload,
                     headers=supabase_headers
                 )
@@ -807,10 +902,13 @@ async def setup_payout(
 
     return PayoutSetupResponse(
         status="pending_admin_approval",
-        message="Payout setup completed successfully. Application submitted for Super Admin review.",
+        message="Payout details submitted successfully. Verification status is pending review.",
         reference_id=ref_id,
         payout_method=method,
-        registered_name=holder_name
+        registered_name=holder_name,
+        verification_status="PENDING_VERIFICATION",
+        account_holder_name=holder_name,
+        shop_name=shop_name
     )
 
 

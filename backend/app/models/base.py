@@ -146,6 +146,7 @@ class Runner(Base):
     current_longitude = Column(Float, nullable=True)
     last_location_updated_at = Column(UTCDateTime, nullable=True)
     upi_id = Column(String(100), nullable=True)
+    bank_account_info = Column(Text, nullable=True)
     rejection_reason = Column(Text, nullable=True)
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     
@@ -408,3 +409,24 @@ class MonthlyRationItem(Base):
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
 
     ration_list = relationship("MonthlyRationList", back_populates="items")
+
+
+class PayoutAccount(Base):
+    __tablename__ = "payout_accounts"
+    
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    role = Column(String(20), nullable=False) # vendor, runner
+    shop_name = Column(String(150), nullable=True)
+    account_holder_name = Column(String(150), nullable=False)
+    payout_method = Column(String(20), nullable=False) # bank, upi
+    account_number = Column(String(50), nullable=True)
+    ifsc_code = Column(String(20), nullable=True)
+    bank_name = Column(String(150), nullable=True)
+    branch_name = Column(String(150), nullable=True)
+    upi_id = Column(String(100), nullable=True)
+    verified_beneficiary_name = Column(String(150), nullable=True)
+    verification_status = Column(String(50), default="PENDING_VERIFICATION")
+    is_active = Column(Boolean, default=True)
+    created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
