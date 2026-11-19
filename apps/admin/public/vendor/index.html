@@ -242,30 +242,31 @@
             </button>
 
             <div class="space-y-1.5 mb-5">
-              <h2 id="auth-heading" class="text-2xl font-extrabold text-slate-900" data-i18n="verify_mobile_heading">Verify Your Mobile Number</h2>
-              <p id="auth-subtext" class="text-xs text-slate-500 leading-relaxed" data-i18n="verify_mobile_sub">Enter your mobile number to receive a one-time password (OTP).</p>
+              <h2 id="auth-heading" class="text-2xl font-extrabold text-slate-900" data-i18n="auth_heading_login">Welcome Back</h2>
+              <p id="auth-subtext" class="text-xs text-slate-500 leading-relaxed" data-i18n="auth_subtext_login">Enter your mobile number to continue.</p>
             </div>
 
             <!-- Step 1: Mobile Input Section -->
             <div id="phone-input-section" class="space-y-4 pt-1">
               <div>
-                <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="phone_number_label">Mobile Number (India)</label>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1" data-i18n="phone_number_label">Mobile Number</label>
                 <div class="relative flex items-center">
                   <div class="absolute left-3.5 flex items-center space-x-1.5 text-xs font-bold text-slate-700 border-r border-slate-300 pr-2.5 select-none">
                     <span>🇮🇳</span>
                     <span class="font-mono text-emerald-800 font-extrabold">+91</span>
                   </div>
-                  <input type="tel" id="vendor-phone-input" maxlength="10" placeholder="Enter 10-digit mobile number" value="" autocomplete="tel-national" class="w-full pl-20 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs font-mono font-bold">
+                  <input type="tel" id="vendor-phone-input" maxlength="10" placeholder="10-digit mobile number" data-i18n-placeholder="phone_number_placeholder" value="" autocomplete="tel-national" inputmode="numeric" class="w-full pl-20 pr-4 py-3.5 bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-2xl text-sm font-semibold tracking-wide text-slate-900 transition shadow-2xs font-mono font-bold">
                 </div>
-                <p class="text-[10px] text-slate-400 mt-1" data-i18n="sms_dispatched_note">Instant SMS OTP delivered to your mobile phone</p>
               </div>
 
               <!-- Invisible reCAPTCHA container -->
               <div id="recaptcha-container"></div>
 
-              <button type="button" id="send-otp-btn" onclick="sendMobileOTP()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
-                <span id="send-otp-text" data-i18n="send_otp_btn">Send OTP</span>
-                <i data-lucide="send" class="w-4 h-4"></i>
+              <button type="button" id="send-otp-btn" onclick="sendMobileOTP()" class="w-full h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center transition active:scale-98">
+                <span id="send-otp-btn-content" class="flex items-center justify-center">
+                  <span id="send-otp-text" data-i18n="send_otp_btn">Send OTP</span>
+                  <i data-lucide="send" class="w-4 h-4 ml-2"></i>
+                </span>
               </button>
             </div>
 
@@ -279,7 +280,7 @@
               </div>
 
               <div class="space-y-2">
-                <label class="block text-center text-xs font-semibold text-slate-700" data-i18n="enter_otp_label">Enter 4-Digit OTP</label>
+                <label class="block text-center text-xs font-semibold text-slate-700" data-i18n="enter_otp_label">Verification Code</label>
                 <div class="otp-digit-group">
                   <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-1" autocomplete="one-time-code" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
                   <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-2" autocomplete="off" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
@@ -289,14 +290,16 @@
               </div>
 
               <div class="flex justify-between items-center text-xs text-slate-500 pt-1">
-                <span id="resend-countdown" class="text-slate-400 font-mono text-[11px]"></span>
+                <span id="resend-countdown" class="text-slate-400 font-mono text-[11px] hidden"></span>
                 <button type="button" id="resend-otp-btn" onclick="sendMobileOTP(true)" class="text-emerald-600 font-semibold hover:underline" data-i18n="resend_otp">Resend OTP</button>
               </div>
 
               <div class="pt-2">
-                <button type="button" id="verify-otp-btn" onclick="verifyMobileOTP()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
-                  <span id="verify-btn-text" data-i18n="verify_proceed">Verify OTP & Continue</span>
-                  <i data-lucide="check" class="w-4 h-4"></i>
+                <button type="button" id="verify-otp-btn" onclick="verifyMobileOTP()" class="w-full h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center transition active:scale-98">
+                  <span id="verify-btn-content" class="flex items-center justify-center">
+                    <span id="verify-btn-text" data-i18n="verify_proceed">Verify & Continue</span>
+                    <i data-lucide="check" class="w-4 h-4 ml-2"></i>
+                  </span>
                 </button>
               </div>
             </div>
@@ -2112,16 +2115,19 @@
         mobile_reg_title: "Enter Mobile Number",
         mobile_reg_sub: "We will send a 4-digit verification code to your phone",
         phone_number_label: "Phone Number",
-        verify_mobile_heading: "Verify Your Mobile Number",
-        verify_mobile_sub: "Enter your mobile number to receive a one-time password (OTP).",
-        otp_screen_heading: "Enter Verification OTP",
-        otp_screen_sub: "We've sent a 4-digit OTP to your mobile number.",
-        change_number: "Change Number",
+        auth_heading_login: "Welcome Back",
+        auth_subtext_login: "Enter your mobile number to continue.",
+        phone_number_label: "Mobile Number",
+        phone_number_placeholder: "10-digit mobile number",
         send_otp_btn: "Send OTP",
-        enter_otp_label: "Enter 4-Digit OTP",
-        testing_otp_label: "Testing OTP:",
+        please_wait: "Please wait",
+        verify_mobile_heading: "Verify Mobile Number",
+        otp_screen_sub: "Enter the 4-digit code sent to +91 XXXXX XXXXX.",
+        enter_otp_label: "Verification Code",
+        change_number: "Change Number",
         resend_otp: "Resend OTP",
-        verify_proceed: "Verify & Proceed",
+        verify_proceed: "Verify & Continue",
+        mobile_verified: "Mobile number verified",
         step_3_badge: "Step 3 of 7",
         profile_info_sub: "Profile Information",
         basic_details_title: "Shopkeeper Details",
@@ -2419,16 +2425,19 @@
         mobile_reg_title: "मोबाइल नंबर दर्ज करें",
         mobile_reg_sub: "हम आपके फ़ोन पर 4-अंकों का सत्यापन कोड भेजेंगे",
         phone_number_label: "फ़ोन नंबर",
-        verify_mobile_heading: "अपना मोबाइल नंबर सत्यापित करें",
-        verify_mobile_sub: "वन-टाइम पासवर्ड (OTP) प्राप्त करने के लिए अपना मोबाइल नंबर दर्ज करें।",
-        otp_screen_heading: "सत्यापन OTP दर्ज करें",
-        otp_screen_sub: "हमने आपके मोबाइल नंबर पर 4-अंकीय OTP भेजा है।",
-        change_number: "नंबर बदलें",
+        auth_heading_login: "वापसी पर स्वागत है",
+        auth_subtext_login: "आगे बढ़ने के लिए अपना मोबाइल नंबर दर्ज करें।",
+        phone_number_label: "मोबाइल नंबर",
+        phone_number_placeholder: "10 अंकों का मोबाइल नंबर",
         send_otp_btn: "OTP भेजें",
-        enter_otp_label: "4 अंकों का OTP दर्ज करें",
-        testing_otp_label: "परीक्षण OTP:",
-        resend_otp: "OTP पुनः भेजें",
+        please_wait: "कृपया प्रतीक्षा करें",
+        verify_mobile_heading: "मोबाइल नंबर सत्यापित करें",
+        otp_screen_sub: "भेजा गया 4-अंकीय कोड दर्ज करें।",
+        enter_otp_label: "सत्यापन कोड",
+        change_number: "नंबर बदलें",
+        resend_otp: "पुनः OTP भेजें",
         verify_proceed: "सत्यापित करें और आगे बढ़ें",
+        mobile_verified: "मोबाइल नंबर सत्यापित",
         step_3_badge: "चरण 3 का 7",
         profile_info_sub: "प्रोफ़ाइल जानकारी",
         basic_details_title: "दुकानदार विवरण",
@@ -3323,22 +3332,42 @@
     // PAGE 2: MOBILE & OTP LOGIC
     // ---------------------------------------------------------------------------
     let resendTimerInterval = null;
+    let isSendingOtp = false;
+    let isVerifyingOtp = false;
 
     function startResendCooldown(seconds = 30) {
-      const resendBtn = document.getElementById('resend-otp-btn');
-      const timerEl = document.getElementById('resend-countdown');
-      if (resendBtn) {
-        resendBtn.disabled = true;
-        resendBtn.classList.add('pointer-events-none', 'text-slate-400');
-        resendBtn.classList.remove('text-emerald-600', 'hover:underline');
+      if (resendTimerInterval) {
+        clearInterval(resendTimerInterval);
+        resendTimerInterval = null;
       }
 
-      if (resendTimerInterval) clearInterval(resendTimerInterval);
-
       let remaining = seconds;
+      const resendBtn = document.getElementById('resend-otp-btn');
+      const timerEl = document.getElementById('resend-countdown');
+
+      if (resendBtn) {
+        resendBtn.disabled = true;
+        resendBtn.classList.add('opacity-50', 'pointer-events-none');
+        resendBtn.classList.remove('hover:underline');
+      }
+
       const updateText = () => {
-        if (timerEl) {
-          timerEl.innerText = remaining > 0 ? (currentLang === 'hi' ? `${remaining}s में पुनः भेजें` : `Resend in ${remaining}s`) : '';
+        if (remaining > 0) {
+          if (timerEl) {
+            timerEl.innerText = currentLang === 'hi' ? `${remaining}s में पुनः भेजें` : `Resend in ${remaining}s`;
+            timerEl.classList.remove('hidden');
+          }
+        } else {
+          if (timerEl) {
+            timerEl.innerText = '';
+            timerEl.classList.add('hidden');
+          }
+          if (resendBtn) {
+            resendBtn.disabled = false;
+            resendBtn.classList.remove('opacity-50', 'pointer-events-none');
+            resendBtn.classList.add('hover:underline');
+            resendBtn.innerText = currentLang === 'hi' ? "पुनः OTP भेजें" : "Resend OTP";
+          }
         }
       };
       updateText();
@@ -3349,24 +3378,24 @@
         if (remaining <= 0) {
           clearInterval(resendTimerInterval);
           resendTimerInterval = null;
-          if (resendBtn) {
-            resendBtn.disabled = false;
-            resendBtn.classList.remove('pointer-events-none', 'text-slate-400');
-            resendBtn.classList.add('text-emerald-600', 'hover:underline');
-          }
         }
       }, 1000);
     }
 
-    function updateAuthHeadings(step) {
+    function updateAuthHeadings(step, phoneFormatted) {
       const heading = document.getElementById('auth-heading');
       const sub = document.getElementById('auth-subtext');
       if (step === 'otp') {
-        if (heading) heading.innerText = currentLang === 'hi' ? "सत्यापन OTP दर्ज करें" : "Enter Verification OTP";
-        if (sub) sub.innerText = currentLang === 'hi' ? "हमने आपके मोबाइल नंबर पर 4-अंकीय OTP भेजा है।" : "We've sent a 4-digit OTP to your mobile number.";
+        if (heading) heading.innerText = currentLang === 'hi' ? "मोबाइल नंबर सत्यापित करें" : "Verify Mobile Number";
+        const displayPhone = phoneFormatted || document.getElementById('otp-phone-display')?.innerText || "+91 ----------";
+        if (sub) {
+          sub.innerText = currentLang === 'hi'
+            ? `${displayPhone} पर भेजा गया 4-अंकीय कोड दर्ज करें।`
+            : `Enter the 4-digit code sent to ${displayPhone}.`;
+        }
       } else {
-        if (heading) heading.innerText = currentLang === 'hi' ? "अपना मोबाइल नंबर सत्यापित करें" : "Verify Your Mobile Number";
-        if (sub) sub.innerText = currentLang === 'hi' ? "वन-टाइम पासवर्ड (OTP) प्राप्त करने के लिए अपना मोबाइल नंबर दर्ज करें।" : "Enter your mobile number to receive a one-time password (OTP).";
+        if (heading) heading.innerText = currentLang === 'hi' ? "वापसी पर स्वागत है" : "Welcome Back";
+        if (sub) sub.innerText = currentLang === 'hi' ? "आगे बढ़ने के लिए अपना मोबाइल नंबर दर्ज करें।" : "Enter your mobile number to continue.";
       }
     }
 
@@ -3386,9 +3415,10 @@
 
       const sendBtn = document.getElementById('send-otp-btn');
       if (sendBtn) sendBtn.disabled = false;
-      const sendBtnText = document.getElementById('send-otp-text');
-      if (sendBtnText) {
-        sendBtnText.innerText = currentLang === 'hi' ? "OTP भेजें" : "Send OTP";
+      const sendBtnContent = document.getElementById('send-otp-btn-content');
+      if (sendBtnContent) {
+        sendBtnContent.innerHTML = `<span id="send-otp-text" data-i18n="send_otp_btn">${currentLang === 'hi' ? "OTP भेजें" : "Send OTP"}</span><i data-lucide="send" class="w-4 h-4 ml-2"></i>`;
+        if (window.lucide) lucide.createIcons();
       }
       const phoneInput = document.getElementById('vendor-phone-input');
       if (phoneInput) {
@@ -3426,6 +3456,21 @@
           next.select();
         }
       }
+
+      // Check if all 4 digits are entered for safe auto-submit
+      let entered = '';
+      for (let i = 1; i <= 4; i++) {
+        const b = document.getElementById('otp-' + i);
+        if (b) entered += b.value.trim();
+      }
+
+      if (entered.length === 4 && !isVerifyingOtp && !isSendingOtp) {
+        setTimeout(() => {
+          if (!isVerifyingOtp) {
+            verifyMobileOTP();
+          }
+        }, 60);
+      }
     }
 
     function handleOtpPaste(event) {
@@ -3440,41 +3485,60 @@
       }
       const targetIdx = Math.min(digits.length, 4);
       document.getElementById('otp-' + targetIdx)?.focus();
+
+      if (digits.length === 4 && !isVerifyingOtp && !isSendingOtp) {
+        setTimeout(() => {
+          if (!isVerifyingOtp) {
+            verifyMobileOTP();
+          }
+        }, 60);
+      }
     }
 
     async function sendMobileOTP(isResend = false) {
+      if (isSendingOtp) return; // Prevent duplicate requests caused by repeated taps
+
+      const phoneInput = document.getElementById('vendor-phone-input');
+      let raw = (phoneInput?.value || '').trim();
+      let clean = raw.replace(/[^\d+]/g, '');
+      if (clean.startsWith('+91')) clean = clean.slice(3);
+      else if (clean.startsWith('91') && clean.length === 12) clean = clean.slice(2);
+      else if (clean.startsWith('0') && clean.length === 11) clean = clean.slice(1);
+      clean = clean.replace(/\D/g, '').slice(-10);
+
+      if (!/^[6-9]\d{9}$/.test(clean)) {
+        toastError(currentLang === 'hi' ? "कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें।" : "Enter a valid 10-digit mobile number.");
+        phoneInput?.focus();
+        return;
+      }
+
+      isSendingOtp = true;
+      const formattedPhoneNumber = `+91 ${clean.slice(0, 5)} ${clean.slice(5)}`;
+      state.userProfile.phone = clean;
+
+      const sendBtn = document.getElementById('send-otp-btn');
+      const sendBtnContent = document.getElementById('send-otp-btn-content');
+      const resendBtn = document.getElementById('resend-otp-btn');
+
+      const pleaseWaitText = currentLang === 'hi' ? "कृपया प्रतीक्षा करें" : "Please wait";
+      const spinnerSvg = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>`;
+
+      if (sendBtn && !isResend) {
+        sendBtn.disabled = true;
+        if (sendBtnContent) {
+          sendBtnContent.innerHTML = `${spinnerSvg}<span>${pleaseWaitText}</span>`;
+        }
+      }
+      if (resendBtn && isResend) {
+        resendBtn.disabled = true;
+        resendBtn.innerHTML = `${spinnerSvg}<span>${pleaseWaitText}</span>`;
+      }
+
+      console.log("[Message Central] Dispatching 4-digit SMS OTP to vendor:", formattedPhoneNumber);
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 6000);
+
       try {
-        const phoneInput = document.getElementById('vendor-phone-input');
-        let raw = (phoneInput?.value || '').trim();
-        let clean = raw.replace(/[^\d+]/g, '');
-        if (clean.startsWith('+91')) clean = clean.slice(3);
-        else if (clean.startsWith('91') && clean.length === 12) clean = clean.slice(2);
-        else if (clean.startsWith('0') && clean.length === 11) clean = clean.slice(1);
-        clean = clean.replace(/\D/g, '').slice(-10);
-
-        if (!/^[6-9]\d{9}$/.test(clean)) {
-          toastError(currentLang === 'hi' ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें" : "Please enter a valid 10-digit Indian mobile number");
-          phoneInput?.focus();
-          return;
-        }
-
-        const formattedPhoneNumber = `+91 ${clean.slice(0, 5)} ${clean.slice(5)}`;
-        state.userProfile.phone = clean;
-
-        const sendBtn = document.getElementById('send-otp-btn');
-        const sendBtnText = document.getElementById('send-otp-text');
-        const resendBtn = document.getElementById('resend-otp-btn');
-
-        if (sendBtn && !isResend) {
-          sendBtn.disabled = true;
-          if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "भेजा जा रहा है..." : "Sending...";
-        }
-        if (resendBtn && isResend) {
-          resendBtn.disabled = true;
-          resendBtn.innerText = currentLang === 'hi' ? "भेजा जा रहा है..." : "Sending...";
-        }
-
-        console.log("[Message Central] Dispatching 4-digit SMS OTP to vendor:", formattedPhoneNumber);
         const res = await fetch('/api/send-otp', {
           method: 'POST',
           headers: {
@@ -3484,22 +3548,31 @@
           body: JSON.stringify({
             phoneNumber: clean,
             role: 'vendor'
-          })
+          }),
+          signal: abortController.signal
         });
+        clearTimeout(timeoutId);
 
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.success) {
-          const errMsg = data.message || data.error || (currentLang === 'hi' ? "SMS OTP भेजने में विफल। कृपया पुनः प्रयास करें।" : "Failed to dispatch SMS verification code");
-          throw new Error(errMsg);
+          if (res.status === 429) {
+            throw new Error(data.message || (currentLang === 'hi' ? "कृपया पुनः प्रयास करने से पहले प्रतीक्षा करें।" : "Please wait before requesting another OTP."));
+          }
+          throw new Error(currentLang === 'hi' ? "कोड नहीं भेजा जा सका। कृपया पुनः प्रयास करें।" : "Couldn't send the code. Please try again.");
         }
 
+        // Provider accepted the request
         window.__gb_verification_id = data.verificationId || null;
 
         if (sendBtn) {
           sendBtn.disabled = false;
-          if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "OTP भेजें" : "Send OTP";
+          if (sendBtnContent) {
+            sendBtnContent.innerHTML = `<span id="send-otp-text" data-i18n="send_otp_btn">${currentLang === 'hi' ? "OTP भेजें" : "Send OTP"}</span><i data-lucide="send" class="w-4 h-4 ml-2"></i>`;
+            if (window.lucide) lucide.createIcons();
+          }
         }
         if (resendBtn) {
+          resendBtn.disabled = false;
           resendBtn.innerText = currentLang === 'hi' ? "पुनः OTP भेजें" : "Resend OTP";
         }
 
@@ -3508,36 +3581,48 @@
 
         document.getElementById('phone-input-section')?.classList.add('hidden');
         document.getElementById('otp-container')?.classList.remove('hidden');
-        updateAuthHeadings('otp');
+        updateAuthHeadings('otp', formattedPhoneNumber);
 
         for (let i = 1; i <= 4; i++) {
           const b = document.getElementById('otp-' + i);
           if (b) b.value = '';
         }
 
+        // Resend cooldown starts strictly after provider accepts OTP request
         startResendCooldown(30);
 
-        toastSuccess(currentLang === 'hi' ? `4-अंकीय OTP ${formattedPhoneNumber} पर सफलतापूर्वक भेजा गया` : `4-digit OTP sent successfully to ${formattedPhoneNumber}!`);
         const otp1 = document.getElementById('otp-1');
         if (otp1) otp1.focus();
       } catch (err) {
+        clearTimeout(timeoutId);
         console.error("[Message Central Send Error]:", err);
-        const sendBtn = document.getElementById('send-otp-btn');
-        const sendBtnText = document.getElementById('send-otp-text');
-        const resendBtn = document.getElementById('resend-otp-btn');
         if (sendBtn) {
           sendBtn.disabled = false;
-          if (sendBtnText) sendBtnText.innerText = currentLang === 'hi' ? "OTP भेजें" : "Send OTP";
+          if (sendBtnContent) {
+            sendBtnContent.innerHTML = `<span id="send-otp-text" data-i18n="send_otp_btn">${currentLang === 'hi' ? "OTP भेजें" : "Send OTP"}</span><i data-lucide="send" class="w-4 h-4 ml-2"></i>`;
+            if (window.lucide) lucide.createIcons();
+          }
         }
         if (resendBtn) {
           resendBtn.disabled = false;
           resendBtn.innerText = currentLang === 'hi' ? "पुनः OTP भेजें" : "Resend OTP";
         }
-        toastError(err?.message || "Failed to dispatch SMS OTP");
+
+        let errMsg = currentLang === 'hi' ? "कोड नहीं भेजा जा सका। कृपया पुनः प्रयास करें।" : "Couldn't send the code. Please try again.";
+        if (err.name === 'AbortError' || (err.message && err.message.toLowerCase().includes('connection'))) {
+          errMsg = currentLang === 'hi' ? "कनेक्शन समस्या। कृपया पुनः प्रयास करें।" : "Connection problem. Please try again.";
+        } else if (err.message && (err.message.includes('wait') || err.message.includes('प्रतीक्षा'))) {
+          errMsg = err.message;
+        }
+        toastError(errMsg);
+      } finally {
+        isSendingOtp = false;
       }
     }
 
     async function verifyMobileOTP() {
+      if (isVerifyingOtp) return; // Prevent duplicate verification requests
+
       let entered = '';
       for (let i = 1; i <= 4; i++) {
         const b = document.getElementById('otp-' + i);
@@ -3545,18 +3630,27 @@
       }
 
       const btn = document.getElementById('verify-otp-btn');
-      const btnText = document.getElementById('verify-btn-text');
+      const btnContent = document.getElementById('verify-btn-content');
 
       if (entered.length !== 4) {
-        toastError(currentLang === 'hi' ? "कृपया 4-अंकीय OTP कोड दर्ज करें" : "Please enter complete 4-digit OTP");
+        toastError(currentLang === 'hi' ? "गलत कोड। कृपया पुनः प्रयास करें।" : "Incorrect code. Please try again.");
         return;
       }
 
-      if (btnText) btnText.innerText = currentLang === 'hi' ? "सत्यापित हो रहा है..." : "Verifying...";
+      isVerifyingOtp = true;
+      const pleaseWaitText = currentLang === 'hi' ? "कृपया प्रतीक्षा करें" : "Please wait";
+      const spinnerSvg = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>`;
+
       if (btn) btn.disabled = true;
+      if (btnContent) {
+        btnContent.innerHTML = `${spinnerSvg}<span>${pleaseWaitText}</span>`;
+      }
 
       const phone = state.userProfile.phone || (document.getElementById('vendor-phone-input')?.value || '').trim();
       const clean = phone.replace(/\D/g, '').slice(-10);
+
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 6000);
 
       try {
         console.log("[Message Central] Verifying 4-digit OTP for vendor:", clean);
@@ -3571,20 +3665,25 @@
             otp: entered,
             verificationId: window.__gb_verification_id || undefined,
             role: 'vendor'
-          })
+          }),
+          signal: abortController.signal
         });
+        clearTimeout(timeoutId);
 
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.success) {
-          let errMsg = data.message || data.error;
-          if (!errMsg) {
-            errMsg = currentLang === 'hi' ? "अमान्य या समाप्त OTP। कृपया पुनः प्रयास करें।" : "Invalid or expired OTP. Please try again.";
+          if (data.code === 'auth/code-expired' || (data.message && data.message.toLowerCase().includes('expired'))) {
+            throw new Error(currentLang === 'hi' ? "कोड समाप्त हो गया। नया OTP मांगें।" : "Code expired. Request a new OTP.");
           }
-          throw new Error(errMsg);
+          throw new Error(currentLang === 'hi' ? "गलत कोड। कृपया पुनः प्रयास करें।" : "Incorrect code. Please try again.");
         }
 
-        if (btnText) btnText.innerText = currentLang === 'hi' ? "सत्यापित!" : "Verified!";
-        if (btn) btn.disabled = false;
+        // Success State: "Mobile number verified"
+        const verifiedText = currentLang === 'hi' ? "मोबाइल नंबर सत्यापित" : "Mobile number verified";
+        if (btnContent) {
+          btnContent.innerHTML = `<span>${verifiedText}</span><i data-lucide="check" class="w-4 h-4 ml-2"></i>`;
+          if (window.lucide) lucide.createIcons();
+        }
 
         localStorage.setItem('gb_vendor_phone', clean);
         localStorage.setItem('gb_vendor_authenticated', 'true');
@@ -3594,13 +3693,30 @@
           localStorage.setItem('gb_vendor_token', userToken);
           localStorage.setItem('gb_auth_token', userToken);
         }
-        toastSuccess(currentLang === 'hi' ? "मोबाइल नंबर सत्यापित! स्वागत है।" : "Mobile number verified successfully!");
-        navigateTo('onboarding-3');
+        toastSuccess(verifiedText);
+
+        setTimeout(() => {
+          navigateTo('onboarding-3');
+        }, 300);
       } catch (err) {
+        clearTimeout(timeoutId);
         console.error("[Message Central Verify Error]:", err);
-        if (btnText) btnText.innerText = currentLang === 'hi' ? "OTP सत्यापित करें और आगे बढ़ें" : "Verify OTP & Continue";
         if (btn) btn.disabled = false;
-        toastError(err?.message || (currentLang === 'hi' ? "गलत OTP कोड" : "Invalid OTP code"));
+        if (btnContent) {
+          btnContent.innerHTML = `<span id="verify-btn-text" data-i18n="verify_proceed">${currentLang === 'hi' ? "सत्यापित करें और आगे बढ़ें" : "Verify & Continue"}</span><i data-lucide="check" class="w-4 h-4 ml-2"></i>`;
+          if (window.lucide) lucide.createIcons();
+        }
+
+        let userMsg = currentLang === 'hi' ? "गलत कोड। कृपया पुनः प्रयास करें।" : "Incorrect code. Please try again.";
+        if (err.name === 'AbortError' || (err.message && err.message.toLowerCase().includes('connection'))) {
+          userMsg = currentLang === 'hi' ? "कनेक्शन समस्या। कृपया पुनः प्रयास करें।" : "Connection problem. Please try again.";
+        } else if (err.message && (err.message.includes('expired') || err.message.includes('समाप्त'))) {
+          userMsg = currentLang === 'hi' ? "कोड समाप्त हो गया। नया OTP मांगें।" : "Code expired. Request a new OTP.";
+        }
+        toastError(userMsg);
+        // Note: Preserve entered digits on error!
+      } finally {
+        isVerifyingOtp = false;
       }
     }
 

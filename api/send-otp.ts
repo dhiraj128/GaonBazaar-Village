@@ -123,8 +123,8 @@ export default async function handler(req: any, res: any) {
       return sendJson(res, 400, {
         success: false,
         code: 'auth/invalid-phone-number',
-        error: 'Please enter a valid 10-digit Indian mobile number',
-        message: 'Please enter a valid 10-digit Indian mobile number',
+        error: 'Enter a valid 10-digit mobile number.',
+        message: 'Enter a valid 10-digit mobile number.',
       });
     }
 
@@ -136,8 +136,8 @@ export default async function handler(req: any, res: any) {
       return sendJson(res, 429, {
         success: false,
         code: 'auth/too-many-requests',
-        error: `Please wait ${waitSeconds} seconds before requesting another OTP`,
-        message: `Please wait ${waitSeconds} seconds before requesting another OTP`,
+        error: `Please wait ${waitSeconds}s before requesting another OTP.`,
+        message: `Please wait ${waitSeconds}s before requesting another OTP.`,
         retryAfter: waitSeconds,
       });
     }
@@ -151,12 +151,12 @@ export default async function handler(req: any, res: any) {
       return sendJson(res, 500, {
         success: false,
         code: 'auth/missing-credentials',
-        error: 'Server configuration error: SMS gateway authentication credentials are not configured.',
-        message: 'Server configuration error: SMS gateway authentication credentials are not configured.',
+        error: "Couldn't send the code. Please try again.",
+        message: "Couldn't send the code. Please try again.",
       });
     }
 
-    // Step 2: Dispatch real 4-digit SMS OTP via Message Central VerifyNow API v3
+    // Step 2: Dispatch real 4-digit SMS OTP via Message Central VerifyNow API v3 with 4500ms timeout
     const params = new URLSearchParams({
       countryCode: '91',
       flowType: 'SMS',
@@ -170,15 +170,36 @@ export default async function handler(req: any, res: any) {
     const mcSendUrl = `https://cpaas.messagecentral.com/verification/v3/send?${params.toString()}`;
     console.log(`[Message Central VerifyNow] Dispatching 4-digit OTP to +91${clean}...`);
 
-    const mcResponse = await fetch(mcSendUrl, {
-      method: 'POST',
-      headers: {
-        authToken: authToken,
-        accept: '*/*',
-      },
-    });
+    const abortController = new AbortController();
+    const timeoutHandle = setTimeout(() => abortController.abort(), 4500);
 
-    const mcText = await mcResponse.text();
+    let mcResponse: any;
+    let mcText = '';
+    try {
+      mcResponse = await fetch(mcSendUrl, {
+        method: 'POST',
+        headers: {
+          authToken: authToken,
+          accept: '*/*',
+        },
+        signal: abortController.signal,
+      });
+      clearTimeout(timeoutHandle);
+      mcText = await mcResponse.text();
+    } catch (fetchErr: any) {
+      clearTimeout(timeoutHandle);
+      if (fetchErr.name === 'AbortError') {
+        console.error(`[Message Central Timeout] Send OTP request timed out after 4500ms for +91${clean}`);
+        return sendJson(res, 504, {
+          success: false,
+          code: 'auth/gateway-timeout',
+          error: 'Connection problem. Please try again.',
+          message: 'Connection problem. Please try again.',
+        });
+      }
+      throw fetchErr;
+    }
+
     let mcData: any = {};
     try {
       mcData = JSON.parse(mcText);
@@ -200,8 +221,8 @@ export default async function handler(req: any, res: any) {
       return sendJson(res, 502, {
         success: false,
         code: 'auth/sms-delivery-failed',
-        error: `Message Central SMS dispatch failed: ${errDetail}`,
-        message: `Message Central SMS dispatch failed: ${errDetail}`,
+        error: "Couldn't send the code. Please try again.",
+        message: "Couldn't send the code. Please try again.",
         providerStatus: mcData?.responseCode || mcResponse.status,
       });
     }
@@ -209,7 +230,7 @@ export default async function handler(req: any, res: any) {
     const verificationId = String(mcData.data.verificationId);
     const expiresAt = now + 5 * 60 * 1000; // 5-minute validity
 
-    // Step 4: Persist verification session across memory and Supabase
+    // Step 4: Persist verification session across memory cache immediately
     getOtpCache().set(clean, {
       verificationId,
       expiresAt,
@@ -217,15 +238,21 @@ export default async function handler(req: any, res: any) {
       attempts: 0,
     });
 
-    await saveChallengeToSupabase({
-      id: verificationId,
-      phone: clean,
-      session_id: verificationId,
-      role: role,
-      expires_at: new Date(expiresAt).toISOString(),
+    // Fire challenge persistence to Supabase non-blockingly (max 350ms race to avoid blocking HTTP response)
+    Promise.race([
+      saveChallengeToSupabase({
+        id: verificationId,
+        phone: clean,
+        session_id: verificationId,
+        role: role,
+        expires_at: new Date(expiresAt).toISOString(),
+      }),
+      new Promise((resolve) => setTimeout(resolve, 350)),
+    ]).catch((err) => {
+      console.warn('[Send OTP] Async challenge sync notice:', err);
     });
 
-    // Step 5: Respond with success and verificationId
+    // Step 5: Respond immediately with success and verificationId
     return sendJson(res, 200, {
       success: true,
       message: '4-digit SMS OTP dispatched successfully via Message Central VerifyNow',

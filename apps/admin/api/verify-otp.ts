@@ -243,8 +243,8 @@ export default async function handler(req: any, res: any) {
       return sendJson(res, 400, {
         success: false,
         code: 'auth/invalid-phone-number',
-        error: 'Please enter a valid 10-digit Indian mobile number',
-        message: 'Please enter a valid 10-digit Indian mobile number',
+        error: 'Enter a valid 10-digit mobile number.',
+        message: 'Enter a valid 10-digit mobile number.',
       });
     }
 
@@ -253,8 +253,8 @@ export default async function handler(req: any, res: any) {
       return sendJson(res, 400, {
         success: false,
         code: 'auth/invalid-otp-length',
-        error: 'Please enter a valid 4-digit verification code',
-        message: 'Please enter a valid 4-digit verification code',
+        error: 'Incorrect code. Please try again.',
+        message: 'Incorrect code. Please try again.',
       });
     }
 
@@ -267,8 +267,8 @@ export default async function handler(req: any, res: any) {
       return sendJson(res, 500, {
         success: false,
         code: 'auth/missing-credentials',
-        error: 'Server configuration error: SMS gateway authentication credentials are not configured.',
-        message: 'Server configuration error: SMS gateway authentication credentials are not configured.',
+        error: 'Connection problem. Please try again.',
+        message: 'Connection problem. Please try again.',
       });
     }
 
@@ -292,13 +292,13 @@ export default async function handler(req: any, res: any) {
     if (!verificationId) {
       return sendJson(res, 400, {
         success: false,
-        code: 'auth/session-not-found',
-        error: 'No active OTP verification session found for this number. Please request an OTP.',
-        message: 'No active OTP verification session found for this number. Please request an OTP.',
+        code: 'auth/session-expired',
+        error: 'Code expired. Request a new OTP.',
+        message: 'Code expired. Request a new OTP.',
       });
     }
 
-    // Step 3: Validate with Message Central VerifyNow API
+    // Step 3: Validate with Message Central VerifyNow API with 4500ms timeout
     const params = new URLSearchParams({
       countryCode: '91',
       mobileNumber: clean,
@@ -312,15 +312,36 @@ export default async function handler(req: any, res: any) {
     const mcValidateUrl = `https://cpaas.messagecentral.com/verification/v3/validateOtp?${params.toString()}`;
     console.log(`[Message Central VerifyNow] Validating 4-digit OTP for +91${clean} (Verification ID: ${verificationId})...`);
 
-    const mcResponse = await fetch(mcValidateUrl, {
-      method: 'GET',
-      headers: {
-        authToken: authToken,
-        accept: '*/*',
-      },
-    });
+    const abortController = new AbortController();
+    const timeoutHandle = setTimeout(() => abortController.abort(), 4500);
 
-    const mcText = await mcResponse.text();
+    let mcResponse: any;
+    let mcText = '';
+    try {
+      mcResponse = await fetch(mcValidateUrl, {
+        method: 'GET',
+        headers: {
+          authToken: authToken,
+          accept: '*/*',
+        },
+        signal: abortController.signal,
+      });
+      clearTimeout(timeoutHandle);
+      mcText = await mcResponse.text();
+    } catch (fetchErr: any) {
+      clearTimeout(timeoutHandle);
+      if (fetchErr.name === 'AbortError') {
+        console.error(`[Message Central Timeout] Validate OTP timed out after 4500ms for +91${clean}`);
+        return sendJson(res, 504, {
+          success: false,
+          code: 'auth/gateway-timeout',
+          error: 'Connection problem. Please try again.',
+          message: 'Connection problem. Please try again.',
+        });
+      }
+      throw fetchErr;
+    }
+
     let mcData: any = {};
     try {
       mcData = JSON.parse(mcText);
@@ -337,23 +358,27 @@ export default async function handler(req: any, res: any) {
       (mcData.data?.verificationStatus === 'VERIFICATION_COMPLETED' || mcData.data?.responseCode === '200' || mcData.data?.responseCode === 200);
 
     if (!isVerified) {
-      const errMessage =
-        mcData.data?.errorMessage ||
-        mcData.message ||
-        'Invalid 4-digit verification code. Please check your SMS and try again.';
+      const isExpired =
+        mcData.data?.verificationStatus === 'EXPIRED' ||
+        String(mcData.data?.errorMessage || '').toLowerCase().includes('expired') ||
+        String(mcData.message || '').toLowerCase().includes('expired');
+
+      const userMsg = isExpired ? 'Code expired. Request a new OTP.' : 'Incorrect code. Please try again.';
 
       return sendJson(res, 400, {
         success: false,
-        code: 'auth/invalid-verification-code',
-        error: errMessage,
-        message: errMessage,
+        code: isExpired ? 'auth/code-expired' : 'auth/invalid-verification-code',
+        error: userMsg,
+        message: userMsg,
         details: mcData?.data,
       });
     }
 
     // Step 5: Mark challenge as used to prevent replay
     getOtpCache().delete(clean);
-    await markChallengeUsedInSupabase(verificationId);
+    markChallengeUsedInSupabase(verificationId).catch((err) => {
+      console.warn('[Verify OTP] Async mark used notice:', err);
+    });
 
     // Step 6: Identify or initialize user in database
     const user = await getOrCreateUser(clean, role, name);
