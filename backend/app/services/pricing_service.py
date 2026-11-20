@@ -1,7 +1,7 @@
 from app.core.config import settings
 from typing import Dict, Any, List
 
-# Proposed 5-tier delivery pricing matrix (Part 4.7)
+# 5-tier delivery pricing matrix with exact 80% Runner / 20% Platform split
 # Rates in INR Rupees and deterministic Integer-Paise
 DEFAULT_PRICING_TIERS = [
     {
@@ -9,50 +9,50 @@ DEFAULT_PRICING_TIERS = [
         "max_km": 1.0,
         "customer_fee": 15.0,
         "customer_fee_paise": 1500,
-        "runner_payout": 10.0,
-        "runner_payout_paise": 1000,
-        "platform_share": 5.0,
-        "platform_share_paise": 500,
+        "runner_payout": 12.0,
+        "runner_payout_paise": 1200,
+        "platform_share": 3.0,
+        "platform_share_paise": 300,
     },
     {
         "min_km": 1.0,
         "max_km": 2.0,
         "customer_fee": 20.0,
         "customer_fee_paise": 2000,
-        "runner_payout": 14.0,
-        "runner_payout_paise": 1400,
-        "platform_share": 6.0,
-        "platform_share_paise": 600,
+        "runner_payout": 16.0,
+        "runner_payout_paise": 1600,
+        "platform_share": 4.0,
+        "platform_share_paise": 400,
     },
     {
         "min_km": 2.0,
         "max_km": 4.0,
         "customer_fee": 25.0,
         "customer_fee_paise": 2500,
-        "runner_payout": 18.0,
-        "runner_payout_paise": 1800,
-        "platform_share": 7.0,
-        "platform_share_paise": 700,
+        "runner_payout": 20.0,
+        "runner_payout_paise": 2000,
+        "platform_share": 5.0,
+        "platform_share_paise": 500,
     },
     {
         "min_km": 4.0,
         "max_km": 6.0,
         "customer_fee": 30.0,
         "customer_fee_paise": 3000,
-        "runner_payout": 22.0,
-        "runner_payout_paise": 2200,
-        "platform_share": 8.0,
-        "platform_share_paise": 800,
+        "runner_payout": 24.0,
+        "runner_payout_paise": 2400,
+        "platform_share": 6.0,
+        "platform_share_paise": 600,
     },
     {
         "min_km": 6.0,
         "max_km": 8.0,
         "customer_fee": 40.0,
         "customer_fee_paise": 4000,
-        "runner_payout": 28.0,
-        "runner_payout_paise": 2800,
-        "platform_share": 12.0,
-        "platform_share_paise": 1200,
+        "runner_payout": 32.0,
+        "runner_payout_paise": 3200,
+        "platform_share": 8.0,
+        "platform_share_paise": 800,
     },
 ]
 
