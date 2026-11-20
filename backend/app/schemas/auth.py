@@ -29,7 +29,7 @@ class SendOTPResponse(BaseModel):
 
 class VerifyOTPRequest(BaseModel):
     phone: str = Field(..., pattern=r"^[5-9]\d{9}$")
-    otp: str = Field(..., min_length=4, max_length=6)
+    otp: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
     session_id: Optional[str] = None
     role: Optional[str] = "customer"
     name: Optional[str] = None

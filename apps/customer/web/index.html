@@ -640,12 +640,14 @@
           </div>
 
           <div class="space-y-2">
-            <label class="block text-center text-[11px] font-semibold text-slate-600">Enter 4-Digit SMS Verification Code</label>
-            <div class="flex justify-center items-center gap-2 sm:gap-3 max-w-full mx-auto px-1">
-              <input type="tel" maxlength="1" id="otp-1" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-2', event)" class="w-13 h-14 text-center text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-2" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-3', event)" class="w-13 h-14 text-center text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-3" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-4', event)" class="w-13 h-14 text-center text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-4" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, null, event)" class="w-13 h-14 text-center text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+            <label class="block text-center text-[11px] font-semibold text-slate-600">Enter 6-Digit SMS Verification Code</label>
+            <div class="flex justify-center items-center gap-1.5 sm:gap-2 max-w-full mx-auto px-1">
+              <input type="tel" maxlength="1" id="otp-1" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-2', event)" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-2" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-3', event)" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-3" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-4', event)" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-4" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-5', event)" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-5" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-6', event)" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-6" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, null, event)" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
             </div>
           </div>
 
@@ -4227,7 +4229,7 @@
       document.getElementById('phone-input-section')?.classList.add('hidden');
       document.getElementById('otp-input-section')?.classList.remove('hidden');
 
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 1; i <= 6; i++) {
         const b = document.getElementById(`otp-${i}`);
         if (b) b.value = '';
       }

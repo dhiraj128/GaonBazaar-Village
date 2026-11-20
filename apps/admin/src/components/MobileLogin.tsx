@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Send, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import {
-  sendMessageCentralOtp,
-  verifyMessageCentralOtp
+  sendTwoFactorOtp,
+  verifyTwoFactorOtp
 } from '../utils/firebase';
 import { PullToRefresh } from './PullToRefresh';
 
@@ -34,7 +34,7 @@ export function MobileLogin({
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [verificationId, setVerificationId] = useState<string | null>(null);
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [isLoading, setIsLoading] = useState(false);
@@ -59,8 +59,8 @@ export function MobileLogin({
   const t = {
     title: propTitle || (isHindi ? "मोबाइल लॉगिन" : "Mobile Login"),
     subtitle: propSubtitle || (isHindi
-      ? "सुरक्षित 4-अंकीय OTP प्राप्त करने के लिए अपना मोबाइल नंबर दर्ज करें।"
-      : "Enter your mobile number to receive a secure 4-digit OTP."),
+      ? "सुरक्षित 6-अंकीय OTP प्राप्त करने के लिए अपना मोबाइल नंबर दर्ज करें।"
+      : "Enter your mobile number to receive a secure 6-digit OTP."),
     nameLabel: isHindi ? "पूरा नाम" : "Full Name",
     nameSublabel: isHindi ? "(नए ग्राहकों के लिए)" : "(for new customers)",
     namePlaceholder: isHindi ? "उदा. रमेश कुमार" : "e.g. Ramesh Kumar",
@@ -71,13 +71,13 @@ export function MobileLogin({
     sendingBtn: isHindi ? "भेजा जा रहा है..." : "Sending...",
     codeSentTo: isHindi ? "कोड भेजा गया:" : "Code sent to:",
     changeBtn: isHindi ? "बदलें" : "Change",
-    otpTitle: isHindi ? "4-अंकीय SMS सत्यापन कोड दर्ज करें" : "Enter 4-Digit SMS Verification Code",
+    otpTitle: isHindi ? "6-अंकीय SMS सत्यापन कोड दर्ज करें" : "Enter 6-Digit SMS Verification Code",
     verifyBtn: isHindi ? "सत्यापित करें और आगे बढ़ें" : "Verify & Proceed",
     verifyingBtn: isHindi ? "सत्यापित हो रहा है..." : "Verifying...",
     resendBtn: isHindi ? "OTP पुनः भेजें" : "Resend OTP",
     trustBadge: isHindi ? "🔒 100% सुरक्षित और एन्क्रिप्टेड लॉगिन" : "🔒 256-bit Encrypted & Secure Authentication",
     invalidPhone: isHindi ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें" : "Please enter a valid 10-digit Indian mobile number",
-    invalidOtp: isHindi ? "कृपया पूरा 4-अंकीय OTP कोड दर्ज करें" : "Please enter complete 4-digit OTP",
+    invalidOtp: isHindi ? "कृपया पूरा 6-अंकीय OTP कोड दर्ज करें" : "Please enter complete 6-digit OTP",
   };
 
   const handleSendOtp = async (e?: React.FormEvent) => {
@@ -97,12 +97,12 @@ export function MobileLogin({
     setStep('otp');
     setStatusMessage(
       isHindi
-        ? `4-अंकीय सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया`
-        : `4-digit verification code sent to ${formattedPhoneNumber}`
+        ? `6-अंकीय सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया`
+        : `6-digit verification code sent to ${formattedPhoneNumber}`
     );
 
     // Non-blocking parallel background dispatch
-    sendMessageCentralOtp(clean, 'customer')
+    sendTwoFactorOtp(clean, 'customer')
       .then((res) => {
         if (res && res.verificationId) {
           setVerificationId(res.verificationId);
@@ -117,23 +117,23 @@ export function MobileLogin({
       });
   };
 
-  const handleVerifyOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setError(null);
-
-    const code = otp.join('');
-    if (code.length !== 4) {
+  const handleVerifyOtpWithCode = async (codeToVerify?: string) => {
+    const code = codeToVerify || otp.join('');
+    if (code.length !== 6) {
       setError(t.invalidOtp);
       return;
     }
 
+    if (isLoading) return;
     setIsLoading(true);
+    setError(null);
+
     try {
       const clean = phone.replace(/\D/g, '').slice(-10);
       const formattedPhoneNumber = `+91${clean}`;
 
-      console.log('[Auth] Verifying 4-digit OTP via Message Central & Backend JWT Session...');
-      const userCred = await verifyMessageCentralOtp(clean, code, verificationId || undefined, 'customer');
+      console.log('[Auth] Verifying 6-digit OTP via 2Factor.in & Backend JWT Session...');
+      const userCred = await verifyTwoFactorOtp(clean, code, verificationId || undefined, 'customer');
       const authUser = userCred.user;
       console.log('[Auth] OTP successfully verified for UID:', authUser.uid);
 
@@ -185,14 +185,14 @@ export function MobileLogin({
         onSuccess(sessionUser);
       }
     } catch (err: any) {
-      console.error("MESSAGE CENTRAL VERIFY ERROR:", err?.code, err?.message);
-      const code = err?.code || '';
+      console.error("2FACTOR VERIFY ERROR:", err?.code, err?.message);
+      const codeErr = err?.code || '';
 
-      if (code === 'auth/invalid-verification-code') {
+      if (codeErr === 'auth/invalid-verification-code') {
         setError(isHindi
-          ? "अमान्य OTP कोड। कृपया सही 4-अंकीय कोड दर्ज करें।"
-          : "Invalid OTP code. Please enter the correct 4-digit code.");
-      } else if (code === 'auth/code-expired') {
+          ? "अमान्य OTP कोड। कृपया सही 6-अंकीय कोड दर्ज करें।"
+          : "Invalid OTP code. Please enter the correct 6-digit code.");
+      } else if (codeErr === 'auth/code-expired') {
         setError(isHindi
           ? "सत्यापन कोड समाप्त हो गया है। कृपया नया OTP अनुरोध करें।"
           : "Verification code has expired. Please request a new OTP.");
@@ -206,26 +206,44 @@ export function MobileLogin({
     }
   };
 
+  const handleVerifyOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    await handleVerifyOtpWithCode();
+  };
+
   const handleOtpChange = (index: number, val: string) => {
     const cleaned = val.replace(/\D/g, '');
     const newOtp = [...otp];
     if (cleaned.length > 1) {
-      // Pasted full 4-digit code
-      const pasted = cleaned.slice(0, 4).split('');
-      for (let i = 0; i < 4; i++) {
+      // Pasted full 6-digit code
+      const pasted = cleaned.slice(0, 6).split('');
+      for (let i = 0; i < 6; i++) {
         newOtp[i] = pasted[i] || '';
       }
       setOtp(newOtp);
-      const nextEl = document.getElementById('react-otp-3');
+      const targetIdx = Math.min(pasted.length - 1, 5);
+      const nextEl = document.getElementById(`react-otp-${targetIdx}`);
       nextEl?.focus();
+
+      if (pasted.length === 6) {
+        setTimeout(() => {
+          handleVerifyOtpWithCode(newOtp.join(''));
+        }, 60);
+      }
       return;
     }
     newOtp[index] = cleaned;
     setOtp(newOtp);
 
-    if (cleaned && index < 3) {
+    if (cleaned && index < 5) {
       const nextEl = document.getElementById(`react-otp-${index + 1}`);
       nextEl?.focus();
+    }
+
+    if (newOtp.join('').length === 6) {
+      setTimeout(() => {
+        handleVerifyOtpWithCode(newOtp.join(''));
+      }, 60);
     }
   };
 
@@ -370,7 +388,7 @@ export function MobileLogin({
                         value={digit}
                         onChange={(e) => handleOtpChange(idx, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                        className="w-14 sm:w-16 h-16 text-center text-2xl font-bold font-mono bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-[#0F9D58] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-xs"
+                        className="w-11 sm:w-13 h-14 sm:h-16 text-center text-xl sm:text-2xl font-bold font-mono bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-[#0F9D58] focus:bg-white focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-xs"
                       />
                     ))}
                   </div>
@@ -378,7 +396,7 @@ export function MobileLogin({
 
                 <button
                   type="submit"
-                  disabled={isLoading || otp.join('').length !== 4}
+                  disabled={isLoading || otp.join('').length !== 6}
                   className="w-full py-4 bg-[#0F9D58] hover:bg-[#0D874C] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black rounded-2xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center space-x-2 text-sm sm:text-base cursor-pointer tracking-wide"
                 >
                   {isLoading ? (

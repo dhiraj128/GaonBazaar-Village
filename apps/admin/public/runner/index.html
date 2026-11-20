@@ -82,30 +82,30 @@
       animation: alert-pulse 1.8s infinite;
     }
   
-    /* Precision 4-Digit OTP Input Styles */
+    /* Precision 6-Digit OTP Input Styles */
     .otp-digit-group {
       display: flex !important;
       justify-content: center !important;
       align-items: center !important;
-      gap: 12px !important;
+      gap: 8px !important;
       width: 100% !important;
-      max-width: 290px !important;
+      max-width: 320px !important;
       margin: 0 auto !important;
     }
     .otp-digit-box {
-      width: 54px !important;
-      height: 58px !important;
-      min-width: 54px !important;
-      max-width: 54px !important;
-      flex: 0 0 54px !important;
+      width: 44px !important;
+      height: 52px !important;
+      min-width: 44px !important;
+      max-width: 44px !important;
+      flex: 0 0 44px !important;
       text-align: center !important;
-      font-size: 24px !important;
+      font-size: 22px !important;
       font-weight: 800 !important;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
       color: #0f172a !important;
       background-color: #ffffff !important;
       border: 2px solid #cbd5e1 !important;
-      border-radius: 14px !important;
+      border-radius: 12px !important;
       outline: none !important;
       transition: all 0.15s ease-in-out !important;
       box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
@@ -121,17 +121,17 @@
     }
     @media (max-width: 360px) {
       .otp-digit-group {
-        gap: 8px !important;
-        max-width: 240px !important;
+        gap: 6px !important;
+        max-width: 270px !important;
       }
       .otp-digit-box {
-        width: 46px !important;
-        height: 50px !important;
-        min-width: 46px !important;
-        max-width: 46px !important;
-        flex: 0 0 46px !important;
-        font-size: 20px !important;
-        border-radius: 10px !important;
+        width: 38px !important;
+        height: 46px !important;
+        min-width: 38px !important;
+        max-width: 38px !important;
+        flex: 0 0 38px !important;
+        font-size: 18px !important;
+        border-radius: 8px !important;
       }
     }
 
@@ -300,6 +300,8 @@
                   <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-2" autocomplete="off" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
                   <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-3" autocomplete="off" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
                   <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-4" autocomplete="off" oninput="handleOtpInput(4, event)" onkeydown="handleOtpKey(4, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-5" autocomplete="off" oninput="handleOtpInput(5, event)" onkeydown="handleOtpKey(5, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-6" autocomplete="off" oninput="handleOtpInput(6, event)" onkeydown="handleOtpKey(6, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
                 </div>
               </div>
 
@@ -1991,7 +1993,7 @@
         select_language_sub: "Select your preferred language to continue",
         continue_btn: "Continue",
         mobile_reg_title: "Enter Mobile Number",
-        mobile_reg_sub: "We will send a 4-digit verification code to your phone",
+        mobile_reg_sub: "We will send a 6-digit verification code to your phone",
         phone_number_label: "Phone Number",
         auth_heading_login: "Welcome Back",
         auth_subtext_login: "Enter your mobile number to continue.",
@@ -2000,8 +2002,8 @@
         send_otp_btn: "Send OTP",
         please_wait: "Please wait",
         verify_mobile_heading: "Verify Mobile Number",
-        otp_screen_sub: "Enter the 4-digit code sent to +91 XXXXX XXXXX.",
-        enter_otp_label: "Verification Code",
+        otp_screen_sub: "Enter the 6-digit code sent to +91 XXXXX XXXXX.",
+        enter_otp_label: "Enter 6-Digit Verification Code",
         change_number: "Change Number",
         resend_otp: "Resend OTP",
         verify_proceed: "Verify & Continue",
@@ -2205,7 +2207,7 @@
         select_language_sub: "आगे बढ़ने के लिए अपनी पसंदीदा भाषा चुनें",
         continue_btn: "आगे बढ़ें",
         mobile_reg_title: "मोबाइल नंबर दर्ज करें",
-        mobile_reg_sub: "हम आपके फ़ोन पर 4-अंकों का सत्यापन कोड भेजेंगे",
+        mobile_reg_sub: "हम आपके फ़ोन पर 6-अंकों का सत्यापन कोड भेजेंगे",
         phone_number_label: "फ़ोन नंबर",
         auth_heading_login: "वापसी पर स्वागत है",
         auth_subtext_login: "आगे बढ़ने के लिए अपना मोबाइल नंबर दर्ज करें।",
@@ -2214,8 +2216,8 @@
         send_otp_btn: "OTP भेजें",
         please_wait: "कृपया प्रतीक्षा करें",
         verify_mobile_heading: "मोबाइल नंबर सत्यापित करें",
-        otp_screen_sub: "भेजा गया 4-अंकीय कोड दर्ज करें।",
-        enter_otp_label: "सत्यापन कोड",
+        otp_screen_sub: "भेजा गया 6-अंकीय कोड दर्ज करें।",
+        enter_otp_label: "6-अंकीय सत्यापन कोड",
         change_number: "नंबर बदलें",
         resend_otp: "पुनः OTP भेजें",
         verify_proceed: "सत्यापित करें और आगे बढ़ें",
@@ -2967,8 +2969,8 @@
         const displayPhone = phoneFormatted || document.getElementById('otp-phone-display')?.innerText || "+91 ----------";
         if (sub) {
           sub.innerText = currentLang === 'hi'
-            ? `${displayPhone} पर भेजा गया 4-अंकीय कोड दर्ज करें।`
-            : `Enter the 4-digit code sent to ${displayPhone}.`;
+            ? `${displayPhone} पर भेजा गया 6-अंकीय कोड दर्ज करें।`
+            : `Enter the 6-digit code sent to ${displayPhone}.`;
         }
       } else {
         if (heading) heading.innerText = currentLang === 'hi' ? "वापसी पर स्वागत है" : "Welcome Back";
@@ -2982,7 +2984,7 @@
         resendTimerInterval = null;
       }
       window.__gb_verification_id = null;
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 1; i <= 6; i++) {
         const b = document.getElementById('otp-' + i);
         if (b) b.value = '';
       }
@@ -3016,7 +3018,7 @@
         }
       } else if (event.key === 'ArrowLeft' && index > 1) {
         document.getElementById('otp-' + (index - 1))?.focus();
-      } else if (event.key === 'ArrowRight' && index < 4) {
+      } else if (event.key === 'ArrowRight' && index < 6) {
         document.getElementById('otp-' + (index + 1))?.focus();
       }
     }
@@ -3026,7 +3028,7 @@
       let val = input.value.replace(/\D/g, '');
       input.value = val ? val.slice(-1) : '';
 
-      if (input.value && index < 4) {
+      if (input.value && index < 6) {
         const next = document.getElementById('otp-' + (index + 1));
         if (next) {
           next.focus();
@@ -3034,14 +3036,14 @@
         }
       }
 
-      // Check if all 4 digits are entered for safe auto-submit
+      // Check if all 6 digits are entered for safe auto-submit
       let entered = '';
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 1; i <= 6; i++) {
         const b = document.getElementById('otp-' + i);
         if (b) entered += b.value.trim();
       }
 
-      if (entered.length === 4 && !isVerifyingOtp && !isSendingOtp) {
+      if (entered.length === 6 && !isVerifyingOtp && !isSendingOtp) {
         setTimeout(() => {
           if (!isVerifyingOtp) {
             verifyMobileOTP();
@@ -3053,17 +3055,17 @@
     function handleOtpPaste(event) {
       event.preventDefault();
       const pasteData = (event.clipboardData || window.clipboardData)?.getData('text') || '';
-      const digits = pasteData.replace(/\D/g, '').slice(0, 4);
+      const digits = pasteData.replace(/\D/g, '').slice(0, 6);
       if (!digits) return;
 
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 6; i++) {
         const b = document.getElementById('otp-' + (i + 1));
         if (b) b.value = digits[i] || '';
       }
-      const targetIdx = Math.min(digits.length, 4);
+      const targetIdx = Math.min(digits.length, 6);
       document.getElementById('otp-' + targetIdx)?.focus();
 
-      if (digits.length === 4 && !isVerifyingOtp && !isSendingOtp) {
+      if (digits.length === 6 && !isVerifyingOtp && !isSendingOtp) {
         setTimeout(() => {
           if (!isVerifyingOtp) {
             verifyMobileOTP();
@@ -3100,7 +3102,7 @@
       document.getElementById('otp-container')?.classList.remove('hidden');
       updateAuthHeadings('otp', formattedPhoneNumber);
 
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 1; i <= 6; i++) {
         const b = document.getElementById('otp-' + i);
         if (b) b.value = '';
       }
@@ -3111,7 +3113,7 @@
       if (otp1) otp1.focus();
 
       isSendingOtp = true;
-      console.log("[Auth] Dispatching 4-digit SMS OTP to runner:", formattedPhoneNumber);
+      console.log("[2Factor.in] Dispatching 6-digit SMS OTP to runner:", formattedPhoneNumber);
 
       // Non-blocking parallel background dispatch
       (async () => {
@@ -3154,7 +3156,7 @@
       if (isVerifyingOtp) return; // Prevent duplicate verification requests
 
       let entered = '';
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 1; i <= 6; i++) {
         const b = document.getElementById('otp-' + i);
         if (b) entered += b.value.trim();
       }
@@ -3162,8 +3164,8 @@
       const btn = document.getElementById('verify-otp-btn');
       const btnContent = document.getElementById('verify-btn-content');
 
-      if (entered.length !== 4) {
-        toastError(currentLang === 'hi' ? "गलत कोड। कृपया पुनः प्रयास करें।" : "Incorrect code. Please try again.");
+      if (entered.length !== 6) {
+        toastError(currentLang === 'hi' ? "गलत कोड। कृपया पूरा 6-अंकीय कोड दर्ज करें।" : "Incorrect code. Please enter the complete 6-digit code.");
         return;
       }
 
@@ -3183,7 +3185,7 @@
       const timeoutId = setTimeout(() => abortController.abort(), 6000);
 
       try {
-        console.log("[Message Central] Verifying 4-digit OTP for runner:", clean);
+        console.log("[2Factor.in] Verifying 6-digit OTP for runner:", clean);
         const res = await fetch('/api/verify-otp', {
           method: 'POST',
           headers: {

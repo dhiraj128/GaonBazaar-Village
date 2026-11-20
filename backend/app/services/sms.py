@@ -47,16 +47,25 @@ def normalize_indian_phone(phone: str) -> str:
 
     return digits
 
+_sms_http_client: Optional[httpx.AsyncClient] = None
+
+def get_sms_http_client() -> httpx.AsyncClient:
+    global _sms_http_client
+    if _sms_http_client is None or _sms_http_client.is_closed:
+        _sms_http_client = httpx.AsyncClient(timeout=5.0)
+    return _sms_http_client
+
 async def send_sms_otp(phone: str, otp: str, role: str = "customer") -> Dict[str, Any]:
     """
-    Sends transactional SMS OTP using 2Factor.in SMS OTP API:
+    Sends transactional 6-digit SMS OTP using 2Factor.in SMS OTP API:
     https://2factor.in/API/V1/{TWOFACTOR_API_KEY}/SMS/+91{ten_digit_phone}/{otp_code}/OTP1
 
     - Reads TWOFACTOR_API_KEY from environment variables (os.getenv("TWOFACTOR_API_KEY"))
     - Normalizes Indian phone numbers cleanly to 10 digits before formatting +91{ten_digit_phone}
+    - Employs shared pooled httpx.AsyncClient with a tight 5-second timeout
     - Checks HTTP 200 response and JSON {"Status": "Success"}
     - Raises clear HTTP 502 / 400 errors with logged error details if 2Factor.in fails
-    - Gracefully marks as pending_credentials in development/test environments when no key is set
+    - If TWOFACTOR_API_KEY is missing in production, fails fast with an explicit error
     """
     ten_digit_phone = normalize_indian_phone(phone)
 
@@ -77,7 +86,7 @@ async def send_sms_otp(phone: str, otp: str, role: str = "customer") -> Dict[str
             logger.error("[SMS Gateway] CRITICAL: TWOFACTOR_API_KEY is not configured in production!")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="SMS gateway service is not configured in production environment."
+                detail="SMS gateway service is not configured in production environment (missing TWOFACTOR_API_KEY)."
             )
         logger.info(
             f"[SMS Gateway] TWOFACTOR_API_KEY not configured. "
@@ -96,8 +105,8 @@ async def send_sms_otp(phone: str, otp: str, role: str = "customer") -> Dict[str
     logger.info(f"[SMS 2Factor] Dispatching transactional OTP to {masked_phone} via 2Factor.in...")
 
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(endpoint_url)
+        client = get_sms_http_client()
+        resp = await client.get(endpoint_url)
     except httpx.RequestError as exc:
         logger.error(f"[SMS 2Factor] Network error connecting to 2Factor.in for {masked_phone}: {exc}")
         raise HTTPException(

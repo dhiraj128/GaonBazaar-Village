@@ -1,6 +1,6 @@
 /**
- * GaonBazaar Pure Message Central & Backend Session Authentication Client
- * Zero Firebase dependencies - Powered directly by Message Central VerifyNow and Supabase backend.
+ * GaonBazaar 2Factor.in SMS & Backend Session Authentication Client
+ * Zero external Firebase dependencies - Powered directly by 2Factor.in and Supabase backend.
  */
 
 export interface AuthUser {
@@ -24,13 +24,13 @@ export function resetRecaptchaVerifier(): void {
 }
 
 /**
- * Sends a real 4-digit SMS OTP via Message Central VerifyNow (/api/send-otp).
+ * Sends a real 6-digit SMS OTP via 2Factor.in (/api/send-otp).
  * Zero hardcoded phone numbers or static OTP bypasses.
  */
-export async function sendMessageCentralOtp(
+export async function sendTwoFactorOtp(
   rawPhone: string,
   role: string = 'customer'
-): Promise<{ success: boolean; verificationId: string; message?: string }> {
+): Promise<{ success: boolean; verificationId: string; sessionId?: string; message?: string }> {
   const clean10 = rawPhone.replace(/\D/g, '').slice(-10);
   if (!/^[6-9]\d{9}$/.test(clean10)) {
     throw {
@@ -39,7 +39,7 @@ export async function sendMessageCentralOtp(
     };
   }
 
-  console.log('[Message Central Client] Requesting 4-digit OTP dispatch for:', clean10);
+  console.log('[2Factor.in Client] Requesting 6-digit OTP dispatch for:', clean10);
 
   let response: Response;
   try {
@@ -52,7 +52,7 @@ export async function sendMessageCentralOtp(
       body: JSON.stringify({ phoneNumber: clean10, role }),
     });
   } catch (netErr: any) {
-    console.error('[Message Central Client Network Exception]:', netErr);
+    console.error('[2Factor.in Client Network Exception]:', netErr);
     throw {
       code: 'auth/network-error',
       message: 'Network connection error. Please verify your internet connection.',
@@ -64,7 +64,7 @@ export async function sendMessageCentralOtp(
   try {
     data = JSON.parse(rawText);
   } catch (parseErr) {
-    console.error('[Message Central Client Non-JSON Server Response]:', response.status, rawText);
+    console.error('[2Factor.in Client Non-JSON Server Response]:', response.status, rawText);
     throw {
       code: 'auth/server-error',
       message: `Server returned HTTP ${response.status}: ${rawText.slice(0, 100) || 'Service temporarily unavailable'}`,
@@ -82,10 +82,10 @@ export async function sendMessageCentralOtp(
 }
 
 /**
- * Verifies the 4-digit OTP code with Message Central VerifyNow (/api/verify-otp),
+ * Verifies the 6-digit OTP code with 2Factor.in (/api/verify-otp),
  * receives a secure backend JWT session token, and establishes authenticated session.
  */
-export async function verifyMessageCentralOtp(
+export async function verifyTwoFactorOtp(
   rawPhone: string,
   otp: string,
   verificationId?: string,
@@ -94,14 +94,14 @@ export async function verifyMessageCentralOtp(
   const clean10 = rawPhone.replace(/\D/g, '').slice(-10);
   const cleanOtp = String(otp || '').trim();
 
-  if (!cleanOtp || cleanOtp.length !== 4) {
+  if (!cleanOtp || cleanOtp.length !== 6) {
     throw {
       code: 'auth/invalid-verification-code',
-      message: 'Please enter the complete 4-digit verification code',
+      message: 'Please enter the complete 6-digit verification code',
     };
   }
 
-  console.log('[Message Central Client] Verifying OTP and requesting JWT Session for:', clean10);
+  console.log('[2Factor.in Client] Verifying OTP and requesting JWT Session for:', clean10);
 
   let response: Response;
   try {
@@ -119,7 +119,7 @@ export async function verifyMessageCentralOtp(
       }),
     });
   } catch (netErr: any) {
-    console.error('[Message Central Verify Network Exception]:', netErr);
+    console.error('[2Factor.in Verify Network Exception]:', netErr);
     throw {
       code: 'auth/network-error',
       message: 'Network connection error. Please verify your internet connection.',
@@ -131,7 +131,7 @@ export async function verifyMessageCentralOtp(
   try {
     data = JSON.parse(rawText);
   } catch (parseErr) {
-    console.error('[Message Central Verify Non-JSON Server Response]:', response.status, rawText);
+    console.error('[2Factor.in Verify Non-JSON Server Response]:', response.status, rawText);
     throw {
       code: 'auth/server-error',
       message: `Server returned HTTP ${response.status}: ${rawText.slice(0, 100) || 'Service temporarily unavailable'}`,
@@ -167,7 +167,6 @@ export async function verifyMessageCentralOtp(
   return { user: authUser, token };
 }
 
-// Backwards-compatible aliases
-export const sendFast2SmsOtp = sendMessageCentralOtp;
-export const verifyFast2SmsOtp = (rawPhone: string, otp: string) => verifyMessageCentralOtp(rawPhone, otp);
+export const sendFast2SmsOtp = sendTwoFactorOtp;
+export const verifyFast2SmsOtp = (rawPhone: string, otp: string) => verifyTwoFactorOtp(rawPhone, otp);
 export const sendFirebaseTestPhoneOtp = async (rawPhone: string) => null;

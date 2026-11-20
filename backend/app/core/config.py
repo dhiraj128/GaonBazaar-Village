@@ -117,7 +117,7 @@ class Settings(BaseSettings):
     TESTING: bool = False
     
     # SMS Gateway Configuration (2Factor.in Transactional OTP)
-    SMS_PROVIDER: Optional[str] = "2factor" # 2factor, fast2sms, msg91, twilio, mock
+    SMS_PROVIDER: Optional[str] = "2factor" # Strictly 2Factor.in SMS OTP
     TWOFACTOR_API_KEY: Optional[str] = None
     SMS_API_KEY: Optional[str] = None
     SMS_SENDER_ID: str = "GAONBZ"

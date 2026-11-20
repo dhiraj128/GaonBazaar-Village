@@ -52,7 +52,7 @@ export async function sendCustomerOTP(isResend = false) {
   document.getElementById('phone-input-section')?.classList.add('hidden');
   document.getElementById('otp-input-section')?.classList.remove('hidden');
 
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 6; i++) {
     const box = document.getElementById(`otp-${i}`);
     if (box) box.value = '';
   }
@@ -64,8 +64,8 @@ export async function sendCustomerOTP(isResend = false) {
   if (typeof window.toastSuccess === 'function') {
     window.toastSuccess(
       window.currentLang === 'hi'
-        ? "4-अंकीय OTP आपके मोबाइल पर भेजा गया है!"
-        : "4-Digit OTP sent to " + formattedPhoneNumber + "!"
+        ? "6-अंकीय OTP आपके मोबाइल पर भेजा गया है!"
+        : "6-Digit OTP sent to " + formattedPhoneNumber + "!"
     );
   }
 
@@ -107,22 +107,22 @@ export async function sendCustomerOTP(isResend = false) {
 }
 
 /**
- * Step 2: Verify 4-digit OTP via Message Central (/api/verify-otp) & Establish Backend JWT Session
+ * Step 2: Verify 6-digit OTP via 2Factor.in (/api/verify-otp) & Establish Backend JWT Session
  */
 export async function verifyCustomerOTP() {
   hideAuthError();
 
   let code = '';
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 6; i++) {
     const box = document.getElementById(`otp-${i}`);
     if (box) code += box.value.trim();
   }
 
-  if (code.length !== 4) {
+  if (code.length !== 6) {
     showAuthError(
       window.currentLang === 'hi'
-        ? "कृपया पूरा 4-अंकीय OTP कोड दर्ज करें"
-        : "Please enter the complete 4-digit OTP code"
+        ? "कृपया पूरा 6-अंकीय OTP कोड दर्ज करें"
+        : "Please enter the complete 6-digit OTP code"
     );
     return;
   }
@@ -146,7 +146,7 @@ export async function verifyCustomerOTP() {
   const enteredName = (nameInput?.value || '').trim() || 'Customer';
 
   try {
-    console.log(`[Message Central] Verifying 4-digit OTP for: ${formattedPhoneNumber}`);
+    console.log(`[2Factor.in] Verifying 6-digit OTP for: ${formattedPhoneNumber}`);
     const vRes = await fetch('/api/verify-otp', {
       method: 'POST',
       headers: {
@@ -855,7 +855,7 @@ export function startResendTimer() {
 }
 
 /**
- * 4-Digit OTP Box auto-advance and backspace navigation
+ * 6-Digit OTP Box auto-advance and backspace navigation
  */
 export function handleOtpInput(current, nextId, event) {
   hideAuthError();
@@ -869,21 +869,43 @@ export function handleOtpInput(current, nextId, event) {
     return;
   }
 
-  // Paste handler: if user pastes full 4-digit code into first box
+  // Paste handler: if user pastes full 6-digit code into first box
   if (current.value.length > 1) {
-    const pasted = current.value.replace(/\D/g, '').slice(0, 4);
+    const pasted = current.value.replace(/\D/g, '').slice(0, 6);
     for (let i = 0; i < pasted.length; i++) {
       const box = document.getElementById(`otp-${i + 1}`);
       if (box) box.value = pasted[i];
     }
-    const target = document.getElementById(`otp-${Math.min(pasted.length + 1, 4)}`);
+    const target = document.getElementById(`otp-${Math.min(pasted.length, 6)}`);
     if (target) target.focus();
+
+    if (pasted.length === 6) {
+      setTimeout(() => {
+        if (typeof verifyCustomerOTP === 'function') {
+          verifyCustomerOTP();
+        }
+      }, 60);
+    }
     return;
   }
 
   if (current.value.length >= 1 && nextId) {
     const next = document.getElementById(nextId);
     if (next) next.focus();
+  }
+
+  // Check if all 6 boxes are entered for automatic verification
+  let allDigits = '';
+  for (let i = 1; i <= 6; i++) {
+    const b = document.getElementById(`otp-${i}`);
+    if (b) allDigits += b.value.trim();
+  }
+  if (allDigits.length === 6) {
+    setTimeout(() => {
+      if (typeof verifyCustomerOTP === 'function') {
+        verifyCustomerOTP();
+      }
+    }, 60);
   }
 }
 // Bind to window for HTML onclick and input event handlers

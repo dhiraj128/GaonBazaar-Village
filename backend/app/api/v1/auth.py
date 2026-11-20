@@ -85,7 +85,7 @@ async def send_otp(
         otp_code = "123456"
         delivery_channel = "razorpay_compliance"
     elif is_whitelisted_test_phone(clean_phone):
-        otp_code = "1234"
+        otp_code = "123456"
         delivery_channel = "staging_sandbox"
     else:
         otp_code = f"{secrets.SystemRandom().randint(100000, 999999)}"
@@ -162,7 +162,7 @@ async def verify_otp(
     now = datetime.now(timezone.utc)
     now_ts = now.timestamp()
     is_non_prod = getattr(settings, "ENVIRONMENT", "").lower() != "production"
-    is_razorpay_backdoor = (is_non_prod and clean_phone == "9999999999" and payload.otp in ["123456", "1234"])
+    is_razorpay_backdoor = (is_non_prod and clean_phone == "9999999999" and payload.otp == "123456")
 
     # 1. Lookup active persistent OTP challenge from database
     query = select(OtpChallenge).where(
@@ -201,9 +201,9 @@ async def verify_otp(
                 detail="अधिकतम प्रयास सीमा समाप्त। कृपया नया ओटीपी अनुरोध करें (Maximum OTP verification attempts exceeded)"
             )
 
-        # Constant-time hash verification (supports 4-digit '1234' and 6-digit '123456' for test personas)
+        # Constant-time hash verification (strictly 6-digit OTP)
         is_test_phone = is_whitelisted_test_phone(clean_phone)
-        is_valid = verify_otp_hash(payload.otp, challenge.otp_hash) or (is_test_phone and payload.otp in ["1234", "123456"]) or is_razorpay_backdoor
+        is_valid = verify_otp_hash(payload.otp, challenge.otp_hash) or (is_test_phone and payload.otp == "123456") or is_razorpay_backdoor
         if not is_valid:
             await db.commit()
             raise HTTPException(

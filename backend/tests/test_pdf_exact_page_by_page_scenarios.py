@@ -36,10 +36,10 @@ async def test_scenario_1_vendor_new_applicant_lifecycle():
         assert send_res.status_code == 200
         assert send_res.json()["delivery_channel"] in ["staging_sandbox", "test_mock"]
 
-        # Step 2: Verify OTP with 4-digit code '1234'
+        # Step 2: Verify OTP with 6-digit code '123456'
         ver_res = await client.post("/api/v1/auth/otp/verify", json={
             "phone": "9800000021",
-            "otp": "1234",
+            "otp": "123456",
             "role": "vendor"
         })
         assert ver_res.status_code == 200
@@ -112,10 +112,10 @@ async def test_scenario_2_runner_new_applicant_lifecycle():
         send_res = await client.post("/api/v1/auth/otp/send", json={"phone": "9800000031", "role": "runner"})
         assert send_res.status_code == 200
 
-        # Step 2: Verify OTP with 4-digit code '1234'
+        # Step 2: Verify OTP with 6-digit code '123456'
         ver_res = await client.post("/api/v1/auth/otp/verify", json={
             "phone": "9800000031",
-            "otp": "1234",
+            "otp": "123456",
             "role": "runner"
         })
         assert ver_res.status_code == 200
