@@ -40,6 +40,8 @@ export function MobileLogin({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [resendCountdown, setResendCountdown] = useState(30);
+  const [canResend, setCanResend] = useState(false);
 
   // Guarantee strictly empty inputs on mount
   useEffect(() => {
@@ -53,6 +55,28 @@ export function MobileLogin({
       setLang(propLang);
     }
   }, [propLang]);
+
+  // 30-second live resend countdown timer
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+    if (step === 'otp' && resendCountdown > 0) {
+      setCanResend(false);
+      interval = setInterval(() => {
+        setResendCountdown((prev) => {
+          if (prev <= 1) {
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else if (resendCountdown === 0) {
+      setCanResend(true);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [step, resendCountdown]);
 
   // Strict localized copy dictionary
   const isHindi = lang === 'hi';
@@ -95,6 +119,8 @@ export function MobileLogin({
 
     // INSTANT OPTIMISTIC TRANSITION: Immediately switch to OTP step (< 1s, no blocking spinner)
     setStep('otp');
+    setResendCountdown(30);
+    setCanResend(false);
     setStatusMessage(
       isHindi
         ? `6-अंकीय सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया`
@@ -110,11 +136,59 @@ export function MobileLogin({
       })
       .catch((err: any) => {
         console.error("SMS DISPATCH ERROR:", err);
+        const retrySec = err?.retryAfter || err?.retry_after;
+        if (retrySec && typeof retrySec === 'number') {
+          setResendCountdown(retrySec);
+        }
         const msg = err?.message || (isHindi
           ? "OTP भेजने में असमर्थ। कृपया अपना नेटवर्क जांचें और पुनः प्रयास करें।"
           : "Unable to send OTP. Please check your network and try again.");
         setError(msg);
       });
+  };
+
+  const handleResendOtp = async () => {
+    if (!canResend || isLoading) return;
+    setError(null);
+    setStatusMessage(null);
+
+    const clean = phone.replace(/\D/g, '').slice(-10);
+    if (!/^[6-9]\d{9}$/.test(clean)) {
+      setError(t.invalidPhone);
+      return;
+    }
+
+    // 1. Reset OTP boxes & autofocus first input
+    setOtp(['', '', '', '', '', '']);
+    const firstInput = document.getElementById('react-otp-0');
+    if (firstInput) firstInput.focus();
+
+    // 2. Start new 30-second countdown immediately
+    setResendCountdown(30);
+    setCanResend(false);
+    setStatusMessage(
+      isHindi
+        ? `नया 6-अंकीय OTP +91${clean} पर भेजा गया!`
+        : `New 6-digit OTP sent to +91${clean}!`
+    );
+
+    // 3. Dispatch fresh OTP request via 2Factor.in
+    try {
+      const res = await sendTwoFactorOtp(clean, 'customer');
+      if (res && res.verificationId) {
+        setVerificationId(res.verificationId);
+      }
+    } catch (err: any) {
+      console.error("RESEND OTP ERROR:", err);
+      const retrySec = err?.retryAfter || err?.retry_after;
+      if (retrySec && typeof retrySec === 'number') {
+        setResendCountdown(retrySec);
+      }
+      const msg = err?.message || (isHindi
+        ? "नया OTP भेजने में असमर्थ। कृपया पुनः प्रयास करें।"
+        : "Failed to resend OTP. Please try again.");
+      setError(msg);
+    }
   };
 
   const handleVerifyOtpWithCode = async (codeToVerify?: string) => {
@@ -362,7 +436,14 @@ export function MobileLogin({
                   </span>
                   <button
                     type="button"
-                    onClick={() => setStep('phone')}
+                    onClick={() => {
+                      setStep('phone');
+                      setOtp(['', '', '', '', '', '']);
+                      setError(null);
+                      setStatusMessage(null);
+                      setCanResend(false);
+                      setResendCountdown(30);
+                    }}
                     className="text-[#0F9D58] font-bold hover:underline"
                   >
                     {t.changeBtn}
@@ -415,11 +496,14 @@ export function MobileLogin({
                 <div className="text-center pt-1">
                   <button
                     type="button"
-                    onClick={() => handleSendOtp()}
-                    disabled={isLoading}
-                    className="text-xs text-slate-500 hover:text-[#0F9D58] font-semibold underline transition-colors"
+                    id="react-resend-otp-btn"
+                    onClick={handleResendOtp}
+                    disabled={!canResend || isLoading}
+                    className="text-xs font-semibold text-slate-500 hover:text-[#0F9D58] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {t.resendBtn}
+                    {canResend
+                      ? t.resendBtn
+                      : (isHindi ? `OTP पुनः भेजें (${resendCountdown}s)` : `Resend OTP in ${resendCountdown}s`)}
                   </button>
                 </div>
               </form>

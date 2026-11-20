@@ -237,7 +237,7 @@
               <!-- Invisible reCAPTCHA container -->
               <div id="recaptcha-container"></div>
 
-              <button type="button" id="send-otp-btn" onclick="sendMobileOTP()" class="w-full h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center transition active:scale-98">
+              <button type="button" id="send-otp-btn" class="w-full h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center transition active:scale-98 cursor-pointer">
                 <span id="send-otp-btn-content" class="flex items-center justify-center">
                   <span id="send-otp-text" data-i18n="send_otp_btn">Send OTP</span>
                   <i data-lucide="send" class="w-4 h-4 ml-2"></i>
@@ -245,34 +245,34 @@
               </button>
             </div>
 
-            <!-- Step 2: 4-Digit OTP Container -->
+            <!-- Step 2: 6-Digit OTP Container -->
             <div id="otp-container" class="space-y-4 pt-2 hidden">
               <div class="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-between">
                 <div class="text-xs text-emerald-900">
                   <span class="font-medium" data-i18n="otp_sent_to">Code sent to:</span> <span id="otp-phone-display" class="font-bold font-mono">+91 ----------</span>
                 </div>
-                <button type="button" onclick="resetVendorPhone()" class="text-xs text-emerald-700 font-bold hover:underline" data-i18n="change_number">Change Number</button>
+                <button type="button" id="btn-vendor-change-phone" class="text-xs text-emerald-700 font-bold hover:underline cursor-pointer" data-i18n="change_number">Change Number</button>
               </div>
 
               <div class="space-y-2">
                 <label class="block text-center text-xs font-semibold text-slate-700" data-i18n="enter_otp_label">Verification Code</label>
                 <div class="otp-digit-group">
-                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-1" autocomplete="one-time-code" oninput="handleOtpInput(1, event)" onkeydown="handleOtpKey(1, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
-                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-2" autocomplete="off" oninput="handleOtpInput(2, event)" onkeydown="handleOtpKey(2, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
-                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-3" autocomplete="off" oninput="handleOtpInput(3, event)" onkeydown="handleOtpKey(3, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
-                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-4" autocomplete="off" oninput="handleOtpInput(4, event)" onkeydown="handleOtpKey(4, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
-                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-5" autocomplete="off" oninput="handleOtpInput(5, event)" onkeydown="handleOtpKey(5, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
-                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-6" autocomplete="off" oninput="handleOtpInput(6, event)" onkeydown="handleOtpKey(6, event)" onpaste="handleOtpPaste(event)" class="otp-digit-box" value="">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-1" autocomplete="one-time-code" class="otp-digit-box" value="">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-2" autocomplete="off" class="otp-digit-box" value="">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-3" autocomplete="off" class="otp-digit-box" value="">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-4" autocomplete="off" class="otp-digit-box" value="">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-5" autocomplete="off" class="otp-digit-box" value="">
+                  <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" id="otp-6" autocomplete="off" class="otp-digit-box" value="">
                 </div>
               </div>
 
               <div class="flex justify-between items-center text-xs text-slate-500 pt-1">
                 <span id="resend-countdown" class="text-slate-400 font-mono text-[11px] hidden"></span>
-                <button type="button" id="resend-otp-btn" onclick="sendMobileOTP(true)" class="text-emerald-600 font-semibold hover:underline" data-i18n="resend_otp">Resend OTP</button>
+                <button type="button" id="resend-otp-btn" class="text-emerald-600 font-semibold hover:underline cursor-pointer" data-i18n="resend_otp">Resend OTP</button>
               </div>
 
               <div class="pt-2">
-                <button type="button" id="verify-otp-btn" onclick="verifyMobileOTP()" class="w-full h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center transition active:scale-98">
+                <button type="button" id="verify-otp-btn" class="w-full h-[52px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center transition active:scale-98 cursor-pointer">
                   <span id="verify-btn-content" class="flex items-center justify-center">
                     <span id="verify-btn-text" data-i18n="verify_proceed">Verify & Continue</span>
                     <i data-lucide="check" class="w-4 h-4 ml-2"></i>

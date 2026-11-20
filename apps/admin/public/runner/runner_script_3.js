@@ -1298,6 +1298,10 @@
       const otp1 = document.getElementById('otp-1');
       if (otp1) otp1.focus();
 
+      if (isResend) {
+        toastSuccess(currentLang === 'hi' ? "नया 6-अंकीय OTP भेजा गया!" : `New 6-digit OTP sent to +91 ${clean}!`);
+      }
+
       isSendingOtp = true;
       console.log("[2Factor.in] Dispatching 6-digit SMS OTP to runner:", formattedPhoneNumber);
 
@@ -1326,7 +1330,11 @@
             const data = await res.json().catch(() => ({}));
             let errMsg = currentLang === 'hi' ? "कोड नहीं भेजा जा सका। कृपया पुनः प्रयास करें।" : "Couldn't send the code. Please try again.";
             if (res.status === 429) {
-              errMsg = data.message || (currentLang === 'hi' ? "कृपया पुनः प्रयास करने से पहले प्रतीक्षा करें।" : "Please wait before requesting another OTP.");
+              const retrySec = data.retryAfter || data.retry_after || data.cooldown;
+              if (retrySec && typeof retrySec === 'number') {
+                startResendCooldown(retrySec);
+              }
+              errMsg = data.message || (currentLang === 'hi' ? `कृपया ${retrySec || 30} सेकंड बाद पुनः प्रयास करें।` : "Please wait before requesting another OTP.");
             }
             toastError(errMsg);
           }
@@ -1337,6 +1345,61 @@
         }
       })();
     }
+
+    function initRunnerAuthListeners() {
+      const sendOtpBtn = document.getElementById('send-otp-btn');
+      if (sendOtpBtn && !sendOtpBtn.__bound) {
+        sendOtpBtn.__bound = true;
+        sendOtpBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          sendMobileOTP();
+        });
+      }
+
+      const changePhoneBtn = document.getElementById('btn-runner-change-phone');
+      if (changePhoneBtn && !changePhoneBtn.__bound) {
+        changePhoneBtn.__bound = true;
+        changePhoneBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          resetRunnerPhone();
+        });
+      }
+
+      const resendOtpBtn = document.getElementById('resend-otp-btn');
+      if (resendOtpBtn && !resendOtpBtn.__bound) {
+        resendOtpBtn.__bound = true;
+        resendOtpBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          sendMobileOTP(true);
+        });
+      }
+
+      const verifyOtpBtn = document.getElementById('verify-otp-btn');
+      if (verifyOtpBtn && !verifyOtpBtn.__bound) {
+        verifyOtpBtn.__bound = true;
+        verifyOtpBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          verifyMobileOTP();
+        });
+      }
+
+      for (let i = 1; i <= 6; i++) {
+        const box = document.getElementById('otp-' + i);
+        if (box && !box.__bound) {
+          box.__bound = true;
+          box.addEventListener('input', (e) => handleOtpInput(i, e));
+          box.addEventListener('keydown', (e) => handleOtpKey(i, e));
+          box.addEventListener('paste', (e) => handleOtpPaste(e));
+        }
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initRunnerAuthListeners);
+    } else {
+      initRunnerAuthListeners();
+    }
+    window.addEventListener('load', initRunnerAuthListeners);
 
     async function verifyMobileOTP() {
       if (isVerifyingOtp) return; // Prevent duplicate verification requests

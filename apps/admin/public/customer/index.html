@@ -587,7 +587,7 @@
           <!-- Invisible security reCAPTCHA container for SMS abuse prevention -->
           <div id="recaptcha-container"></div>
 
-          <button type="button" onclick="sendCustomerOTP()" id="send-otp-btn" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
+          <button type="button" id="send-otp-btn" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
             <span id="send-otp-text" data-i18n="send_otp_btn">Send OTP</span>
             <i data-lucide="send" id="send-otp-icon" class="w-4 h-4"></i>
           </button>
@@ -599,30 +599,30 @@
             <div class="text-xs text-emerald-900">
               <span class="font-medium" data-i18n="otp_sent_to">Code sent to:</span> <span id="otp-phone-display" class="font-bold"></span>
             </div>
-            <button onclick="resetCustomerPhone()" class="text-xs text-emerald-700 font-bold hover:underline" data-i18n="change_number">Change</button>
+            <button type="button" id="btn-customer-change-phone" class="text-xs text-emerald-700 font-bold hover:underline" data-i18n="change_number">Change</button>
           </div>
 
           <div class="space-y-2">
             <label class="block text-center text-[11px] font-semibold text-slate-600">Enter 6-Digit SMS Verification Code</label>
             <div class="flex justify-center items-center gap-1.5 sm:gap-2 max-w-full mx-auto px-1">
-              <input type="tel" maxlength="1" id="otp-1" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-2', event)" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-2" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-3', event)" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-3" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-4', event)" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-4" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-5', event)" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-5" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, 'otp-6', event)" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
-              <input type="tel" maxlength="1" id="otp-6" autocomplete="off" spellcheck="false" value="" onkeyup="handleOtpInput(this, null, event)" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-1" autocomplete="off" spellcheck="false" value="" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-2" autocomplete="off" spellcheck="false" value="" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-3" autocomplete="off" spellcheck="false" value="" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-4" autocomplete="off" spellcheck="false" value="" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-5" autocomplete="off" spellcheck="false" value="" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
+              <input type="tel" maxlength="1" id="otp-6" autocomplete="off" spellcheck="false" value="" class="w-10 sm:w-12 h-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-slate-50 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl shadow-2xs transition">
             </div>
           </div>
 
           <div class="flex justify-between items-center text-xs pt-1 px-1">
             <span class="text-slate-500" data-i18n="didnt_receive">Didn't receive code?</span>
             <div>
-              <button onclick="resendCustomerOTP()" id="resend-otp-btn" class="font-bold text-emerald-700 hover:underline" data-i18n="resend_otp">Resend OTP</button>
+              <button type="button" id="resend-otp-btn" class="font-bold text-emerald-700 hover:underline cursor-pointer" data-i18n="resend_otp">Resend OTP</button>
               <span id="resend-timer" class="text-slate-400 text-xs hidden">Resend in <span id="resend-countdown" class="font-bold text-slate-600">30</span>s</span>
             </div>
           </div>
 
-          <button onclick="verifyCustomerOTP()" id="verify-otp-btn" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98">
+          <button type="button" id="verify-otp-btn" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 transition active:scale-98 cursor-pointer">
             <span data-i18n="verify_login_btn">Verify & Login</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </button>
