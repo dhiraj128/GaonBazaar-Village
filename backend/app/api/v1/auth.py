@@ -50,17 +50,21 @@ def is_whitelisted_test_phone(phone: str) -> bool:
         return False
     return phone in TEST_PHONE_WHITELIST
 
+from app.services.sms import send_sms_otp, normalize_indian_phone
+
 # In-memory OTP storage cache for fast session lookup and test harness compatibility
 OTP_STORAGE = {}
 
 @router.post("/otp/send", response_model=SendOTPResponse)
+@router.post("/send-otp", response_model=SendOTPResponse)
 async def send_otp(
     payload: SendOTPRequest,
     db: AsyncSession = Depends(get_db)
 ):
+    clean_phone = normalize_indian_phone(payload.phone)
     now = datetime.now(timezone.utc)
     now_ts = now.timestamp()
-    stored = OTP_STORAGE.get(payload.phone)
+    stored = OTP_STORAGE.get(clean_phone)
 
     # 1. Rate limiting: minimum 15 seconds between OTP requests per phone (bypassed in pytest if testing)
     if not getattr(settings, "TESTING", False) and stored and (now_ts - stored.get("last_sent_at", 0)) < 15:
@@ -73,23 +77,23 @@ async def send_otp(
     # 2. Challenge generation:
     # Staging/development test persona handling (strictly disabled in production)
     is_non_prod = getattr(settings, "ENVIRONMENT", "").lower() != "production"
-    if is_non_prod and payload.phone == "9999999999":
+    if is_non_prod and clean_phone == "9999999999":
         otp_code = "123456"
         delivery_channel = "razorpay_compliance"
-    elif is_whitelisted_test_phone(payload.phone):
+    elif is_whitelisted_test_phone(clean_phone):
         otp_code = "1234"
         delivery_channel = "staging_sandbox"
     else:
         otp_code = f"{secrets.SystemRandom().randint(100000, 999999)}"
         delivery_channel = "sms"
 
-    session_id = f"sess_{payload.phone}_{int(now_ts)}_{secrets.token_hex(4)}"
+    session_id = f"sess_{clean_phone}_{int(now_ts)}_{secrets.token_hex(4)}"
     expires_at = now + timedelta(seconds=300)
     otp_hashed = hash_otp(otp_code)
 
     # 3. Store persistent challenge in database
     challenge = OtpChallenge(
-        phone=payload.phone,
+        phone=clean_phone,
         session_id=session_id,
         otp_hash=otp_hashed,
         role=payload.role,
@@ -102,7 +106,7 @@ async def send_otp(
     await db.commit()
 
     # 4. Update in-memory OTP_STORAGE for test compatibility and low-latency cache
-    OTP_STORAGE[payload.phone] = {
+    OTP_STORAGE[clean_phone] = {
         "otp": otp_code,
         "session_id": session_id,
         "role": payload.role,
@@ -111,15 +115,18 @@ async def send_otp(
         "last_sent_at": now_ts
     }
 
-    # 5. Dispatch SMS via configured provider (Fast2SMS, MSG91, Twilio)
-    if is_non_prod and payload.phone == "9999999999":
+    # 5. Dispatch SMS via configured provider (2Factor.in transactional OTP)
+    if is_non_prod and clean_phone == "9999999999":
         delivery_status = "delivered"
     else:
-        sms_res = await send_sms_otp(payload.phone, otp_code, payload.role)
+        sms_res = await send_sms_otp(clean_phone, otp_code, payload.role)
+        if isinstance(sms_res, dict) and sms_res.get("status") in ("failed", "error"):
+            err_msg = sms_res.get("error") or sms_res.get("message") or "SMS OTP delivery failed"
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=err_msg)
         delivery_status = sms_res.get("status", "delivered")
 
     return SendOTPResponse(
-        message=f"OTP challenge issued to +91 {payload.phone}",
+        message=f"OTP challenge issued to +91 {clean_phone}",
         session_id=session_id,
         expires_in=300,
         delivery_status=delivery_status,
@@ -128,18 +135,20 @@ async def send_otp(
     )
 
 @router.post("/otp/verify", response_model=TokenResponse)
+@router.post("/verify-otp", response_model=TokenResponse)
 async def verify_otp(
     payload: VerifyOTPRequest,
     db: AsyncSession = Depends(get_db)
 ):
+    clean_phone = normalize_indian_phone(payload.phone)
     now = datetime.now(timezone.utc)
     now_ts = now.timestamp()
     is_non_prod = getattr(settings, "ENVIRONMENT", "").lower() != "production"
-    is_razorpay_backdoor = (is_non_prod and payload.phone == "9999999999" and payload.otp in ["123456", "1234"])
+    is_razorpay_backdoor = (is_non_prod and clean_phone == "9999999999" and payload.otp in ["123456", "1234"])
 
     # 1. Lookup active persistent OTP challenge from database
     query = select(OtpChallenge).where(
-        OtpChallenge.phone == payload.phone,
+        OtpChallenge.phone == clean_phone,
         OtpChallenge.is_used == False
     )
     if payload.session_id:
@@ -157,7 +166,7 @@ async def verify_otp(
         if challenge.expires_at < now:
             challenge.is_used = True
             await db.commit()
-            OTP_STORAGE.pop(payload.phone, None)
+            OTP_STORAGE.pop(clean_phone, None)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="ओटीपी की समय सीमा समाप्त हो गई है (OTP has expired. Please request a new OTP)"
@@ -168,14 +177,14 @@ async def verify_otp(
         if challenge.attempts > 3:
             challenge.is_used = True
             await db.commit()
-            OTP_STORAGE.pop(payload.phone, None)
+            OTP_STORAGE.pop(clean_phone, None)
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail="अधिकतम प्रयास सीमा समाप्त। कृपया नया ओटीपी अनुरोध करें (Maximum OTP verification attempts exceeded)"
             )
 
         # Constant-time hash verification (supports 4-digit '1234' and 6-digit '123456' for test personas)
-        is_test_phone = is_whitelisted_test_phone(payload.phone)
+        is_test_phone = is_whitelisted_test_phone(clean_phone)
         is_valid = verify_otp_hash(payload.otp, challenge.otp_hash) or (is_test_phone and payload.otp in ["1234", "123456"]) or is_razorpay_backdoor
         if not is_valid:
             await db.commit()
@@ -188,11 +197,11 @@ async def verify_otp(
         challenge.is_used = True
         await db.commit()
         matched_role = challenge.role or payload.role or "customer"
-        OTP_STORAGE.pop(payload.phone, None)
+        OTP_STORAGE.pop(clean_phone, None)
 
     else:
         # Fallback to in-memory OTP_STORAGE (for tests where DB might be mocked or pre-seeded)
-        mem_stored = OTP_STORAGE.get(payload.phone)
+        mem_stored = OTP_STORAGE.get(clean_phone)
         if not mem_stored:
             if is_razorpay_backdoor:
                 matched_role = payload.role or "customer"
@@ -203,7 +212,7 @@ async def verify_otp(
                 )
 
         if mem_stored.get("expires_at", 0) < now_ts:
-            OTP_STORAGE.pop(payload.phone, None)
+            OTP_STORAGE.pop(clean_phone, None)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="ओटीपी की समय सीमा समाप्त हो गई है (OTP has expired. Please request a new OTP)"
@@ -211,13 +220,13 @@ async def verify_otp(
 
         mem_stored["attempts"] = mem_stored.get("attempts", 0) + 1
         if mem_stored["attempts"] > 3:
-            OTP_STORAGE.pop(payload.phone, None)
+            OTP_STORAGE.pop(clean_phone, None)
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail="अधिकतम प्रयास सीमा समाप्त। कृपया नया ओटीपी अनुरोध करें (Maximum OTP verification attempts exceeded)"
             )
 
-        is_test_phone = is_whitelisted_test_phone(payload.phone)
+        is_test_phone = is_whitelisted_test_phone(clean_phone)
         is_valid = secrets.compare_digest(str(mem_stored.get("otp")), str(payload.otp)) or (is_test_phone and payload.otp in ["1234", "123456"]) or is_razorpay_backdoor
         if not is_valid:
             raise HTTPException(
@@ -226,23 +235,23 @@ async def verify_otp(
             )
 
         matched_role = mem_stored.get("role", payload.role or "customer")
-        OTP_STORAGE.pop(payload.phone, None)
+        OTP_STORAGE.pop(clean_phone, None)
 
     # 2. Query or create User entity in PostgreSQL / SQLite
-    user_query = await db.execute(select(User).where(User.phone == payload.phone))
+    user_query = await db.execute(select(User).where(User.phone == clean_phone))
     user = user_query.scalars().first()
 
-    is_staging_persona = is_whitelisted_test_phone(payload.phone)
+    is_staging_persona = is_whitelisted_test_phone(clean_phone)
 
     if not user:
         user = User(
-            phone=payload.phone,
+            phone=clean_phone,
             name=payload.name or (
-                "Razorpay Compliance Reviewer" if payload.phone == "9999999999" else
-                "Minapur Pilot Customer" if payload.phone == "9800000000" else
-                "Chaturshi Kirana Store" if payload.phone == "9800000001" else
-                "Minapur Fast Runner" if payload.phone == "9800000003" else
-                f"User {payload.phone[-4:]}"
+                "Razorpay Compliance Reviewer" if clean_phone == "9999999999" else
+                "Minapur Pilot Customer" if clean_phone == "9800000000" else
+                "Chaturshi Kirana Store" if clean_phone == "9800000001" else
+                "Minapur Fast Runner" if clean_phone == "9800000003" else
+                f"User {clean_phone[-4:]}"
             ),
             role=matched_role,
             preferred_language="hi"

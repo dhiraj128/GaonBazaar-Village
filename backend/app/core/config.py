@@ -116,11 +116,22 @@ class Settings(BaseSettings):
     ADMIN_API_KEY: str = "dev-insecure-admin-key-change-in-production"
     TESTING: bool = False
     
-    # SMS Gateway Configuration
-    SMS_PROVIDER: Optional[str] = "fast2sms" # fast2sms, msg91, twilio, mock
-    SMS_API_KEY: Optional[str] = "XsoSYvBFIKVteH8tVfguXYkVcFsxVrVLFDbeH3sTPPv0vyErS6yuPzySrgai1ir1lVg31OVM8CnyXiio"
+    # SMS Gateway Configuration (2Factor.in Transactional OTP)
+    SMS_PROVIDER: Optional[str] = "2factor" # 2factor, fast2sms, msg91, twilio, mock
+    TWOFACTOR_API_KEY: Optional[str] = None
+    SMS_API_KEY: Optional[str] = None
     SMS_SENDER_ID: str = "GAONBZ"
-    SMS_TEMPLATE_ID: Optional[str] = None
+    SMS_TEMPLATE_ID: Optional[str] = "OTP1"
+
+    @property
+    def RESOLVED_TWOFACTOR_API_KEY(self) -> str:
+        import os
+        return (
+            os.getenv("TWOFACTOR_API_KEY")
+            or os.getenv("TWO_FACTOR_API_KEY")
+            or self.TWOFACTOR_API_KEY
+            or ""
+        ).strip()
     
     # Database (Default to SQLite file for robust local testing without external daemon)
     DATABASE_URL: str = "sqlite+aiosqlite:///./gaonbazaar.db"
