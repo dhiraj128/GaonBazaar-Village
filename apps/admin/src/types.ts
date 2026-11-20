@@ -247,6 +247,13 @@ export interface SettlementLedger {
   runner_payouts_due: number;
   platform_fee_collected: number;
   total_delivered_orders: number;
+  total_customer_collected?: number;
+  total_vendor_payable?: number;
+  total_runner_payable?: number;
+  item_margins_total?: number;
+  platform_delivery_share_total?: number;
+  platform_checkout_fee_total?: number;
+  net_platform_profit?: number;
 }
 
 export interface CatalogItem {

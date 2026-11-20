@@ -10,7 +10,10 @@ class StoreProductResponse(BaseModel):
     category: str
     unit: str
     price: float
-    mrp: Optional[float]
+    mrp: Optional[float] = None
+    vendor_price: Optional[float] = None
+    customer_price: Optional[float] = None
+    item_margin: Optional[float] = None
     image_url: str
     in_stock: bool
     stock_quantity: int
@@ -50,7 +53,8 @@ class AddProductToStoreRequest(BaseModel):
     custom_name_hi: Optional[str] = None
     category: str
     unit: str
-    price: float
+    price: Optional[float] = None
+    vendor_price: Optional[float] = None
     mrp: Optional[float] = None
     image_url: Optional[str] = None
     stock_quantity: int = 50
@@ -84,5 +88,6 @@ class ProductStockUpdate(BaseModel):
     in_stock: Optional[bool] = None
     stock_quantity: Optional[int] = None
     price: Optional[float] = None
+    vendor_price: Optional[float] = None
     mrp: Optional[float] = None
 

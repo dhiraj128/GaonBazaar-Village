@@ -158,14 +158,22 @@ async def create_order(
         name_en = prod.custom_name_en or (prod.global_item.name_en if prod.global_item else "Product")
         name_hi = prod.custom_name_hi or (prod.global_item.name_hi if prod.global_item else "उत्पाद")
         
+        cust_p = prod.customer_price if prod.customer_price is not None else prod.price
+        vend_p = prod.vendor_price if prod.vendor_price is not None else prod.price
+        item_mrg = prod.item_margin if prod.item_margin is not None else round(cust_p - vend_p, 2)
+
         order_items_to_create.append(OrderItem(
             product_id=prod.id,
             product_name_en=name_en,
             product_name_hi=name_hi,
             unit=prod.unit,
-            unit_price=prod.price,
+            unit_price=cust_p,
             quantity=itm.quantity,
             total_price=line_total,
+            mrp=prod.mrp,
+            vendor_price=vend_p,
+            customer_price=cust_p,
+            item_margin=item_mrg,
             image_url=prod.image_url
         ))
         
@@ -509,13 +517,16 @@ async def get_vendor_finances(
         raise HTTPException(status_code=404, detail="Store not found")
         
     orders_res = await db.execute(
-        select(Order).where(Order.store_id == store.id, Order.status == "DELIVERED").order_by(Order.delivered_at.desc())
+        select(Order).options(selectinload(Order.items)).where(Order.store_id == store.id, Order.status == "DELIVERED").order_by(Order.delivered_at.desc())
     )
     delivered_orders = orders_res.scalars().all()
 
     def _vendor_payout(o):
-        is_online = (o.payment_method or "").upper() in ["ONLINE", "UPI"]
-        return round(o.subtotal * 0.98, 2) if is_online else round(o.subtotal, 2)
+        # 100% of vendor price for items sold (vendor_price * quantity), 0% hidden deduction
+        if hasattr(o, "items") and o.items:
+            v_sum = sum((getattr(i, "vendor_price", None) or i.unit_price) * i.quantity for i in o.items)
+            return round(v_sum, 2)
+        return round(o.subtotal, 2)
 
     total_sales = round(sum(_vendor_payout(o) for o in delivered_orders), 2)
 
@@ -625,9 +636,9 @@ async def get_runner_finances(
     week_start = today_start - timedelta(days=now.weekday())
 
     def _get_payout(o):
+        # 100% of calculated distance-based delivery fee share, 0% extra deduction
         r_base = getattr(o, 'runner_payout', None) or max(0.0, (o.delivery_fee or 0.0) - 3.0)
-        is_online = (o.payment_method or "").upper() in ["ONLINE", "UPI"]
-        return round(r_base * 0.98, 2) if is_online else round(r_base, 2)
+        return round(r_base, 2)
 
     def _is_after(dt, threshold):
         if not dt:
@@ -1067,6 +1078,11 @@ async def _format_order_response(
     seconds_remaining = max(0, int((cancel_deadline - now).total_seconds()))
     can_cancel = (order.status == "PLACED" and seconds_remaining > 0)
     
+    # Security: Delivery PIN is strictly customer-only. Never expose to Vendor or Runner.
+    is_cust = (current_user_id and order.customer_id == current_user_id)
+    is_admin = (role == "admin")
+    exposed_otp = order.delivery_otp if (is_cust or is_admin) else None
+
     items_out = [
         OrderItemDetail(
             id=i.id,
@@ -1077,6 +1093,10 @@ async def _format_order_response(
             unit_price=i.unit_price,
             quantity=i.quantity,
             total_price=i.total_price,
+            mrp=getattr(i, 'mrp', None),
+            vendor_price=(getattr(i, 'vendor_price', None) or i.unit_price) if not is_cust else None,
+            customer_price=getattr(i, 'customer_price', None) or i.unit_price,
+            item_margin=(getattr(i, 'item_margin', None) or 0.0) if not is_cust else None,
             image_url=i.image_url
         )
         for i in order.items
@@ -1091,11 +1111,6 @@ async def _format_order_response(
         )
         for t in order.timeline
     ]
-
-    # Security: Delivery PIN is strictly customer-only. Never expose to Vendor or Runner.
-    is_cust = (current_user_id and order.customer_id == current_user_id)
-    is_admin = (role == "admin")
-    exposed_otp = order.delivery_otp if (is_cust or is_admin) else None
     
     # Section 4 - Strict Runner Isolation & Privacy:
     # Runner cannot see customer's full address before accepting the order (minimal discovery info).
@@ -1118,8 +1133,7 @@ async def _format_order_response(
         )
     
     runner_base = getattr(order, "runner_payout", None) or max(0.0, (order.delivery_fee or 0.0) - 3.0)
-    is_online = (order.payment_method or "").upper() in ["ONLINE", "UPI"]
-    payout_val = round(runner_base * 0.98, 2) if is_online else round(runner_base, 2)
+    payout_val = round(runner_base, 2)
 
     return OrderResponse(
         id=order.id,

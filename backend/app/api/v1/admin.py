@@ -1837,14 +1837,37 @@ async def get_settlements_ledger(
     and platform fees collected. Restricted to Super Admin role.
     """
     res = await db.execute(
-        select(Order).options(selectinload(Order.store), selectinload(Order.runner)).where(Order.status == "DELIVERED")
+        select(Order).options(selectinload(Order.store), selectinload(Order.runner), selectinload(Order.items)).where(Order.status == "DELIVERED")
     )
     delivered_orders = res.scalars().all()
 
     vendor_totals = {}
     runner_totals = {}
 
+    total_customer_collected = 0.0
+    item_margins_total = 0.0
+    platform_delivery_share_total = 0.0
+    platform_checkout_fee_total = 0.0
+
     for o in delivered_orders:
+        total_customer_collected += (o.total_amount or 0.0)
+        p_fee = o.platform_fee if o.platform_fee is not None else settings.PLATFORM_FEE
+        platform_checkout_fee_total += p_fee
+
+        # Compute order items vendor payout and platform item margin
+        order_vendor_payout = 0.0
+        if o.items:
+            for itm in o.items:
+                v_unit = itm.vendor_price if itm.vendor_price is not None else itm.unit_price
+                c_unit = itm.customer_price if itm.customer_price is not None else itm.unit_price
+                m_unit = itm.item_margin if itm.item_margin is not None else max(0.0, round(c_unit - v_unit, 2))
+                order_vendor_payout += (v_unit * itm.quantity)
+                item_margins_total += (m_unit * itm.quantity)
+        else:
+            order_vendor_payout = o.subtotal
+
+        order_vendor_payout = round(order_vendor_payout, 2)
+
         if o.store_id:
             s_name = o.store.shop_name if o.store else "Store"
             if o.store_id not in vendor_totals:
@@ -1867,9 +1890,8 @@ async def get_settlements_ledger(
                     "bank_account": b_ac,
                     "ifsc": b_ifsc
                 }
-            # Invisible 2% electronic processing fee on ONLINE orders, 0% on COD
-            is_online = (o.payment_method or "").upper() in ["ONLINE", "UPI"]
-            net_payout = round(o.subtotal * 0.98, 2) if is_online else round(o.subtotal, 2)
+            # Vendor receives 100% of vendor price for items sold, 0% cut
+            net_payout = order_vendor_payout
 
             vendor_totals[o.store_id]["gross_sales"] += net_payout
             vendor_totals[o.store_id]["online_gateway_fee"] = 0.0
@@ -1898,23 +1920,45 @@ async def get_settlements_ledger(
                     "bank_account": r_ac,
                     "ifsc": r_ifsc
                 }
-            is_online = (o.payment_method or "").upper() in ["ONLINE", "UPI"]
-            r_base = max(0.0, (o.delivery_fee or 0.0) - 3.0)
-            net_r_payout = round(r_base * 0.98, 2) if is_online else round(r_base, 2)
+            # Runner receives 100% of calculated distance-based delivery share, 0% cut
+            r_base = getattr(o, "runner_payout", None) or max(0.0, (o.delivery_fee or 0.0) - 3.0)
+            net_r_payout = round(r_base, 2)
+
+            # Platform delivery share is remaining delivery fee
+            p_deliv_share = max(0.0, round((o.delivery_fee or 0.0) - r_base, 2))
+            platform_delivery_share_total += p_deliv_share
 
             runner_totals[o.runner_id]["delivery_fees"] += net_r_payout
             runner_totals[o.runner_id]["online_gateway_fee"] = 0.0
             runner_totals[o.runner_id]["total_payout"] += net_r_payout
             runner_totals[o.runner_id]["order_count"] += 1
+        else:
+            # If no runner assigned yet delivered, all delivery fee goes to platform
+            platform_delivery_share_total += (o.delivery_fee or 0.0)
+
+    total_vendor_payable = round(sum(v["total_payout"] for v in vendor_totals.values()), 2)
+    total_runner_payable = round(sum(r["total_payout"] for r in runner_totals.values()), 2)
+    item_margins_total = round(item_margins_total, 2)
+    platform_delivery_share_total = round(platform_delivery_share_total, 2)
+    platform_checkout_fee_total = round(platform_checkout_fee_total, 2)
+    net_platform_profit = round(item_margins_total + platform_delivery_share_total + platform_checkout_fee_total, 2)
 
     return {
         "vendor_settlements": list(vendor_totals.values()),
         "runner_settlements": list(runner_totals.values()),
-        "vendor_payouts_due": round(sum(v["total_payout"] for v in vendor_totals.values()), 2),
-        "runner_payouts_due": round(sum(r["total_payout"] for r in runner_totals.values()), 2),
+        "vendor_payouts_due": total_vendor_payable,
+        "runner_payouts_due": total_runner_payable,
         "total_online_gateway_fee": 0.0,
-        "platform_fee_collected": len(delivered_orders) * settings.PLATFORM_FEE,
-        "total_delivered_orders": len(delivered_orders)
+        "platform_fee_collected": platform_checkout_fee_total,
+        "total_delivered_orders": len(delivered_orders),
+        # Part 4 metrics:
+        "total_customer_collected": round(total_customer_collected, 2),
+        "total_vendor_payable": total_vendor_payable,
+        "total_runner_payable": total_runner_payable,
+        "item_margins_total": item_margins_total,
+        "platform_delivery_share_total": platform_delivery_share_total,
+        "platform_checkout_fee_total": platform_checkout_fee_total,
+        "net_platform_profit": net_platform_profit
     }
 
 
@@ -2063,7 +2107,7 @@ async def export_vendor_payouts_csv(
     Super Admin privilege strictly required.
     """
     res = await db.execute(
-        select(Order).options(selectinload(Order.store)).where(Order.status == "DELIVERED")
+        select(Order).options(selectinload(Order.store), selectinload(Order.items)).where(Order.status == "DELIVERED")
     )
     delivered = res.scalars().all()
 
@@ -2087,9 +2131,11 @@ async def export_vendor_payouts_csv(
                     "ifsc": b_ifsc,
                     "amount": 0.0
                 }
-            is_online = (o.payment_method or "").upper() in ["ONLINE", "UPI"]
-            net = round(o.subtotal * 0.98, 2) if is_online else round(o.subtotal, 2)
-            vendor_totals[o.store_id]["amount"] += net
+            if o.items:
+                v_net = round(sum((getattr(i, "vendor_price", None) or i.unit_price) * i.quantity for i in o.items), 2)
+            else:
+                v_net = round(o.subtotal, 2)
+            vendor_totals[o.store_id]["amount"] += v_net
 
     output = io.StringIO()
     writer = csv.writer(output)
@@ -2141,9 +2187,8 @@ async def export_runner_payouts_csv(
                     "ifsc": r_ifsc,
                     "amount": 0.0
                 }
-            is_online = (o.payment_method or "").upper() in ["ONLINE", "UPI"]
             r_base = max(0.0, (o.delivery_fee or 0.0) - 3.0)
-            net = round(r_base * 0.98, 2) if is_online else round(r_base, 2)
+            net = round(r_base, 2)
             runner_totals[o.runner_id]["amount"] += net
 
     output = io.StringIO()
@@ -2175,7 +2220,7 @@ async def process_weekly_batch_settlement(
     Logs audit trail event.
     """
     res = await db.execute(
-        select(Order).options(selectinload(Order.store), selectinload(Order.runner)).where(Order.status == "DELIVERED")
+        select(Order).options(selectinload(Order.store), selectinload(Order.runner), selectinload(Order.items)).where(Order.status == "DELIVERED")
     )
     delivered = res.scalars().all()
 
@@ -2202,8 +2247,10 @@ async def process_weekly_batch_settlement(
                         "amount": 0.0,
                         "orders_count": 0
                     }
-                is_online = (o.payment_method or "").upper() in ["ONLINE", "UPI"]
-                v_net = round(o.subtotal * 0.98, 2) if is_online else round(o.subtotal, 2)
+                if o.items:
+                    v_net = round(sum((getattr(i, "vendor_price", None) or i.unit_price) * i.quantity for i in o.items), 2)
+                else:
+                    v_net = round(o.subtotal, 2)
                 vendor_payouts[o.store_id]["amount"] += v_net
                 vendor_payouts[o.store_id]["orders_count"] += 1
 
@@ -2219,9 +2266,8 @@ async def process_weekly_batch_settlement(
                         "amount": 0.0,
                         "deliveries_count": 0
                     }
-                is_online = (o.payment_method or "").upper() in ["ONLINE", "UPI"]
                 r_base = max(0.0, (o.delivery_fee or 0.0) - 3.0)
-                r_net = round(r_base * 0.98, 2) if is_online else round(r_base, 2)
+                r_net = round(r_base, 2)
                 runner_payouts[o.runner_id]["amount"] += r_net
                 runner_payouts[o.runner_id]["deliveries_count"] += 1
 

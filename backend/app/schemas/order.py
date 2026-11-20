@@ -37,7 +37,11 @@ class OrderItemDetail(BaseModel):
     unit_price: float
     quantity: int
     total_price: float
-    image_url: Optional[str]
+    mrp: Optional[float] = None
+    vendor_price: Optional[float] = None
+    customer_price: Optional[float] = None
+    item_margin: Optional[float] = None
+    image_url: Optional[str] = None
 
 class OrderTimelineDetail(BaseModel):
     status: str

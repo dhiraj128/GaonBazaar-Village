@@ -4346,7 +4346,16 @@
       if (imgEl) imgEl.src = bustUrl;
       if (nameEl) nameEl.textContent = name;
       if (storeEl) storeEl.textContent = p.store || 'Sharma Kirana & General Store';
-      if (priceEl) priceEl.textContent = `₹${Number(p.price).toFixed(2)}`;
+      const custPrice = Number(p.customer_price || p.price || 0);
+      const mrpVal = (p.mrp && Number(p.mrp) > 0) ? Number(p.mrp) : null;
+      if (priceEl) {
+        if (mrpVal && mrpVal > custPrice) {
+          const discountPct = Math.round(((mrpVal - custPrice) / mrpVal) * 100);
+          priceEl.innerHTML = `<span class="text-sm text-slate-400 line-through mr-1.5 font-mono">₹${mrpVal.toFixed(2)}</span><span class="text-emerald-700 font-mono font-black">₹${custPrice.toFixed(2)}</span><span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">${discountPct}% OFF</span>`;
+        } else {
+          priceEl.innerHTML = `<span class="text-emerald-700 font-mono font-black">₹${custPrice.toFixed(2)}</span>`;
+        }
+      }
       if (unitEl) unitEl.textContent = p.unit || '1 unit';
       if (catEl) catEl.textContent = p.category || 'Grocery';
       if (descEl) {
@@ -4400,7 +4409,15 @@ function createProductCardElement(p) {
 
         <div class="flex items-center justify-between border-t border-slate-100 pt-2 gap-1 min-w-0">
           <div class="min-w-0 shrink-0">
-            <span class="text-xs font-black text-slate-900 font-mono">₹${p.price.toFixed(2)}</span>
+            ${(p.mrp && Number(p.mrp) > Number(p.customer_price || p.price)) ? `
+              <div class="flex items-center flex-wrap gap-1">
+                <span class="text-[10px] text-slate-400 line-through font-mono">₹${Number(p.mrp).toFixed(2)}</span>
+                <span class="text-xs font-black text-slate-900 font-mono">₹${Number(p.customer_price || p.price).toFixed(2)}</span>
+                <span class="px-1 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">${Math.round(((Number(p.mrp) - Number(p.customer_price || p.price)) / Number(p.mrp)) * 100)}% OFF</span>
+              </div>
+            ` : `
+              <span class="text-xs font-black text-slate-900 font-mono">₹${Number(p.customer_price || p.price).toFixed(2)}</span>
+            `}
           </div>
           <div id="btn-container-${p.id}" class="shrink-0">
             ${inCart ? `

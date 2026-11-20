@@ -175,8 +175,11 @@ class StoreProduct(Base):
     custom_name_hi = Column(String(150), nullable=True)
     category = Column(String(50), nullable=False)
     unit = Column(String(30), nullable=False) # 1 kg, 500 g, 1 packet, etc.
-    price = Column(Float, nullable=False)
-    mrp = Column(Float, nullable=True)
+    price = Column(Float, nullable=False) # Customer-facing selling price
+    mrp = Column(Float, nullable=True) # Optional printed MRP
+    vendor_price = Column(Float, nullable=True) # Exact amount vendor receives per unit
+    customer_price = Column(Float, nullable=True) # Final customer price after platform markup
+    item_margin = Column(Float, nullable=True) # Platform markup margin (customer_price - vendor_price)
     image_url = Column(String(500), nullable=False)
     in_stock = Column(Boolean, default=True)
     stock_quantity = Column(Integer, default=50)
@@ -237,9 +240,13 @@ class OrderItem(Base):
     product_name_en = Column(String(150), nullable=False)
     product_name_hi = Column(String(150), nullable=False)
     unit = Column(String(30), nullable=False)
-    unit_price = Column(Float, nullable=False)
+    unit_price = Column(Float, nullable=False) # Customer unit price
     quantity = Column(Integer, nullable=False)
     total_price = Column(Float, nullable=False)
+    mrp = Column(Float, nullable=True) # Printed MRP if packaged, null if loose
+    vendor_price = Column(Float, nullable=True) # Vendor net earning per unit
+    customer_price = Column(Float, nullable=True) # Customer price per unit
+    item_margin = Column(Float, nullable=True) # Platform item margin (customer_price - vendor_price)
     image_url = Column(String(500), nullable=True)
     
     order = relationship("Order", back_populates="items")

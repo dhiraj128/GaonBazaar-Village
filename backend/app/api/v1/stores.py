@@ -11,6 +11,7 @@ from app.schemas.store import (
     StoreStatusUpdate, ProductStockUpdate
 )
 from app.services.geo_service import calculate_haversine_distance, is_within_service_radius
+from app.services.pricing_service import compute_item_pricing
 from app.core.security import get_current_user_payload
 
 router = APIRouter(tags=["Stores & Products"])
@@ -248,8 +249,11 @@ async def get_store_products(
             name_hi=name_hi,
             category=p.category,
             unit=p.unit,
-            price=p.price,
+            price=p.customer_price or p.price,
             mrp=p.mrp,
+            vendor_price=p.vendor_price or p.price,
+            customer_price=p.customer_price or p.price,
+            item_margin=p.item_margin or 0.0,
             image_url=p.image_url,
             in_stock=p.in_stock,
             stock_quantity=p.stock_quantity
@@ -316,6 +320,15 @@ async def add_vendor_product(
             if not name_hi:
                 name_hi = gitem.name_hi
                 
+    vendor_price = data.vendor_price if data.vendor_price is not None else data.price
+    if vendor_price is None or vendor_price <= 0:
+        raise HTTPException(status_code=400, detail="Vendor selling price must be greater than 0")
+
+    try:
+        pricing = compute_item_pricing(vendor_price=vendor_price, mrp=data.mrp)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     product = StoreProduct(
         store_id=store.id,
         global_product_id=data.global_product_id,
@@ -323,8 +336,11 @@ async def add_vendor_product(
         custom_name_hi=name_hi,
         category=data.category,
         unit=data.unit,
-        price=data.price,
-        mrp=data.mrp,
+        price=pricing["customer_price"],
+        mrp=pricing["mrp"],
+        vendor_price=pricing["vendor_price"],
+        customer_price=pricing["customer_price"],
+        item_margin=pricing["item_margin"],
         image_url=image_url or "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400",
         stock_quantity=data.stock_quantity,
         in_stock=data.in_stock
@@ -343,6 +359,9 @@ async def add_vendor_product(
         unit=product.unit,
         price=product.price,
         mrp=product.mrp,
+        vendor_price=product.vendor_price,
+        customer_price=product.customer_price,
+        item_margin=product.item_margin,
         image_url=product.image_url,
         in_stock=product.in_stock,
         stock_quantity=product.stock_quantity
@@ -368,10 +387,18 @@ async def update_product_stock(
         p.in_stock = data.in_stock
     if data.stock_quantity is not None:
         p.stock_quantity = data.stock_quantity
-    if data.price is not None:
-        p.price = data.price
-    if data.mrp is not None:
-        p.mrp = data.mrp
+    if data.vendor_price is not None or data.price is not None or data.mrp is not None:
+        new_v_price = data.vendor_price if data.vendor_price is not None else (data.price if data.price is not None else (p.vendor_price or p.price))
+        new_mrp = data.mrp if data.mrp is not None else p.mrp
+        try:
+            pricing = compute_item_pricing(vendor_price=new_v_price, mrp=new_mrp)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        p.vendor_price = pricing["vendor_price"]
+        p.customer_price = pricing["customer_price"]
+        p.item_margin = pricing["item_margin"]
+        p.price = pricing["customer_price"]
+        p.mrp = pricing["mrp"]
     await db.commit()
     return {
         "message": "Product updated successfully",
@@ -379,6 +406,9 @@ async def update_product_stock(
         "in_stock": p.in_stock,
         "stock_quantity": p.stock_quantity,
         "price": p.price,
+        "customer_price": p.customer_price or p.price,
+        "vendor_price": p.vendor_price,
+        "item_margin": p.item_margin,
         "mrp": p.mrp
     }
 

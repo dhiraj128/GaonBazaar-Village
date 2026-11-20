@@ -143,3 +143,35 @@ def calculate_order_totals(subtotal: float, distance_km: float) -> Dict[str, flo
         "platform_fee": round(platform_fee_paise / 100.0, 2),
         "total_amount": round(total_amount_paise / 100.0, 2)
     }
+
+
+def compute_item_pricing(vendor_price: float, mrp: Any = None) -> Dict[str, Any]:
+    """
+    Computes platform customer price and platform margin based on vendor price and optional MRP:
+    - Validation: If MRP > 0 and vendor_price > MRP -> raise ValueError("Selling price cannot exceed printed MRP.")
+    - Rule A (Packaged item priced below MRP): If MRP > 0 and vendor_price < MRP -> customer_price = min(vendor_price + 2.0, mrp)
+    - Rule B (Packaged item priced equal to MRP): If MRP > 0 and vendor_price == MRP -> customer_price = vendor_price
+    - Rule C (Loose / Non-MRP item): If MRP is None or <= 0 -> customer_price = vendor_price + 4.0
+    - item_margin = round(customer_price - vendor_price, 2)
+    """
+    v_price = round(float(vendor_price), 2)
+    mrp_val = round(float(mrp), 2) if mrp is not None and float(mrp) > 0 else None
+
+    if mrp_val is not None:
+        if v_price > mrp_val:
+            raise ValueError("Selling price cannot exceed printed MRP.")
+        elif v_price < mrp_val:
+            customer_price = round(min(v_price + 2.0, mrp_val), 2)
+        else:
+            customer_price = round(v_price, 2)
+    else:
+        customer_price = round(v_price + 4.0, 2)
+
+    item_margin = round(customer_price - v_price, 2)
+    return {
+        "mrp": mrp_val,
+        "vendor_price": v_price,
+        "customer_price": customer_price,
+        "item_margin": item_margin
+    }
+

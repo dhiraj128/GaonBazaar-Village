@@ -138,56 +138,113 @@ export const SettlementsView: React.FC<SettlementsViewProps> = ({ ledger }) => {
         </div>
       )}
 
-      {/* Financial Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Vendor Settlements (0% Commission)
+      {/* Financial Summary Cards (Part 4: Role-Based Display & Profit Tracking) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Total Customer Collected */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              Total Customer Collected
             </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <Store className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-black text-slate-800">
-            ₹{totalVendorPayouts.toFixed(2)}
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            100% of product subtotal directly to kirana shopkeepers
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Runner Delivery Payouts
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Bike className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-black text-slate-800">
-            ₹{totalRunnerPayouts.toFixed(2)}
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            100% of delivery fee passed through to delivery runners
-          </div>
-        </div>
-
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Platform Convenience Revenue
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
               <CircleDollarSign className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-emerald-600">
-            ₹{ledger.platform_fee_collected.toFixed(2)}
+          <div className="text-2xl font-black text-slate-900">
+            ₹{(ledger.total_customer_collected ?? (totalVendorPayouts + totalRunnerPayouts + ledger.platform_fee_collected)).toFixed(2)}
           </div>
-          <div className="text-xs text-slate-500 mt-1">
-            ₹3.00 collected across {ledger.total_delivered_orders} delivered order(s)
+          <div className="text-[11px] text-slate-400 mt-1">
+            Total gross collected across {ledger.total_delivered_orders} delivered order(s)
+          </div>
+        </div>
+
+        {/* Card 2: Total Vendor Payable (100% of vendor_price * qty) */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              Vendor Payable (100%)
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <Store className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-emerald-700">
+            ₹{(ledger.total_vendor_payable ?? totalVendorPayouts).toFixed(2)}
+          </div>
+          <div className="text-[11px] text-emerald-600 font-semibold mt-1">
+            100% vendor item price (0% platform cut)
+          </div>
+        </div>
+
+        {/* Card 3: Total Runner Payable (100% of delivery share) */}
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              Runner Payable (100%)
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+              <Bike className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-blue-700">
+            ₹{(ledger.total_runner_payable ?? totalRunnerPayouts).toFixed(2)}
+          </div>
+          <div className="text-[11px] text-blue-600 font-semibold mt-1">
+            100% distance-based delivery share (0% cut)
+          </div>
+        </div>
+
+        {/* Card 4: Net Platform Profit */}
+        <div className="bg-gradient-to-br from-purple-50 to-indigo-50/50 p-5 rounded-2xl border border-purple-200 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[11px] font-bold text-purple-900 uppercase tracking-wider">
+              Net Platform Profit
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-xs">
+              <CircleDollarSign className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-black text-purple-900">
+            ₹{(ledger.net_platform_profit ?? ((ledger.item_margins_total || 0) + (ledger.platform_delivery_share_total || 0) + ledger.platform_fee_collected)).toFixed(2)}
+          </div>
+          <div className="text-[11px] text-purple-700 font-semibold mt-1">
+            Item markups + Delivery split + ₹3 fees
+          </div>
+        </div>
+      </div>
+
+      {/* Clear Revenue Audit Breakdown (Part 4) */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+        <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider mb-3">
+          Net Platform Profit Audit Breakdown
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+            <span className="text-[11px] font-bold text-slate-500 block">1. Item Markup Margin</span>
+            <span className="text-lg font-black text-slate-900">
+              ₹{(ledger.item_margins_total || 0).toFixed(2)}
+            </span>
+            <p className="text-[10px] text-slate-500 mt-0.5">
+              ₹2 (packaged below MRP) & ₹4 (loose/non-MRP items)
+            </p>
+          </div>
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+            <span className="text-[11px] font-bold text-slate-500 block">2. Platform Delivery Share</span>
+            <span className="text-lg font-black text-slate-900">
+              ₹{(ledger.platform_delivery_share_total || 0).toFixed(2)}
+            </span>
+            <p className="text-[10px] text-slate-500 mt-0.5">
+              Distance-based delivery fee tier split (e.g. ₹3/₹5 platform share)
+            </p>
+          </div>
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+            <span className="text-[11px] font-bold text-slate-500 block">3. Checkout Platform Fees</span>
+            <span className="text-lg font-black text-slate-900">
+              ₹{(ledger.platform_checkout_fee_total ?? ledger.platform_fee_collected).toFixed(2)}
+            </span>
+            <p className="text-[10px] text-slate-500 mt-0.5">
+              Fixed ₹3.00 customer checkout fee per delivered order
+            </p>
           </div>
         </div>
       </div>

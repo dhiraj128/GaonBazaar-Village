@@ -9,12 +9,12 @@ from app.models.base import Order, Store, User, Runner
 @pytest.mark.asyncio
 async def test_vendor_and_runner_invisible_deductions():
     """
-    Verify the invisible 2% online deduction and 0% COD deduction:
-    1. Vendor Online: subtotal * 0.98
-    2. Vendor COD: subtotal * 1.00
-    3. Runner Online: (delivery_fee - 3.0) * 0.98
-    4. Runner COD: delivery_fee - 3.0
-    5. UI ledgers: online_gateway_fee == 0.0
+    Verify 0% deduction on Vendor and Runner payouts:
+    1. Vendor Online: subtotal * 1.00 (100% of item earnings)
+    2. Vendor COD: subtotal * 1.00 (100% of item earnings)
+    3. Runner Online: runner_base * 1.00 (100% of delivery fee share)
+    4. Runner COD: runner_base * 1.00 (100% of delivery fee share)
+    5. UI ledgers: total_online_gateway_fee == 0.0
     """
     settings.TESTING = True
 
@@ -47,10 +47,10 @@ async def test_vendor_and_runner_invisible_deductions():
     )
 
     def _calc_vendor_payout(o):
-        is_online = (o.payment_method or "").upper() in ["ONLINE", "UPI"]
-        return round(o.subtotal * 0.98, 2) if is_online else round(o.subtotal, 2)
+        # 100% of vendor price earnings with 0% platform percentage deduction
+        return round(float(o.subtotal), 2)
 
-    assert _calc_vendor_payout(order_online_vendor) == 98.00
+    assert _calc_vendor_payout(order_online_vendor) == 100.00
     assert _calc_vendor_payout(order_cod_vendor) == 100.00
 
     # 2. Runner Online & COD calculation check
@@ -82,12 +82,12 @@ async def test_vendor_and_runner_invisible_deductions():
 
     def _calc_runner_payout(o):
         r_base = getattr(o, 'runner_payout', None) or max(0.0, (o.delivery_fee or 0.0) - 3.0)
-        is_online = (o.payment_method or "").upper() in ["ONLINE", "UPI"]
-        return round(r_base * 0.98, 2) if is_online else round(r_base, 2)
+        # 100% of runner delivery share with 0% deduction
+        return round(float(r_base), 2)
 
-    # (25 - 3) * 0.98 = 22 * 0.98 = 21.56
-    assert _calc_runner_payout(order_online_runner) == 21.56
-    # 25 - 3 = 22.00
+    # 25 - 3 = 22.00 (100% payout, no 2% cut)
+    assert _calc_runner_payout(order_online_runner) == 22.00
+    # 25 - 3 = 22.00 (100% payout, no 2% cut)
     assert _calc_runner_payout(order_cod_runner) == 22.00
 
 @pytest.mark.asyncio

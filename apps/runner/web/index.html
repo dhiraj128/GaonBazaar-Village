@@ -206,46 +206,48 @@
       <!-- ONBOARDING FLOW (PHASE 1: 7 STRICT SCREENS) -->
       <!-- ======================================================================= -->
       
-      <!-- PAGE 1: LANGUAGE SELECTION -->
-      <div id="screen-onboarding-1" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
-        <div class="pt-6 text-center">
-          <div class="w-20 h-20 bg-blue-100 text-blue-700 rounded-3xl mx-auto flex items-center justify-center shadow-inner mb-5">
-            <i data-lucide="bike" class="w-10 h-10"></i>
-          </div>
-          <h2 class="text-2xl font-extrabold text-slate-900 mb-2" data-i18n="select_language_title">Choose Your Language</h2>
-          <p class="text-sm text-slate-500 mb-8" data-i18n="select_language_sub">अपनी पसंदीदा भाषा चुनें / Select preferred language to continue</p>
-          
-          <div class="space-y-4 max-w-xs mx-auto">
-            <button type="button" onclick="setLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
-              <div class="flex items-center space-x-3">
-                <span class="text-xl">🇬🇧</span>
-                <span class="text-base font-bold">English</span>
-              </div>
-              <div id="check-icon-en" class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                <i data-lucide="check" class="w-3.5 h-3.5"></i>
-              </div>
-            </button>
+            <!-- PAGE 1: LANGUAGE SELECTION -->
+      <div id="screen-onboarding-1" class="app-screen flex-1 p-4 sm:p-6 flex flex-col justify-center items-center overflow-y-auto hidden">
+        <div class="w-full max-w-md my-auto bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 text-center space-y-6 landscape:p-5 landscape:space-y-3">
+          <div>
+            <div class="w-16 h-16 bg-blue-100 text-blue-700 rounded-2xl mx-auto flex items-center justify-center shadow-inner mb-4">
+              <i data-lucide="bike" class="w-8 h-8"></i>
+            </div>
+            <h2 class="text-2xl font-extrabold text-slate-900 mb-1.5" data-i18n="select_language_title">Choose Your Language</h2>
+            <p class="text-xs text-slate-500 mb-6" data-i18n="select_language_sub">अपनी पसंदीदा भाषा चुनें / Select preferred language to continue</p>
+            
+            <div class="space-y-3 max-w-xs mx-auto landscape:max-w-md landscape:grid landscape:grid-cols-2 landscape:gap-3 landscape:space-y-0">
+              <button type="button" onclick="setLanguage('en')" id="lang-btn-en" class="w-full p-4 rounded-xl border-2 border-blue-600 bg-blue-50/50 flex items-center justify-between font-semibold text-slate-900 shadow-xs transition active:scale-98">
+                <div class="flex items-center space-x-3">
+                  <span class="text-xl">🇬🇧</span>
+                  <span class="text-base font-bold">English</span>
+                </div>
+                <div id="check-icon-en" class="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                </div>
+              </button>
 
-            <button type="button" onclick="setLanguage('hi')" id="lang-btn-hi" class="w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-sm transition active:scale-98">
-              <div class="flex items-center space-x-3">
-                <span class="text-xl">🇮🇳</span>
-                <span class="text-base font-bold">हिन्दी (Hindi)</span>
-              </div>
-              <div id="check-icon-hi" class="w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold">
-              </div>
+              <button type="button" onclick="setLanguage('hi')" id="lang-btn-hi" class="w-full p-4 rounded-xl border-2 border-slate-200 bg-white flex items-center justify-between font-semibold text-slate-900 shadow-xs transition active:scale-98">
+                <div class="flex items-center space-x-3">
+                  <span class="text-xl">🇮🇳</span>
+                  <span class="text-base font-bold">हिन्दी (Hindi)</span>
+                </div>
+                <div id="check-icon-hi" class="w-6 h-6 rounded-full border-2 border-slate-300 bg-white flex items-center justify-center text-xs font-bold">
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button onclick="navigateTo('onboarding-2')" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+              <span data-i18n="continue_btn">Continue</span>
+              <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </button>
           </div>
-        </div>
-
-        <div class="pt-6">
-          <button onclick="navigateTo('onboarding-2')" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
-            <span data-i18n="continue_btn">Continue</span>
-            <i data-lucide="arrow-right" class="w-4 h-4"></i>
-          </button>
         </div>
       </div>
 
-      <!-- PAGE 2: MOBILE REGISTRATION & OTP -->
+            <!-- PAGE 2: MOBILE REGISTRATION & OTP -->
       <div id="screen-onboarding-2" class="app-screen flex-1 p-4 sm:p-6 flex flex-col justify-center items-center overflow-y-auto hidden">
         <div class="w-full max-w-md my-auto bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 space-y-5 landscape:p-5 landscape:space-y-3">
           <div>
@@ -743,12 +745,14 @@
         </div>
       </div>
 
-      id="screen-onboarding-6" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
+      <div id="screen-onboarding-6" class="app-screen flex-1 p-6 flex flex-col justify-between hidden">
         <div>
-          <div class="mb-5">
-            <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="payout_title">Bank / UPI Settlement</h2>
-            <p class="text-xs text-slate-500 leading-relaxed" data-i18n="runner_payout_sub">Direct per-delivery payouts credited daily to your registered account</p>
+          <div class="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
+            <span class="px-2 py-0.5 bg-blue-100 rounded" data-i18n="step_6_badge">Step 6 of 7</span>
+            <span data-i18n="payout_settlement_sub">Payout Settlement</span>
           </div>
+          <h2 class="text-2xl font-bold text-slate-900 mb-1" data-i18n="payout_title">Bank / UPI Settlement</h2>
+          <p class="text-sm text-slate-500 mb-5" data-i18n="payout_sub">Daily 100% delivery fees and tips credited directly to your registered account</p>
 
           <!-- Toggle: Tab 1 (UPI ID) vs Tab 2 (Bank Account) -->
           <div class="flex p-1 bg-slate-200 rounded-xl mb-5 border border-slate-200">
@@ -772,16 +776,35 @@
           <!-- Tab 1: UPI Details Form -->
           <div id="form-upi-payout" class="space-y-4">
             <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">
+                Account Holder Name <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="upi-holder-name" oninput="validatePayoutForm('upi')" placeholder="Full name registered with UPI" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-semibold text-xs focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+            </div>
+
+            <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="upi_id_label">
                 Virtual Payment Address (UPI ID) <span class="text-rose-500">*</span>
               </label>
-              <input type="text" autocomplete="off" id="upi-vpa" placeholder="e.g. name@bank or 9876543210@paytm" value="sonukumar@paytm" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
-              <span class="text-[11px] text-slate-500 mt-1 block">Supported: Google Pay, PhonePe, Paytm, BHIM, Cred</span>
+              <input type="text" autocomplete="off" id="upi-vpa" oninput="validatePayoutForm('upi')" placeholder="e.g. name@bank or 9876543210@paytm" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <p id="upi-vpa-feedback" class="text-[10px] mt-1 font-semibold hidden"></p>
+              <span class="text-[11px] text-slate-500 mt-1 block" data-i18n="upi_supported_apps">Supported: Google Pay, PhonePe, Paytm, BHIM, Cred</span>
+            </div>
+
+            <!-- Truthful Review Notice -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-800">
+                <i data-lucide="shield-check" class="w-4 h-4 text-blue-600"></i>
+                <span>Payout Verification Status</span>
+              </div>
+              <p class="text-[11px] text-slate-500 leading-relaxed">
+                Submitted payout details will be reviewed and verified by Super Admin prior to settlement disbursement.
+              </p>
             </div>
 
             <div class="pt-2">
-              <button id="btn-save-submit-upi" onclick="submitPayoutDetails('upi')" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
-                <span data-i18n="save_submit_btn">Save & Submit</span>
+              <button id="btn-save-submit-upi" onclick="submitPayoutDetails('upi')" disabled class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+                <span data-i18n="save_submit_btn">Save & Submit Payout Details</span>
                 <i data-lucide="check-circle" class="w-4 h-4"></i>
               </button>
             </div>
@@ -790,17 +813,25 @@
           <!-- Tab 2: Bank Details Form -->
           <div id="form-bank-payout" class="space-y-4 hidden">
             <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">
+                Account Holder Name (As per Bank) <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="bank-holder-name" oninput="validatePayoutForm('bank')" placeholder="Full name as registered with bank" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-bold text-xs tracking-wider focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+            </div>
+
+            <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="acc_num_label">
                 Account Number <span class="text-rose-500">*</span>
               </label>
-              <input type="text" inputmode="numeric" autocomplete="off" id="bank-acc-no" value="30200889912345" placeholder="Enter bank account number" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <input type="text" inputmode="numeric" autocomplete="off" id="bank-acc-no" oninput="handleAccountInput()" placeholder="Enter bank account number (9-18 digits)" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <p id="bank-acc-feedback" class="text-[10px] mt-1 font-semibold hidden"></p>
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="reenter_acc_num_label">
-                Re-enter Account Number <span class="text-rose-500">*</span>
+                Confirm Bank Account Number <span class="text-rose-500">*</span>
               </label>
-              <input type="text" inputmode="numeric" autocomplete="off" id="bank-acc-no-confirm" value="30200889912345" oninput="checkAccountMatch()" placeholder="Re-enter to verify account number" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <input type="text" inputmode="numeric" autocomplete="off" id="bank-acc-no-confirm" oninput="checkAccountMatch()" placeholder="Re-enter to verify account number" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono text-xs font-semibold focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
               <p id="acc-match-msg" class="text-[10px] mt-1 font-semibold hidden"></p>
             </div>
 
@@ -808,13 +839,28 @@
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="ifsc_label">
                 IFSC Code <span class="text-rose-500">*</span>
               </label>
-              <input type="text" autocomplete="off" id="bank-ifsc" value="SBIN0004567" maxlength="11" oninput="this.value = this.value.toUpperCase()" placeholder="e.g. SBIN0001234 or HDFC0001234" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-bold text-xs tracking-wider focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
-              <p class="text-[10px] text-slate-400 mt-1">11-character code on your cheque book or passbook (5th character is 0)</p>
+              <input type="text" autocomplete="off" id="bank-ifsc" maxlength="11" oninput="handleIfscInput(this.value)" placeholder="e.g. SBIN0001234 or HDFC0001234" class="w-full px-3.5 py-3 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono uppercase font-bold text-xs tracking-wider focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none shadow-xs">
+              <!-- Dynamic Bank Branch Resolver Display -->
+              <div id="ifsc-branch-display" class="mt-1.5 p-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs hidden">
+                <span class="font-bold text-slate-800" id="resolved-bank-name"></span>
+                <span id="resolved-bank-badge" class="text-[10px] font-bold px-1.5 py-0.5 rounded"></span>
+              </div>
+            </div>
+
+            <!-- Truthful Review Notice -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-800">
+                <i data-lucide="shield-check" class="w-4 h-4 text-blue-600"></i>
+                <span>Bank Account Verification</span>
+              </div>
+              <p class="text-[11px] text-slate-500 leading-relaxed">
+                Submitted bank account details will be reviewed and verified by Super Admin prior to settlement disbursement.
+              </p>
             </div>
 
             <div class="pt-2">
-              <button id="btn-save-submit-bank" onclick="submitPayoutDetails('bank')" class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
-                <span data-i18n="save_submit_btn">Save & Submit</span>
+              <button id="btn-save-submit-bank" onclick="submitPayoutDetails('bank')" disabled class="w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-xs shadow-md active:scale-98 transition flex items-center justify-center space-x-2">
+                <span data-i18n="save_submit_btn">Save & Submit Payout Details</span>
                 <i data-lucide="check-circle" class="w-4 h-4"></i>
               </button>
             </div>
@@ -822,7 +868,7 @@
         </div>
 
         <div class="pt-4 text-center">
-          <p class="text-[11px] text-slate-400">Powered by Razorpay Payouts • 100% Encrypted & Bank Regulated</p>
+          <p class="text-[11px] text-slate-400">100% Encrypted & Bank Regulated Payout Channel</p>
         </div>
       </div>
 
@@ -853,17 +899,13 @@
             </div>
             <div class="flex justify-between items-center text-xs pt-1 border-t border-slate-100">
               <div>
-                <span class="text-slate-700 font-bold block" data-i18n="penny_drop_status_label">₹1 Penny Drop Verification:</span>
-                <span class="text-[10px] text-slate-400" data-i18n="penny_drop_desc">Razorpay Fund Account Validation</span>
+                <span class="text-slate-700 font-bold block">Payout Settlement Account:</span>
+                <span class="text-[10px] text-slate-400">Direct Bank / UPI Settlement</span>
               </div>
-              <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center space-x-1" id="runner-penny-drop-badge">
-                <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
-                <span data-i18n="processing_status">PROCESSING</span>
+              <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-amber-50 text-amber-800 border border-amber-200 flex items-center space-x-1" id="runner-payout-status-badge">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                <span>SUBMITTED (Pending Review)</span>
               </span>
-            </div>
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-500 font-medium" data-i18n="est_review_label">Estimated Review:</span>
-              <span class="font-semibold text-blue-700" data-i18n="review_time_val">~ 2 to 4 Hours</span>
             </div>
           </div>
 
@@ -1357,15 +1399,87 @@
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
           <span class="text-xs font-bold text-slate-800 uppercase tracking-wide" data-i18n="support_header">Help & Operations</span>
 
-          <!-- Partner FAQ Card: 0% Commission & 3% Online Bank Settlement Fee -->
-          <div class="p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 text-left space-y-1.5">
-            <div class="flex items-start space-x-2 text-emerald-950 font-bold text-xs">
-              <span class="text-emerald-600 font-extrabold text-sm">Q:</span>
-              <span>Why is there a 3% deduction on my online orders? / ऑनलाइन ऑर्डर पर 3% की कटौती क्यों होती है?</span>
+          <!-- Partner FAQ Section: 5-Point Operational Guidelines & Delivery Payout Explanation -->
+          <div class="rounded-xl border border-blue-200 overflow-hidden bg-white text-left shadow-2xs">
+            <div class="p-3 bg-blue-50/80 border-b border-blue-100 flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="help-circle" class="w-4 h-4 text-blue-700"></i>
+                <span class="text-xs font-bold text-blue-950" data-i18n="faq_runner_header">Delivery Partner Guidelines & Operations FAQ</span>
+              </div>
+              <span class="text-[9px] font-extrabold text-blue-800 bg-white px-2 py-0.5 rounded-full border border-blue-200">5 Points</span>
             </div>
-            <div class="text-[11px] text-slate-700 leading-relaxed pl-5 space-y-1">
-              <p><strong>Apna GaonBazaar charges 0% platform commission.</strong> The 3% deduction is strictly a mandatory <em>"Online Gateway & Bank Settlement Fee"</em>. This covers the RBI-regulated payment gateway processing costs, 18% GST on digital transactions, and the automated IMPS bank transfer fee to your account.</p>
-              <p class="text-emerald-800 font-medium">✓ If an order is Cash on Delivery (COD) or Doorstep Admin QR, there are zero digital banking fees, so you receive exactly 100% of your earnings with no deductions.</p>
+
+            <div class="divide-y divide-slate-100 text-xs">
+              <!-- Point 1: Delivery Radius & Cluster Geofencing -->
+              <details class="group p-2.5">
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-slate-800 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-blue-600 font-extrabold">1.</span>
+                    <span data-i18n="faq_r1_q">What are the delivery radius & cluster geofencing rules?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-600 leading-relaxed pl-4 bg-slate-50/60 p-2 rounded-lg border border-slate-100" data-i18n="faq_r1_a">
+                  Gaon Mitra operates within an 8km geofenced village cluster. Missions are assigned close to your base village to ensure 15–30 minute doorsteps while keeping bike fuel expenditure low.
+                </div>
+              </details>
+
+              <!-- Point 2: Handling Unreachable Customers -->
+              <details class="group p-2.5">
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-slate-800 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-blue-600 font-extrabold">2.</span>
+                    <span data-i18n="faq_r2_q">How should I handle unreachable customers at the doorstep?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-600 leading-relaxed pl-4 bg-slate-50/60 p-2 rounded-lg border border-slate-100" data-i18n="faq_r2_a">
+                  If a customer is unreachable, attempt at least 3 phone calls within 5 minutes. If still unavailable, notify your Hub Manager in the app. Never complete delivery without the customer's 4-digit handover OTP.
+                </div>
+              </details>
+
+              <!-- Point 3: Daily COD Cash Deposit at Rural Hub -->
+              <details class="group p-2.5">
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-slate-800 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-blue-600 font-extrabold">3.</span>
+                    <span data-i18n="faq_r3_q">How and when do I deposit daily COD cash at the rural hub?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-600 leading-relaxed pl-4 bg-slate-50/60 p-2 rounded-lg border border-slate-100" data-i18n="faq_r3_a">
+                  All cash collected from Cash on Delivery (COD) orders must be deposited at the Muzaffarpur rural operations hub at the end of each evening shift. The Hub Manager will instantly reconcile your cash collection.
+                </div>
+              </details>
+
+              <!-- Point 4: Weekly Delivery Payout Schedule -->
+              <details class="group p-2.5">
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-slate-800 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-blue-600 font-extrabold">4.</span>
+                    <span data-i18n="faq_r4_q">What is the weekly delivery payout schedule?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-600 leading-relaxed pl-4 bg-slate-50/60 p-2 rounded-lg border border-slate-100" data-i18n="faq_r4_a">
+                  Delivery fees and completed order bonuses are settled directly to your verified bank account or UPI ID every Friday night. You can review all completed trip earnings in real-time in your Earnings tab.
+                </div>
+              </details>
+
+              <!-- Point 5 (Mandatory Online Deduction Explanation) -->
+              <!-- Point 5: 100% Delivery Payout with 0% Platform Deduction -->
+              <details class="group p-2.5 bg-blue-50/40" open>
+                <summary class="flex justify-between items-center cursor-pointer font-bold text-blue-950 text-[11px] select-none list-none">
+                  <span class="flex items-center space-x-1.5">
+                    <span class="text-blue-600 font-extrabold">5.</span>
+                    <span data-i18n="faq_r5_q">What is the platform deduction on my delivery earnings?</span>
+                  </span>
+                  <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-blue-600 group-open:rotate-180 transition-transform"></i>
+                </summary>
+                <div class="mt-2 text-[10.5px] text-slate-700 leading-relaxed pl-4 bg-white p-2.5 rounded-lg border border-blue-200/80 shadow-2xs" data-i18n="faq_r5_a">
+                  0% platform deduction. You receive 100% of your calculated distance-based delivery fee share on every trip, with zero extra deductions on both Online and Cash on Delivery (COD) orders.
+                </div>
+              </details>
             </div>
           </div>
           
@@ -1832,6 +1946,17 @@
     // ---------------------------------------------------------------------------
     const i18n = {
       en: {
+        faq_runner_header: "Delivery Partner Guidelines & Operations FAQ",
+        faq_r1_q: "What are the delivery radius & cluster geofencing rules?",
+        faq_r1_a: "Gaon Mitra operates within an 8km geofenced village cluster. Missions are assigned close to your base village to ensure 15–30 minute doorsteps while keeping bike fuel expenditure low.",
+        faq_r2_q: "How should I handle unreachable customers at the doorstep?",
+        faq_r2_a: "If a customer is unreachable, attempt at least 3 phone calls within 5 minutes. If still unavailable, notify your Hub Manager in the app. Never complete delivery without the customer's 4-digit handover OTP.",
+        faq_r3_q: "How and when do I deposit daily COD cash at the rural hub?",
+        faq_r3_a: "All cash collected from Cash on Delivery (COD) orders must be deposited at the Muzaffarpur rural operations hub at the end of each evening shift. The Hub Manager will instantly reconcile your cash collection.",
+        faq_r4_q: "What is the weekly delivery payout schedule?",
+        faq_r4_a: "Delivery fees and completed order bonuses are settled directly to your verified bank account or UPI ID every Friday night. You can review all completed trip earnings in real-time in your Earnings tab.",
+        faq_r5_q: "What is the platform deduction on my delivery earnings?",
+        faq_r5_a: "0% platform deduction. You receive 100% of your calculated distance-based delivery fee share on every trip, with zero extra deductions on both Online and Cash on Delivery (COD) orders.",
                 id_verification_title: "Identity Verification",
         id_verification_sub: "Choose any one government ID to verify your identity instantly",
         pan_card_tab: "PAN Card",
@@ -2035,6 +2160,17 @@
         cancel_btn: "Cancel",
       },
       hi: {
+        faq_runner_header: "डिलीवरी पार्टनर दिशानिर्देश एवं अक्सर पूछे जाने वाले प्रश्न",
+        faq_r1_q: "डिलीवरी दायरा और क्लस्टर जियोफेंसिंग नियम क्या हैं?",
+        faq_r1_a: "गाँव मित्र 8 किमी के जियोफेंस्ड ग्रामीण क्लस्टर के भीतर काम करते हैं। 15-30 मिनट में डिलीवरी सुनिश्चित करने और बाइक पेट्रोल खर्च को कम रखने के लिए आपके आधार गाँव के करीब के मिशन सौंपे जाते हैं।",
+        faq_r2_q: "ग्राहक के न मिलने पर क्या प्रक्रिया अपनानी चाहिए?",
+        faq_r2_a: "यदि ग्राहक फोन नहीं उठाता है, तो 5 मिनट के भीतर कम से कम 3 बार कॉल करने का प्रयास करें। यदि फिर भी संपर्क न हो, तो ऐप में हब मैनेजर को सूचित करें। ग्राहक के 4-अंकीय ओटीपी (OTP) के बिना डिलीवरी कभी पूर्ण न करें।",
+        faq_r3_q: "दैनिक सीओडी (COD) नकद ग्रामीण हब पर कब और कैसे जमा करना है?",
+        faq_r3_a: "कैश ऑन डिलीवरी (COD) ऑर्डरों से एकत्र की गई पूरी नकद राशि हर शाम शिफ्ट खत्म होने पर मुजफ्फरपुर ग्रामीण हब पर जमा की जानी चाहिए। हब मैनेजर तुरंत आपके नकद संग्रह का समाधान करेंगे।",
+        faq_r4_q: "साप्ताहिक डिलीवरी भुगतान अनुसूची क्या है?",
+        faq_r4_a: "डिलीवरी शुल्क और पूर्ण ऑर्डर प्रोत्साहन राशि हर शुक्रवार की रात सीधे आपके सत्यापित बैंक खाते या यूपीआई आईडी में स्थानांतरित की जाती है। आप अपनी कमाई टैब में सभी पूरी की गई यात्राओं को देख सकते हैं।",
+        faq_r5_q: "ऑनलाइन ऑर्डर पर मेरा डिलीवरी भुगतान थोड़ा कम क्यों होता है?",
+        faq_r5_a: "ऑनलाइन भुगतान के लिए, रेज़रपे (Razorpay) जैसे बैकएंड प्रोसेसर इलेक्ट्रॉनिक ट्रांसफर को प्रोसेस करने के लिए एक मानक शुल्क लेते हैं। कैश ऑन डिलीवरी (COD) डिलीवरी में यह ऑनलाइन शुल्क नहीं होता है।",
                 id_verification_title: "पहचान सत्यापन",
         id_verification_sub: "तुरंत पहचान सत्यापित करने के लिए कोई एक सरकारी पहचान पत्र चुनें",
         pan_card_tab: "पैन कार्ड",
@@ -3359,6 +3495,146 @@
       }
     }
 
+    
+    // =========================================================================
+    // RUNNER AADHAAR OTP COUNTDOWN TIMER & BANK VERIFICATION HELPERS
+    // =========================================================================
+    var aadhaarTimerInterval = null;
+
+    function startAadhaarTimer() {
+      clearInterval(aadhaarTimerInterval);
+      var timeLeft = 30;
+      var timerEl = document.getElementById('aadhaar-resend-timer');
+      var resendBtn = document.getElementById('btn-resend-aadhaar-otp');
+      if (resendBtn) resendBtn.disabled = true;
+
+      aadhaarTimerInterval = setInterval(function() {
+        timeLeft--;
+        if (timerEl) {
+          timerEl.innerText = "00:" + (timeLeft < 10 ? "0" + timeLeft : timeLeft);
+        }
+        if (timeLeft <= 0) {
+          clearInterval(aadhaarTimerInterval);
+          if (resendBtn) resendBtn.disabled = false;
+          if (timerEl) timerEl.innerText = "00:00";
+        }
+      }, 1000);
+    }
+
+    function resendAadhaarOtp() {
+      toastSuccess(currentLang === 'hi' ? "Aadhaar OTP पुनः भेजा गया!" : "Aadhaar OTP resent successfully!");
+      startAadhaarTimer();
+    }
+    window.resendAadhaarOtp = resendAadhaarOtp;
+
+    // Global Payout Setup State
+    window.payoutState = {
+      isIfscValid: false,
+      resolvedBank: '',
+      resolvedBranch: '',
+      ifscCache: {}
+    };
+
+    let ifscDebounceTimer = null;
+    function handleIfscInput(raw) {
+      const el = document.getElementById('bank-ifsc');
+      if (el) {
+        el.value = raw.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11);
+      }
+      const code = el ? el.value : '';
+      if (ifscDebounceTimer) clearTimeout(ifscDebounceTimer);
+      if (code.length === 11) {
+        ifscDebounceTimer = setTimeout(() => {
+          resolveIfscBranch(code);
+        }, 250);
+      } else {
+        const display = document.getElementById('ifsc-branch-display');
+        if (display) display.classList.add('hidden');
+        window.payoutState.isIfscValid = false;
+        validatePayoutForm('bank');
+      }
+    }
+    window.handleIfscInput = handleIfscInput;
+
+    async function resolveIfscBranch(ifsc) {
+      const code = (ifsc || '').trim().toUpperCase();
+      const display = document.getElementById('ifsc-branch-display');
+      const nameEl = document.getElementById('resolved-bank-name');
+      const badgeEl = document.getElementById('resolved-bank-badge');
+      if (!display || !nameEl || !badgeEl) return;
+
+      if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(code)) {
+        display.classList.remove('hidden');
+        display.className = "mt-1.5 p-2 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between text-xs text-rose-800";
+        nameEl.innerText = "Invalid IFSC format (5th character must be '0')";
+        badgeEl.className = "text-[10px] font-bold px-1.5 py-0.5 bg-rose-100 rounded text-rose-700";
+        badgeEl.innerText = "Invalid ✕";
+        window.payoutState.isIfscValid = false;
+        validatePayoutForm('bank');
+        return;
+      }
+
+      // Check cache
+      if (window.payoutState.ifscCache[code]) {
+        applyResolvedIfsc(window.payoutState.ifscCache[code]);
+        return;
+      }
+
+      display.classList.remove('hidden');
+      display.className = "mt-1.5 p-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs text-slate-700";
+      nameEl.innerText = "Checking IFSC with bank directory...";
+      badgeEl.className = "text-[10px] font-bold px-1.5 py-0.5 bg-slate-200 rounded text-slate-700 animate-pulse";
+      badgeEl.innerText = "Searching...";
+
+      try {
+        let resp = await fetch(`/api/lookup-ifsc?ifsc=${encodeURIComponent(code)}`);
+        if (!resp.ok) {
+          resp = await fetch(`https://ifsc.razorpay.com/${encodeURIComponent(code)}`);
+        }
+        if (resp.ok) {
+          const data = await resp.json();
+          const bankName = data.bank_name || data.BANK || "Recognized Bank";
+          const branchName = data.branch_name || data.BRANCH || data.CITY || "";
+          const resolvedObj = {
+            valid: true,
+            bank_name: bankName,
+            branch_name: branchName,
+            ifsc: code
+          };
+          window.payoutState.ifscCache[code] = resolvedObj;
+          applyResolvedIfsc(resolvedObj);
+        } else {
+          throw new Error("IFSC not found");
+        }
+      } catch (e) {
+        display.classList.remove('hidden');
+        display.className = "mt-1.5 p-2 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between text-xs text-rose-800";
+        nameEl.innerText = "IFSC code not found in bank directory";
+        badgeEl.className = "text-[10px] font-bold px-1.5 py-0.5 bg-rose-100 rounded text-rose-700";
+        badgeEl.innerText = "Not Found ✕";
+        window.payoutState.isIfscValid = false;
+        validatePayoutForm('bank');
+      }
+    }
+    window.resolveIfscBranch = resolveIfscBranch;
+
+    function applyResolvedIfsc(data) {
+      const display = document.getElementById('ifsc-branch-display');
+      const nameEl = document.getElementById('resolved-bank-name');
+      const badgeEl = document.getElementById('resolved-bank-badge');
+      if (!display || !nameEl || !badgeEl) return;
+
+      display.classList.remove('hidden');
+      display.className = "mt-1.5 p-2 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs text-blue-800";
+      nameEl.innerText = `${data.bank_name} — ${data.branch_name}`;
+      badgeEl.className = "text-[10px] font-bold px-1.5 py-0.5 bg-blue-100 rounded text-blue-700";
+      badgeEl.innerText = "Verified Directory ✓";
+      window.payoutState.isIfscValid = true;
+      window.payoutState.resolvedBank = data.bank_name;
+      window.payoutState.resolvedBranch = data.branch_name;
+      validatePayoutForm('bank');
+    }
+
     // =========================================================================
     // HIGH-ACCURACY DUAL-ENGINE UIDAI SECURE QR CODE SCANNER (jsQR + Html5Qrcode)
     // =========================================================================
@@ -3991,9 +4267,13 @@
       const userId = (state.userProfile && state.userProfile.phone) || localStorage.getItem('gb_user_phone') || 'usr_party';
 
       try {
+        const token = localStorage.getItem('gb_runner_token') || localStorage.getItem('gb_auth_token') || localStorage.getItem('token') || '';
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
         const verifyRes = await fetch('/api/verify-aadhaar-qr', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers,
+          credentials: 'include',
           body: JSON.stringify({
             qr_data: clean,
             user_id: userId,
@@ -5490,7 +5770,6 @@
     }
 
 // PAGE 6: BANK / UPI PAYOUT SETUP & SUBMISSION
-    // ---------------------------------------------------------------------------
     function switchPayoutMode(mode) {
       state.payoutMode = mode;
       hidePayoutError();
@@ -5504,37 +5783,121 @@
         upiBtn.className = "flex-1 py-2.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5";
         bankForm.classList.remove('hidden');
         upiForm.classList.add('hidden');
+        validatePayoutForm('bank');
         document.getElementById('bank-acc-no')?.focus();
       } else {
         upiBtn.className = "flex-1 py-2.5 rounded-lg text-xs font-bold transition bg-white text-slate-900 shadow-xs flex items-center justify-center space-x-1.5";
         bankBtn.className = "flex-1 py-2.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1.5";
         upiForm.classList.remove('hidden');
         bankForm.classList.add('hidden');
+        validatePayoutForm('upi');
         document.getElementById('upi-vpa')?.focus();
       }
       lucide.createIcons();
     }
 
+    function handleAccountInput() {
+      const el = document.getElementById('bank-acc-no');
+      const feedback = document.getElementById('bank-acc-feedback');
+      if (!el) return;
+      el.value = el.value.replace(/\D/g, '');
+      const val = el.value;
+      if (feedback) {
+        if (!val) {
+          feedback.classList.add('hidden');
+        } else if (val.length < 9) {
+          feedback.classList.remove('hidden');
+          feedback.className = "text-[10px] mt-1 font-medium text-rose-600";
+          feedback.innerText = "✕ Minimum 9 digits required (Current: " + val.length + ")";
+        } else if (val.length > 18) {
+          feedback.classList.remove('hidden');
+          feedback.className = "text-[10px] mt-1 font-medium text-rose-600";
+          feedback.innerText = "✕ Maximum 18 digits allowed";
+        } else {
+          feedback.classList.remove('hidden');
+          feedback.className = "text-[10px] mt-1 font-bold text-blue-600";
+          feedback.innerText = "✓ Valid account number length (" + val.length + " digits)";
+        }
+      }
+      checkAccountMatch();
+      validatePayoutForm('bank');
+    }
+    window.handleAccountInput = handleAccountInput;
+
     function checkAccountMatch() {
       const acc = (document.getElementById('bank-acc-no')?.value || '').trim();
-      const confirm = (document.getElementById('bank-acc-no-confirm')?.value || '').trim();
+      const confirmEl = document.getElementById('bank-acc-no-confirm');
+      if (confirmEl) confirmEl.value = confirmEl.value.replace(/\D/g, '');
+      const confirm = (confirmEl?.value || '').trim();
       const msg = document.getElementById('acc-match-msg');
       if (!msg) return;
 
       if (!confirm) {
         msg.classList.add('hidden');
-        return;
-      }
-
-      msg.classList.remove('hidden');
-      if (acc === confirm) {
-        msg.className = "text-[10px] mt-1 font-bold text-emerald-600";
+      } else if (acc === confirm && acc.length >= 9 && acc.length <= 18) {
+        msg.classList.remove('hidden');
+        msg.className = "text-[10px] mt-1 font-bold text-blue-600";
         msg.innerText = "✓ Account numbers match";
       } else {
+        msg.classList.remove('hidden');
         msg.className = "text-[10px] mt-1 font-medium text-rose-600";
         msg.innerText = "✕ Account numbers do not match";
       }
+      validatePayoutForm('bank');
     }
+    window.checkAccountMatch = checkAccountMatch;
+
+    function validatePayoutForm(mode) {
+      if (mode === 'upi') {
+        const vpaEl = document.getElementById('upi-vpa');
+        const vpaFeedback = document.getElementById('upi-vpa-feedback');
+        const holderEl = document.getElementById('upi-holder-name');
+        const btn = document.getElementById('btn-save-submit-upi');
+
+        const vpa = (vpaEl?.value || '').trim();
+        const holder = (holderEl?.value || '').trim();
+        const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+
+        let isVpaValid = false;
+        if (vpaFeedback) {
+          if (!vpa) {
+            vpaFeedback.classList.add('hidden');
+          } else if (upiRegex.test(vpa)) {
+            vpaFeedback.classList.remove('hidden');
+            vpaFeedback.className = "text-[10px] mt-1 font-bold text-blue-600";
+            vpaFeedback.innerText = "✓ Valid UPI ID syntax";
+            isVpaValid = true;
+          } else {
+            vpaFeedback.classList.remove('hidden');
+            vpaFeedback.className = "text-[10px] mt-1 font-medium text-rose-600";
+            vpaFeedback.innerText = "✕ Invalid UPI ID format (e.g. name@bank)";
+          }
+        } else {
+          isVpaValid = upiRegex.test(vpa);
+        }
+
+        const isHolderValid = holder.length >= 2;
+        if (btn) {
+          btn.disabled = !(isVpaValid && isHolderValid);
+        }
+      } else {
+        const acc = (document.getElementById('bank-acc-no')?.value || '').trim();
+        const confirm = (document.getElementById('bank-acc-no-confirm')?.value || '').trim();
+        const holder = (document.getElementById('bank-holder-name')?.value || '').trim();
+        const ifsc = (document.getElementById('bank-ifsc')?.value || '').trim().toUpperCase();
+        const btn = document.getElementById('btn-save-submit-bank');
+
+        const isAccValid = /^\d{9,18}$/.test(acc);
+        const isConfirmValid = acc === confirm && confirm.length >= 9;
+        const isHolderValid = holder.length >= 2;
+        const isIfscValid = window.payoutState.isIfscValid && /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc);
+
+        if (btn) {
+          btn.disabled = !(isAccValid && isConfirmValid && isHolderValid && isIfscValid);
+        }
+      }
+    }
+    window.validatePayoutForm = validatePayoutForm;
 
     function showPayoutError(text) {
       const banner = document.getElementById('payout-error-banner');
@@ -5558,18 +5921,26 @@
 
       if (mode === 'upi') {
         const vpa = (document.getElementById('upi-vpa')?.value || '').trim().toLowerCase();
-        if (!vpa || !vpa.includes('@') || vpa.length < 5) {
+        const holder = (document.getElementById('upi-holder-name')?.value || '').trim();
+        if (!vpa || !/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(vpa)) {
           showPayoutError(currentLang === 'hi' ? "कृपया वैध UPI ID दर्ज करें (उदा. name@bank)" : "Please enter a valid UPI ID (e.g. name@bank)");
           document.getElementById('upi-vpa')?.focus();
           return;
         }
+        if (!holder || holder.length < 2) {
+          showPayoutError(currentLang === 'hi' ? "कृपया खाताधारक का नाम दर्ज करें" : "Please enter account holder name");
+          document.getElementById('upi-holder-name')?.focus();
+          return;
+        }
         payload.upi_id = vpa;
+        payload.account_holder_name = holder;
       } else {
         const acc = (document.getElementById('bank-acc-no')?.value || '').trim();
         const confirm = (document.getElementById('bank-acc-no-confirm')?.value || '').trim();
         const ifsc = (document.getElementById('bank-ifsc')?.value || '').trim().toUpperCase();
+        const holder = (document.getElementById('bank-holder-name')?.value || '').trim();
 
-        if (!acc || acc.length < 9 || acc.length > 18 || !/^\d+$/.test(acc)) {
+        if (!acc || !/^\d{9,18}$/.test(acc)) {
           showPayoutError(currentLang === 'hi' ? "कृपया वैध बैंक खाता संख्या दर्ज करें (9-18 अंक)" : "Please enter a valid Bank Account Number (9 to 18 digits)");
           document.getElementById('bank-acc-no')?.focus();
           return;
@@ -5579,66 +5950,74 @@
           document.getElementById('bank-acc-no-confirm')?.focus();
           return;
         }
-        if (!ifsc || ifsc.length !== 11 || ifsc[4] !== '0') {
-          showPayoutError(currentLang === 'hi' ? "कृपया 11-अक्षरों का मान्य IFSC कोड दर्ज करें (उदा. SBIN0004567)" : "Please enter a valid 11-character IFSC Code (e.g. SBIN0004567)");
+        if (!ifsc || !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) {
+          showPayoutError(currentLang === 'hi' ? "कृपया 11-अक्षरों का मान्य IFSC कोड दर्ज करें (उदा. SBIN0001234)" : "Please enter a valid 11-character IFSC Code");
           document.getElementById('bank-ifsc')?.focus();
           return;
         }
+        if (!holder || holder.length < 2) {
+          showPayoutError(currentLang === 'hi' ? "कृपया खाताधारक का नाम दर्ज करें" : "Please enter account holder name");
+          document.getElementById('bank-holder-name')?.focus();
+          return;
+        }
         payload.account_number = acc;
+        payload.confirm_account_number = confirm;
         payload.ifsc_code = ifsc;
-        payload.account_holder_name = state.userProfile.name || 'Sonu Kumar Verma';
+        payload.account_holder_name = holder;
+        payload.bank_name = window.payoutState.resolvedBank || null;
+        payload.branch_name = window.payoutState.resolvedBranch || null;
       }
 
       const btnId = mode === 'upi' ? 'btn-save-submit-upi' : 'btn-save-submit-bank';
       const btn = document.getElementById(btnId);
       const originalHtml = btn ? btn.innerHTML : '';
       if (btn) {
-        btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? '₹1 जमा के साथ आपके खाते का सत्यापन हो रहा है...' : 'Verifying your account with a ₹1 deposit...'}`;
+        btn.innerHTML = `<span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span> ${currentLang === 'hi' ? 'पेआउट विवरण सहेजा जा रहा है...' : 'Saving payout account details...'}`;
         btn.disabled = true;
       }
 
-      // Execute penny drop and payout setup
-      (async () => {
+      try {
+        let savedSuccessfully = false;
+        // 1. Post to dedicated Serverless endpoint /api/save-payout
         try {
-          // 1. ₹1 Penny Drop Verification API
-          const pennyReq = {
-            account_holder_name: state.userProfile.name || 'Sonu Kumar Verma',
-            account_number: mode === 'bank' ? payload.account_number : null,
-            ifsc_code: mode === 'bank' ? payload.ifsc_code : null,
-            upi_id: mode === 'upi' ? payload.upi_id : null
-          };
+          const resp = await fetch('/api/save-payout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (resp.ok) savedSuccessfully = true;
+        } catch (apiErr) {
+          console.warn("Serverless save-payout call warning:", apiErr);
+        }
 
-          try {
-            await apiRequest('/api/v1/payments/verify-penny-drop', 'POST', pennyReq);
-          } catch (pErr) {
-            console.warn("Penny drop verification endpoint note:", pErr);
-          }
+        // 2. Secondary sync to backend FastAPI /api/v1/payments/payout-setup
+        try {
+          await apiRequest('/api/v1/payments/payout-setup', 'POST', payload);
+          savedSuccessfully = true;
+        } catch (beErr) {
+          console.warn("Backend payout-setup call notice:", beErr);
+        }
 
-          // 2. Razorpay Payout Setup
-          try {
-            await apiRequest('/api/v1/payments/payout-setup', 'POST', payload);
-          } catch (beErr) {
-            console.warn("Backend payout-setup call notice:", beErr);
-          }
+        // 3. Direct Supabase status sync
+        try {
+          const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
+          const supabaseKey = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
+          const cleanPhone = (state.userProfile?.phone || localStorage.getItem('gb_user_phone') || '').replace(/\D/g, '').slice(-10);
+          
+          if (cleanPhone) {
+            await fetch(`${supabaseUrl}/rest/v1/users?phone=eq.${cleanPhone}`, {
+              method: 'PATCH',
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ status: 'pending_admin_approval' })
+            });
 
-          // 3. Direct Supabase status sync to 'pending_admin_approval'
-          try {
-            const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
-            const supabaseKey = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
-            const cleanPhone = (state.userProfile.phone || localStorage.getItem('gb_user_phone') || '').replace(/\D/g, '').slice(-10);
-            
-            if (cleanPhone) {
-              await fetch(`${supabaseUrl}/rest/v1/users?phone=eq.${cleanPhone}`, {
-                method: 'PATCH',
-                headers: {
-                  'apikey': supabaseKey,
-                  'Authorization': `Bearer ${supabaseKey}`,
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ status: 'pending_admin_approval' })
-              });
-
-              await fetch(`${supabaseUrl}/rest/v1/runners?phone=eq.${cleanPhone}`, {
+            const runnerName = payload.account_holder_name || state.userProfile?.name;
+            if (runnerName) {
+              await fetch(`${supabaseUrl}/rest/v1/runners?full_name=eq.${encodeURIComponent(runnerName)}`, {
                 method: 'PATCH',
                 headers: {
                   'apikey': supabaseKey,
@@ -5647,42 +6026,46 @@
                 },
                 body: JSON.stringify({
                   payout_mode: mode,
-                  payout_target: mode === 'upi' ? payload.upi_id : `${payload.account_number}@${payload.ifsc_code}`,
+                  upi_id: mode === 'upi' ? payload.upi_id : `A/C:${payload.account_number.slice(-4)}:${payload.ifsc_code}`,
                   status: 'pending_admin_approval'
                 })
               });
             }
-          } catch (supaErr) {
-            console.warn("Supabase approval update notice:", supaErr);
           }
-
-          // 4. Save to localStorage
-          localStorage.setItem('gb_payout_verified', 'true');
-          localStorage.setItem('gb_payout_mode', mode);
-          localStorage.setItem('gb_payout_penny_drop', 'SUCCESS');
-          if (mode === 'upi') localStorage.setItem('gb_payout_upi', payload.upi_id);
-          if (mode === 'bank') {
-            localStorage.setItem('gb_payout_account', payload.account_number);
-            localStorage.setItem('gb_payout_ifsc', payload.ifsc_code);
-          }
-
-          toastSuccess(currentLang === 'hi' ? "₹1 जमा सत्यापन सफल! विवरण समीक्षाधीन है।" : "₹1 Penny drop verified! Details submitted for review.");
-          navigateTo('onboarding-7');
-        } catch (finalErr) {
-          console.error("Payout submission error:", finalErr);
-          showPayoutError(currentLang === 'hi' ? "सत्यापन विफल। कृपया अपना विवरण पुनः जांचें।" : "Verification failed. Please check your details.");
-        } finally {
-          if (btn) {
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
-            lucide.createIcons();
-          }
+        } catch (supaErr) {
+          console.warn("Supabase approval update notice:", supaErr);
         }
-      })();
+
+        // 4. Save to localStorage
+        localStorage.setItem('gb_payout_submitted', 'true');
+        localStorage.setItem('gb_payout_mode', mode);
+        localStorage.setItem('gb_payout_status', 'PENDING_VERIFICATION');
+        localStorage.removeItem('gb_payout_penny_drop');
+
+        if (mode === 'upi') {
+          localStorage.setItem('gb_payout_upi', payload.upi_id);
+          localStorage.setItem('gb_payout_holder', payload.account_holder_name);
+        }
+        if (mode === 'bank') {
+          localStorage.setItem('gb_payout_account', payload.account_number);
+          localStorage.setItem('gb_payout_ifsc', payload.ifsc_code);
+          localStorage.setItem('gb_payout_holder', payload.account_holder_name);
+          if (payload.bank_name) localStorage.setItem('gb_payout_bank', payload.bank_name);
+        }
+
+        toastSuccess(currentLang === 'hi' ? "पेआउट विवरण सफलतापूर्वक जमा कर दिया गया! समीक्षाधीन है।" : "Payout details submitted successfully for admin review.");
+        navigateTo('onboarding-7');
+      } catch (finalErr) {
+        console.error("Payout submission error:", finalErr);
+        showPayoutError(currentLang === 'hi' ? "विवरण सहेजने में विफल। कृपया पुनः प्रयास करें।" : "Failed to save payout details. Please try again.");
+      } finally {
+        if (btn) {
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+        }
+      }
     }
 
-    // ---------------------------------------------------------------------------
-    // PAGE 7: UNDER REVIEW & DEMO APPROVAL
     // ---------------------------------------------------------------------------
     function simulateAdminApprovalAndOpenDashboard() {
       toastSuccess("Super Admin Approval Granted! Opening Live Runner Hub...");
