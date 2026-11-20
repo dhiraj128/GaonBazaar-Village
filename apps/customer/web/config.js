@@ -9,7 +9,7 @@
 
   window.APP_CONFIG = {
     // Maximum delivery coverage radius from pilot fulfillment hub (in kilometers)
-    MAX_DELIVERY_RADIUS_KM: env.MAX_DELIVERY_RADIUS_KM || 8.0,
+    MAX_DELIVERY_RADIUS_KM: env.MAX_DELIVERY_RADIUS_KM || 9.0,
 
     // Central pilot fulfillment hub coordinates (Muzaffarpur, Bihar)
     HUB_LATITUDE: env.HUB_LATITUDE || 26.2315,

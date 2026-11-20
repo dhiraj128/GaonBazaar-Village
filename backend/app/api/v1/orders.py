@@ -62,7 +62,7 @@ async def sync_cart(data: CartSyncRequest, db: AsyncSession = Depends(get_db)):
     
     warning = None
     if not is_serv:
-        warning = f"Delivery address is {distance_km} km away, exceeding maximum 8.0 km policy."
+        warning = f"Delivery address is {distance_km} km away, exceeding maximum 9.0 km policy."
         
     return CartPriceBreakdown(
         subtotal=totals["subtotal"],
@@ -96,12 +96,12 @@ async def create_order(
     if not address:
         raise HTTPException(status_code=404, detail="Delivery address not found")
         
-    # Check 8.0 km distance limit
+    # Check 9.0 km distance limit
     is_serv, dist_km = is_within_service_radius(store.latitude, store.longitude, address.latitude, address.longitude)
-    if not is_serv:
+    if not is_serv or dist_km > 9.0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Store is {dist_km} km away. Maximum allowed delivery radius is 8.0 km."
+            detail="Out of delivery area. We currently deliver within 9 km of the store."
         )
         
     # Calculate prices and items
@@ -609,6 +609,14 @@ async def list_runner_jobs(
     for oid in order_ids:
         resp = await _format_order_response(oid, db, current_user_id=user_id, role="runner")
         if resp:
+            # Enforce 9.0 km dispatch radius for unassigned jobs broadcast
+            if runner and resp.runner_id is None and runner.current_latitude is not None and runner.current_longitude is not None:
+                s_res = await db.execute(select(Store).where(Store.id == resp.store_id))
+                st = s_res.scalars().first()
+                if st and st.latitude is not None and st.longitude is not None:
+                    dist_to_store = calculate_haversine_distance(st.latitude, st.longitude, runner.current_latitude, runner.current_longitude)
+                    if dist_to_store > 9.0:
+                        continue
             out.append(resp)
     return out
 
@@ -963,6 +971,18 @@ async def runner_job_action(
     now = datetime.now(timezone.utc)
     
     if act == "ACCEPT":
+        # Enforce 9.0 km dispatch radius for runner job acceptance
+        if not is_admin and runner and runner.current_latitude is not None and runner.current_longitude is not None:
+            s_res = await db.execute(select(Store).where(Store.id == order.store_id))
+            st = s_res.scalars().first()
+            if st and st.latitude is not None and st.longitude is not None:
+                dist_to_store = calculate_haversine_distance(st.latitude, st.longitude, runner.current_latitude, runner.current_longitude)
+                if dist_to_store > 9.0:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Out of dispatch radius. Runner must be within 9 km of the store to accept this order."
+                    )
+
         # Atomic conditional update to prevent concurrent claiming race conditions
         from sqlalchemy import update
         target_runner_id = runner.id if runner else None
@@ -1132,7 +1152,7 @@ async def _format_order_response(
             if order.delivery_address else "Minapur, Muzaffarpur"
         )
     
-    runner_base = getattr(order, "runner_payout", None) or max(0.0, (order.delivery_fee or 0.0) - 3.0)
+    runner_base = getattr(order, "runner_payout", None) if getattr(order, "runner_payout", None) is not None else round((order.delivery_fee or 0.0) * 0.80, 2)
     payout_val = round(runner_base, 2)
 
     return OrderResponse(
@@ -1173,6 +1193,9 @@ async def _format_order_response(
         payment_status=order.payment_status,
         payment_order_id=getattr(order, "payment_order_id", None),
         transaction_id=getattr(order, "transaction_id", None),
+        refund_status=getattr(order, "refund_status", None),
+        refund_amount=getattr(order, "refund_amount", None),
+        razorpay_refund_id=getattr(order, "razorpay_refund_id", None),
         delivery_otp=exposed_otp,
         runner_payout=payout_val,
         placed_at=order.placed_at,

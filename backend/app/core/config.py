@@ -136,7 +136,7 @@ class Settings(BaseSettings):
         return clean_and_normalize_database_url(url, is_async=False)
     
     # Rural Hyperlocal Configuration
-    MAX_DELIVERY_RADIUS_KM: float = 8.0
+    MAX_DELIVERY_RADIUS_KM: float = 9.0
     BASE_DELIVERY_FEE: float = 15.0
     PER_KM_DELIVERY_FEE: float = 5.0
     PLATFORM_FEE: float = 3.0 # Strict ₹3 platform fee

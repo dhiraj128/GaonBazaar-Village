@@ -1850,6 +1850,9 @@ async def get_settlements_ledger(
     platform_checkout_fee_total = 0.0
 
     for o in delivered_orders:
+        if o.payment_status == "REFUNDED" or o.refund_status == "PROCESSED" or o.status == "CANCELLED":
+            continue
+
         total_customer_collected += (o.total_amount or 0.0)
         p_fee = o.platform_fee if o.platform_fee is not None else settings.PLATFORM_FEE
         platform_checkout_fee_total += p_fee
@@ -1920,11 +1923,11 @@ async def get_settlements_ledger(
                     "bank_account": r_ac,
                     "ifsc": r_ifsc
                 }
-            # Runner receives 100% of calculated distance-based delivery share, 0% cut
-            r_base = getattr(o, "runner_payout", None) or max(0.0, (o.delivery_fee or 0.0) - 3.0)
+            # Runner receives 100% of calculated distance-based delivery share (exact 80%), 0% cut
+            r_base = o.runner_payout if o.runner_payout is not None else round((o.delivery_fee or 0.0) * 0.80, 2)
             net_r_payout = round(r_base, 2)
 
-            # Platform delivery share is remaining delivery fee
+            # Platform delivery share is remaining delivery fee (exact 20%)
             p_deliv_share = max(0.0, round((o.delivery_fee or 0.0) - r_base, 2))
             platform_delivery_share_total += p_deliv_share
 
@@ -2113,6 +2116,8 @@ async def export_vendor_payouts_csv(
 
     vendor_totals: Dict[str, Dict[str, Any]] = {}
     for o in delivered:
+        if o.payment_status == "REFUNDED" or o.refund_status == "PROCESSED" or o.status == "CANCELLED":
+            continue
         if o.store_id:
             s_name = o.store.shop_name if o.store else "Store"
             b_ac = "NOT_CONFIGURED"
@@ -2171,6 +2176,8 @@ async def export_runner_payouts_csv(
 
     runner_totals: Dict[str, Dict[str, Any]] = {}
     for o in delivered:
+        if o.payment_status == "REFUNDED" or o.refund_status == "PROCESSED" or o.status == "CANCELLED":
+            continue
         if o.runner_id:
             r_name = o.runner.full_name if o.runner else "Runner"
             r_ac = "NOT_CONFIGURED"
@@ -2187,7 +2194,7 @@ async def export_runner_payouts_csv(
                     "ifsc": r_ifsc,
                     "amount": 0.0
                 }
-            r_base = max(0.0, (o.delivery_fee or 0.0) - 3.0)
+            r_base = o.runner_payout if o.runner_payout is not None else round((o.delivery_fee or 0.0) * 0.80, 2)
             net = round(r_base, 2)
             runner_totals[o.runner_id]["amount"] += net
 
@@ -2230,6 +2237,9 @@ async def process_weekly_batch_settlement(
     batch_id = f"BATCH_SETTLE_{int(now.timestamp())}"
 
     for o in delivered:
+        if o.payment_status == "REFUNDED" or o.refund_status == "PROCESSED" or o.status == "CANCELLED":
+            continue
+
         if o.store_id and o.store:
             is_verified = False
             if o.store.bank_account_info:
@@ -2266,7 +2276,7 @@ async def process_weekly_batch_settlement(
                         "amount": 0.0,
                         "deliveries_count": 0
                     }
-                r_base = max(0.0, (o.delivery_fee or 0.0) - 3.0)
+                r_base = o.runner_payout if o.runner_payout is not None else round((o.delivery_fee or 0.0) * 0.80, 2)
                 r_net = round(r_base, 2)
                 runner_payouts[o.runner_id]["amount"] += r_net
                 runner_payouts[o.runner_id]["deliveries_count"] += 1

@@ -104,13 +104,15 @@ async def test_sec_04_cross_user_kyc_hijack_prevention(db_session):
     import secrets
     user_a_id = f"usr_a_{secrets.token_hex(4)}"
     user_b_id = f"usr_b_{secrets.token_hex(4)}"
+    phone_a = f"98{secrets.randbelow(89999999) + 10000000}"
+    phone_b = f"98{secrets.randbelow(89999999) + 10000000}"
 
-    user_a = User(id=user_a_id, phone="9876540001", name="User A", role="vendor", is_active=True)
-    user_b = User(id=user_b_id, phone="9876540002", name="User B", role="vendor", is_active=True)
+    user_a = User(id=user_a_id, phone=phone_a, name="User A", role="vendor", is_active=True)
+    user_b = User(id=user_b_id, phone=phone_b, name="User B", role="vendor", is_active=True)
     db_session.add_all([user_a, user_b])
     await db_session.commit()
 
-    token_a = create_access_token({"sub": user_a_id, "phone": "9876540001", "role": "vendor"})
+    token_a = create_access_token({"sub": user_a_id, "phone": phone_a, "role": "vendor"})
 
     qr_payload, _ = create_synthetic_signed_qr(name="User B Impersonation")
 
@@ -137,9 +139,11 @@ async def test_sec_05_admin_authorized_to_update_kyc(db_session):
     import secrets
     vendor_id = f"usr_v_{secrets.token_hex(4)}"
     admin_id = f"usr_adm_{secrets.token_hex(4)}"
+    phone_v = f"98{secrets.randbelow(89999999) + 10000000}"
+    phone_adm = f"98{secrets.randbelow(89999999) + 10000000}"
 
-    vendor = User(id=vendor_id, phone="9876540003", name="Vendor Ram", role="vendor", is_active=True)
-    admin = User(id=admin_id, phone="9876540004", name="Super Admin", role="super_admin", is_active=True)
+    vendor = User(id=vendor_id, phone=phone_v, name="Vendor Ram", role="vendor", is_active=True)
+    admin = User(id=admin_id, phone=phone_adm, name="Super Admin", role="super_admin", is_active=True)
     db_session.add_all([vendor, admin])
     await db_session.commit()
 

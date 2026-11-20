@@ -42,6 +42,8 @@
   <!-- Toastify Notifications -->
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <!-- Razorpay Official Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <!-- Leaflet Map CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <!-- Google Maps JavaScript API (Rural Hybrid Satellite View) -->
@@ -7586,7 +7588,7 @@ function createProductCardElement(p) {
     function checkServiceability(lat, lng) {
       const maxRadiusKm = (window.APP_CONFIG && typeof window.APP_CONFIG.MAX_DELIVERY_RADIUS_KM === 'number') 
         ? window.APP_CONFIG.MAX_DELIVERY_RADIUS_KM 
-        : 8.0;
+        : 9.0;
       const HUB_LAT = (window.APP_CONFIG && window.APP_CONFIG.HUB_LATITUDE) || 26.2315;
       const HUB_LNG = (window.APP_CONFIG && window.APP_CONFIG.HUB_LONGITUDE) || 85.3610;
 
@@ -7618,8 +7620,8 @@ function createProductCardElement(p) {
           cartBanner.classList.remove('hidden');
           const cartMsg = document.getElementById('cart-service-unreachable-msg');
           if (cartMsg) cartMsg.innerText = currentLang === 'hi' 
-            ? "इस स्थान पर वर्तमान में सेवा उपलब्ध नहीं है।" 
-            : "Service is currently unavailable in this location.";
+            ? "डिलीवरी क्षेत्र से बाहर। हम वर्तमान में स्टोर के 9 किमी के भीतर डिलीवरी करते हैं।" 
+            : "Out of delivery area. We currently deliver within 9 km of the store.";
         }
         if (btnPlace) {
           btnPlace.disabled = true;
@@ -7828,7 +7830,7 @@ function createProductCardElement(p) {
           badgeEl.innerText = "Serviceable (Delivery ₹20)";
           confirmBtn.disabled = false;
           confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
-        } else if (distKm <= 5.0) {
+        } else if (distKm <= 6.0) {
           badgeEl.className = "block w-full text-center text-[10px] font-extrabold px-2 py-1 rounded-lg bg-emerald-100 text-emerald-800";
           badgeEl.innerText = "Serviceable (Delivery ₹25)";
           confirmBtn.disabled = false;
@@ -7838,9 +7840,14 @@ function createProductCardElement(p) {
           badgeEl.innerText = "Extended Zone (Delivery ₹35)";
           confirmBtn.disabled = false;
           confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
+        } else if (distKm <= 9.0) {
+          badgeEl.className = "block w-full text-center text-[10px] font-extrabold px-2 py-1 rounded-lg bg-amber-100 text-amber-800";
+          badgeEl.innerText = "Extended Zone (Delivery ₹40)";
+          confirmBtn.disabled = false;
+          confirmBtn.classList.remove('opacity-50', 'pointer-events-none');
         } else {
           badgeEl.className = "block w-full text-center text-[10px] font-extrabold px-2 py-1 rounded-lg bg-rose-100 text-rose-800";
-          badgeEl.innerText = "Delivery is not available at this location yet.";
+          badgeEl.innerText = "Out of delivery area. We currently deliver within 9 km of the store.";
           confirmBtn.disabled = true;
           confirmBtn.classList.add('opacity-50', 'pointer-events-none');
         }
@@ -9056,19 +9063,69 @@ function createProductCardElement(p) {
           const placedOrder = await executeOrderPlacementWithMethod('ONLINE');
           const orderIdToVerify = (placedOrder && placedOrder.id) || ('ord_' + Date.now().toString(36));
 
-          // Register UPI intent with backend
-          try {
-            await apiRequest('/api/v1/payments/verify-upi', 'POST', {
-              order_id: orderIdToVerify,
-              upi_app: selectedUpiAppChoice || 'upi',
-              amount: grandTotal
-            });
-          } catch (initErr) {
-            console.warn("UPI init notice:", initErr);
+          let openedRazorpay = false;
+          if (window.Razorpay && placedOrder && placedOrder.id) {
+            try {
+              const rzpData = await apiRequest('/api/v1/payments/create-order', 'POST', { order_id: placedOrder.id });
+              if (rzpData && rzpData.key_id && (rzpData.razorpay_order_id || rzpData.id)) {
+                openedRazorpay = true;
+                const rzpOrderId = rzpData.razorpay_order_id || rzpData.id;
+                const options = {
+                  key: rzpData.key_id,
+                  amount: rzpData.amount,
+                  currency: rzpData.currency || "INR",
+                  name: "Apna GaonBazaar",
+                  description: "Order #" + placedOrder.id.slice(-6),
+                  order_id: rzpOrderId,
+                  prefill: {
+                    contact: localStorage.getItem('gb_customer_phone') || ''
+                  },
+                  theme: {
+                    color: "#059669"
+                  },
+                  handler: async function (response) {
+                    try {
+                      await apiRequest('/api/v1/payments/verify', 'POST', {
+                        order_id: placedOrder.id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                      });
+                      toastSuccess(currentLang === 'hi' ? "ऑनलाइन भुगतान सफल! आपका ऑर्डर कन्फर्म हो गया।" : "Payment Successful! Order Confirmed.");
+                      switchTab('orders');
+                      syncActiveOrderUI();
+                    } catch (vErr) {
+                      toastError(vErr.message || "Payment verification failed");
+                    }
+                  },
+                  modal: {
+                    ondismiss: function() {
+                      // Fallback to Direct UPI modal if dismissed
+                      openUpiVerificationModal(placedOrder.id, grandTotal, selectedUpiAppChoice || 'gpay');
+                    }
+                  }
+                };
+                const rzp = new window.Razorpay(options);
+                rzp.open();
+              }
+            } catch (rzpErr) {
+              console.warn("Razorpay live checkout fallback:", rzpErr);
+            }
           }
 
-          // Open Direct UPI Verification & Dynamic QR Modal
-          openUpiVerificationModal(orderIdToVerify, grandTotal, selectedUpiAppChoice || 'gpay');
+          if (!openedRazorpay) {
+            // Direct Native UPI Intent & Dynamic QR Modal Fallback
+            try {
+              await apiRequest('/api/v1/payments/verify-upi', 'POST', {
+                order_id: orderIdToVerify,
+                upi_app: selectedUpiAppChoice || 'upi',
+                amount: grandTotal
+              });
+            } catch (initErr) {
+              console.warn("UPI init notice:", initErr);
+            }
+            openUpiVerificationModal(orderIdToVerify, grandTotal, selectedUpiAppChoice || 'gpay');
+          }
         } finally {
           if (btn) {
             btn.innerHTML = originalHtml;

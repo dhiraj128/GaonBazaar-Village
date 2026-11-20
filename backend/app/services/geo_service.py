@@ -60,7 +60,7 @@ def calculate_haversine_distance(lat1: float, lon1: float, lat2: float, lon2: fl
 
 def is_within_service_radius(store_lat: float, store_lon: float, customer_lat: float, customer_lon: float) -> Tuple[bool, float]:
     """
-    Strictly verifies if distance is <= 8.0 km.
+    Strictly verifies if distance is <= 9.0 km.
     Returns (is_serviceable, distance_km).
     """
     dist = calculate_haversine_distance(store_lat, store_lon, customer_lat, customer_lon)

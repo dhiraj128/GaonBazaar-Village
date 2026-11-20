@@ -47,40 +47,43 @@ def test_markup_validation_vendor_price_exceeds_mrp():
 
 def test_delivery_fee_tiers_and_split_untouched():
     # PART 1 check: Distance delivery tiers with exact 80% Runner / 20% Platform split
-    # Tier 1: 0 - 1.0 km -> 15.0 (Runner 12.0 [80%], Platform 3.0 [20%])
+    # Tier 1: 0.0 - 2.0 km -> 15.0 (Runner 12.0 [80%], Platform 3.0 [20%])
     assert calculate_delivery_fee(0.5) == 15.0
     assert calculate_runner_payout(0.5) == 12.0
     assert calculate_platform_delivery_share(0.5) == 3.0
+    assert calculate_delivery_fee(1.8) == 15.0
+    assert calculate_runner_payout(1.8) == 12.0
+    assert calculate_platform_delivery_share(1.8) == 3.0
 
-    # Tier 2: 1.0 - 2.0 km -> 20.0 (Runner 16.0 [80%], Platform 4.0 [20%])
-    assert calculate_delivery_fee(1.5) == 20.0
-    assert calculate_runner_payout(1.5) == 16.0
-    assert calculate_platform_delivery_share(1.5) == 4.0
+    # Tier 2: > 2.0 - 4.0 km -> 20.0 (Runner 16.0 [80%], Platform 4.0 [20%])
+    assert calculate_delivery_fee(2.5) == 20.0
+    assert calculate_runner_payout(2.5) == 16.0
+    assert calculate_platform_delivery_share(2.5) == 4.0
 
-    # Tier 3: 2.0 - 4.0 km -> 25.0 (Runner 20.0 [80%], Platform 5.0 [20%])
-    assert calculate_delivery_fee(3.0) == 25.0
-    assert calculate_runner_payout(3.0) == 20.0
-    assert calculate_platform_delivery_share(3.0) == 5.0
+    # Tier 3: > 4.0 - 6.0 km -> 25.0 (Runner 20.0 [80%], Platform 5.0 [20%])
+    assert calculate_delivery_fee(5.0) == 25.0
+    assert calculate_runner_payout(5.0) == 20.0
+    assert calculate_platform_delivery_share(5.0) == 5.0
 
-    # Tier 4: 4.0 - 6.0 km -> 30.0 (Runner 24.0 [80%], Platform 6.0 [20%])
-    assert calculate_delivery_fee(5.0) == 30.0
-    assert calculate_runner_payout(5.0) == 24.0
-    assert calculate_platform_delivery_share(5.0) == 6.0
+    # Tier 4: > 6.0 - 8.0 km -> 35.0 (Runner 28.0 [80%], Platform 7.0 [20%])
+    assert calculate_delivery_fee(7.5) == 35.0
+    assert calculate_runner_payout(7.5) == 28.0
+    assert calculate_platform_delivery_share(7.5) == 7.0
 
-    # Tier 5: 6.0 - 8.0 km -> 40.0 (Runner 32.0 [80%], Platform 8.0 [20%])
-    assert calculate_delivery_fee(7.5) == 40.0
-    assert calculate_runner_payout(7.5) == 32.0
-    assert calculate_platform_delivery_share(7.5) == 8.0
+    # Tier 5: > 8.0 - 9.0 km -> 40.0 (Runner 32.0 [80%], Platform 8.0 [20%])
+    assert calculate_delivery_fee(8.5) == 40.0
+    assert calculate_runner_payout(8.5) == 32.0
+    assert calculate_platform_delivery_share(8.5) == 8.0
 
     # Fixed platform checkout fee is untouched at 3.0
     assert ACTIVE_PRICING_POLICY["platform_fee"] == 3.0
 
-    # Order totals calculation check
+    # Order totals calculation check (distance 2.5 km -> Tier 2: ₹20.0 delivery fee)
     totals = calculate_order_totals(subtotal=200.0, distance_km=2.5)
     assert totals["subtotal"] == 200.0
-    assert totals["delivery_fee"] == 25.0
+    assert totals["delivery_fee"] == 20.0
     assert totals["platform_fee"] == 3.0
-    assert totals["total_amount"] == 228.0
+    assert totals["total_amount"] == 223.0
 
 def test_settlement_ledger_net_platform_profit_formula():
     # Test formula: Net Profit = sum(item_margin * qty) + platform_delivery_share + platform_checkout_fee

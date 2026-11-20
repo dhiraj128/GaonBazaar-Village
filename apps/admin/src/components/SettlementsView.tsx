@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CircleDollarSign, Store, Bike, CheckCircle, Download, Send, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { CircleDollarSign, Store, Bike, CheckCircle, Download, Send, AlertTriangle, ShieldCheck, RotateCcw, X } from 'lucide-react';
 import type { SettlementLedger } from '../types';
 
 interface SettlementsViewProps {
@@ -16,6 +16,15 @@ export const SettlementsView: React.FC<SettlementsViewProps> = ({ ledger }) => {
     message: string;
   } | null>(null);
   const [batchError, setBatchError] = useState<string | null>(null);
+
+  // Refund Modal State
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [refundOrderId, setRefundOrderId] = useState('');
+  const [refundAmount, setRefundAmount] = useState('');
+  const [refundReason, setRefundReason] = useState('Customer settlement refund');
+  const [isRefunding, setIsRefunding] = useState(false);
+  const [refundSuccessMsg, setRefundSuccessMsg] = useState<string | null>(null);
+  const [refundErrorMsg, setRefundErrorMsg] = useState<string | null>(null);
 
   if (!ledger) {
     return <div className="p-8 text-center text-slate-500">Loading settlements ledger...</div>;
@@ -51,6 +60,44 @@ export const SettlementsView: React.FC<SettlementsViewProps> = ({ ledger }) => {
     }
   };
 
+  const handleIssueRefund = async () => {
+    if (!refundOrderId.trim()) {
+      setRefundErrorMsg('Please enter an Order ID');
+      return;
+    }
+    setIsRefunding(true);
+    setRefundErrorMsg(null);
+    setRefundSuccessMsg(null);
+    const token = localStorage.getItem('token') || localStorage.getItem('access_token');
+    try {
+      const res = await fetch('/api/v1/payments/refund', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify({
+          order_id: refundOrderId.trim(),
+          amount: refundAmount ? parseFloat(refundAmount) : null,
+          refund_amount: refundAmount ? parseFloat(refundAmount) : null,
+          reason: refundReason.trim()
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.id) {
+        setRefundSuccessMsg(`Refund of ₹${data.amount.toFixed(2)} processed successfully! Reference: ${data.gateway_refund_id || data.id}. Order is excluded from settlements.`);
+        setRefundOrderId('');
+        setRefundAmount('');
+      } else {
+        setRefundErrorMsg(data.detail || data.message || 'Refund processing failed');
+      }
+    } catch {
+      setRefundErrorMsg('Network error while processing refund');
+    } finally {
+      setIsRefunding(false);
+    }
+  };
+
   const downloadVendorCsv = () => {
     window.open('/api/v1/admin/settlements/payouts/vendor-csv', '_blank');
   };
@@ -75,6 +122,18 @@ export const SettlementsView: React.FC<SettlementsViewProps> = ({ ledger }) => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <button
+            onClick={() => {
+              setShowRefundModal(true);
+              setRefundErrorMsg(null);
+              setRefundSuccessMsg(null);
+            }}
+            className="px-3.5 py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 hover:text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition border border-rose-500/30 active:scale-95"
+            title="Issue Order Refund"
+          >
+            <RotateCcw className="w-4 h-4 text-rose-400" />
+            <span>Issue Refund</span>
+          </button>
           <button
             onClick={downloadVendorCsv}
             className="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition border border-white/20 active:scale-95"
@@ -110,6 +169,108 @@ export const SettlementsView: React.FC<SettlementsViewProps> = ({ ledger }) => {
           </button>
         </div>
       </div>
+
+      {/* Issue Refund Modal */}
+      {showRefundModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center space-x-2 text-rose-600">
+                <RotateCcw className="w-5 h-5" />
+                <h3 className="font-extrabold text-base text-slate-900">Issue Order Refund</h3>
+              </div>
+              <button
+                onClick={() => setShowRefundModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Refunds are processed via Razorpay Gateway for online orders or registered as direct cash disbursement for COD. Refunded orders are automatically excluded from partner settlements.
+            </p>
+
+            {refundSuccessMsg && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-medium">
+                {refundSuccessMsg}
+              </div>
+            )}
+
+            {refundErrorMsg && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 font-medium">
+                {refundErrorMsg}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Order ID *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. ord_abc123"
+                  value={refundOrderId}
+                  onChange={(e) => setRefundOrderId(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Refund Amount (₹) <span className="text-slate-400 font-normal">(Leave empty for Full Refund)</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Full Order Amount"
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Reason</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Item unavailable, Customer cancellation"
+                  value={refundReason}
+                  onChange={(e) => setRefundReason(e.target.value)}
+                  className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowRefundModal(false)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={handleIssueRefund}
+                disabled={isRefunding}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition flex items-center space-x-1.5 shadow-md shadow-rose-600/30 disabled:opacity-50"
+              >
+                {isRefunding ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Confirm & Execute Refund</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Batch Execution Results Notification */}
       {batchResult && (

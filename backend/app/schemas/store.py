@@ -36,6 +36,7 @@ class StoreResponse(BaseModel):
     rating: float
     banner_url: Optional[str]
     distance_km: Optional[float] = None
+    is_serviceable: Optional[bool] = True
 
 class GlobalCatalogResponse(BaseModel):
     id: str

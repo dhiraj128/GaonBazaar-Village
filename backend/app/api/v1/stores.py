@@ -113,7 +113,7 @@ async def onboard_store(
 async def get_nearby_stores(
     latitude: float = Query(...),
     longitude: float = Query(...),
-    radius_km: float = Query(8.0),
+    radius_km: float = Query(9.0),
     db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(Store).where(Store.is_approved == True))
@@ -122,15 +122,15 @@ async def get_nearby_stores(
     nearby = []
     for store in all_stores:
         is_serv, dist = is_within_service_radius(store.latitude, store.longitude, latitude, longitude)
-        if is_serv and dist <= radius_km:
-            nearby.append((store, dist))
+        if dist <= radius_km:
+            nearby.append((store, dist, is_serv and dist <= 9.0))
             
     # Sort by distance
     nearby.sort(key=lambda x: x[1])
     
     # Return formatted list (ensuring top stores have featured flags appropriately set)
     stores_out = []
-    for idx, (st, dist) in enumerate(nearby):
+    for idx, (st, dist, is_serv) in enumerate(nearby):
         stores_out.append(StoreResponse(
             id=st.id,
             owner_id=st.owner_id,
@@ -148,7 +148,8 @@ async def get_nearby_stores(
             is_featured=(idx < 2), # Exactly two featured nearby stores
             rating=st.rating,
             banner_url=st.banner_url,
-            distance_km=dist
+            distance_km=dist,
+            is_serviceable=is_serv
         ))
     return stores_out
 

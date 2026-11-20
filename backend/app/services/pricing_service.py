@@ -1,12 +1,12 @@
 from app.core.config import settings
 from typing import Dict, Any, List
 
-# 5-tier delivery pricing matrix with exact 80% Runner / 20% Platform split
+# 5-tier delivery pricing matrix (up to 9.0 km) with exact 80% Runner / 20% Platform split
 # Rates in INR Rupees and deterministic Integer-Paise
 DEFAULT_PRICING_TIERS = [
     {
         "min_km": 0.0,
-        "max_km": 1.0,
+        "max_km": 2.0,
         "customer_fee": 15.0,
         "customer_fee_paise": 1500,
         "runner_payout": 12.0,
@@ -15,8 +15,8 @@ DEFAULT_PRICING_TIERS = [
         "platform_share_paise": 300,
     },
     {
-        "min_km": 1.0,
-        "max_km": 2.0,
+        "min_km": 2.0,
+        "max_km": 4.0,
         "customer_fee": 20.0,
         "customer_fee_paise": 2000,
         "runner_payout": 16.0,
@@ -25,8 +25,8 @@ DEFAULT_PRICING_TIERS = [
         "platform_share_paise": 400,
     },
     {
-        "min_km": 2.0,
-        "max_km": 4.0,
+        "min_km": 4.0,
+        "max_km": 6.0,
         "customer_fee": 25.0,
         "customer_fee_paise": 2500,
         "runner_payout": 20.0,
@@ -35,18 +35,18 @@ DEFAULT_PRICING_TIERS = [
         "platform_share_paise": 500,
     },
     {
-        "min_km": 4.0,
-        "max_km": 6.0,
-        "customer_fee": 30.0,
-        "customer_fee_paise": 3000,
-        "runner_payout": 24.0,
-        "runner_payout_paise": 2400,
-        "platform_share": 6.0,
-        "platform_share_paise": 600,
-    },
-    {
         "min_km": 6.0,
         "max_km": 8.0,
+        "customer_fee": 35.0,
+        "customer_fee_paise": 3500,
+        "runner_payout": 28.0,
+        "runner_payout_paise": 2800,
+        "platform_share": 7.0,
+        "platform_share_paise": 700,
+    },
+    {
+        "min_km": 8.0,
+        "max_km": 9.0,
         "customer_fee": 40.0,
         "customer_fee_paise": 4000,
         "runner_payout": 32.0,
@@ -58,12 +58,16 @@ DEFAULT_PRICING_TIERS = [
 
 # Configurable in-memory active pricing policy (can be updated via Admin API)
 ACTIVE_PRICING_POLICY = {
-    "version": "v2_rural_5tier",
+    "version": "v3_rural_9km_5tier",
     "platform_fee": 3.0,
     "platform_fee_paise": 300,
-    "max_geofence_km": 8.0,
+    "max_geofence_km": 9.0,
     "tiers": DEFAULT_PRICING_TIERS
 }
+
+def is_distance_deliverable(distance_km: float) -> bool:
+    """Checks whether the distance is strictly within the 9.0 km geofence limit."""
+    return distance_km <= ACTIVE_PRICING_POLICY["max_geofence_km"]
 
 def get_tier_for_distance(distance_km: float) -> Dict[str, Any]:
     """Find the applicable pricing tier for a given distance in km."""

@@ -214,7 +214,26 @@ class Order(Base):
     online_gateway_fee = Column(Float, default=0.0) # 3% on ONLINE, 0 on COD
     payment_order_id = Column(String(100), nullable=True) # Razorpay Order ID
     transaction_id = Column(String(100), nullable=True) # Razorpay Payment ID
+    refund_status = Column(String(30), nullable=True) # PENDING, PROCESSED, FAILED
+    refund_amount = Column(Float, nullable=True)
+    razorpay_refund_id = Column(String(100), nullable=True)
     delivery_otp = Column(String(6), nullable=False) # 4 or 6 digit verification code
+
+    @property
+    def razorpay_order_id(self):
+        return self.payment_order_id
+
+    @razorpay_order_id.setter
+    def razorpay_order_id(self, val):
+        self.payment_order_id = val
+
+    @property
+    def razorpay_payment_id(self):
+        return self.transaction_id
+
+    @razorpay_payment_id.setter
+    def razorpay_payment_id(self, val):
+        self.transaction_id = val
     
     placed_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
     cancel_until = Column(UTCDateTime, nullable=False) # placed_at + 180s strict window
@@ -225,6 +244,11 @@ class Order(Base):
     store = relationship("Store", back_populates="orders")
     runner = relationship("Runner", back_populates="orders")
     delivery_address = relationship("Address")
+    
+    @property
+    def address(self):
+        return self.delivery_address
+
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
     timeline = relationship("OrderTimeline", back_populates="order", cascade="all, delete-orphan")
     messages = relationship("OrderMessage", back_populates="order", cascade="all, delete-orphan")

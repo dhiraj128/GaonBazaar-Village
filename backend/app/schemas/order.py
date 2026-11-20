@@ -80,6 +80,9 @@ class OrderResponse(BaseModel):
     payment_status: str
     payment_order_id: Optional[str] = None
     transaction_id: Optional[str] = None
+    refund_status: Optional[str] = None
+    refund_amount: Optional[float] = None
+    razorpay_refund_id: Optional[str] = None
     delivery_otp: Optional[str] = None
     runner_payout: Optional[float] = None
     placed_at: datetime
