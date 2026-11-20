@@ -19,10 +19,11 @@ class SendOTPRequest(BaseModel):
         return str(v)
 
 class SendOTPResponse(BaseModel):
+    status: Optional[str] = "sent"
     message: str
     session_id: str
     expires_in: int = 300
-    delivery_status: Optional[str] = "delivered"
+    delivery_status: Optional[str] = "dispatched"
     delivery_channel: Optional[str] = "sms"
     mock_otp: Optional[str] = None # For dev/testing environments
 

@@ -96,11 +96,19 @@ async function saveChallengeToSupabase(record: {
         role: record.role,
         attempts: 0,
         is_used: false,
+        used: false,
+        verified: false,
+        delivery_status: 'dispatched',
         expires_at: record.expires_at,
         created_at: new Date().toISOString(),
       }),
     });
-    return res.ok;
+    if (!res.ok) {
+      const errDetail = await res.text().catch(() => '');
+      console.error('[Send OTP] Supabase challenge persistence failed with status:', res.status, errDetail);
+      return false;
+    }
+    return true;
   } catch (err) {
     console.error('[Send OTP] Supabase challenge persistence exception:', err);
     return false;

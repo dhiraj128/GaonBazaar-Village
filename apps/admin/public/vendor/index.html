@@ -3565,112 +3565,65 @@
         return;
       }
 
-      isSendingOtp = true;
       const formattedPhoneNumber = `+91 ${clean.slice(0, 5)} ${clean.slice(5)}`;
       state.userProfile.phone = clean;
 
-      const sendBtn = document.getElementById('send-otp-btn');
-      const sendBtnContent = document.getElementById('send-otp-btn-content');
-      const resendBtn = document.getElementById('resend-otp-btn');
+      // INSTANT OPTIMISTIC TRANSITION: Immediately switch to OTP screen (< 1s, no blocking spinner)
+      const phoneDisplay = document.getElementById('otp-phone-display');
+      if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
 
-      const pleaseWaitText = currentLang === 'hi' ? "कृपया प्रतीक्षा करें" : "Please wait";
-      const spinnerSvg = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>`;
+      document.getElementById('phone-input-section')?.classList.add('hidden');
+      document.getElementById('otp-container')?.classList.remove('hidden');
+      updateAuthHeadings('otp', formattedPhoneNumber);
 
-      if (sendBtn && !isResend) {
-        sendBtn.disabled = true;
-        if (sendBtnContent) {
-          sendBtnContent.innerHTML = `${spinnerSvg}<span>${pleaseWaitText}</span>`;
-        }
-      }
-      if (resendBtn && isResend) {
-        resendBtn.disabled = true;
-        resendBtn.innerHTML = `${spinnerSvg}<span>${pleaseWaitText}</span>`;
+      for (let i = 1; i <= 4; i++) {
+        const b = document.getElementById('otp-' + i);
+        if (b) b.value = '';
       }
 
-      console.log("[Message Central] Dispatching 4-digit SMS OTP to vendor:", formattedPhoneNumber);
-      const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 6000);
+      startResendCooldown(30);
 
-      try {
-        const res = await fetch('/api/send-otp', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            phoneNumber: clean,
-            role: 'vendor'
-          }),
-          signal: abortController.signal
-        });
-        clearTimeout(timeoutId);
+      const otp1 = document.getElementById('otp-1');
+      if (otp1) otp1.focus();
 
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.success) {
-          if (res.status === 429) {
-            throw new Error(data.message || (currentLang === 'hi' ? "कृपया पुनः प्रयास करने से पहले प्रतीक्षा करें।" : "Please wait before requesting another OTP."));
+      isSendingOtp = true;
+      console.log("[Auth] Dispatching 4-digit SMS OTP to vendor:", formattedPhoneNumber);
+
+      // Non-blocking parallel background dispatch
+      (async () => {
+        try {
+          const apiBase = (window.APP_CONFIG && window.APP_CONFIG.BACKEND_URL) || '';
+          let res = await fetch(`${apiBase}/api/v1/auth/otp/send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ phone: clean, role: 'vendor' })
+          }).catch(() => null);
+
+          if (!res || !res.ok) {
+            res = await fetch('/api/send-otp', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+              body: JSON.stringify({ phoneNumber: clean, role: 'vendor' })
+            }).catch(() => null);
           }
-          throw new Error(currentLang === 'hi' ? "कोड नहीं भेजा जा सका। कृपया पुनः प्रयास करें।" : "Couldn't send the code. Please try again.");
-        }
 
-        // Provider accepted the request
-        window.__gb_verification_id = data.verificationId || null;
-
-        if (sendBtn) {
-          sendBtn.disabled = false;
-          if (sendBtnContent) {
-            sendBtnContent.innerHTML = `<span id="send-otp-text" data-i18n="send_otp_btn">${currentLang === 'hi' ? "OTP भेजें" : "Send OTP"}</span><i data-lucide="send" class="w-4 h-4 ml-2"></i>`;
-            if (window.lucide) lucide.createIcons();
+          if (res && res.ok) {
+            const data = await res.json().catch(() => ({}));
+            window.__gb_verification_id = data.verificationId || data.session_id || null;
+          } else if (res) {
+            const data = await res.json().catch(() => ({}));
+            let errMsg = currentLang === 'hi' ? "कोड नहीं भेजा जा सका। कृपया पुनः प्रयास करें।" : "Couldn't send the code. Please try again.";
+            if (res.status === 429) {
+              errMsg = data.message || (currentLang === 'hi' ? "कृपया पुनः प्रयास करने से पहले प्रतीक्षा करें।" : "Please wait before requesting another OTP.");
+            }
+            toastError(errMsg);
           }
+        } catch (err) {
+          console.error("[Vendor Send OTP Background Error]:", err);
+        } finally {
+          isSendingOtp = false;
         }
-        if (resendBtn) {
-          resendBtn.disabled = false;
-          resendBtn.innerText = currentLang === 'hi' ? "पुनः OTP भेजें" : "Resend OTP";
-        }
-
-        const phoneDisplay = document.getElementById('otp-phone-display');
-        if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
-
-        document.getElementById('phone-input-section')?.classList.add('hidden');
-        document.getElementById('otp-container')?.classList.remove('hidden');
-        updateAuthHeadings('otp', formattedPhoneNumber);
-
-        for (let i = 1; i <= 4; i++) {
-          const b = document.getElementById('otp-' + i);
-          if (b) b.value = '';
-        }
-
-        // Resend cooldown starts strictly after provider accepts OTP request
-        startResendCooldown(30);
-
-        const otp1 = document.getElementById('otp-1');
-        if (otp1) otp1.focus();
-      } catch (err) {
-        clearTimeout(timeoutId);
-        console.error("[Message Central Send Error]:", err);
-        if (sendBtn) {
-          sendBtn.disabled = false;
-          if (sendBtnContent) {
-            sendBtnContent.innerHTML = `<span id="send-otp-text" data-i18n="send_otp_btn">${currentLang === 'hi' ? "OTP भेजें" : "Send OTP"}</span><i data-lucide="send" class="w-4 h-4 ml-2"></i>`;
-            if (window.lucide) lucide.createIcons();
-          }
-        }
-        if (resendBtn) {
-          resendBtn.disabled = false;
-          resendBtn.innerText = currentLang === 'hi' ? "पुनः OTP भेजें" : "Resend OTP";
-        }
-
-        let errMsg = currentLang === 'hi' ? "कोड नहीं भेजा जा सका। कृपया पुनः प्रयास करें।" : "Couldn't send the code. Please try again.";
-        if (err.name === 'AbortError' || (err.message && err.message.toLowerCase().includes('connection'))) {
-          errMsg = currentLang === 'hi' ? "कनेक्शन समस्या। कृपया पुनः प्रयास करें।" : "Connection problem. Please try again.";
-        } else if (err.message && (err.message.includes('wait') || err.message.includes('प्रतीक्षा'))) {
-          errMsg = err.message;
-        }
-        toastError(errMsg);
-      } finally {
-        isSendingOtp = false;
-      }
+      })();
     }
 
     async function verifyMobileOTP() {

@@ -13,7 +13,7 @@ def generate_uuid() -> str:
 class UTCDateTime(TypeDecorator):
     """
     Ensures datetime objects are always stored and retrieved timezone-aware (UTC).
-    Prevents 'can't subtract offset-naive and offset-aware datetimes' in asyncpg and SQLite.
+    Compatible with PostgreSQL TIMESTAMPTZ (retaining UTC tzinfo) and SQLite DATETIME (naive UTC).
     """
     impl = DateTime(timezone=True)
     cache_ok = True
@@ -26,9 +26,9 @@ class UTCDateTime(TypeDecorator):
                 utc_dt = value.replace(tzinfo=timezone.utc)
             else:
                 utc_dt = value.astimezone(timezone.utc)
-            # Store naive UTC representation in the database to completely prevent
-            # asyncpg's Cython codec error: "can't subtract offset-naive and offset-aware datetimes"
-            return utc_dt.replace(tzinfo=None)
+            if dialect and dialect.name == "sqlite":
+                return utc_dt.replace(tzinfo=None)
+            return utc_dt
         return value
 
     def process_result_value(self, value, dialect):
@@ -44,12 +44,16 @@ class OtpChallenge(Base):
     __tablename__ = "otp_challenges"
     
     id = Column(String(36), primary_key=True, default=generate_uuid)
-    phone = Column(String(15), index=True, nullable=False)
+    phone = Column(String(20), index=True, nullable=False)
     session_id = Column(String(100), unique=True, index=True, nullable=False)
     otp_hash = Column(String(128), nullable=False)
+    code = Column(String(20), nullable=True)
     role = Column(String(20), nullable=False, default="customer")
     attempts = Column(Integer, default=0)
     is_used = Column(Boolean, default=False)
+    used = Column(Boolean, default=False)
+    verified = Column(Boolean, default=False)
+    delivery_status = Column(String(50), default="delivered")
     expires_at = Column(UTCDateTime, nullable=False)
     created_at = Column(UTCDateTime, default=lambda: datetime.now(timezone.utc))
 

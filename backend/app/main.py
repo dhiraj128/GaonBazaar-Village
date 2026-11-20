@@ -157,6 +157,23 @@ async def init_db_and_seed():
     except Exception as exc:
         logger.debug("Schema migration notice (runners.last_location_updated_at): %s", exc)
 
+    # 3b. Ensure otp_challenges table and all its columns exist
+    otp_cols = [
+        ("code", "VARCHAR(20)"),
+        ("used", "BOOLEAN DEFAULT FALSE"),
+        ("verified", "BOOLEAN DEFAULT FALSE"),
+        ("delivery_status", "VARCHAR(50) DEFAULT 'delivered'"),
+    ]
+    for col_name, col_type in otp_cols:
+        try:
+            async with async_engine.begin() as conn:
+                if async_engine.dialect.name == "sqlite":
+                    await conn.execute(text(f"ALTER TABLE otp_challenges ADD COLUMN {col_name} {col_type};"))
+                else:
+                    await conn.execute(text(f"ALTER TABLE otp_challenges ADD COLUMN IF NOT EXISTS {col_name} {col_type};"))
+        except Exception as exc:
+            logger.debug("Schema migration notice (otp_challenges.%s): %s", col_name, exc)
+
     # 4. Update verified product image URLs in existing database rows
     url_updates = [
         ("cat_mustard_oil", "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"),

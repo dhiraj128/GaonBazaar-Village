@@ -1,11 +1,14 @@
 import hashlib
 import secrets
+import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends, HTTPException, Header, status
+from fastapi import APIRouter, Depends, HTTPException, Header, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+logger = logging.getLogger("gaonbazaar.auth")
 
 from app.core.config import settings
 from app.db.session import get_db
@@ -59,6 +62,7 @@ OTP_STORAGE = {}
 @router.post("/send-otp", response_model=SendOTPResponse)
 async def send_otp(
     payload: SendOTPRequest,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
     clean_phone = normalize_indian_phone(payload.phone)
@@ -91,19 +95,31 @@ async def send_otp(
     expires_at = now + timedelta(seconds=300)
     otp_hashed = hash_otp(otp_code)
 
-    # 3. Store persistent challenge in database
+    # 3. Store persistent challenge in database immediately
     challenge = OtpChallenge(
         phone=clean_phone,
         session_id=session_id,
         otp_hash=otp_hashed,
+        code=otp_code if is_non_prod else None,
         role=payload.role,
         attempts=0,
         is_used=False,
+        used=False,
+        verified=False,
+        delivery_status="dispatched",
         expires_at=expires_at,
         created_at=now
     )
     db.add(challenge)
-    await db.commit()
+    try:
+        await db.commit()
+    except Exception as exc:
+        logger.exception(f"[Send OTP] Failed to persist verification challenge for +91{clean_phone} to database: {exc}")
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to persist verification challenge in database: {str(exc)}"
+        )
 
     # 4. Update in-memory OTP_STORAGE for test compatibility and low-latency cache
     OTP_STORAGE[clean_phone] = {
@@ -115,21 +131,23 @@ async def send_otp(
         "last_sent_at": now_ts
     }
 
-    # 5. Dispatch SMS via configured provider (2Factor.in transactional OTP)
-    if is_non_prod and clean_phone == "9999999999":
-        delivery_status = "delivered"
-    else:
-        sms_res = await send_sms_otp(clean_phone, otp_code, payload.role)
-        if isinstance(sms_res, dict) and sms_res.get("status") in ("failed", "error"):
-            err_msg = sms_res.get("error") or sms_res.get("message") or "SMS OTP delivery failed"
-            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=err_msg)
-        delivery_status = sms_res.get("status", "delivered")
+    # 5. Dispatch SMS asynchronously via FastAPI BackgroundTasks (< 200 ms instant API response)
+    async def _async_dispatch_sms_otp(phone_num: str, code: str, user_role: str):
+        try:
+            res = await send_sms_otp(phone_num, code, user_role)
+            logger.info(f"[SMS Background Task] 2Factor.in delivery status for +91{phone_num}: {res.get('status')}")
+        except Exception as exc:
+            logger.error(f"[SMS Background Task] Failed delivering 2Factor.in OTP to +91{phone_num}: {exc}")
+
+    if not (is_non_prod and clean_phone == "9999999999"):
+        background_tasks.add_task(_async_dispatch_sms_otp, clean_phone, otp_code, payload.role)
 
     return SendOTPResponse(
+        status="sent",
         message=f"OTP challenge issued to +91 {clean_phone}",
         session_id=session_id,
         expires_in=300,
-        delivery_status=delivery_status,
+        delivery_status="delivered" if (is_non_prod and clean_phone == "9999999999") else "dispatched",
         delivery_channel=delivery_channel,
         mock_otp=None # Never expose OTP code in public API response
     )

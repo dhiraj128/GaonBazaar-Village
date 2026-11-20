@@ -1,5 +1,109 @@
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+export const SUPABASE_URL = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
+export const SUPABASE_ANON_KEY = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ";
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let resendTimerInterval = null;
+let resendCountdownSeconds = 30;
+
 export function getOrCreateRecaptchaVerifier() { return null; }
 export function resetRecaptcha() {}
+
+/**
+ * Step 1: Send SMS OTP with Instant Optimistic Transition (< 1s)
+ */
+export async function sendCustomerOTP(isResend = false) {
+  hideAuthError();
+  const phoneInput = document.getElementById('cust-phone-input');
+  const nameInput = document.getElementById('cust-name-input');
+  const rawInput = (phoneInput?.value || '').trim();
+  const name = (nameInput?.value || '').trim();
+
+  // 1. Enforce "+91" Country Code Formatting
+  let clean = rawInput.replace(/[^\d+]/g, '');
+  if (clean.startsWith('+91')) {
+    clean = clean.slice(3);
+  } else if (clean.startsWith('91') && clean.length === 12) {
+    clean = clean.slice(2);
+  } else if (clean.startsWith('0') && clean.length === 11) {
+    clean = clean.slice(1);
+  }
+  clean = clean.replace(/\D/g, '').slice(-10);
+
+  // Validate 10-digit Indian Mobile format (starts with 6-9)
+  if (!/^[6-9]\d{9}$/.test(clean)) {
+    const invalidMsg = window.currentLang === 'hi'
+      ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें (6-9 से शुरू)"
+      : "Please enter a valid 10-digit Indian mobile number (e.g. 9876543210)";
+    showAuthError(invalidMsg);
+    if (typeof window.toastError === 'function') window.toastError(invalidMsg);
+    phoneInput?.focus();
+    return;
+  }
+
+  const formattedPhoneNumber = `+91 ${clean.slice(0, 5)} ${clean.slice(5)}`;
+
+  // INSTANT OPTIMISTIC TRANSITION: Immediately switch to OTP screen (< 1s, no blocking spinner)
+  const phoneDisplay = document.getElementById('otp-phone-display');
+  if (phoneDisplay) phoneDisplay.innerText = formattedPhoneNumber;
+
+  document.getElementById('phone-input-section')?.classList.add('hidden');
+  document.getElementById('otp-input-section')?.classList.remove('hidden');
+
+  for (let i = 1; i <= 4; i++) {
+    const box = document.getElementById(`otp-${i}`);
+    if (box) box.value = '';
+  }
+  const otp1 = document.getElementById('otp-1');
+  if (otp1) otp1.focus();
+
+  startResendTimer();
+
+  if (typeof window.toastSuccess === 'function') {
+    window.toastSuccess(
+      window.currentLang === 'hi'
+        ? "4-अंकीय OTP आपके मोबाइल पर भेजा गया है!"
+        : "4-Digit OTP sent to " + formattedPhoneNumber + "!"
+    );
+  }
+
+  // Non-blocking parallel background dispatch
+  (async () => {
+    try {
+      const apiBase = (window.APP_CONFIG && window.APP_CONFIG.BACKEND_URL) || '';
+      let res = await fetch(`${apiBase}/api/v1/auth/otp/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: clean, role: 'customer', name: name || undefined })
+      }).catch(() => null);
+
+      if (!res || !res.ok) {
+        res = await fetch('/api/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber: clean, role: 'customer' })
+        }).catch(() => null);
+      }
+
+      if (res && res.ok) {
+        const data = await res.json().catch(() => ({}));
+        window.__gb_verification_id = data.verificationId || data.session_id || null;
+      } else if (res) {
+        const data = await res.json().catch(() => ({}));
+        const errMsg = data.message || data.error || (
+          res.status === 429
+            ? (window.currentLang === 'hi' ? "कृपया पुनः प्रयास करने से पहले प्रतीक्षा करें।" : "Please wait before requesting another OTP.")
+            : (window.currentLang === 'hi' ? "OTP भेजने में असमर्थ। कृपया पुनः प्रयास करें।" : "Unable to send SMS OTP. Please try again.")
+        );
+        showAuthError(errMsg);
+        if (typeof window.toastError === 'function') window.toastError(errMsg);
+      }
+    } catch (err) {
+      console.warn("[Customer Send OTP Background Error]:", err);
+    }
+  })();
 }
 
 /**
@@ -129,7 +233,6 @@ export async function verifyCustomerOTP() {
       if (window.lucide) window.lucide.createIcons();
     }
   }
-}
 }
 /**
  * Step 4: Supabase Database Sync

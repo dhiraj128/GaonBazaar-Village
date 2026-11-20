@@ -92,29 +92,29 @@ export function MobileLogin({
     }
 
     const formattedPhoneNumber = `+91${clean}`;
-    setIsLoading(true);
 
-    try {
-      console.log('[Auth] Initiating Message Central 4-digit OTP dispatch for:', formattedPhoneNumber);
-      const res = await sendMessageCentralOtp(clean, 'customer');
-      if (res && res.verificationId) {
-        setVerificationId(res.verificationId);
-      }
-      setStep('otp');
-      setStatusMessage(
-        isHindi
-          ? `4-अंकीय सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया`
-          : `4-digit verification code sent to ${formattedPhoneNumber}`
-      );
-    } catch (err: any) {
-      console.error("SMS DISPATCH ERROR:", err);
-      const msg = err?.message || (isHindi
-        ? "OTP भेजने में असमर्थ। कृपया अपना नेटवर्क जांचें और पुनः प्रयास करें।"
-        : "Unable to send OTP. Please check your network and try again.");
-      setError(msg);
-    } finally {
-      setIsLoading(false);
-    }
+    // INSTANT OPTIMISTIC TRANSITION: Immediately switch to OTP step (< 1s, no blocking spinner)
+    setStep('otp');
+    setStatusMessage(
+      isHindi
+        ? `4-अंकीय सत्यापन कोड ${formattedPhoneNumber} पर भेजा गया`
+        : `4-digit verification code sent to ${formattedPhoneNumber}`
+    );
+
+    // Non-blocking parallel background dispatch
+    sendMessageCentralOtp(clean, 'customer')
+      .then((res) => {
+        if (res && res.verificationId) {
+          setVerificationId(res.verificationId);
+        }
+      })
+      .catch((err: any) => {
+        console.error("SMS DISPATCH ERROR:", err);
+        const msg = err?.message || (isHindi
+          ? "OTP भेजने में असमर्थ। कृपया अपना नेटवर्क जांचें और पुनः प्रयास करें।"
+          : "Unable to send OTP. Please check your network and try again.");
+        setError(msg);
+      });
   };
 
   const handleVerifyOtp = async (e?: React.FormEvent) => {

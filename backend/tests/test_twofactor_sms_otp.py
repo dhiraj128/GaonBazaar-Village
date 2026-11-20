@@ -154,7 +154,8 @@ async def test_auth_endpoints_send_and_verify_with_2factor_mock(monkeypatch):
             send_data = send_res.json()
             session_id = send_data["session_id"]
             assert session_id is not None
-            assert send_data["delivery_status"] == "delivered"
+            assert send_data["delivery_status"] in ("dispatched", "delivered")
+            assert send_data["status"] == "sent"
 
             # Check that 2Factor GET was dispatched with normalized phone
             called_url = mock_get.call_args[0][0]
@@ -178,8 +179,8 @@ async def test_auth_endpoints_send_and_verify_with_2factor_mock(monkeypatch):
             assert auth_data["user"]["role"] == "customer"
 
 @pytest.mark.asyncio
-async def test_auth_send_otp_propagates_2factor_failure_to_client(monkeypatch):
-    """Verify that when 2Factor.in fails during send_otp, client receives HTTP 502 with error details."""
+async def test_auth_send_otp_non_blocking_instant_response_on_background_error(monkeypatch):
+    """Verify send_otp returns 200 immediately with BackgroundTasks even if 2Factor has an issue."""
     settings.TESTING = True
     test_key = "2factor-failing-key"
     monkeypatch.setenv("TWOFACTOR_API_KEY", test_key)
@@ -199,6 +200,7 @@ async def test_auth_send_otp_propagates_2factor_failure_to_client(monkeypatch):
                 "phone": "9877766655",
                 "role": "customer"
             })
-            assert send_res.status_code == 502
-            err_data = send_res.json()
-            assert "DND Blocked or Insufficient Balance" in err_data["detail"]
+            assert send_res.status_code == 200
+            resp_data = send_res.json()
+            assert resp_data["status"] == "sent"
+            assert resp_data["delivery_status"] == "dispatched"
