@@ -67,9 +67,26 @@ function extractAndVerifyCaller(req: VercelRequest): any | null {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Strict CORS configuration
+  const rawOrigin = req.headers['origin'] || req.headers['Origin'];
+  const origin = Array.isArray(rawOrigin) ? rawOrigin[0] : (rawOrigin || '');
+  const isDev = process.env.ENVIRONMENT !== 'production' && process.env.NODE_ENV !== 'production';
+  const isLocalhost = isDev && typeof origin === 'string' && (origin === 'http://localhost:5173' || origin.startsWith('http://localhost:'));
+  const isAllowedProd =
+    origin === 'https://apnagaonbazaar.in' ||
+    origin === 'https://www.apnagaonbazaar.in' ||
+    origin === 'https://dukaan.apnagaonbazaar.in' ||
+    origin === 'https://mitra.apnagaonbazaar.in';
+
+  if (typeof origin === 'string' && (isAllowedProd || isLocalhost)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', 'https://apnagaonbazaar.in');
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Vary', 'Origin');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();

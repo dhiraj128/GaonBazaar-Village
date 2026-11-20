@@ -123,14 +123,28 @@ async function saveChallengeToSupabase(record: {
 }
 
 export default async function handler(req: any, res: any) {
-  // CORS configuration
+  // Strict CORS configuration
+  const origin = (req.headers && (req.headers.origin || req.headers.Origin)) || '';
+  const isDev = process.env.ENVIRONMENT !== 'production' && process.env.NODE_ENV !== 'production';
+  const isLocalhost = isDev && typeof origin === 'string' && (origin === 'http://localhost:5173' || origin.startsWith('http://localhost:'));
+  const isAllowedProd =
+    origin === 'https://apnagaonbazaar.in' ||
+    origin === 'https://www.apnagaonbazaar.in' ||
+    origin === 'https://dukaan.apnagaonbazaar.in' ||
+    origin === 'https://mitra.apnagaonbazaar.in';
+
+  if (typeof origin === 'string' && (isAllowedProd || isLocalhost)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', 'https://apnagaonbazaar.in');
+  }
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
   );
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Content-Type', 'application/json');
 
   if (req.method === 'OPTIONS') {
