@@ -329,8 +329,8 @@ export default async function handler(req: any, res: any) {
     return sendJson(res, 500, {
       success: false,
       code: 'auth/internal-error',
-      error: 'Internal server error dispatching OTP',
-      message: 'Internal server error dispatching OTP',
+      error: error?.message || 'Internal server error dispatching OTP',
+      message: error?.message || 'Internal server error dispatching OTP',
     });
   }
 }

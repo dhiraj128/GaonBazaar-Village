@@ -424,8 +424,8 @@ export default async function handler(req: any, res: any) {
     return sendJson(res, 500, {
       success: false,
       code: 'auth/internal-error',
-      error: 'Internal server error verifying OTP',
-      message: 'Internal server error verifying OTP',
+      error: error?.message || 'Internal server error verifying OTP',
+      message: error?.message || 'Internal server error verifying OTP',
     });
   }
 }
