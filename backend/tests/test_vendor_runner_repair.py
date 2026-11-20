@@ -75,7 +75,8 @@ async def test_vendor_and_runner_endpoints_and_actions():
         })
         assert stock_patch.status_code == 200
         assert stock_patch.json()["in_stock"] is False
-        assert stock_patch.json()["price"] == 40.0
+        assert stock_patch.json()["vendor_price"] == 40.0
+        assert stock_patch.json()["price"] == 44.0
 
         # 9. Register Runner
         r_headers = await issue_and_verify_test_token(client, runner_phone, "runner")

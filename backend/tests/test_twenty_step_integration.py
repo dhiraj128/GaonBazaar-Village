@@ -69,7 +69,8 @@ async def test_twenty_step_integrated_journey():
         assert prod_add.status_code == 200
         product = prod_add.json()
         product_id = product["id"]
-        assert product["price"] == 210.0
+        assert product["vendor_price"] == 210.0
+        assert product["price"] == 212.0
         assert product["stock_quantity"] == 50
         
         # STEP 5: Register a test Customer
@@ -104,7 +105,7 @@ async def test_twenty_step_integrated_journey():
         cart_data = cart_check.json()
         assert cart_data["is_serviceable"] is True
         assert cart_data["platform_fee"] == 3.0
-        assert cart_data["subtotal"] == 210.0
+        assert cart_data["subtotal"] == 212.0
         
         # STEP 8: Place a test COD order
         order_res = await client.post("/api/v1/orders", headers=c_headers, json={
@@ -120,7 +121,7 @@ async def test_twenty_step_integrated_journey():
         delivery_otp = order["delivery_otp"]
         assert order["status"] == "PLACED"
         assert order["platform_fee"] == 3.0
-        assert order["total_amount"] == 210.0 + order["delivery_fee"] + 3.0
+        assert order["total_amount"] == 212.0 + order["delivery_fee"] + 3.0
         
         # STEP 9: Verify Vendor receives the order
         v_orders = await client.get("/api/v1/vendor/orders", headers=v_headers)
