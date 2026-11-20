@@ -180,6 +180,19 @@ async def test_strict_vendor_isolation():
 
         # Place Order for Store 1
         s1_prods = (await client.get(f"/api/v1/stores/{s1['id']}/products")).json()
+        if not s1_prods:
+            add_res1 = await client.post("/api/v1/vendor/products", headers=v1_headers, json={
+                "category": "Grocery",
+                "custom_name_en": "Store 1 Atta",
+                "unit": "1 kg",
+                "price": 38.0,
+                "mrp": 45.0,
+                "in_stock": True,
+                "stock_quantity": 100
+            })
+            assert add_res1.status_code == 200
+            s1_prods = [add_res1.json()]
+
         ord1 = (await client.post("/api/v1/orders", headers=cust_headers, json={
             "store_id": s1["id"],
             "delivery_address_id": addr["id"],
@@ -190,6 +203,19 @@ async def test_strict_vendor_isolation():
 
         # Place Order for Store 2
         s2_prods = (await client.get(f"/api/v1/stores/{s2['id']}/products")).json()
+        if not s2_prods:
+            add_res2 = await client.post("/api/v1/vendor/products", headers=v2_headers, json={
+                "category": "Dairy",
+                "custom_name_en": "Store 2 Milk",
+                "unit": "1 L",
+                "price": 50.0,
+                "mrp": 60.0,
+                "in_stock": True,
+                "stock_quantity": 100
+            })
+            assert add_res2.status_code == 200
+            s2_prods = [add_res2.json()]
+
         ord2 = (await client.post("/api/v1/orders", headers=cust_headers, json={
             "store_id": s2["id"],
             "delivery_address_id": addr["id"],

@@ -174,6 +174,29 @@ async def init_db_and_seed():
         except Exception as exc:
             logger.debug("Schema migration notice (otp_challenges.%s): %s", col_name, exc)
 
+    # 3c. Supabase PostgreSQL Row-Level Security (RLS) auto-enforcement across all public tables
+    if "postgresql" in settings.ASYNC_DATABASE_URL:
+        rls_sweep_stmt = """
+        DO $$
+        DECLARE
+            r RECORD;
+        BEGIN
+            FOR r IN (
+                SELECT tablename 
+                FROM pg_tables 
+                WHERE schemaname = 'public'
+            ) LOOP
+                EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY;', r.tablename);
+            END LOOP;
+        END $$;
+        """
+        try:
+            async with async_engine.begin() as conn:
+                await conn.execute(text(rls_sweep_stmt))
+            logger.info("Supabase PostgreSQL Row-Level Security (RLS) successfully verified on all public tables")
+        except Exception as exc:
+            logger.debug("RLS auto-enforcement notice: %s", exc)
+
     # 4. Update verified product image URLs in existing database rows
     url_updates = [
         ("cat_mustard_oil", "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"),

@@ -72,9 +72,16 @@ async def test_address_ownership_isolation():
 
         # Customer B tries to create an order using Customer A's address -> 404
         stores = (await client.get("/api/v1/stores/nearby?latitude=26.1950&longitude=85.3450")).json()
-        store_id = stores[0]["id"]
-        prod_res = await client.get(f"/api/v1/stores/{store_id}/products")
-        prod_id = prod_res.json()[0]["id"]
+        store_id = None
+        prod_id = None
+        for s in stores:
+            prod_res = await client.get(f"/api/v1/stores/{s['id']}/products")
+            p_json = prod_res.json()
+            if p_json:
+                store_id = s["id"]
+                prod_id = p_json[0]["id"]
+                break
+        assert store_id is not None and prod_id is not None, "No store with products found"
 
         order_res = await client.post("/api/v1/orders", headers=b_headers, json={
             "store_id": store_id,

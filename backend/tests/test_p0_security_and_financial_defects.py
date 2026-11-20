@@ -186,10 +186,18 @@ async def test_payment_status_integrity_and_simulation():
         addr_id = addr.json()["id"]
 
         stores = (await client.get("/api/v1/stores/nearby?latitude=26.1950&longitude=85.3450")).json()
-        store_1 = stores[0]
-        prods = (await client.get(f"/api/v1/stores/{store_1['id']}/products")).json()
-        avail_prods = [p for p in prods if p.get("in_stock", True) and (p.get("stock_quantity") is None or p.get("stock_quantity", 0) >= 2)]
-        target_prod = avail_prods[0] if avail_prods else prods[0]
+        store_1 = None
+        target_prod = None
+        avail_prods = []
+        for s in stores:
+            p_list = (await client.get(f"/api/v1/stores/{s['id']}/products")).json()
+            avail = [p for p in p_list if p.get("in_stock", True) and (p.get("stock_quantity") is None or p.get("stock_quantity", 0) >= 2)]
+            if avail or p_list:
+                store_1 = s
+                avail_prods = avail
+                target_prod = avail[0] if avail else p_list[0]
+                break
+        assert store_1 is not None and target_prod is not None, "No store with products found"
 
         # 1. Test online order -> payment_status MUST be PENDING, not prematurely PAID
         online_order = await client.post("/api/v1/orders", headers=c_headers, json={
