@@ -6,17 +6,18 @@ from typing import Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, Header, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import delete
 from sqlalchemy.future import select
 
 logger = logging.getLogger("gaonbazaar.auth")
 
 from app.core.config import settings
 from app.db.session import get_db
-from app.models.base import User, Store, Runner, OtpChallenge
+from app.models.base import User, Store, Runner, OtpChallenge, Address
 from app.schemas.auth import (
     SendOTPRequest, SendOTPResponse, VerifyOTPRequest, TokenResponse, UserInfo, UpdateProfileRequest, UploadAvatarRequest
 )
-from app.core.security import create_access_token, get_current_user_payload, revoke_token, security_bearer, HTTPAuthorizationCredentials
+from app.core.security import create_access_token, get_current_user_payload, revoke_token, revoke_user_sessions, security_bearer, HTTPAuthorizationCredentials
 from app.services.sms import send_sms_otp
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -516,5 +517,55 @@ async def user_logout(
         "status": "SUCCESS",
         "message": "सफलतापूर्वक लॉगआउट किया गया (Successfully logged out and session revoked)"
     }
+
+class DeleteAccountRequest(BaseModel):
+    reason: Optional[str] = "User requested account deletion"
+    confirm: Optional[bool] = True
+
+@router.delete("/me")
+@router.post("/delete-account")
+async def delete_user_account(
+    req: Optional[DeleteAccountRequest] = None,
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_bearer),
+    payload: dict = Depends(get_current_user_payload),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Google Play Store Compliant User Account & Data Deletion Endpoint.
+    - Soft-deletes user profile, marks is_active=False
+    - Anonymizes PII (phone number, name, avatar, email)
+    - Deletes customer saved delivery addresses
+    - Revokes JWT session tokens immediately
+    - Retains anonymized transaction logs strictly as required by Indian accounting & statutory tax regulations
+    """
+    user_id = payload.get("sub")
+    res = await db.execute(select(User).where(User.id == user_id))
+    user = res.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Anonymize personal data
+    masked_suffix = secrets.token_hex(4)
+    user.phone = f"del_{user.phone[:3]}_{masked_suffix}"
+    user.name = "Deleted User"
+    user.email = None
+    user.avatar_url = None
+    user.is_active = False
+
+    # Remove saved delivery addresses
+    await db.execute(delete(Address).where(Address.user_id == user_id))
+
+    # Invalidate and revoke all active sessions
+    revoke_user_sessions(user_id)
+    if credentials and credentials.credentials:
+        revoke_token(credentials.credentials)
+
+    await db.commit()
+
+    return {
+        "status": "SUCCESS",
+        "message": "खाता और व्यक्तिगत डेटा सफलतापूर्वक हटा दिया गया है (Your account and personal data have been deleted per privacy compliance)"
+    }
+
 
 

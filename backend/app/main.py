@@ -935,19 +935,46 @@ async def lifespan(app: FastAPI):
         if not init_task.done():
             init_task.cancel()
 
+is_prod = settings.ENVIRONMENT.lower() == "production"
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url=None if is_prod else "/docs",
+    redoc_url=None if is_prod else "/redoc",
+    openapi_url=None if is_prod else "/openapi.json"
 )
+
+prod_origins = [
+    "https://apnagaonbazaar.in",
+    "https://www.apnagaonbazaar.in",
+    "https://dukaan.apnagaonbazaar.in",
+    "https://mitra.apnagaonbazaar.in",
+    "https://admin.apnagaonbazaar.in",
+    "https://gaonbazaar-village.onrender.com",
+]
+
+dev_origins = prod_origins + [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+    "http://localhost:3003",
+    "http://localhost:5173",
+    "http://localhost:8000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:8000",
+]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=prod_origins if is_prod else dev_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Attach API routes
 app.include_router(auth.router, prefix=settings.API_V1_STR)

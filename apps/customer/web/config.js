@@ -27,11 +27,6 @@
     SUPABASE_URL: env.SUPABASE_URL || "https://vxewgvrjhjpntfvsmuez.supabase.co",
     SUPABASE_ANON_KEY: env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4ZXdndnJqaGpwbnRmdnNtdWV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NDkwMzcsImV4cCI6MjEwOTEyNTAzN30.3jUR0U9RGcgc2q-zeWX7OeWaFqugSHOFdDieYoGFIwQ",
 
-    // Cashfree SecureID Test API Configuration (Paperless KYC)
-    CASHFREE_CLIENT_ID: env.CASHFREE_CLIENT_ID || "CF11351373DBOMC8KHUJMC73EBPFLG",
-    CASHFREE_CLIENT_SECRET: env.CASHFREE_CLIENT_SECRET || ((typeof atob !== "undefined") ? atob("Y2Zza19tYV90ZXN0XzI1YTEzMDBmN2MxZTZlZTM5MzA5NDhhZjMyYTRkMDM3X2NlNzA1Yjhi") : ""),
-    CASHFREE_BASE_URL: env.CASHFREE_BASE_URL || "https://sandbox.cashfree.com/verification",
-
     // Backend API Base Endpoint (Production Render deployment)
     API_BASE_URL: env.API_BASE_URL || "https://gaonbazaar-village.onrender.com/api/v1"
   };
