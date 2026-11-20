@@ -1,3 +1,4 @@
+import { createClient } from '@supabase/supabase-js';
 import type {
   AdminOverview,
   ExceptionAlert,
@@ -484,18 +485,16 @@ export const adminApi = {
 
     // Native Supabase Realtime live sync across devices
     try {
-      if (typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function') {
-        const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        supabaseChannel = sbClient
-          .channel('super_admin_live_feed')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload: any) => {
-            onMessage({
-              type: 'ORDER_STATUS_UPDATED',
-              data: payload.new || payload.old || payload,
-            });
-          })
-          .subscribe();
-      }
+      const sbClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabaseChannel = sbClient
+        .channel('super_admin_live_feed')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload: any) => {
+          onMessage({
+            type: 'ORDER_STATUS_UPDATED',
+            data: payload.new || payload.old || payload,
+          });
+        })
+        .subscribe();
     } catch (e) {
       console.warn('Supabase Realtime subscription notice:', e);
     }
