@@ -27,7 +27,11 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.exceptions import InvalidSignature
-from PIL import Image
+try:
+    from PIL import Image
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
 
 try:
     import cv2
@@ -419,12 +423,13 @@ class AadhaarSecureQrParser:
                 b64 = base64.b64encode(photo_bytes).decode("ascii")
                 return f"data:image/jpeg;base64,{b64}"
 
-            # Open with Pillow (handles JPEG, JPEG2000, PNG)
-            img = Image.open(io.BytesIO(photo_bytes))
-            buf = io.BytesIO()
-            img.save(buf, format="JPEG", quality=85)
-            b64 = base64.b64encode(buf.getvalue()).decode("ascii")
-            return f"data:image/jpeg;base64,{b64}"
+            # Open with Pillow if available (handles JPEG, JPEG2000, PNG)
+            if HAS_PIL:
+                img = Image.open(io.BytesIO(photo_bytes))
+                buf = io.BytesIO()
+                img.save(buf, format="JPEG", quality=85)
+                b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+                return f"data:image/jpeg;base64,{b64}"
         except Exception as exc:
             logger.debug("Photo extraction notice: %s", exc)
             try:
