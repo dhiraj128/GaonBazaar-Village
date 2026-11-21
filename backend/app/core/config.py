@@ -119,6 +119,7 @@ class Settings(BaseSettings):
     # SMS Gateway Configuration (2Factor.in Transactional OTP)
     SMS_PROVIDER: Optional[str] = "2factor" # Strictly 2Factor.in SMS OTP
     TWOFACTOR_API_KEY: Optional[str] = None
+    TWOFACTOR_OTP_TEMPLATE: Optional[str] = "OTP1"
     SMS_API_KEY: Optional[str] = None
     SMS_SENDER_ID: str = "GAONBZ"
     SMS_TEMPLATE_ID: Optional[str] = "OTP1"
@@ -132,6 +133,18 @@ class Settings(BaseSettings):
             or self.TWOFACTOR_API_KEY
             or ""
         ).strip()
+
+    @property
+    def RESOLVED_TWOFACTOR_OTP_TEMPLATE(self) -> str:
+        import os
+        import urllib.parse
+        raw = (
+            os.getenv("TWOFACTOR_OTP_TEMPLATE")
+            or self.TWOFACTOR_OTP_TEMPLATE
+            or self.SMS_TEMPLATE_ID
+            or "OTP1"
+        ).strip()
+        return urllib.parse.quote(raw)
     
     # Database (Default to SQLite file for robust local testing without external daemon)
     DATABASE_URL: str = "sqlite+aiosqlite:///./gaonbazaar.db"

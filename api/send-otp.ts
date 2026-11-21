@@ -252,7 +252,8 @@ export default async function handler(req: any, res: any) {
     }
 
     // 6. Dispatch real 6-digit SMS OTP via 2Factor.in API if not test persona
-    const twoFactorApiKey = process.env.TWOFACTOR_API_KEY || '';
+    const twoFactorApiKey = (process.env.TWOFACTOR_API_KEY || '').trim();
+    const twoFactorTemplate = (process.env.TWOFACTOR_OTP_TEMPLATE || 'OTP1').trim();
     if (!isTestPersona) {
       if (!twoFactorApiKey) {
         console.error('[CRITICAL] Missing TWOFACTOR_API_KEY in serverless environment.');
@@ -264,7 +265,7 @@ export default async function handler(req: any, res: any) {
         });
       }
 
-      const twoFactorUrl = `https://2factor.in/API/V1/${encodeURIComponent(twoFactorApiKey)}/SMS/+91${clean}/${otpCode}/OTP1`;
+      const twoFactorUrl = `https://2factor.in/API/V1/${encodeURIComponent(twoFactorApiKey)}/SMS/+91${clean}/${otpCode}/${encodeURIComponent(twoFactorTemplate)}`;
       console.log(`[2Factor.in] Dispatching 6-digit OTP to ${maskedPhone}...`);
 
       const abortController = new AbortController();
@@ -288,7 +289,12 @@ export default async function handler(req: any, res: any) {
           smsData = { Status: 'Error', Details: smsText };
         }
 
-        console.log(`[2Factor.in] Send response status for ${maskedPhone}:`, smsRes.status, smsData?.Status);
+        console.log(
+          `[2Factor.in] Send response status for ${maskedPhone}:`,
+          smsRes.status,
+          smsData?.Status,
+          smsData?.Details ? `Details: ${smsData.Details}` : ''
+        );
 
         if (!smsRes.ok || smsData.Status !== 'Success') {
           const errDetail = smsData.Details || smsData.message || `2Factor.in returned status ${smsRes.status}`;

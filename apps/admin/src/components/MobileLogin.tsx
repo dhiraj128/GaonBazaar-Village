@@ -460,8 +460,10 @@ export function MobileLogin({
                         key={idx}
                         id={`react-otp-${idx}`}
                         type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         maxLength={1}
-                        autoComplete="off"
+                        autoComplete={idx === 0 ? "one-time-code" : "off"}
                         autoCorrect="off"
                         autoCapitalize="off"
                         spellCheck={false}

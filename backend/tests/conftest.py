@@ -2,15 +2,17 @@ import pytest
 import pytest_asyncio
 from app.core.config import settings
 from app.db.session import async_engine
-from app.models.base import Base
+from app.models.base import Base, OtpChallenge
 from app.main import app
 from app.api.v1.auth import OTP_STORAGE
+from sqlalchemy import delete
 
 @pytest_asyncio.fixture(scope="function", autouse=True)
 async def init_test_db():
     settings.TESTING = True
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(delete(OtpChallenge))
         
     async with app.router.lifespan_context(app):
         from tests.test_data_seeder import seed_test_database

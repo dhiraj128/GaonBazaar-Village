@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Any
 
 class SendOTPRequest(BaseModel):
-    phone: str = Field(..., description="10-digit Indian mobile number", pattern=r"^[5-9]\d{9}$")
+    phone: str = Field(..., description="10-digit Indian mobile number", pattern=r"^[6-9]\d{9}$")
     role: str = Field("customer", description="customer, vendor, runner, admin")
 
     @field_validator("phone", mode="before")
@@ -28,7 +28,7 @@ class SendOTPResponse(BaseModel):
     mock_otp: Optional[str] = None # For dev/testing environments
 
 class VerifyOTPRequest(BaseModel):
-    phone: str = Field(..., pattern=r"^[5-9]\d{9}$")
+    phone: str = Field(..., pattern=r"^[6-9]\d{9}$")
     otp: str = Field(..., min_length=6, max_length=6, pattern=r"^\d{6}$")
     session_id: Optional[str] = None
     role: Optional[str] = "customer"

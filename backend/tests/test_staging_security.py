@@ -32,8 +32,14 @@ async def test_otp_bypass_restricted_for_public_numbers():
 
             # 3. Verify authorized whitelisted test persona (9800000000) requires genuine challenge issuance first
             from app.api.v1.auth import OTP_STORAGE
+            from app.db.session import AsyncSessionLocal
+            from app.models.base import OtpChallenge
+            from sqlalchemy import delete
             test_phone = "9800000000"
             OTP_STORAGE.pop(test_phone, None)
+            async with AsyncSessionLocal() as session:
+                await session.execute(delete(OtpChallenge).where(OtpChallenge.phone == test_phone))
+                await session.commit()
             t_send = await client.post("/api/v1/auth/otp/send", json={
                 "phone": test_phone,
                 "role": "customer"

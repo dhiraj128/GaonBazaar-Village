@@ -38,8 +38,8 @@ def normalize_indian_phone(phone: str) -> str:
     elif len(digits) == 11 and digits.startswith("0"):
         digits = digits[1:]
 
-    # Validate 10-digit Indian mobile number
-    if len(digits) != 10 or digits[0] not in "56789":
+    # Validate 10-digit Indian mobile number (strictly starts with 6-9)
+    if len(digits) != 10 or digits[0] not in "6789":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid mobile number '{phone}'. Please provide a valid 10-digit Indian mobile number."
@@ -57,19 +57,22 @@ def get_sms_http_client() -> httpx.AsyncClient:
 
 async def send_sms_otp(phone: str, otp: str, role: str = "customer") -> Dict[str, Any]:
     """
-    Sends transactional 6-digit SMS OTP using 2Factor.in SMS OTP API:
-    https://2factor.in/API/V1/{TWOFACTOR_API_KEY}/SMS/+91{ten_digit_phone}/{otp_code}/OTP1
+    Sends transactional 6-digit SMS OTP using official 2Factor.in SMS OTP API:
+    GET https://2factor.in/API/V1/{TWOFACTOR_API_KEY}/SMS/+91{ten_digit_phone}/{otp_code}/{template_name}
 
-    - Reads TWOFACTOR_API_KEY from environment variables (os.getenv("TWOFACTOR_API_KEY"))
-    - Normalizes Indian phone numbers cleanly to 10 digits before formatting +91{ten_digit_phone}
+    - Reads TWOFACTOR_API_KEY from environment variables (trimmed)
+    - Reads TWOFACTOR_OTP_TEMPLATE from environment variable (default "OTP1", URL-encoded)
+    - Strictly normalizes Indian numbers to 10 digits starting with 6–9 and sends as +91{phone}
+    - ZERO voice fallback endpoints
     - Employs shared pooled httpx.AsyncClient with a tight 5-second timeout
-    - Checks HTTP 200 response and JSON {"Status": "Success"}
+    - Logs HTTP status and sanitized JSON response (Status, Details), never logging the API key or OTP code
     - Raises clear HTTP 502 / 400 errors with logged error details if 2Factor.in fails
-    - If TWOFACTOR_API_KEY is missing in production, fails fast with an explicit error
     """
+    import urllib.parse
+
     ten_digit_phone = normalize_indian_phone(phone)
 
-    # 1. Read TWOFACTOR_API_KEY from environment or settings
+    # 1. Read TWOFACTOR_API_KEY from environment or settings (strictly trimmed)
     api_key = (
         os.getenv("TWOFACTOR_API_KEY")
         or os.getenv("TWO_FACTOR_API_KEY")
@@ -77,6 +80,15 @@ async def send_sms_otp(phone: str, otp: str, role: str = "customer") -> Dict[str
         or getattr(settings, "TWOFACTOR_API_KEY", "")
         or ""
     ).strip()
+
+    # 2. Read template name from environment or settings (URL-encoded, stripped of whitespace)
+    raw_template = (
+        os.getenv("TWOFACTOR_OTP_TEMPLATE")
+        or getattr(settings, "TWOFACTOR_OTP_TEMPLATE", "")
+        or getattr(settings, "SMS_TEMPLATE_ID", "")
+        or "OTP1"
+    ).strip()
+    template = urllib.parse.quote(raw_template)
 
     masked_phone = f"+91 XXXXX {ten_digit_phone[-4:]}"
 
@@ -98,11 +110,10 @@ async def send_sms_otp(phone: str, otp: str, role: str = "customer") -> Dict[str
             "message": "SMS delivery pending TWOFACTOR_API_KEY configuration"
         }
 
-    # 2. Format 2Factor.in transactional OTP endpoint
-    template = getattr(settings, "SMS_TEMPLATE_ID", None) or "OTP1"
+    # 3. Format official 2Factor.in transactional SMS OTP endpoint
     endpoint_url = f"https://2factor.in/API/V1/{api_key}/SMS/+91{ten_digit_phone}/{otp}/{template}"
 
-    logger.info(f"[SMS 2Factor] Dispatching transactional OTP to {masked_phone} via 2Factor.in...")
+    logger.info(f"[SMS 2Factor] Dispatching transactional OTP to {masked_phone} via 2Factor.in (Template: {raw_template})...")
 
     try:
         client = get_sms_http_client()
@@ -114,13 +125,21 @@ async def send_sms_otp(phone: str, otp: str, role: str = "customer") -> Dict[str
             detail=f"Unable to reach SMS gateway (2Factor.in): {str(exc)}"
         )
 
-    # 3. Check HTTP status 200 and JSON {"Status": "Success"}
-    if resp.status_code == 200:
-        try:
-            res_data = resp.json()
-        except Exception:
-            res_data = {}
+    # 4. Check HTTP status and sanitized 2Factor.in JSON response (Status, Details)
+    try:
+        res_data = resp.json()
+    except Exception:
+        res_data = {}
 
+    provider_status = res_data.get("Status") if isinstance(res_data, dict) else None
+    provider_details = res_data.get("Details") if isinstance(res_data, dict) else (resp.text[:100] if resp.text else None)
+
+    logger.info(
+        f"[SMS 2Factor] Response for {masked_phone}: HTTP {resp.status_code}, "
+        f"Provider Status={provider_status}, Details={provider_details}"
+    )
+
+    if resp.status_code == 200:
         if isinstance(res_data, dict) and res_data.get("Status") == "Success":
             session_id = res_data.get("Details", "")
             logger.info(f"[SMS 2Factor] OTP successfully delivered to {masked_phone}. Session: {session_id}")
@@ -138,14 +157,7 @@ async def send_sms_otp(phone: str, otp: str, role: str = "customer") -> Dict[str
                 detail=f"SMS OTP delivery failed via 2Factor.in: {err_detail}"
             )
     else:
-        err_detail = resp.text
-        try:
-            err_json = resp.json()
-            if isinstance(err_json, dict) and err_json.get("Details"):
-                err_detail = err_json.get("Details")
-        except Exception:
-            pass
-
+        err_detail = provider_details or resp.text
         logger.error(f"[SMS 2Factor] 2Factor.in returned HTTP {resp.status_code} for {masked_phone}: {err_detail}")
         err_status = status.HTTP_400_BAD_REQUEST if resp.status_code in (400, 422) else status.HTTP_502_BAD_GATEWAY
         raise HTTPException(

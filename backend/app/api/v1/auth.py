@@ -71,13 +71,34 @@ async def send_otp(
     now_ts = now.timestamp()
     stored = OTP_STORAGE.get(clean_phone)
 
-    # 1. Rate limiting: minimum 15 seconds between OTP requests per phone (bypassed in pytest if testing)
-    if not getattr(settings, "TESTING", False) and stored and (now_ts - stored.get("last_sent_at", 0)) < 15:
-        wait_sec = int(15 - (now_ts - stored["last_sent_at"]))
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="कृपया पुनः प्रयास करने से पहले 15 सेकंड प्रतीक्षा करें (Please wait 15 seconds before requesting another OTP)"
+    # 1. Rate limiting: 30-second cooldown between OTP requests per phone (bypassed in pytest if testing)
+    if not getattr(settings, "TESTING", False):
+        if stored and (now_ts - stored.get("last_sent_at", 0)) < 30:
+            wait_sec = max(1, int(30 - (now_ts - stored["last_sent_at"])))
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"कृपया पुनः प्रयास करने से पहले {wait_sec} सेकंड प्रतीक्षा करें (Please wait {wait_sec} seconds before requesting another OTP)"
+            )
+        # Durable database check for cross-worker instance cooldown
+        stmt = (
+            select(OtpChallenge)
+            .where(OtpChallenge.phone == clean_phone)
+            .order_by(OtpChallenge.created_at.desc())
+            .limit(1)
         )
+        last_challenge_res = await db.execute(stmt)
+        last_challenge = last_challenge_res.scalars().first()
+        if last_challenge and last_challenge.created_at:
+            last_created = last_challenge.created_at
+            if last_created.tzinfo is None:
+                last_created = last_created.replace(tzinfo=timezone.utc)
+            elapsed_sec = (now - last_created).total_seconds()
+            if elapsed_sec < 30:
+                wait_sec = max(1, int(30 - elapsed_sec))
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail=f"कृपया पुनः प्रयास करने से पहले {wait_sec} सेकंड प्रतीक्षा करें (Please wait {wait_sec} seconds before requesting another OTP)"
+                )
 
     # 2. Challenge generation:
     # Staging/development test persona handling (strictly disabled in production)
@@ -184,6 +205,7 @@ async def verify_otp(
         # challenge.expires_at is retrieved as timezone-aware UTC datetime
         if challenge.expires_at < now:
             challenge.is_used = True
+            challenge.used = True
             await db.commit()
             OTP_STORAGE.pop(clean_phone, None)
             raise HTTPException(
@@ -195,6 +217,7 @@ async def verify_otp(
         challenge.attempts += 1
         if challenge.attempts > 3:
             challenge.is_used = True
+            challenge.used = True
             await db.commit()
             OTP_STORAGE.pop(clean_phone, None)
             raise HTTPException(
@@ -214,6 +237,8 @@ async def verify_otp(
 
         # Challenge verified successfully: mark as single-use
         challenge.is_used = True
+        challenge.used = True
+        challenge.verified = True
         await db.commit()
         matched_role = challenge.role or payload.role or "customer"
         OTP_STORAGE.pop(clean_phone, None)
