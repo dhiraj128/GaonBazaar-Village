@@ -1,6 +1,6 @@
 // GaonBazaar Rural Hyperlocal PWA Service Worker: Runner
 // Offline-first caching optimized for low-bandwidth 2G/3G rural networks
-const CACHE_NAME = 'gaonbazaar-runner-v1.0.0';
+const CACHE_NAME = 'gaonbazaar-runner-v1.0.1';
 
 const PRECACHE_ASSETS = [
   './',
@@ -10,7 +10,11 @@ const PRECACHE_ASSETS = [
   './icons/Icon-192.png',
   './icons/Icon-512.png',
   './icons/Icon-maskable-192.png',
-  './icons/Icon-maskable-512.png'
+  './icons/Icon-maskable-512.png',
+  './runner_script_1.js',
+  './runner_script_2.js',
+  './runner_script_3.js',
+  './runner_script_4.js'
 ];
 
 // Install: precache critical app shell

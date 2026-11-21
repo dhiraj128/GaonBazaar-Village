@@ -1,0 +1,14 @@
+# robots.txt for https://www.apnagaonbazaar.in
+User-agent: *
+Allow: /
+Allow: /privacy-policy
+Allow: /privacy
+Allow: /terms
+Allow: /terms-and-conditions
+Allow: /delete-account
+
+# Disallow administrative portals and private internal APIs
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://www.apnagaonbazaar.in/sitemap.xml

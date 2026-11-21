@@ -1,6 +1,6 @@
 // GaonBazaar Rural Hyperlocal PWA Service Worker: Customer
 // Offline-first caching optimized for low-bandwidth 2G/3G rural networks
-const CACHE_NAME = 'gaonbazaar-customer-v1.0.0';
+const CACHE_NAME = 'gaonbazaar-customer-v1.0.1';
 
 const PRECACHE_ASSETS = [
   './',
@@ -11,6 +11,10 @@ const PRECACHE_ASSETS = [
   './icons/Icon-512.png',
   './icons/Icon-maskable-192.png',
   './icons/Icon-maskable-512.png',
+  './customer_script_1.js',
+  './customer_script_2.js',
+  './customer_script_3.js',
+  './customer_script_4.js',
   './config.js',
   './auth-service.js'
 ];
