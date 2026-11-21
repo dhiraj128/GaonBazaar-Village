@@ -65,17 +65,22 @@
     },
     {
       "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
-      "source": "/vendor_script_:file(.*)",
-      "destination": "/vendor/vendor_script_$file"
+      "source": "/vendor_script_(.*)",
+      "destination": "/vendor/vendor_script_$1"
+    },
+    {
+      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
+      "source": "/service-worker.js",
+      "destination": "/vendor/service-worker.js"
+    },
+    {
+      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
+      "source": "/manifest.json",
+      "destination": "/vendor/manifest.json"
     },
     {
       "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
       "source": "/vendor/(.*)",
-      "destination": "/vendor/$1"
-    },
-    {
-      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
-      "source": "/(.*\\.(?:js|css|png|jpg|jpeg|svg|ico|json|woff|woff2|ttf|webmanifest))",
       "destination": "/vendor/$1"
     },
     {
@@ -85,17 +90,22 @@
     },
     {
       "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
-      "source": "/runner_script_:file(.*)",
-      "destination": "/runner/runner_script_$file"
+      "source": "/runner_script_(.*)",
+      "destination": "/runner/runner_script_$1"
+    },
+    {
+      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
+      "source": "/service-worker.js",
+      "destination": "/runner/service-worker.js"
+    },
+    {
+      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
+      "source": "/manifest.json",
+      "destination": "/runner/manifest.json"
     },
     {
       "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
       "source": "/runner/(.*)",
-      "destination": "/runner/$1"
-    },
-    {
-      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
-      "source": "/(.*\\.(?:js|css|png|jpg|jpeg|svg|ico|json|woff|woff2|ttf|webmanifest))",
       "destination": "/runner/$1"
     },
     {
@@ -109,8 +119,16 @@
       "destination": "/index.html"
     },
     {
-      "source": "/customer_script_:file(.*)",
-      "destination": "/customer/customer_script_$file"
+      "source": "/customer_script_(.*)",
+      "destination": "/customer/customer_script_$1"
+    },
+    {
+      "source": "/vendor_script_(.*)",
+      "destination": "/vendor/vendor_script_$1"
+    },
+    {
+      "source": "/runner_script_(.*)",
+      "destination": "/runner/runner_script_$1"
     },
     {
       "source": "/(.*)",
