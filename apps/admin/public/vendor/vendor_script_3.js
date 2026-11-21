@@ -986,14 +986,16 @@
       livenessCaptured: false,
       isShopOpen: true,
       userProfile: {
-        phone: '9876543210',
-        name: 'Ramesh Chandra Sharma',
-        shopName: 'Sharma Kirana & General Store',
-        category: 'Grocery & Kirana',
-        emergency: '9811223344',
-        idCardNumber: 'XXXX-XXXX-9012',
-        payoutMethod: 'HDFC Bank ending in ****9012'
-      }
+        phone: '',
+        name: '',
+        shopName: '',
+        category: '',
+        emergency: '',
+        idCardNumber: '',
+        payoutMethod: ''
+      },
+      todayEarnings: 0,
+      totalOrders: 0
     };
 
     
@@ -1687,7 +1689,7 @@
 
       state.userProfile.shopName = shop;
       state.userProfile.category = cat;
-      const defaultName = state.userProfile.name || localStorage.getItem('gb_user_name') || 'Ramesh Chandra Sharma';
+      const defaultName = state.userProfile.name || localStorage.getItem('gb_user_name') || '';
 
       // Safe element updates
       const accShop = document.getElementById('account-display-shop');
@@ -1819,7 +1821,7 @@
         btn.disabled = true;
       }
 
-      const registeredName = (state.userProfile.name || 'Ramesh Chandra Sharma').toUpperCase();
+      const registeredName = (state.userProfile.name || localStorage.getItem('gb_user_name') || 'MERCHANT').toUpperCase();
 
       try {
         const backendUrl = (window.APP_CONFIG && window.APP_CONFIG.API_BASE_URL) || "https://gaonbazaar-village.onrender.com/api/v1";
@@ -4124,7 +4126,7 @@
       // Save to Supabase stores table
       try {
         const supabaseUrl = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL) || "https://vxewgvrjhjpntfvsmuez.supabase.co";
-        const ownerName = state.userProfile.name || 'Ramesh Chandra Sharma';
+        const ownerName = state.userProfile.name || localStorage.getItem('gb_user_name') || '';
         safeApiCall(`${supabaseUrl}/rest/v1/stores?owner_name=eq.${encodeURIComponent(ownerName)}`, 'PATCH', {
           latitude: vendorCoordinates.lat,
           longitude: vendorCoordinates.lng,
@@ -4600,7 +4602,7 @@
       const banner = document.getElementById('sound-alert-banner');
       if (banner) banner.classList.add('hidden');
 
-      const card = document.getElementById('order-card-101');
+      const card = document.getElementById(`order-card-${orderId}`) || document.getElementById('order-card-101');
       if (card) {
         card.innerHTML = `
           <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-center">
@@ -4609,12 +4611,11 @@
         `;
       }
 
-      document.getElementById('new-orders-badge').innerText = '0';
-      document.getElementById('prep-orders-badge').innerText = '2';
-
       try {
         await apiRequest('/api/v1/orders/vendor/orders/' + orderId + '/action', 'POST', { action: 'ACCEPT' });
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Order accept API notice:", e);
+      }
 
       const supa = getSupabaseVendorClient();
       if (supa) {
@@ -4626,12 +4627,13 @@
       }
 
       toastSuccess("Order " + orderId + " accepted! Start packing items.");
+      await syncVendorOrdersFromBackend();
       setTimeout(() => switchOrdersSubTab('preparing'), 800);
     }
 
-    function rejectOrder(orderId) {
+    async function rejectOrder(orderId) {
       stopOrderAlertRingtone();
-      const card = document.getElementById('order-card-101');
+      const card = document.getElementById(`order-card-${orderId}`) || document.getElementById('order-card-101');
       if (card) {
         card.innerHTML = `
           <div class="p-3 bg-rose-50 border border-rose-200 rounded-lg text-center">
@@ -4639,12 +4641,17 @@
           </div>
         `;
       }
-      document.getElementById('new-orders-badge').innerText = '0';
+      try {
+        await apiRequest('/api/v1/orders/vendor/orders/' + orderId + '/action', 'POST', { action: 'REJECT' });
+      } catch (e) {
+        console.warn("Order reject API notice:", e);
+      }
       toastInfo("Order " + orderId + " was rejected.");
+      await syncVendorOrdersFromBackend();
     }
 
     async function markOrderReady(orderId) {
-      const card = document.getElementById('prep-card-102');
+      const card = document.getElementById(`prep-card-${orderId}`) || document.getElementById('prep-card-102');
       if (card) {
         card.innerHTML = `
           <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-center">
@@ -4652,12 +4659,12 @@
           </div>
         `;
       }
-      document.getElementById('prep-orders-badge').innerText = '0';
-      document.getElementById('ready-orders-badge').innerText = '2';
 
       try {
         await apiRequest('/api/v1/orders/vendor/orders/' + orderId + '/action', 'POST', { action: 'PACK' });
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Order ready API notice:", e);
+      }
 
       const supa = getSupabaseVendorClient();
       if (supa) {
@@ -4669,15 +4676,16 @@
       }
 
       toastSuccess("Order " + orderId + " marked Ready for Runner Handover!");
+      await syncVendorOrdersFromBackend();
       setTimeout(() => switchOrdersSubTab('ready'), 800);
     }
 
     async function verifyPickupOTPAndComplete(orderId) {
-      const input = document.getElementById('handover-otp-input');
+      const input = document.getElementById(`handover-otp-input-${orderId}`) || document.getElementById('handover-otp-input');
       const otp = input ? input.value.trim() : '';
 
-      if (otp !== '5821' && otp !== '1234') {
-        toastError("Invalid Pickup OTP! Ask runner for the 4-digit code (Demo: 5821)");
+      if (!otp || otp.length !== 4) {
+        toastError(currentLang === 'hi' ? "कृपया 4-अंकों का पिकअप ओटीपी दर्ज करें" : "Please enter the 4-digit pickup OTP provided by the runner");
         return;
       }
 
@@ -4686,21 +4694,22 @@
           action: 'HANDOFF',
           handover_code: otp
         });
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Handover action notice:", e);
+      }
 
-      const card = document.getElementById('handover-card-103');
+      const card = document.getElementById(`handover-card-${orderId}`) || document.getElementById('handover-card-103');
       if (card) {
         card.innerHTML = `
           <div class="p-4 bg-emerald-50 border border-emerald-300 rounded-xl text-center space-y-1">
             <i data-lucide="check-circle-2" class="w-8 h-8 text-emerald-600 mx-auto"></i>
             <h4 class="text-xs font-extrabold text-emerald-900">Handover Complete!</h4>
-            <p class="text-[11px] text-emerald-700">Order #${orderId} handed over to Runner Sonu Kumar.</p>
-            <span class="inline-block text-[10px] font-bold text-emerald-800 bg-emerald-200/60 px-2 py-0.5 rounded mt-1">Settlement ₹420 Credited</span>
+            <p class="text-[11px] text-emerald-700">Order #${orderId} handed over to Runner.</p>
           </div>
         `;
       }
-      document.getElementById('ready-orders-badge').innerText = '0';
-      toastSuccess("Handover verified! ₹420 added to daily ledger.");
+      toastSuccess("Handover verified!");
+      await syncVendorOrdersFromBackend();
       lucide.createIcons();
     }
 

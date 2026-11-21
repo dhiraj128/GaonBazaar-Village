@@ -921,156 +921,74 @@
         <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 flex space-x-2">
           <button onclick="switchOrdersSubTab('new')" id="subtab-btn-new" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold bg-white text-emerald-700 shadow-xs flex items-center justify-center space-x-1 transition">
             <span data-i18n="subtab_new">New Orders</span>
-            <span id="new-orders-badge" class="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center">1</span>
+            <span id="new-orders-badge" class="w-4 h-4 rounded-full bg-slate-300 text-slate-700 text-[10px] flex items-center justify-center">0</span>
           </button>
           <button onclick="switchOrdersSubTab('preparing')" id="subtab-btn-preparing" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1 transition">
             <span data-i18n="subtab_preparing">Preparing</span>
-            <span id="prep-orders-badge" class="w-4 h-4 rounded-full bg-slate-300 text-slate-700 text-[10px] flex items-center justify-center">1</span>
+            <span id="prep-orders-badge" class="w-4 h-4 rounded-full bg-slate-300 text-slate-700 text-[10px] flex items-center justify-center">0</span>
           </button>
           <button onclick="switchOrdersSubTab('ready')" id="subtab-btn-ready" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 flex items-center justify-center space-x-1 transition">
             <span data-i18n="subtab_ready">Ready Handover</span>
-            <span id="ready-orders-badge" class="w-4 h-4 rounded-full bg-slate-300 text-slate-700 text-[10px] flex items-center justify-center">1</span>
+            <span id="ready-orders-badge" class="w-4 h-4 rounded-full bg-slate-300 text-slate-700 text-[10px] flex items-center justify-center">0</span>
           </button>
         </div>
 
         <!-- SUB-TAB CONTENT: NEW ORDERS -->
         <div id="subtab-content-new" class="p-4 space-y-4">
           <!-- New Orders Empty State -->
-          <div id="new-orders-empty" class="p-8 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs hidden">
+          <div id="new-orders-empty" class="p-8 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
             <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
               <i data-lucide="inbox" class="w-7 h-7"></i>
             </div>
             <h4 class="text-sm font-bold text-slate-900" data-i18n="no_new_orders_title">All Caught Up!</h4>
             <p class="text-xs text-slate-500 max-w-xs mx-auto" data-i18n="no_new_orders_sub">New customer orders will ring and appear here in real-time. Keep your shop online.</p>
           </div>
-          <div id="sound-alert-banner" class="bg-amber-500 text-white p-3 rounded-xl flex items-center justify-between shadow-md">
+          <div id="sound-alert-banner" class="bg-amber-500 text-white p-3 rounded-xl flex items-center justify-between shadow-md hidden">
             <div class="flex items-center space-x-2">
               <i data-lucide="bell-ring" class="w-5 h-5 animate-bounce"></i>
               <span class="text-xs font-bold" data-i18n="ringing_alert">Incoming Order Alert Ringing!</span>
             </div>
             <button onclick="silenceAlertSound()" class="text-xs bg-amber-700 hover:bg-amber-800 px-2 py-1 rounded font-semibold active:scale-95" data-i18n="mute_btn">Mute</button>
           </div>
-
-          <!-- Pulsing New Order Card -->
-          <div id="order-card-101" class="bg-white rounded-xl border-2 border-emerald-500 p-4 shadow-md pulse-order transition">
-            <div class="flex justify-between items-start mb-3">
-              <div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800" data-i18n="instant_dispatch_badge">INSTANT DISPATCH</span>
-                <h3 class="text-base font-bold text-slate-900 mt-1" data-i18n="order_gb8921_title">Order #GB-8921</h3>
-                <p class="text-xs text-slate-500 break-words whitespace-normal leading-relaxed" data-i18n="cust_order_sample">Customer: Sunita Devi (Gopalpur Village - 1.8km)</p>
-              </div>
-              <span class="text-base font-extrabold text-slate-900">₹340.00</span>
-            </div>
-
-            <!-- Items list -->
-            <div class="border-t border-b border-slate-100 py-2.5 my-2.5 space-y-1.5 text-xs">
-              <div class="flex justify-between">
-                <span>1x Aashirvaad Atta 5kg</span>
-                <span class="font-semibold text-slate-700">₹240</span>
-              </div>
-              <div class="flex justify-between">
-                <span>2x Amul Taaza Milk 500ml</span>
-                <span class="font-semibold text-slate-700">₹56</span>
-              </div>
-              <div class="flex justify-between">
-                <span>1x Tata Salt 1kg</span>
-                <span class="font-semibold text-slate-700">₹28</span>
-              </div>
-              <div class="flex justify-between text-slate-500 text-[11px] pt-1 border-t border-dashed">
-                <span data-i18n="packaging_fee_label">Packaging Fee Included</span>
-                <span class="font-semibold text-emerald-700">₹16</span>
-              </div>
-            </div>
-
-            <!-- Actions: Accept / Reject -->
-            <div class="flex flex-col sm:flex-row gap-2.5 pt-1 w-full">
-              <button onclick="rejectOrder('GB-8921')" class="w-full sm:w-1/3 min-h-[48px] h-12 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs sm:text-sm border border-rose-200 transition active:scale-95 flex items-center justify-center" data-i18n="reject_order_btn">
-                Reject
-              </button>
-              <button onclick="acceptOrder('GB-8921')" class="w-full sm:flex-1 min-h-[48px] h-12 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs sm:text-sm shadow-sm transition active:scale-95 flex items-center justify-center space-x-1.5" data-i18n="accept_order_btn">
-                <i data-lucide="check" class="w-4 h-4"></i>
-                <span>Accept Order</span>
-              </button>
-            </div>
-          </div>
         </div>
 
         <!-- SUB-TAB CONTENT: PREPARING -->
         <div id="subtab-content-preparing" class="p-4 space-y-4 hidden">
           <!-- Preparing Orders Empty State -->
-          <div id="prep-orders-empty" class="p-8 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs hidden">
+          <div id="prep-orders-empty" class="p-8 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
             <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto">
               <i data-lucide="package" class="w-7 h-7"></i>
             </div>
             <h4 class="text-sm font-bold text-slate-900" data-i18n="no_prep_orders_title">No Orders Preparing</h4>
             <p class="text-xs text-slate-500 max-w-xs mx-auto" data-i18n="no_prep_orders_sub">Orders accepted from the New Orders tab will appear here for packing.</p>
           </div>
-          <div id="prep-card-102" class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-            <div class="flex justify-between items-start mb-2">
-              <div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800" data-i18n="packing_progress_badge">PACKING IN PROGRESS</span>
-                <h3 class="text-sm font-bold text-slate-900 mt-1" data-i18n="order_gb8919_title">Order #GB-8919</h3>
-                <p class="text-xs text-slate-500 break-words whitespace-normal leading-relaxed" data-i18n="cust_prep_sample">Customer: Vikram Singh (Chaupal Road)</p>
-              </div>
-              <span class="text-sm font-extrabold text-slate-900">₹185.00</span>
+          <div id="prep-orders-container" class="space-y-4">
+            <div id="prep-card-template" class="hidden bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+              <button onclick="markOrderReady('')" class="w-full min-h-[48px] py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition active:scale-95 flex items-center justify-center space-x-1.5">
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                <span>Mark Order Ready for Runner</span>
+              </button>
             </div>
-
-            <!-- Packing Checklist -->
-            <div class="bg-slate-50 rounded-lg p-3 my-2 space-y-2 text-xs">
-              <label class="flex items-center space-x-2 cursor-pointer">
-                <input type="checkbox" checked class="w-4 h-4 text-emerald-600 rounded">
-                <span class="line-through text-slate-400">Fortune Mustard Oil 1L</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer">
-                <input type="checkbox" checked class="w-4 h-4 text-emerald-600 rounded">
-                <span class="line-through text-slate-400">MDH Deggi Mirch 100g</span>
-              </label>
-            </div>
-
-            <button onclick="markOrderReady('GB-8919')" class="w-full min-h-[48px] h-12 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-sm transition active:scale-95 flex items-center justify-center space-x-2" data-i18n="mark_ready_btn">
-              <i data-lucide="package-check" class="w-4 h-4"></i>
-              <span>Mark Ready for Handover</span>
-            </button>
           </div>
         </div>
 
         <!-- SUB-TAB CONTENT: READY FOR HANDOVER (RESPONSIVE NON-CLIPPING FIX) -->
         <div id="subtab-content-ready" class="p-4 space-y-4 hidden">
           <!-- Ready Orders Empty State -->
-          <div id="ready-orders-empty" class="p-8 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs hidden">
+          <div id="ready-orders-empty" class="p-8 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
             <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto">
               <i data-lucide="bike" class="w-7 h-7"></i>
             </div>
             <h4 class="text-sm font-bold text-slate-900" data-i18n="no_ready_orders_title">No Orders Awaiting Handover</h4>
             <p class="text-xs text-slate-500 max-w-xs mx-auto" data-i18n="no_ready_orders_sub">Packed orders assigned to delivery runners will appear here for secure OTP handover.</p>
           </div>
-          <div id="handover-card-103" class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-            <div class="flex justify-between items-start mb-2">
-              <div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800" data-i18n="runner_assigned_badge">RUNNER ASSIGNED</span>
-                <h3 class="text-sm font-bold text-slate-900 mt-1" data-i18n="order_gb8915_title">Order #GB-8915</h3>
-                <p class="text-xs text-slate-500" data-i18n="runner_sample_name">Runner: Sonu Kumar (+91 9711002233)</p>
-              </div>
-              <span class="text-sm font-extrabold text-slate-900">₹420.00</span>
-            </div>
-
-            <!-- Handover Box with responsive flex-col sm:flex-row and min-w-0 -->
-            <div class="p-3.5 bg-blue-50/70 rounded-xl border border-blue-200 my-3 space-y-2.5">
-              <div class="flex items-center space-x-2 text-xs font-semibold text-blue-900">
-                <i data-lucide="shield-check" class="w-4 h-4 text-blue-600 shrink-0"></i>
-                <span data-i18n="verify_pickup_otp">Enter Runner's 4-Digit Pickup OTP</span>
-              </div>
-              
-              <!-- Responsive non-overflowing input group -->
-              <div class="flex flex-col sm:flex-row gap-2.5 w-full">
-                <input type="text" id="handover-otp-input" autocomplete="one-time-code" autocomplete="one-time-code" maxlength="4" placeholder="e.g. 5821" data-i18n-placeholder="handover_otp_placeholder" class="w-full sm:flex-1 min-w-0 min-h-[48px] h-12 px-3 py-2 text-center font-mono font-bold text-xl tracking-widest border-2 border-blue-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs">
-                <button onclick="verifyPickupOTPAndComplete('GB-8915')" class="w-full sm:w-auto min-h-[48px] h-12 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm active:scale-95 transition shrink-0 flex items-center justify-center space-x-1.5" data-i18n="handover_btn">
-                  <i data-lucide="check" class="w-4 h-4"></i>
-                  <span>Handover</span>
-                </button>
-              </div>
-              
-              <span class="text-[10px] text-blue-600 block leading-tight" data-i18n="runner_otp_hint">Ask the delivery partner for their secure OTP (Demo OTP: 5821)</span>
+          <div id="ready-orders-container" class="space-y-4">
+            <div id="ready-card-template" class="hidden bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+              <input type="text" id="handover-otp-input" placeholder="4-digit Pickup OTP" maxlength="4" class="w-full min-h-[48px] h-12 px-3 py-2 border rounded-xl font-mono text-center text-lg">
+              <button onclick="verifyPickupOTPAndComplete('')" class="w-full min-h-[48px] py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md transition active:scale-95 flex items-center justify-center space-x-1.5">
+                <i data-lucide="key" class="w-4 h-4"></i>
+                <span>Verify Pickup & Handover</span>
+              </button>
             </div>
           </div>
         </div>
@@ -1141,170 +1059,15 @@
           </button>
         </div>
 
-        <!-- Products List with Uniform Layout & Verified Product Photos (ZERO EMOJIS, FIXED 48px GEOMETRY) -->
+        <!-- Products List with Uniform Layout & Verified Product Photos -->
         <div id="inventory-list" class="space-y-3">
-          
-          <!-- Product Card 1: Aashirvaad Chakki Atta (Flour / Grain Photo) -->
-          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_atta_01" data-title="Aashirvaad Shudh Chakki Atta 5kg" data-category="Grocery">
-            <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80" alt="Aashirvaad Chakki Atta" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
-              <div class="min-w-0 flex-1 overflow-hidden">
-                <div class="flex items-center space-x-1 min-w-0">
-                  <h4 class="text-xs font-bold text-slate-900 truncate">Aashirvaad Chakki Atta</h4>
-                  <span class="text-[10px] text-slate-500 font-medium shrink-0">(5 kg)</span>
-                </div>
-                <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
-                  <span class="text-xs font-extrabold text-slate-900">₹240.00</span>
-                  <span class="text-[10px] text-slate-400 line-through">₹260.00</span>
-                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">8% OFF</span>
-                </div>
-                <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
-                  <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">45 units</strong></span>
-                  <span class="text-slate-300">•</span>
-                  <span class="stock-label font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
-                </div>
-              </div>
+          <div id="vendor-inventory-empty" class="p-8 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
+            <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+              <i data-lucide="package-plus" class="w-7 h-7"></i>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
-              <input type="checkbox" checked onchange="toggleProductStock(this, 'prod_atta_01', 'Aashirvaad Chakki Atta')" class="sr-only peer">
-              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
+            <h4 class="text-sm font-bold text-slate-900" data-i18n="no_inventory_title">No Products Listed Yet</h4>
+            <p class="text-xs text-slate-500 max-w-xs mx-auto" data-i18n="no_inventory_sub">Tap "+ Add Product" above or browse Master Catalog to stock items in your live store.</p>
           </div>
-
-          <!-- Product Card 2: Amul Taaza Milk (Fresh Dairy Photo) -->
-          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_milk_01" data-title="Amul Taaza Homogenised Toned Milk 500ml" data-category="Dairy">
-            <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80" alt="Amul Taaza Milk" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
-              <div class="min-w-0 flex-1 overflow-hidden">
-                <div class="flex items-center space-x-1 min-w-0">
-                  <h4 class="text-xs font-bold text-slate-900 truncate">Amul Taaza Milk</h4>
-                  <span class="text-[10px] text-slate-500 font-medium shrink-0">(500 ml)</span>
-                </div>
-                <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
-                  <span class="text-xs font-extrabold text-slate-900">₹28.00</span>
-                  <span class="text-[10px] text-slate-400 font-semibold">MRP ₹28.00</span>
-                </div>
-                <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
-                  <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">60 units</strong></span>
-                  <span class="text-slate-300">•</span>
-                  <span class="stock-label font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
-                </div>
-              </div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
-              <input type="checkbox" checked onchange="toggleProductStock(this, 'prod_milk_01', 'Amul Taaza Milk')" class="sr-only peer">
-              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
-          </div>
-
-          <!-- Product Card 3: Fortune Mustard Oil (Cooking Oil Bottle Photo) -->
-          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_oil_01" data-title="Fortune Kachi Ghani Mustard Oil 1L" data-category="Grocery">
-            <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&q=80" alt="Fortune Mustard Oil" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
-              <div class="min-w-0 flex-1 overflow-hidden">
-                <div class="flex items-center space-x-1 min-w-0">
-                  <h4 class="text-xs font-bold text-slate-900 truncate">Fortune Mustard Oil</h4>
-                  <span class="text-[10px] text-slate-500 font-medium shrink-0">(1 L)</span>
-                </div>
-                <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
-                  <span class="text-xs font-extrabold text-slate-900">₹145.00</span>
-                  <span class="text-[10px] text-slate-400 line-through">₹165.00</span>
-                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">12% OFF</span>
-                </div>
-                <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
-                  <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">0 units</strong></span>
-                  <span class="text-slate-300">•</span>
-                  <span class="stock-label font-bold text-rose-500 block" data-i18n="out_of_stock_label">OUT OF STOCK</span>
-                </div>
-              </div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
-              <input type="checkbox" onchange="toggleProductStock(this, 'prod_oil_01', 'Fortune Mustard Oil')" class="sr-only peer">
-              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
-          </div>
-
-          <!-- Product Card 4: Tata Tea Gold (Tea Leaves & Cup Photo) -->
-          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_tea_01" data-title="Tata Tea Gold Leaf 250g" data-category="Beverages">
-            <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&q=80" alt="Tata Tea Gold" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
-              <div class="min-w-0 flex-1 overflow-hidden">
-                <div class="flex items-center space-x-1 min-w-0">
-                  <h4 class="text-xs font-bold text-slate-900 truncate">Tata Tea Gold</h4>
-                  <span class="text-[10px] text-slate-500 font-medium shrink-0">(250 g)</span>
-                </div>
-                <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
-                  <span class="text-xs font-extrabold text-slate-900">₹110.00</span>
-                  <span class="text-[10px] text-slate-400 line-through">₹140.00</span>
-                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">21% OFF</span>
-                </div>
-                <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
-                  <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">35 units</strong></span>
-                  <span class="text-slate-300">•</span>
-                  <span class="stock-label font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
-                </div>
-              </div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
-              <input type="checkbox" checked onchange="toggleProductStock(this, 'prod_tea_01', 'Tata Tea Gold')" class="sr-only peer">
-              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
-          </div>
-
-          <!-- Product Card 5: Madhur Pure Sugar (White Sugar Crystals Photo) -->
-          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_sugar_01" data-title="Madhur Pure & Hygienic Sugar 1kg" data-category="Grocery">
-            <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1587132137056-bfbf0166836e?w=500&q=80" alt="Madhur Sugar" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
-              <div class="min-w-0 flex-1 overflow-hidden">
-                <div class="flex items-center space-x-1 min-w-0">
-                  <h4 class="text-xs font-bold text-slate-900 truncate">Madhur Pure Sugar</h4>
-                  <span class="text-[10px] text-slate-500 font-medium shrink-0">(1 kg)</span>
-                </div>
-                <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
-                  <span class="text-xs font-extrabold text-slate-900">₹45.00</span>
-                  <span class="text-[10px] text-slate-400 line-through">₹50.00</span>
-                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">10% OFF</span>
-                </div>
-                <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
-                  <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">50 units</strong></span>
-                  <span class="text-slate-300">•</span>
-                  <span class="stock-label font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
-                </div>
-              </div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
-              <input type="checkbox" checked onchange="toggleProductStock(this, 'prod_sugar_01', 'Madhur Pure Sugar')" class="sr-only peer">
-              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
-          </div>
-
-          <!-- Product Card 6: Desi Toor Dal (Yellow Lentils / Dal Photo - NOT FISH!) -->
-          <div class="product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden" data-id="prod_dal_01" data-title="Desi Toor Dal 1kg" data-category="Grocery">
-            <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80" alt="Desi Toor Dal" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
-              <div class="min-w-0 flex-1 overflow-hidden">
-                <div class="flex items-center space-x-1 min-w-0">
-                  <h4 class="text-xs font-bold text-slate-900 truncate">Desi Toor Dal</h4>
-                  <span class="text-[10px] text-slate-500 font-medium shrink-0">(1 kg)</span>
-                </div>
-                <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
-                  <span class="text-xs font-extrabold text-slate-900">₹140.00</span>
-                  <span class="text-[10px] text-slate-400 line-through">₹155.00</span>
-                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">10% OFF</span>
-                </div>
-                <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
-                  <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">40 units</strong></span>
-                  <span class="text-slate-300">•</span>
-                  <span class="stock-label font-bold text-emerald-600 block" data-i18n="in_stock_label">IN STOCK</span>
-                </div>
-              </div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
-              <input type="checkbox" checked onchange="toggleProductStock(this, 'prod_dal_01', 'Desi Toor Dal')" class="sr-only peer">
-              <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
-          </div>
-
         </div>
       </div>
 
@@ -1320,8 +1083,8 @@
         <div class="grid grid-cols-3 gap-2.5">
           <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
             <span class="text-[10px] font-semibold text-slate-500 uppercase block" data-i18n="daily_sales">Daily Sales</span>
-            <span class="text-base font-extrabold text-slate-900 mt-0.5 block">₹4,890</span>
-            <span class="text-[9px] text-emerald-600 font-bold" data-i18n="orders_count_badge">14 Orders</span>
+            <span class="text-base font-extrabold text-slate-900 mt-0.5 block">₹0</span>
+            <span class="text-[9px] text-emerald-600 font-bold" data-i18n="orders_count_badge">0 Orders</span>
           </div>
 
           <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 shadow-xs text-center">
@@ -1332,7 +1095,7 @@
 
           <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
             <span class="text-[10px] font-semibold text-slate-500 uppercase block" data-i18n="net_payout">Net Payout</span>
-            <span class="text-base font-extrabold text-emerald-600 mt-0.5 block">₹4,890</span>
+            <span class="text-base font-extrabold text-emerald-600 mt-0.5 block">₹0</span>
             <span class="text-[9px] text-slate-500 font-medium" data-i18n="daily_direct_badge">Daily Direct</span>
           </div>
         </div>
@@ -1340,8 +1103,8 @@
         <!-- Instant Payout Trigger -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
           <div>
-            <h4 class="text-xs font-bold text-slate-900" data-i18n="available_balance">Available Balance: ₹4,890.00</h4>
-            <p class="text-[11px] text-slate-500" data-i18n="auto_transfer_hint">Auto-transfers nightly to HDFC Bank ****9012</p>
+            <h4 class="text-xs font-bold text-slate-900" data-i18n="available_balance">Available Balance: ₹0.00</h4>
+            <p class="text-[11px] text-slate-500" data-i18n="auto_transfer_hint">Auto-transfers nightly to verified bank account</p>
           </div>
           <button onclick="requestInstantPayout()" class="py-2 px-3 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-lg shadow-xs active:scale-95 transition" data-i18n="instant_payout_btn">
             Settle Now
@@ -1352,37 +1115,10 @@
         <div>
           <h3 class="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide" data-i18n="recent_settlements">Recent Transactions</h3>
           <div class="space-y-2">
-            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center text-xs">
-              <div>
-                <span class="font-bold text-slate-900">Order #GB-8910</span>
-                <span class="block text-[10px] text-slate-500">Today, 11:24 AM • UPI Pre-paid</span>
-              </div>
-              <div class="text-right">
-                <span class="font-extrabold text-emerald-600">+₹580.00</span>
-                <span class="block text-[10px] font-bold text-emerald-700" data-i18n="settled_pill">SETTLED</span>
-              </div>
-            </div>
-
-            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center text-xs">
-              <div>
-                <span class="font-bold text-slate-900">Order #GB-8902</span>
-                <span class="block text-[10px] text-slate-500">Today, 09:45 AM • Cash on Delivery</span>
-              </div>
-              <div class="text-right">
-                <span class="font-extrabold text-emerald-600">+₹320.00</span>
-                <span class="block text-[10px] font-bold text-emerald-700" data-i18n="settled_pill">SETTLED</span>
-              </div>
-            </div>
-
-            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center text-xs">
-              <div>
-                <span class="font-bold text-slate-900" data-i18n="batch_settlement_label">Batch Settlement Payout</span>
-                <span class="block text-[10px] text-slate-500">Yesterday, 11:59 PM • NEFT / IMPS</span>
-              </div>
-              <div class="text-right">
-                <span class="font-extrabold text-slate-800">₹7,420.00</span>
-                <span class="block text-[10px] font-bold text-blue-600" data-i18n="paid_to_bank_pill">PAID TO BANK</span>
-              </div>
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs text-center text-slate-400">
+              <i data-lucide="receipt" class="w-8 h-8 mx-auto text-slate-300 mb-2"></i>
+              <p class="text-xs font-semibold text-slate-600">No transactions yet</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Completed order earnings will be listed here.</p>
             </div>
           </div>
         </div>
@@ -1406,14 +1142,14 @@
           </div>
           <div class="flex-1">
             <div class="flex items-center space-x-1.5">
-              <h3 id="account-display-name" class="text-sm font-bold text-slate-900">Ramesh Chandra Sharma</h3>
+              <h3 id="account-display-name" class="text-sm font-bold text-slate-900">Partner Merchant</h3>
               <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 flex items-center space-x-1">
                 <i data-lucide="shield-check" class="w-3 h-3 text-emerald-600"></i>
                 <span data-i18n="verified_badge">Verified</span>
               </span>
             </div>
-            <p id="account-display-shop" class="text-xs text-slate-600 mt-0.5">Sharma Kirana Store</p>
-            <p id="account-display-phone" class="text-xs text-slate-500 font-mono mt-0.5">+91 9876543210</p>
+            <p id="account-display-shop" class="text-xs text-slate-600 mt-0.5">Village Kirana Store</p>
+            <p id="account-display-phone" class="text-xs text-slate-500 font-mono mt-0.5"></p>
           </div>
         </div>
 

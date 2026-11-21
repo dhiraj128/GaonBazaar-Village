@@ -15,12 +15,15 @@ async def test_monthly_ration_list_lifecycle():
         token = create_access_token(data={"sub": uid, "phone": "9800000000", "role": "customer"})
         headers = {"Authorization": f"Bearer {token}"}
 
-        # 1. GET /api/v1/ration-lists (should auto-seed default list for new user)
+        # 1. GET /api/v1/ration-lists (initially returns empty list for new user)
         res = await client.get("/api/v1/ration-lists", headers=headers)
         assert res.status_code == 200, res.text
-        data = res.json()
-        assert len(data) >= 1
-        first_list = data[0]
+        assert res.json() == []
+
+        # Create starter ration list on demand
+        create_res = await client.post("/api/v1/ration-lists", json={"name": "My Monthly Ration"}, headers=headers)
+        assert create_res.status_code == 201, create_res.text
+        first_list = create_res.json()
         assert first_list["name"] == "My Monthly Ration"
         assert len(first_list["items"]) >= 5
         list_id = first_list["id"]

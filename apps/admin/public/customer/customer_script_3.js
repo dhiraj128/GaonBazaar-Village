@@ -228,15 +228,15 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
         }
         if (!user) {
           user = {
-            name: 'Ramesh Patel',
-            phone: '+91 98765 43210',
-            email: 'ramesh.patel@gaonbazaar.in',
-            village: 'Minapur Village',
-            district: 'Muzaffarpur'
+            name: 'Customer',
+            phone: '',
+            email: '',
+            village: '',
+            district: ''
           };
         }
         const nameEl = document.getElementById('user-display-name');
-        if (nameEl) nameEl.textContent = user.name || user.full_name || 'Ramesh Patel';
+        if (nameEl) nameEl.textContent = user.name || user.full_name || 'Customer';
         
         // Customer accounts do NOT require KYC verification - permanently hide badge for customer role
         const kycBadge = document.getElementById('customer-kyc-badge') || document.querySelector('[data-i18n="verified_customer"]');
@@ -256,7 +256,7 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
           }
         }
         const phoneEl = document.getElementById('user-display-phone');
-        if (phoneEl) phoneEl.textContent = user.phone || '+91 98765 43210';
+        if (phoneEl) phoneEl.textContent = user.phone || '';
 
         // Avatar rendering: show avatar image if avatar_url is present, otherwise initials
         const avatarImg = document.getElementById('user-avatar-img');
@@ -269,19 +269,19 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
           if (avatarImg) avatarImg.classList.add('hidden');
           if (initialsEl) {
             initialsEl.classList.remove('hidden');
-            const initials = (user.name || user.full_name || 'RP')
+            const initials = (user.name || user.full_name || 'GB')
               .split(' ')
               .map(w => w[0])
               .slice(0, 2)
               .join('')
               .toUpperCase();
-            initialsEl.textContent = initials || 'RP';
+            initialsEl.textContent = initials || 'GB';
           }
         }
         const editName = document.getElementById('edit-profile-name');
-        if (editName) editName.value = user.name || user.full_name || 'Ramesh Patel';
+        if (editName) editName.value = user.name || user.full_name || '';
         const editEmail = document.getElementById('edit-profile-email');
-        if (editEmail) editEmail.value = user.email || 'ramesh.patel@gaonbazaar.in';
+        if (editEmail) editEmail.value = user.email || '';
       } catch (err) {
         console.error('loadUserProfile error:', err);
       }
@@ -801,39 +801,9 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
       configurable: true
     });
 
-    // Master Stores Directory
-    const storesDirectory = [
-      {
-        id: 'st_sharma',
-        name: 'Sharma Kirana & General Store',
-        category: 'Grocery',
-        rating: 4.8,
-        distanceKm: 0.8,
-        locality: 'Gopalpur Chowk',
-        img: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=400&q=80',
-        products: ['p1', 'p2', 'p4', 'p7', 'p8', 'p9', 'p10']
-      },
-      {
-        id: 'st_kisan',
-        name: 'Kisan Krishi Kendra & Sabzi Mandi',
-        category: 'Vegetables',
-        rating: 4.9,
-        distanceKm: 1.4,
-        locality: 'Main Mandi Road',
-        img: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80',
-        products: ['p5', 'p6', 'p11']
-      },
-      {
-        id: 'st_verma',
-        name: 'Verma Fresh Dairy & Sweets',
-        category: 'Dairy & Milk',
-        rating: 4.7,
-        distanceKm: 2.1,
-        locality: 'Panchayat Bhavan Road',
-        img: 'https://images.unsplash.com/photo-1527153857715-3908f2ae5e81?w=400&q=80',
-        products: ['p3']
-      }
-    ];
+    // Master Stores Directory (dynamically loaded from live database)
+    let storesDirectory = [];
+    window.storesDirectory = storesDirectory;
 
     // Master Product Image Library (Verified High-Res Photographs)
         // ===========================================================================
@@ -1018,169 +988,7 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
     window.PRODUCT_IMAGE_CATALOG = IMAGE_CATALOG;
     window.getProductImage = getProductImage;
 
-    let productsCatalog = [
-
-      {
-        id: 'p1',
-        nameEn: 'Aashirvaad Shudh Chakki Atta',
-        nameHi: 'आशीर्वाद शुद्ध चक्की ताजा आटा',
-        category: 'Grocery',
-        unit: '5 kg',
-        price: 215.00,
-        img: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80',
-        store: 'Sharma Kirana & General Store'
-      },
-      {
-        id: 'p2',
-        nameEn: 'Kachchi Ghani Mustard Oil',
-        nameHi: 'कच्ची घानी शुद्ध सरसों तेल',
-        category: 'Grocery',
-        unit: '1 Litre Bottle',
-        price: 145.00,
-        img: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80',
-        store: 'Sharma Kirana & General Store'
-      },
-      {
-        id: 'p3',
-        nameEn: 'Fresh Pure Cow Milk (Taaza)',
-        nameHi: 'ताज़ा शुद्ध गाय का दूध',
-        category: 'Dairy & Milk',
-        unit: '1 Litre Pouch',
-        price: 56.00,
-        img: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400',
-        store: 'Verma Fresh Dairy & Sweets'
-      },
-      {
-        id: 'p4',
-        nameEn: 'Pure Refined White Sugar (Cheeni)',
-        nameHi: 'शुद्ध सफेद चीनी',
-        category: 'Grocery',
-        unit: '1 kg Pack',
-        price: 45.00,
-        img: 'https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=500&q=80',
-        store: 'Sharma Kirana & General Store'
-      },
-      {
-        id: 'p5',
-        nameEn: 'Red Desi Fresh Tomatoes (Tamatar)',
-        nameHi: 'देसी लाल ताज़ा टमाटर',
-        category: 'Vegetables',
-        unit: '1 kg',
-        price: 28.00,
-        img: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80',
-        store: 'Kisan Krishi Kendra & Sabzi Mandi'
-      },
-      {
-        id: 'p6',
-        nameEn: 'Fresh Farm Potatoes (Aloo)',
-        nameHi: 'ताज़ा आलू',
-        category: 'Vegetables',
-        unit: '2 kg',
-        price: 48.00,
-        img: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400',
-        store: 'Kisan Krishi Kendra & Sabzi Mandi'
-      },
-      {
-        id: 'p7',
-        nameEn: 'Arhar / Toor Dal (Desi Pulses)',
-        nameHi: 'देसी अरहर / तूर दाल',
-        category: 'Grocery',
-        unit: '1 kg',
-        price: 135.00,
-        img: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500&q=80',
-        store: 'Sharma Kirana & General Store'
-      },
-      {
-        id: 'p8',
-        nameEn: 'Parle-G Glucose Biscuits',
-        nameHi: 'पारले-जी ग्लूकोज बिस्कुट',
-        category: 'Grocery',
-        unit: '1 Pack (250g)',
-        price: 25.00,
-        img: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400',
-        store: 'Sharma Kirana & General Store'
-      },
-      {
-        id: 'p9',
-        nameEn: 'Surf Excel Detergent Powder',
-        nameHi: 'सर्फ एक्सेल डिटर्जेंट पाउडर',
-        category: 'General Store',
-        unit: '1 kg Pack',
-        price: 115.00,
-        img: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=500&q=80',
-        store: 'Sharma Kirana & General Store'
-      },
-      {
-        id: 'p10',
-        nameEn: 'Tata Iodized Salt (Namak)',
-        nameHi: 'टाटा आयोडाइज्ड नमक',
-        category: 'Grocery',
-        unit: '1 kg Pack',
-        price: 28.00,
-        img: 'https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=500&q=80',
-        store: 'Sharma Kirana & General Store'
-      },
-      {
-        id: 'p11',
-        nameEn: 'Fresh Red Onions (Pyaz)',
-        nameHi: 'लाल ताज़ा प्याज़',
-        category: 'Vegetables',
-        unit: '1 kg',
-        price: 32.00,
-        img: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400',
-        store: 'Kisan Krishi Kendra & Sabzi Mandi'
-      },
-      {
-        id: 'p12',
-        nameEn: 'Fresh Green Chillies & Ginger',
-        nameHi: 'ताज़ी हरी मिर्च और अदरक',
-        category: 'Vegetables',
-        unit: '250g Pack',
-        price: 20.00,
-        img: 'https://images.unsplash.com/photo-1588252303782-cb80119abd6d?w=500&q=80',
-        store: 'Kisan Krishi Kendra & Sabzi Mandi'
-      },
-      {
-        id: 'p13',
-        nameEn: 'India Gate Basmati Rice (Chawal)',
-        nameHi: 'इंडिया गेट बासमती चावल',
-        category: 'Grocery',
-        unit: '1 kg Pack',
-        price: 95.00,
-        img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500&q=80',
-        store: 'Sharma Kirana & General Store'
-      },
-      {
-        id: 'p14',
-        nameEn: "Lay's Classic Salted Potato Chips",
-        nameHi: 'लेज क्लासिक सॉल्टेड चिप्स',
-        category: 'Snacks',
-        unit: '50g Pack',
-        price: 20.00,
-        img: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&q=80',
-        store: 'Sharma Kirana & General Store'
-      },
-      {
-        id: 'p15',
-        nameEn: "Haldiram's Bhujia Sev Namkeen",
-        nameHi: 'हल्दीराम भुजिया सेव',
-        category: 'Snacks',
-        unit: '200g Pack',
-        price: 48.00,
-        img: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=500&q=80',
-        store: 'Sharma Kirana & General Store'
-      },
-      {
-        id: 'p16',
-        nameEn: 'Wagh Bakri Premium CTC Tea',
-        nameHi: 'वाघ बकरी कड़क चाय पत्ती',
-        category: 'Grocery',
-        unit: '250g Pack',
-        price: 85.00,
-        img: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80',
-        store: 'Sharma Kirana & General Store'
-      }
-    ];
+    let productsCatalog = [];
 
     let cartItems = [];
     Object.defineProperty(window, 'cartItems', {
@@ -2008,20 +1816,25 @@ function createProductCardElement(p) {
       const searchInput = document.getElementById('home-search-input');
       const hasSearch = searchInput && searchInput.value.trim().length > 0;
 
-      // Always populate #products-grid so tests or selectors finding .product-card or #products-grid succeed
-      if (filteredGrid) {
-        filteredGrid.innerHTML = '';
-        itemsToRender.forEach(p => {
-          filteredGrid.appendChild(createProductCardElement(p));
-        });
+      if (!itemsToRender || itemsToRender.length === 0) {
+        if (showcaseSection) showcaseSection.classList.add('hidden');
+        if (filteredSection) filteredSection.classList.remove('hidden');
+        if (filteredGrid) {
+          filteredGrid.innerHTML = `
+            <div class="col-span-2 py-8 text-center text-slate-400 space-y-2">
+              <div class="w-12 h-12 mx-auto bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
+                <i class="fas fa-box-open text-lg"></i>
+              </div>
+              <p class="text-xs font-semibold">${currentLang === 'hi' ? 'कोई सामान उपलब्ध नहीं है' : 'No products available yet. Local store inventory will appear here.'}</p>
+            </div>
+          `;
+        }
+        if (countBadge) countBadge.innerText = '0' + (currentLang === 'hi' ? ' सामान' : ' items');
+        if (window.lucide && typeof lucide.createIcons === 'function') {
+          lucide.createIcons();
+        }
+        return;
       }
-
-      if (countBadge) {
-        countBadge.innerText = itemsToRender.length + (currentLang === 'hi' ? ' सामान' : ' items');
-      }
-
-      // If viewing full catalog without search filter, show supermarket categorized sections
-      if (!hasSearch && itemsToRender.length === productsCatalog.length) {
         if (showcaseSection) showcaseSection.classList.remove('hidden');
         if (filteredSection) filteredSection.classList.add('hidden');
 
@@ -2077,7 +1890,20 @@ function createProductCardElement(p) {
       container.innerHTML = '';
 
       const countBadge = document.getElementById('stores-count-badge');
-      if (countBadge) countBadge.innerText = storesToRender.length + (currentLang === 'hi' ? ' दुकानें' : ' Authorized');
+      if (countBadge) countBadge.innerText = (storesToRender ? storesToRender.length : 0) + (currentLang === 'hi' ? ' दुकानें' : ' Authorized');
+
+      if (!storesToRender || storesToRender.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-8 text-center text-slate-500 w-full">
+            <div class="w-12 h-12 mx-auto mb-2 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
+              <i class="fas fa-store-slash text-lg"></i>
+            </div>
+            <p class="text-sm font-semibold text-slate-700">${currentLang === 'hi' ? 'आपके क्षेत्र में अभी कोई दुकान उपलब्ध नहीं है।' : 'No stores available in your area yet.'}</p>
+            <p class="text-xs text-slate-400 mt-0.5">${currentLang === 'hi' ? 'स्थानीय ग्रामीण व्यापारी जल्द ही जुड़ रहे हैं।' : 'Real village merchants are onboarding soon.'}</p>
+          </div>
+        `;
+        return;
+      }
 
       storesToRender.forEach(st => {
         const card = document.createElement('div');
@@ -2102,6 +1928,40 @@ function createProductCardElement(p) {
         container.appendChild(card);
       });
     }
+
+    async function loadNearbyStores(lat = null, lng = null) {
+      try {
+        let url = '/api/v1/stores/nearby';
+        if (lat !== null && lng !== null) {
+          url += `?latitude=${lat}&longitude=${lng}`;
+        } else if (activeCustomerAddress && activeCustomerAddress.latitude && activeCustomerAddress.longitude) {
+          url += `?latitude=${activeCustomerAddress.latitude}&longitude=${activeCustomerAddress.longitude}`;
+        }
+        const data = await apiRequest(url, 'GET');
+        if (Array.isArray(data)) {
+          storesDirectory = data.map(s => ({
+            id: s.id,
+            name: s.shop_name || s.name,
+            category: s.category || 'General Store',
+            rating: s.rating || 4.8,
+            distanceKm: s.distance_km ? parseFloat(s.distance_km.toFixed(1)) : 1.0,
+            locality: s.village || s.locality || 'Minapur',
+            img: s.banner_url || 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=400&q=80',
+            products: []
+          }));
+          window.storesDirectory = storesDirectory;
+        } else {
+          storesDirectory = [];
+          window.storesDirectory = [];
+        }
+      } catch (e) {
+        console.warn('loadNearbyStores error:', e);
+        storesDirectory = [];
+        window.storesDirectory = [];
+      }
+      renderStoresList(storesDirectory);
+    }
+    window.loadNearbyStores = loadNearbyStores;
 
     function handleHomeSearch(val) {
       val = (val || '').toLowerCase().trim();
@@ -2218,7 +2078,7 @@ function createProductCardElement(p) {
       }
     }
 
-    function openStoreDetailsModal(storeId) {
+    async function openStoreDetailsModal(storeId) {
       const store = storesDirectory.find(s => s.id === storeId);
       if (!store) return;
 
@@ -2226,28 +2086,56 @@ function createProductCardElement(p) {
       document.getElementById('store-modal-locality').innerText = store.locality + ' • ' + store.distanceKm + ' km • ' + store.rating + '★';
 
       const prodsContainer = document.getElementById('store-modal-products');
-      prodsContainer.innerHTML = '';
-
-      const storeProducts = productsCatalog.filter(p => store.products.includes(p.id));
-      storeProducts.forEach(p => {
-        const row = document.createElement('div');
-        row.className = "p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs";
-        row.innerHTML = `
-          <div class="flex items-center space-x-2.5 min-w-0 pr-2">
-            <img src="${p.img}" class="w-10 h-10 rounded-lg object-cover bg-white shrink-0" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80';">
-            <div class="min-w-0">
-              <h5 class="font-bold text-slate-900 truncate">${currentLang === 'hi' ? p.nameHi : p.nameEn}</h5>
-              <p class="text-[10px] text-slate-500 font-mono">₹${p.price.toFixed(2)} / ${p.unit}</p>
-            </div>
-          </div>
-          <button onclick="addProductToCart('${p.id}'); closeModal('modal-store-details'); switchTab('cart');" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] shrink-0 active:scale-95 transition">
-            + ADD
-          </button>
-        `;
-        prodsContainer.appendChild(row);
-      });
-
+      prodsContainer.innerHTML = `
+        <div class="py-6 text-center text-slate-400">
+          <i class="fas fa-spinner fa-spin text-lg"></i>
+          <p class="text-xs mt-1">Loading store products...</p>
+        </div>
+      `;
       openModal('modal-store-details');
+
+      try {
+        const liveProducts = await apiRequest(`/api/v1/stores/${storeId}/products`, 'GET');
+        prodsContainer.innerHTML = '';
+        if (Array.isArray(liveProducts) && liveProducts.length > 0) {
+          liveProducts.forEach(p => {
+            const pNameEn = p.name_en || (p.global_product && p.global_product.name_en) || p.nameEn || p.title || 'Product';
+            const pNameHi = p.name_hi || (p.global_product && p.global_product.name_hi) || p.nameHi || pNameEn;
+            const pPrice = typeof p.price === 'number' ? p.price : 0;
+            const pUnit = p.unit || '1 unit';
+            const pImg = p.image_url || getProductImage(pNameEn, p.category);
+
+            const row = document.createElement('div');
+            row.className = "p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs";
+            row.innerHTML = `
+              <div class="flex items-center space-x-2.5 min-w-0 pr-2">
+                <img src="${pImg}" class="w-10 h-10 rounded-lg object-cover bg-white shrink-0" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80';">
+                <div class="min-w-0">
+                  <h5 class="font-bold text-slate-900 truncate">${currentLang === 'hi' ? pNameHi : pNameEn}</h5>
+                  <p class="text-[10px] text-slate-500 font-mono">₹${pPrice.toFixed(2)} / ${pUnit}</p>
+                </div>
+              </div>
+              <button onclick="addProductToCart('${p.id}'); closeModal('modal-store-details'); switchTab('cart');" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] shrink-0 active:scale-95 transition">
+                + ADD
+              </button>
+            `;
+            prodsContainer.appendChild(row);
+          });
+        } else {
+          prodsContainer.innerHTML = `
+            <div class="py-6 text-center text-slate-400">
+              <p class="text-xs">No products currently available at this store.</p>
+            </div>
+          `;
+        }
+      } catch (err) {
+        console.warn('Failed to load store products:', err);
+        prodsContainer.innerHTML = `
+          <div class="py-6 text-center text-slate-400">
+            <p class="text-xs">Unable to load store inventory.</p>
+          </div>
+        `;
+      }
     }
 
     // ---------------------------------------------------------------------------
@@ -7999,6 +7887,7 @@ function createProductCardElement(p) {
       renderPastOrdersList();
       renderProductCatalog();
       renderStoresList();
+      loadNearbyStores();
       renderCartItems();
       renderFaqAccordion();
       lucide.createIcons();

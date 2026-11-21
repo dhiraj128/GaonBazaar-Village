@@ -899,14 +899,17 @@
       livenessCaptured: false,
       activeRunState: 'pickup', // 'pickup' | 'delivery' | 'completed'
       userProfile: {
-        phone: '9711002233',
-        name: 'Sonu Kumar Verma',
-        vehicleType: 'Motorcycle (Petrol Bike)',
-        vehicleNo: 'UP 32 BK 4821',
-        emergency: '9811445566',
-        dlNumber: 'UP32-2021-0089421',
-        payoutMethod: 'SBI Bank ending in ****2345'
-      }
+        phone: localStorage.getItem('gb_user_phone') || '',
+        name: localStorage.getItem('gb_user_name') || '',
+        vehicleType: localStorage.getItem('gb_runner_vehicle') || '',
+        vehicleNo: localStorage.getItem('gb_runner_vehicleno') || '',
+        emergency: '',
+        dlNumber: '',
+        payoutMethod: ''
+      },
+      todayEarnings: 0,
+      todayRuns: 0,
+      codInHand: 0
     };
 
     function navigateTo(screenId, pushHistory = true) {
@@ -4360,6 +4363,16 @@
       }
 
       toastSuccess("Mission " + missionId + " Assigned to You! Navigating to Active Run...");
+      if (!state.activeMission) {
+        state.activeMission = { id: missionId };
+      }
+      const activeEmpty = document.getElementById('no-active-mission-empty');
+      if (activeEmpty) activeEmpty.classList.add('hidden');
+      const activeContent = document.getElementById('active-mission-content');
+      if (activeContent) activeContent.classList.remove('hidden');
+      const badge = document.getElementById('active-mission-order-badge');
+      if (badge) badge.innerText = `ORDER #${missionId.slice(-6)}`;
+
       setTimeout(() => {
         switchDashboardTab('activerun');
       }, 700);
@@ -4383,23 +4396,7 @@
     // ---------------------------------------------------------------------------
 
     // Active Mission State with Real Dynamic Coordinates (Zero Hardcoded Nav Links)
-    state.activeMission = {
-      id: "GB-8921",
-      store_name: "Sharma Kirana & General Store",
-      store_latitude: 26.2230,
-      store_longitude: 85.3520,
-      store_address: "Shop #4, Main Village Market, Minapur",
-      store_phone: "9876543210",
-      customer_name: "Sunita Devi",
-      customer_phone: "9811224488",
-      delivery_latitude: 26.2315,
-      delivery_longitude: 85.3610,
-      delivery_address: "House 42, Near Primary School, Minapur Village",
-      cod_amount: 340.0,
-      earning: 55.0,
-      pickup_otp: "5821",
-      delivery_otp: ""
-    };
+    state.activeMission = null;
     state.customerSharedLocation = null;
     state.orderMessages = [];
 
@@ -4854,7 +4851,7 @@
 
     function confirmCashDeposit() {
       closeModal('modal-cod-deposit');
-      toastSuccess("₹1,280.00 cash deposit confirmed by Gopalpur Hub cashier!");
+      toastSuccess("Cash deposit confirmed by Hub cashier!");
     }
 
     // ---------------------------------------------------------------------------

@@ -49,35 +49,7 @@ async def list_user_ration_lists(
     lists = result.scalars().all()
 
     if not lists:
-        # Auto-seed default ration list for first-time user
-        now = datetime.now(timezone.utc)
-        default_list = MonthlyRationList(
-            user_id=user_id,
-            name="My Monthly Ration",
-            is_active=True,
-            created_at=now,
-            updated_at=now
-        )
-        db.add(default_list)
-        await db.flush()
-
-        for itm in DEFAULT_RATION_ITEMS:
-            r_item = MonthlyRationItem(
-                list_id=default_list.id,
-                product_id=itm["product_id"],
-                product_name_en=itm["name_en"],
-                product_name_hi=itm["name_hi"],
-                unit=itm["unit"],
-                quantity=itm["quantity"],
-                notes=itm["notes"],
-                created_at=now
-            )
-            db.add(r_item)
-
-        await db.commit()
-        # Re-query with loaded items
-        result = await db.execute(query)
-        lists = result.scalars().all()
+        return []
 
     return [
         MonthlyRationListResponse(
@@ -124,7 +96,14 @@ async def create_ration_list(
     await db.flush()
 
     items_to_add = data.items if (data.items is not None and len(data.items) > 0) else [
-        MonthlyRationItemCreate(**itm) for itm in DEFAULT_RATION_ITEMS
+        MonthlyRationItemCreate(
+            product_id=itm["product_id"],
+            product_name_en=itm["name_en"],
+            product_name_hi=itm["name_hi"],
+            unit=itm["unit"],
+            quantity=itm["quantity"],
+            notes=itm["notes"]
+        ) for itm in DEFAULT_RATION_ITEMS
     ]
 
     for item in items_to_add:
