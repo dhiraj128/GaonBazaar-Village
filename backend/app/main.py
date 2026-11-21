@@ -197,7 +197,53 @@ async def init_db_and_seed():
         except Exception as exc:
             logger.debug("RLS auto-enforcement notice: %s", exc)
 
-    # 4. Ensure Super Admin (9800000099) and Hub Manager (9800000098) operational accounts exist
+    # 4. Update verified product image URLs in existing database rows
+    url_updates = [
+        ("cat_mustard_oil", "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80"),
+        ("cat_soy_oil", "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=500&q=80"),
+        ("cat_atta", "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=500&q=80"),
+        ("cat_salt", "https://images.unsplash.com/photo-1518110903415-32e5b77c1d76?w=500&q=80"),
+        ("cat_led_bulb", "https://images.unsplash.com/photo-1550985543-f47f38aeee65?w=500&q=80"),
+        ("cat_tomato", "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&q=80"),
+        ("cat_toor_dal", "https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=500&q=80"),
+        ("cat_moong_dal", "https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=500&q=80"),
+        ("cat_chana_dal", "https://images.unsplash.com/photo-1585994192701-f1a505c817ea?w=500&q=80"),
+        ("cat_bath_soap", "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=500&q=80"),
+        ("cat_detergent", "https://images.unsplash.com/photo-1585421514738-01798e348b17?w=500&q=80"),
+    ]
+    try:
+        async with async_engine.begin() as conn:
+            for cat_id, new_url in url_updates:
+                await conn.execute(
+                    text("UPDATE global_catalog SET image_url = :url WHERE id = :id"),
+                    {"url": new_url, "id": cat_id}
+                )
+                await conn.execute(
+                    text("""
+                        UPDATE store_products 
+                        SET image_url = :url 
+                        WHERE global_product_id = :id 
+                          AND (
+                            image_url IS NULL 
+                            OR image_url = '' 
+                            OR image_url LIKE '%photo-1509440159596-0249088772ff%'
+                            OR image_url LIKE '%photo-1515543237350-b3eea1ec8082%'
+                            OR image_url LIKE '%photo-1626082896492-766af4eb6501%'
+                            OR image_url LIKE '%photo-1584308666744-24d5c474f2ae%'
+                            OR image_url LIKE '%photo-1620916566398-39f1143ab7be%' 
+                            OR image_url LIKE '%photo-1507668077129-56e32842fceb%'
+                            OR image_url LIKE '%Dune_Aura%'
+                            OR image_url LIKE '%upload.wikimedia.org%'
+                            OR image_url LIKE '%photo-1546470427-227c7369a941%'
+                            OR image_url LIKE '%photo-1607006314144-8849b2f67232%'
+                          )
+                    """),
+                    {"url": new_url, "id": cat_id}
+                )
+    except Exception as exc:
+        logger.debug("Product image URL update notice: %s", exc)
+        
+    # Ensure Super Admin (9800000099) and Hub Manager (9800000098) always exist in DB
     async with AsyncSessionLocal() as session:
         adm_check = await session.execute(select(User).where(User.phone == "9800000099"))
         if not adm_check.scalars().first():
@@ -226,11 +272,11 @@ async def run_resilient_init_db(app: FastAPI):
     retry_delay = 2
     for attempt in range(1, max_retries + 1):
         try:
-            logger.info("Initializing database schema and administrative access (attempt %d/%d)...", attempt, max_retries)
+            logger.info("Initializing database schema (attempt %d/%d)...", attempt, max_retries)
             await init_db_and_seed()
             app.state.db_healthy = True
             app.state.db_error = None
-            logger.info("Database schema initialized and verified successfully.")
+            logger.info("Database schema verified and admin accounts synchronized successfully.")
             return
         except Exception as exc:
             app.state.db_healthy = False
@@ -368,8 +414,13 @@ async def health_db():
             val = result.scalar()
             is_healthy = bool(getattr(app.state, "db_healthy", False))
             if not is_healthy and val == 1:
-                app.state.db_healthy = True
-                is_healthy = True
+                try:
+                    store_check = await session.execute(text("SELECT 1 FROM stores LIMIT 1"))
+                    if store_check.scalar() is not None:
+                        app.state.db_healthy = True
+                        is_healthy = True
+                except Exception:
+                    pass
             return {
                 "status": "connected",
                 "database_engine": "postgresql" if "postgresql" in settings.ASYNC_DATABASE_URL else "sqlite",
@@ -391,7 +442,7 @@ async def seed_database(
     authorization: Optional[str] = Header(None)
 ):
     """
-    Restricted maintenance endpoint to trigger schema sync and administrative access verification.
+    Restricted maintenance endpoint to trigger schema sync and table verification.
     Requires authorized Admin credentials or X-Admin-Key.
     """
     is_authorized = False
@@ -410,19 +461,16 @@ async def seed_database(
     if not is_authorized:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden: Administrative maintenance access required to verify database"
+            detail="Forbidden: Administrative maintenance access required to verify database schema"
         )
 
     try:
         await init_db_and_seed()
         app.state.db_healthy = True
         app.state.db_error = None
-        return {"status": "success", "message": "Database schema and administrative access verified successfully"}
+        return {"status": "success", "message": "Database schema verified successfully"}
     except Exception as exc:
         app.state.db_healthy = False
         app.state.db_error = str(exc)
         logger.error("Manual seed-database error: %s", exc, exc_info=True)
         return {"status": "error", "message": "Database verification encountered an internal error"}
-
-init_db = init_db_and_seed
-

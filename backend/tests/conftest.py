@@ -13,10 +13,8 @@ async def init_test_db():
         await conn.run_sync(Base.metadata.create_all)
         
     async with app.router.lifespan_context(app):
-        from tests.fixtures_seeder import seed_test_fixtures
-        from app.db.session import AsyncSessionLocal
-        async with AsyncSessionLocal() as session:
-            await seed_test_fixtures(session)
+        from tests.test_data_seeder import seed_test_database
+        await seed_test_database()
         yield
 
     await async_engine.dispose()

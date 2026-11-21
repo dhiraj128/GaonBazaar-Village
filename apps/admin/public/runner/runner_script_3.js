@@ -40,7 +40,7 @@
         document.getElementById('runner-base-village')?.value ||
         localStorage.getItem('gb_runner_village') ||
         state.userProfile?.village ||
-        'Chaturshi'
+        ''
       ).trim().toLowerCase();
     }
 
@@ -49,7 +49,7 @@
       if (!order || !order.id) return;
 
       const runnerVillage = getRunnerVillage();
-      const runnerId = state.userProfile?.id || localStorage.getItem('gb_user_id') || 'usr_runner_01';
+      const runnerId = state.userProfile?.id || localStorage.getItem('gb_user_id') || '';
       const orderVillage = (order.delivery_village || '').trim().toLowerCase();
       const st = (order.status || '').toUpperCase();
 
@@ -899,17 +899,14 @@
       livenessCaptured: false,
       activeRunState: 'pickup', // 'pickup' | 'delivery' | 'completed'
       userProfile: {
-        phone: localStorage.getItem('gb_user_phone') || '',
-        name: localStorage.getItem('gb_user_name') || '',
-        vehicleType: localStorage.getItem('gb_runner_vehicle') || '',
-        vehicleNo: localStorage.getItem('gb_runner_vehicleno') || '',
+        phone: '',
+        name: '',
+        vehicleType: '',
+        vehicleNo: '',
         emergency: '',
         dlNumber: '',
         payoutMethod: ''
-      },
-      todayEarnings: 0,
-      todayRuns: 0,
-      codInHand: 0
+      }
     };
 
     function navigateTo(screenId, pushHistory = true) {
@@ -4319,7 +4316,7 @@
       const banner = document.getElementById('runner-alert-banner');
       if (banner) banner.classList.add('hidden');
 
-      const runnerId = state.userProfile?.id || localStorage.getItem('gb_user_id') || 'usr_runner_01';
+      const runnerId = state.userProfile?.id || localStorage.getItem('gb_user_id') || '';
       let claimSuccess = true;
 
       // 1. ATOMIC CONCURRENCY LOCK IN SUPABASE
@@ -4363,16 +4360,6 @@
       }
 
       toastSuccess("Mission " + missionId + " Assigned to You! Navigating to Active Run...");
-      if (!state.activeMission) {
-        state.activeMission = { id: missionId };
-      }
-      const activeEmpty = document.getElementById('no-active-mission-empty');
-      if (activeEmpty) activeEmpty.classList.add('hidden');
-      const activeContent = document.getElementById('active-mission-content');
-      if (activeContent) activeContent.classList.remove('hidden');
-      const badge = document.getElementById('active-mission-order-badge');
-      if (badge) badge.innerText = `ORDER #${missionId.slice(-6)}`;
-
       setTimeout(() => {
         switchDashboardTab('activerun');
       }, 700);
@@ -4851,7 +4838,7 @@
 
     function confirmCashDeposit() {
       closeModal('modal-cod-deposit');
-      toastSuccess("Cash deposit confirmed by Hub cashier!");
+      toastSuccess("₹1,280.00 cash deposit confirmed by Gopalpur Hub cashier!");
     }
 
     // ---------------------------------------------------------------------------

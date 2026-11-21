@@ -926,7 +926,7 @@
         <!-- Incoming Missions Feed -->
         <div id="missions-feed" class="p-4 space-y-4">
           <!-- No Missions Empty State -->
-          <div id="no-missions-empty" class="p-8 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
+          <div id="no-missions-empty" class="p-8 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs hidden">
             <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto radar-pulse">
               <i data-lucide="compass" class="w-7 h-7"></i>
             </div>
@@ -1001,12 +1001,12 @@
           </div>
 
           <!-- Offline / Idle Banner when no mission -->
-          <div id="idle-status-box" class="p-6 bg-white rounded-2xl border border-slate-200 text-center space-y-2 hidden shadow-xs">
+          <div id="idle-status-box" class="p-6 bg-white rounded-2xl border border-slate-200 text-center space-y-2 shadow-xs">
             <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
               <i data-lucide="compass" class="w-6 h-6 animate-spin"></i>
             </div>
             <h4 class="text-sm font-bold text-slate-800">Searching for Next Mission...</h4>
-            <p class="text-xs text-slate-500">Stay within the 8km village hub radius for fastest assignments.</p>
+            <p class="text-xs text-slate-500">Stay within the Gopalpur 8km hub radius for fastest assignments.</p>
           </div>
 
         </div>
@@ -1016,23 +1016,10 @@
 
       <!-- TAB 2: ACTIVE RUN (STEPPER WORKFLOW) -->
       <div id="tab-activerun" class="dashboard-tab flex-1 p-4 space-y-4 hidden">
-        <!-- No Active Mission Empty State -->
-        <div id="no-active-mission-empty" class="p-8 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
-          <div class="w-14 h-14 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto">
-            <i data-lucide="bike" class="w-7 h-7"></i>
-          </div>
-          <h4 class="text-sm font-bold text-slate-800">No Active Mission in Progress</h4>
-          <p class="text-xs text-slate-500 max-w-xs mx-auto">Accept an incoming delivery mission from the Missions tab to start live navigation and delivery.</p>
-          <button onclick="switchDashboardTab('missions')" class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs active:scale-95 transition">
-            View Incoming Missions
-          </button>
-        </div>
-
-        <div id="active-mission-content" class="space-y-4 hidden">
         <div>
           <div class="flex justify-between items-center">
             <h2 class="text-lg font-bold text-slate-900" data-i18n="active_run_title">Active Delivery Mission</h2>
-            <span id="active-mission-order-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">ORDER #--</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">ORDER #GB-8921</span>
           </div>
           <p class="text-xs text-slate-500" data-i18n="active_run_sub">Complete steps in sequence with Google Maps</p>
         </div>
@@ -1058,17 +1045,17 @@
                  class="w-full h-44 object-cover">
             <div class="absolute bottom-2.5 left-2.5 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-slate-200 text-[10px] font-bold text-slate-800 flex items-center space-x-1.5 shadow-xs">
               <i data-lucide="store" class="w-3.5 h-3.5 text-emerald-600"></i>
-              <span id="vendor-shop-location-badge">Vendor Shop: Sharma Kirana</span>
+              <span id="vendor-shop-location-badge">Vendor Shop Location</span>
             </div>
           </div>
 
           <!-- Vendor Details Card -->
           <div class="p-3.5 bg-slate-50 rounded-xl space-y-2 text-xs border border-slate-200">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <h4 id="order-store-name" class="font-bold text-slate-900 text-sm break-words min-w-0">Sharma Kirana & General Store</h4>
+              <h4 id="order-store-name" class="font-bold text-slate-900 text-sm break-words min-w-0">Partner Store</h4>
               <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded shrink-0 break-words whitespace-normal">Verified Merchant</span>
             </div>
-            <p id="order-store-address" class="text-slate-600 text-xs break-words whitespace-normal leading-relaxed">Shop #4, Main Village Market, Minapur • +91 9876543210</p>
+            <p id="order-store-address" class="text-slate-600 text-xs break-words whitespace-normal leading-relaxed">Local Village Market, Minapur Hub</p>
             
             <div class="pt-2 flex flex-col gap-y-2.5 w-full">
               <!-- Direct Intent Scheme Navigation Link to Vendor -->
@@ -1198,11 +1185,11 @@
               
               <!-- Two Distinct Completion Buttons for COD Doorstep Flow -->
               <div id="cod-completion-buttons" class="flex flex-col gap-2.5 w-full">
-                <button id="btn-cash-collected" onclick="verifyCustomerDeliveryAndFinish(state.activeMission ? state.activeMission.id : '', 'CASH')" class="w-full min-h-[48px] py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2">
+                <button id="btn-cash-collected" onclick="verifyCustomerDeliveryAndFinish('GB-8921', 'CASH')" class="w-full min-h-[48px] py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2">
                   <i data-lucide="banknote" class="w-4 h-4"></i>
                   <span data-i18n="btn_physical_cash">Collected Physical Cash</span>
                 </button>
-                <button id="btn-admin-qr-paid" onclick="verifyCustomerDeliveryAndFinish(state.activeMission ? state.activeMission.id : '', 'ADMIN_QR')" class="w-full min-h-[48px] py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2">
+                <button id="btn-admin-qr-paid" onclick="verifyCustomerDeliveryAndFinish('GB-8921', 'ADMIN_QR')" class="w-full min-h-[48px] py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2">
                   <i data-lucide="qr-code" class="w-4 h-4"></i>
                   <span data-i18n="btn_admin_qr">Customer Paid via Admin QR</span>
                 </button>
@@ -1210,7 +1197,7 @@
 
               <!-- Standard Completion Button for Online/Prepaid Orders -->
               <div id="prepaid-completion-buttons" class="hidden w-full">
-                <button id="btn-complete-delivery" onclick="verifyCustomerDeliveryAndFinish(state.activeMission ? state.activeMission.id : '', 'ONLINE')" class="w-full min-h-[48px] h-12 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2">
+                <button id="btn-complete-delivery" onclick="verifyCustomerDeliveryAndFinish('GB-8921', 'ONLINE')" class="w-full min-h-[48px] h-12 py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md active:scale-95 transition flex items-center justify-center space-x-2">
                   <i data-lucide="check-check" class="w-4 h-4"></i>
                   <span data-i18n="complete_run_btn">Complete Delivery</span>
                 </button>
@@ -1218,7 +1205,6 @@
             </div>
             <span class="text-[10px] text-blue-700 block font-medium" data-i18n="ask_otp_note">Ask customer for the 4-digit code shown on their order status screen</span>
           </div>
-        </div>
         </div>
       </div>
 
@@ -1233,14 +1219,14 @@
         <div class="grid grid-cols-3 gap-2.5">
           <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
             <span class="text-[10px] font-semibold text-slate-500 uppercase block" data-i18n="today_earnings">Earnings</span>
-            <span id="runner-stat-earnings" class="text-base font-extrabold text-blue-600 mt-0.5 block">₹0</span>
-            <span id="runner-stat-runs" class="text-[9px] text-emerald-600 font-bold">0 Deliveries</span>
+            <span class="text-base font-extrabold text-blue-600 mt-0.5 block">₹0.00</span>
+            <span class="text-[9px] text-slate-500 font-bold">0 Deliveries</span>
           </div>
 
           <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 shadow-xs text-center">
             <span class="text-[10px] font-semibold text-amber-700 uppercase block" data-i18n="cod_cash_hand">COD in Hand</span>
-            <span id="runner-stat-cod" class="text-base font-extrabold text-amber-800 mt-0.5 block">₹0</span>
-            <span class="text-[9px] text-amber-700 font-bold" data-i18n="deposit_at_hub_badge">No Pending Deposit</span>
+            <span class="text-base font-extrabold text-amber-800 mt-0.5 block">₹0.00</span>
+            <span class="text-[9px] text-amber-700 font-bold" data-i18n="deposit_at_hub_badge">Deposit at Hub</span>
           </div>
 
           <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs text-center">
@@ -1253,7 +1239,7 @@
         <!-- COD Deposit Hub Action Card -->
         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
           <div>
-            <h4 id="hub-cod-deposit-text" class="text-xs font-bold text-slate-900" data-i18n="cod_deposit_title">Hub COD Deposit: ₹0.00</h4>
+            <h4 class="text-xs font-bold text-slate-900" data-i18n="cod_deposit_title">Hub COD Deposit: ₹0.00</h4>
             <p class="text-[11px] text-slate-500">Collectively deposit to Hub Cashier by 9:00 PM</p>
           </div>
           <button onclick="openCodDepositModal()" class="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg shadow-xs active:scale-95 transition" data-i18n="deposit_cash_btn">
@@ -1264,13 +1250,10 @@
         <!-- Recent Runs History -->
         <div>
           <h3 class="text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide" data-i18n="completed_missions">Completed Runs</h3>
-          <div id="runs-history-container" class="space-y-2">
-            <div id="no-runs-empty" class="p-6 bg-white rounded-xl border border-slate-200 text-center space-y-2">
-              <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
-                <i data-lucide="package" class="w-5 h-5"></i>
-              </div>
-              <p class="text-xs font-bold text-slate-700">No completed runs yet</p>
-              <p class="text-[11px] text-slate-400">Completed delivery earnings and settlements will appear here.</p>
+          <div class="space-y-2">
+            <div id="no-runs-empty" class="py-8 text-center text-slate-400 space-y-2 bg-white rounded-xl border border-slate-200">
+              <i data-lucide="package-check" class="w-8 h-8 mx-auto text-slate-300"></i>
+              <p class="text-xs font-semibold" data-i18n="no_runs_yet">No completed deliveries yet today</p>
             </div>
           </div>
         </div>
@@ -1294,14 +1277,14 @@
           </div>
           <div class="flex-1">
             <div class="flex items-center space-x-1.5">
-              <h3 id="account-display-name" class="text-sm font-bold text-slate-900">Partner Runner</h3>
+              <h3 id="account-display-name" class="text-sm font-bold text-slate-900">Sonu Kumar Verma</h3>
               <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 flex items-center space-x-1">
                 <i data-lucide="shield-check" class="w-3 h-3 text-emerald-600"></i>
                 <span data-i18n="verified_badge">Verified</span>
               </span>
             </div>
-            <p id="account-display-vehicle" class="text-xs text-slate-600 mt-0.5">Delivery Partner</p>
-            <p id="account-display-phone" class="text-xs text-slate-500 font-mono mt-0.5">+91 --</p>
+            <p id="account-display-vehicle" class="text-xs text-slate-600 mt-0.5">Hero Splendor (UP 32 BK 4821)</p>
+            <p id="account-display-phone" class="text-xs text-slate-500 font-mono mt-0.5">+91 9711002233</p>
           </div>
         </div>
 
@@ -1315,8 +1298,8 @@
             <div class="flex items-center space-x-2.5">
               <i data-lucide="landmark" class="w-5 h-5 text-slate-600"></i>
               <div>
-                <span id="account-masked-bank" class="font-mono font-bold text-slate-800">No bank account linked</span>
-                <span class="block text-[10px] text-slate-500">Link Bank Account / UPI for Daily Payouts</span>
+                <span id="account-masked-bank" class="font-mono font-bold text-slate-800">SBI Bank ending in ****2345</span>
+                <span class="block text-[10px] text-slate-500">IFSC: SBIN0004567 • SONU KUMAR VERMA</span>
               </div>
             </div>
             <button onclick="openUpdatePayoutModal()" class="py-1 px-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 text-[11px] font-semibold rounded active:scale-95 transition" data-i18n="update_payout_btn">
@@ -1522,10 +1505,10 @@
             </button>
             <div>
               <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
-                <span id="chat-customer-name">Customer</span>
+                <span id="chat-customer-name">Customer Sunita Devi</span>
                 <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
               </h3>
-              <p class="text-[10px] text-slate-500">Order #<span id="chat-order-id">--</span> • Direct Delivery Chat</p>
+              <p class="text-[10px] text-slate-500">Order #<span id="chat-order-id">GB-8921</span> • Direct Delivery Chat</p>
             </div>
           </div>
           <button onclick="closeModal('modal-runner-order-chat')" class="text-slate-400 hover:text-slate-600 p-1">
@@ -1580,9 +1563,9 @@
           <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1">
             <div class="flex justify-between font-bold">
               <span>Total Cash Collected:</span>
-              <span id="modal-cod-amount" class="text-sm text-amber-800">₹0.00</span>
+              <span class="text-sm text-amber-800">₹1,280.00</span>
             </div>
-            <p class="text-[11px] text-amber-700">Present this QR code to the Hub Cashier or pay online to clear your balance.</p>
+            <p class="text-[11px] text-amber-700">Present this QR code to the Gopalpur Hub Cashier or pay online to clear your balance.</p>
           </div>
 
           <div class="text-center p-4 bg-slate-50 rounded-xl border border-dashed border-slate-300">

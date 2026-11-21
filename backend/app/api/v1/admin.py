@@ -1745,17 +1745,9 @@ async def get_demand_heatmaps(
                 "available_riders": 0
             }
 
-    # If no stores yet, fallback to default operational hub
+    # If no stores yet, return empty clusters list
     if not clusters:
-        clusters["zone_muzaffarpur_hub"] = {
-            "zone_id": "zone_muzaffarpur_hub",
-            "zone_name": "Muzaffarpur Operations Hub",
-            "latitude": 26.2230,
-            "longitude": 85.3520,
-            "radius_meters": 1200,
-            "active_orders": 0,
-            "available_riders": 0
-        }
+        return []
 
     # Distribute active orders across clusters
     for o in active_orders:
