@@ -57,6 +57,7 @@ async function checkDurableRateLimit(cleanPhone: string): Promise<{ limited: boo
       }
     );
 
+    if (!res.ok) return { limited: true, waitSeconds: 30 };
     if (res.ok) {
       const records = await res.json();
       if (Array.isArray(records) && records.length > 0) {
@@ -70,6 +71,7 @@ async function checkDurableRateLimit(cleanPhone: string): Promise<{ limited: boo
     }
   } catch (err) {
     console.warn('[Send OTP] Rate limit query notice:', err);
+    return { limited: true, waitSeconds: 30 };
   }
   return { limited: false, waitSeconds: 0 };
 }
@@ -211,30 +213,20 @@ export default async function handler(req: any, res: any) {
     }
 
     // 4. Determine OTP code (Strict 6-digit numeric OTP: 100000–999999, or 123456 for test personas/compliance)
-    const isTestPersona =
-      clean === '9999999999' ||
-      clean === '9800000001' ||
-      clean === '9800000002' ||
-      clean === '9800000003';
-
-    let otpCode: string;
-    if (isTestPersona) {
-      otpCode = '123456';
-    } else {
-      otpCode = String(crypto.randomInt(100000, 1000000));
-    }
+    // Production OTPs are never deterministic; use a sandbox/provider mock only in isolated tests.
+    const otpCode = String(crypto.randomInt(100000, 1000000));
 
     const otpHexHash = crypto.createHash('sha256').update(otpCode).digest('hex');
     const sessionId = crypto.randomUUID ? crypto.randomUUID() : `gb_otp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-    const deliveryStatus = isTestPersona ? 'delivered' : 'dispatched';
+    const deliveryStatus = 'dispatched';
 
     // 5. Durably Persist Verification Challenge to Supabase PostgreSQL table
     const saved = await saveChallengeToSupabase({
       id: sessionId,
       phone: clean,
       session_id: sessionId,
-      code: otpCode,
+      code: '',
       otp_hash: otpHexHash,
       role: safeRole,
       delivery_status: deliveryStatus,
