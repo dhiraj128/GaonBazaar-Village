@@ -1,16 +1,21 @@
 // GaonBazaar Rural Hyperlocal PWA Service Worker: Vendor
-// Offline-first caching optimized for low-bandwidth 2G/3G rural networks
-const CACHE_NAME = 'gaonbazaar-vendor-v1.0.0';
+// Offline-capable caching with network-first navigation for instant updates
+const CACHE_NAME = 'gaonbazaar-vendor-v1.0.2';
 
 const PRECACHE_ASSETS = [
   './',
   './index.html',
+  './vendor.css',
   './manifest.json',
   './favicon.png',
   './icons/Icon-192.png',
   './icons/Icon-512.png',
   './icons/Icon-maskable-192.png',
-  './icons/Icon-maskable-512.png'
+  './icons/Icon-maskable-512.png',
+  './vendor_script_1.js',
+  './vendor_script_2.js',
+  './vendor_script_3.js',
+  './vendor_script_4.js'
 ];
 
 // Install: precache critical app shell
@@ -19,31 +24,37 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS).catch((err) => {
-        console.warn('Precache partial warning:', err);
+        console.warn('[SW-Vendor] Precache partial notice:', err);
       });
     })
   );
 });
 
-// Activate: clean up outdated caches
+// Activate: clean up ONLY outdated vendor caches (never touch customer, runner, or user sessions)
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name.startsWith('gaonbazaar-') && name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+          .filter((name) => name.startsWith('gaonbazaar-vendor-') && name !== CACHE_NAME)
+          .map((name) => {
+            console.log('[SW-Vendor] Purging outdated vendor cache:', name);
+            return caches.delete(name);
+          })
       );
     }).then(() => self.clients.claim())
   );
 });
 
-// Fetch: Stale-While-Revalidate for app shell & CDN assets; Network-first for dynamic API/DB
+// Fetch Strategy:
+// 1. Navigation requests (HTML documents): Network-first with cache fallback
+// 2. Dynamic API & Database requests: Network-only with JSON offline fallback
+// 3. Static assets (CSS, JS, images): Stale-While-Revalidate
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Skip non-GET and chrome-extension/schemes
+  // Skip non-GET and chrome-extension/non-http schemes
   if (req.method !== 'GET' || !url.protocol.startsWith('http')) {
     return;
   }
@@ -61,7 +72,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first / Stale-While-Revalidate for UI assets
+  // Network-first for navigation (HTML page load) to ensure immediate updates on reload
+  if (req.mode === 'navigate' || req.destination === 'document') {
+    event.respondWith(
+      fetch(req)
+        .then((networkResp) => {
+          if (networkResp && networkResp.status === 200) {
+            const copy = networkResp.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          }
+          return networkResp;
+        })
+        .catch(() => caches.match(req).then((cached) => cached || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Stale-While-Revalidate for UI assets (CSS, JS, fonts, images)
   event.respondWith(
     caches.match(req).then((cachedResp) => {
       const fetchPromise = fetch(req).then((networkResp) => {
@@ -72,13 +99,7 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResp;
-      }).catch(() => {
-        // Fallback to cached index.html for navigation requests
-        if (req.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-        return cachedResp;
-      });
+      }).catch(() => cachedResp);
 
       return cachedResp || fetchPromise;
     })

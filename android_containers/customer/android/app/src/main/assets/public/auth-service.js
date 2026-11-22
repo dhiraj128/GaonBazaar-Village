@@ -52,7 +52,7 @@ export async function sendCustomerOTP(isResend = false) {
   document.getElementById('phone-input-section')?.classList.add('hidden');
   document.getElementById('otp-input-section')?.classList.remove('hidden');
 
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 6; i++) {
     const box = document.getElementById(`otp-${i}`);
     if (box) box.value = '';
   }
@@ -64,8 +64,8 @@ export async function sendCustomerOTP(isResend = false) {
   if (typeof window.toastSuccess === 'function') {
     window.toastSuccess(
       window.currentLang === 'hi'
-        ? "4-अंकीय OTP आपके मोबाइल पर भेजा गया है!"
-        : "4-Digit OTP sent to " + formattedPhoneNumber + "!"
+        ? "6-अंकीय OTP आपके मोबाइल पर भेजा गया है!"
+        : "6-Digit OTP sent to " + formattedPhoneNumber + "!"
     );
   }
 
@@ -92,6 +92,12 @@ export async function sendCustomerOTP(isResend = false) {
         window.__gb_verification_id = data.verificationId || data.session_id || null;
       } else if (res) {
         const data = await res.json().catch(() => ({}));
+        if (res.status === 429) {
+          const retrySec = data.retryAfter || data.retry_after || data.cooldown;
+          if (retrySec && typeof retrySec === 'number') {
+            startResendTimer(retrySec);
+          }
+        }
         const errMsg = data.message || data.error || (
           res.status === 429
             ? (window.currentLang === 'hi' ? "कृपया पुनः प्रयास करने से पहले प्रतीक्षा करें।" : "Please wait before requesting another OTP.")
@@ -107,22 +113,22 @@ export async function sendCustomerOTP(isResend = false) {
 }
 
 /**
- * Step 2: Verify 4-digit OTP via Message Central (/api/verify-otp) & Establish Backend JWT Session
+ * Step 2: Verify 6-digit OTP via 2Factor.in (/api/verify-otp) & Establish Backend JWT Session
  */
 export async function verifyCustomerOTP() {
   hideAuthError();
 
   let code = '';
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 6; i++) {
     const box = document.getElementById(`otp-${i}`);
     if (box) code += box.value.trim();
   }
 
-  if (code.length !== 4) {
+  if (code.length !== 6) {
     showAuthError(
       window.currentLang === 'hi'
-        ? "कृपया पूरा 4-अंकीय OTP कोड दर्ज करें"
-        : "Please enter the complete 4-digit OTP code"
+        ? "कृपया पूरा 6-अंकीय OTP कोड दर्ज करें"
+        : "Please enter the complete 6-digit OTP code"
     );
     return;
   }
@@ -146,7 +152,7 @@ export async function verifyCustomerOTP() {
   const enteredName = (nameInput?.value || '').trim() || 'Customer';
 
   try {
-    console.log(`[Message Central] Verifying 4-digit OTP for: ${formattedPhoneNumber}`);
+    console.log(`[2Factor.in] Verifying 6-digit OTP for: ${formattedPhoneNumber}`);
     const vRes = await fetch('/api/verify-otp', {
       method: 'POST',
       headers: {
@@ -825,22 +831,107 @@ export async function resendCustomerOTP() {
   if (resendCountdownSeconds > 0 && resendTimerInterval) {
     return;
   }
-  await sendCustomerOTP();
+  hideAuthError();
+
+  const phoneInput = document.getElementById('cust-phone-input');
+  const rawInput = (phoneInput?.value || '').trim();
+  let clean = rawInput.replace(/[^\d+]/g, '');
+  if (clean.startsWith('+91')) clean = clean.slice(3);
+  else if (clean.startsWith('91') && clean.length === 12) clean = clean.slice(2);
+  else if (clean.startsWith('0') && clean.length === 11) clean = clean.slice(1);
+  clean = clean.replace(/\D/g, '').slice(-10);
+
+  if (!/^[6-9]\d{9}$/.test(clean)) {
+    const invalidMsg = window.currentLang === 'hi'
+      ? "कृपया 10 अंकों का वैध भारतीय मोबाइल नंबर दर्ज करें"
+      : "Please enter a valid 10-digit Indian mobile number";
+    showAuthError(invalidMsg);
+    return;
+  }
+
+  // 1. Clear all 6 OTP boxes
+  for (let i = 1; i <= 6; i++) {
+    const b = document.getElementById(`otp-${i}`);
+    if (b) b.value = '';
+  }
+
+  // 2. Autofocus first input box
+  const otp1 = document.getElementById('otp-1');
+  if (otp1) otp1.focus();
+
+  // 3. Immediately start 30s countdown
+  startResendTimer(30);
+
+  // 4. Success feedback toast
+  if (typeof window.toastSuccess === 'function') {
+    window.toastSuccess(
+      window.currentLang === 'hi'
+        ? "नया 6-अंकीय OTP आपके मोबाइल पर भेजा गया है!"
+        : `New 6-digit OTP sent to +91 ${clean}!`
+    );
+  }
+
+  // 5. Fire background request to 2Factor.in
+  try {
+    const apiBase = (window.APP_CONFIG && window.APP_CONFIG.BACKEND_URL) || '';
+    let res = await fetch(`${apiBase}/api/v1/auth/otp/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: clean, role: 'customer' })
+    }).catch(() => null);
+
+    if (!res || !res.ok) {
+      res = await fetch('/api/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: clean, role: 'customer' })
+      }).catch(() => null);
+    }
+
+    if (res && res.ok) {
+      const data = await res.json().catch(() => ({}));
+      window.__gb_verification_id = data.verificationId || data.session_id || null;
+    } else if (res) {
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 429) {
+        const retrySec = data.retryAfter || data.retry_after || data.cooldown;
+        if (retrySec && typeof retrySec === 'number') {
+          startResendTimer(retrySec);
+        }
+      }
+      const errMsg = data.message || data.error || (
+        res.status === 429
+          ? (window.currentLang === 'hi' ? "कृपया पुनः प्रयास करने से पहले प्रतीक्षा करें।" : "Please wait before requesting another OTP.")
+          : (window.currentLang === 'hi' ? "OTP भेजने में असमर्थ। कृपया पुनः प्रयास करें।" : "Unable to resend SMS OTP. Please try again.")
+      );
+      showAuthError(errMsg);
+      if (typeof window.toastError === 'function') window.toastError(errMsg);
+    }
+  } catch (err) {
+    console.warn("[Customer Resend OTP Background Error]:", err);
+  }
 }
 
-export function startResendTimer() {
+export function startResendTimer(seconds = 30) {
   const timerSpan = document.getElementById('resend-timer');
   const countdownSpan = document.getElementById('resend-countdown');
   const resendBtn = document.getElementById('resend-otp-btn');
 
   if (resendTimerInterval) {
     clearInterval(resendTimerInterval);
+    resendTimerInterval = null;
   }
 
-  resendCountdownSeconds = 30;
-  if (timerSpan) timerSpan.classList.remove('hidden');
-  if (resendBtn) resendBtn.classList.add('hidden');
-  if (countdownSpan) countdownSpan.innerText = resendCountdownSeconds;
+  resendCountdownSeconds = typeof seconds === 'number' && seconds > 0 ? seconds : 30;
+
+  if (resendBtn) {
+    resendBtn.classList.add('hidden');
+    resendBtn.disabled = true;
+  }
+  if (timerSpan) {
+    timerSpan.classList.remove('hidden');
+    if (countdownSpan) countdownSpan.innerText = resendCountdownSeconds;
+  }
 
   resendTimerInterval = setInterval(() => {
     resendCountdownSeconds--;
@@ -849,13 +940,17 @@ export function startResendTimer() {
       clearInterval(resendTimerInterval);
       resendTimerInterval = null;
       if (timerSpan) timerSpan.classList.add('hidden');
-      if (resendBtn) resendBtn.classList.remove('hidden');
+      if (resendBtn) {
+        resendBtn.classList.remove('hidden');
+        resendBtn.disabled = false;
+        resendBtn.innerText = window.currentLang === 'hi' ? "पुनः OTP भेजें" : "Resend OTP";
+      }
     }
   }, 1000);
 }
 
 /**
- * 4-Digit OTP Box auto-advance and backspace navigation
+ * 6-Digit OTP Box auto-advance and backspace navigation
  */
 export function handleOtpInput(current, nextId, event) {
   hideAuthError();
@@ -869,21 +964,43 @@ export function handleOtpInput(current, nextId, event) {
     return;
   }
 
-  // Paste handler: if user pastes full 4-digit code into first box
+  // Paste handler: if user pastes full 6-digit code into first box
   if (current.value.length > 1) {
-    const pasted = current.value.replace(/\D/g, '').slice(0, 4);
+    const pasted = current.value.replace(/\D/g, '').slice(0, 6);
     for (let i = 0; i < pasted.length; i++) {
       const box = document.getElementById(`otp-${i + 1}`);
       if (box) box.value = pasted[i];
     }
-    const target = document.getElementById(`otp-${Math.min(pasted.length + 1, 4)}`);
+    const target = document.getElementById(`otp-${Math.min(pasted.length, 6)}`);
     if (target) target.focus();
+
+    if (pasted.length === 6) {
+      setTimeout(() => {
+        if (typeof verifyCustomerOTP === 'function') {
+          verifyCustomerOTP();
+        }
+      }, 60);
+    }
     return;
   }
 
   if (current.value.length >= 1 && nextId) {
     const next = document.getElementById(nextId);
     if (next) next.focus();
+  }
+
+  // Check if all 6 boxes are entered for automatic verification
+  let allDigits = '';
+  for (let i = 1; i <= 6; i++) {
+    const b = document.getElementById(`otp-${i}`);
+    if (b) allDigits += b.value.trim();
+  }
+  if (allDigits.length === 6) {
+    setTimeout(() => {
+      if (typeof verifyCustomerOTP === 'function') {
+        verifyCustomerOTP();
+      }
+    }, 60);
   }
 }
 // Bind to window for HTML onclick and input event handlers
@@ -940,8 +1057,115 @@ try {
     elName.value = '';
     elName.setAttribute('autocomplete', 'off');
   }
-} catch (e) {
-  console.warn('Init auth clean notice:', e);
+// Wire CSP-compliant DOM event listeners for Customer Login
+export function initCustomerAuthListeners() {
+  const sendOtpBtn = document.getElementById('send-otp-btn');
+  if (sendOtpBtn && !sendOtpBtn.__bound) {
+    sendOtpBtn.__bound = true;
+    sendOtpBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      sendCustomerOTP();
+    });
+  }
+
+  const changePhoneBtn = document.getElementById('btn-customer-change-phone');
+  if (changePhoneBtn && !changePhoneBtn.__bound) {
+    changePhoneBtn.__bound = true;
+    changePhoneBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetCustomerPhone();
+    });
+  }
+
+  const resendOtpBtn = document.getElementById('resend-otp-btn');
+  if (resendOtpBtn && !resendOtpBtn.__bound) {
+    resendOtpBtn.__bound = true;
+    resendOtpBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      resendCustomerOTP();
+    });
+  }
+
+  const verifyOtpBtn = document.getElementById('verify-otp-btn');
+  if (verifyOtpBtn && !verifyOtpBtn.__bound) {
+    verifyOtpBtn.__bound = true;
+    verifyOtpBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      verifyCustomerOTP();
+    });
+  }
+
+  // Wire 6-digit OTP inputs
+  for (let i = 1; i <= 6; i++) {
+    const box = document.getElementById(`otp-${i}`);
+    if (box && !box.__bound) {
+      box.__bound = true;
+
+      box.addEventListener('input', () => {
+        const cleaned = box.value.replace(/\D/g, '');
+        if (cleaned.length > 1) {
+          const pasted = cleaned.slice(0, 6);
+          for (let p = 0; p < pasted.length; p++) {
+            const b = document.getElementById(`otp-${p + 1}`);
+            if (b) b.value = pasted[p];
+          }
+          const target = document.getElementById(`otp-${Math.min(pasted.length, 6)}`);
+          if (target) target.focus();
+          if (pasted.length === 6) {
+            setTimeout(() => verifyCustomerOTP(), 60);
+          }
+          return;
+        }
+        box.value = cleaned;
+        if (cleaned && i < 6) {
+          const next = document.getElementById(`otp-${i + 1}`);
+          if (next) next.focus();
+        }
+
+        let total = '';
+        for (let j = 1; j <= 6; j++) {
+          total += (document.getElementById(`otp-${j}`)?.value || '').trim();
+        }
+        if (total.length === 6) {
+          setTimeout(() => verifyCustomerOTP(), 60);
+        }
+      });
+
+      box.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !box.value && i > 1) {
+          const prev = document.getElementById(`otp-${i - 1}`);
+          if (prev) {
+            prev.focus();
+            prev.value = '';
+          }
+        }
+      });
+
+      box.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const pasted = ((e.clipboardData || window.clipboardData)?.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+        if (pasted) {
+          for (let p = 0; p < pasted.length; p++) {
+            const b = document.getElementById(`otp-${p + 1}`);
+            if (b) b.value = pasted[p];
+          }
+          const target = document.getElementById(`otp-${Math.min(pasted.length, 6)}`);
+          if (target) target.focus();
+          if (pasted.length === 6) {
+            setTimeout(() => verifyCustomerOTP(), 60);
+          }
+        }
+      });
+    }
+  }
 }
+
+// Initialize on DOM load and immediately
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCustomerAuthListeners);
+} else {
+  initCustomerAuthListeners();
+}
+window.addEventListener('load', initCustomerAuthListeners);
 
 console.log("GaonBazaar Auth & Paperless KYC service initialized successfully.");

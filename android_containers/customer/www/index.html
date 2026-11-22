@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>GaonBazaar Customer | Village Hyperlocal Shopping</title>
   
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="customer_script_1.js"></script>
+  <!-- Standalone Bundled Tailwind CSS (Zero Third-Party CDN Dependency) -->
+  <link rel="stylesheet" href="./customer.css">
+  <link rel="stylesheet" href="/css/tailwind-legacy.min.css">
+  <script src="./customer_script_1.js"></script>
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -28,14 +29,31 @@
   <!-- Leaflet Map CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <!-- Google Maps JavaScript API (Rural Hybrid Satellite View) -->
-  <script src="config.js"></script>
+  <script src="./config.js"></script>
   <!-- Customer Auth & Supabase Database Sync Module -->
-  <script type="module" src="auth-service.js"></script>
+  <script type="module" src="./auth-service.js"></script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc&libraries=places,geometry&loading=async" async defer></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
 
   <style>
+    /* Native Instant-Render Visibility Safeguards (Works even before CSS/JS loads) */
+    .hidden, [hidden] {
+      display: none !important;
+    }
+    #modal-checkout-payment {
+      display: none !important;
+    }
+    #modal-checkout-payment.is-open {
+      display: flex !important;
+    }
+    #modal-upi-verification {
+      display: none !important;
+    }
+    #modal-upi-verification.is-open {
+      display: flex !important;
+    }
+
     body {
       font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
       -webkit-tap-highlight-color: transparent;
@@ -82,7 +100,7 @@
       display: flex !important;
     }
   </style>
-  <script src="customer_script_2.js"></script>
+  <script src="./customer_script_2.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex justify-center selection:bg-emerald-500 selection:text-white">
 
@@ -97,7 +115,7 @@
     <!-- =================================================================== -->
     <!-- DEDICATED CHECKOUT PAYMENT SELECTION BOTTOM SHEET / MODAL -->
     <!-- =================================================================== -->
-    <div id="modal-checkout-payment" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div id="modal-checkout-payment" style="display: none !important;" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div class="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
         <!-- Top Drag Handle -->
         <div class="pt-3 pb-1 flex justify-center sm:hidden">
@@ -184,54 +202,37 @@
               </div>
             </div>
 
-            <!-- 2. Bank Account / Net Banking -->
-            <div id="checkout-opt-bank" onclick="selectCheckoutModalPayment('BANK')" class="p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative">
+            <!-- 2. Bank Account / Net Banking (Coming Soon) -->
+            <div id="checkout-opt-bank" class="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 opacity-60 cursor-not-allowed transition relative select-none">
               <div class="flex items-start justify-between">
                 <div class="flex items-center space-x-3">
-                  <input type="radio" name="checkout_modal_pm" id="pm-radio-bank" value="BANK" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+                  <input type="radio" name="checkout_modal_pm" id="pm-radio-bank" value="BANK" disabled class="w-4 h-4 text-slate-400 cursor-not-allowed">
                   <div>
                     <div class="flex items-center space-x-2">
-                      <span class="font-bold text-slate-900 text-xs">2. Bank Account / Net Banking</span>
-                      <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Direct Debit</span>
+                      <span class="font-bold text-slate-500 text-xs">2. Bank Account / Net Banking</span>
+                      <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">Coming Soon / जल्द उपलब्ध</span>
                     </div>
-                    <p class="text-[10px] text-slate-500 mt-0.5">SBI, HDFC, ICICI, PNB & Rural Grameen Banks</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Direct gateway verification under compliance review</p>
                   </div>
                 </div>
-                <span class="text-base">🏦</span>
+                <span class="text-base opacity-50">🏦</span>
               </div>
             </div>
 
-            <!-- 3. Credit / Debit Card -->
-            <div id="checkout-opt-card" onclick="selectCheckoutModalPayment('CARD')" class="p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative">
+            <!-- 3. Credit / Debit Card (Coming Soon) -->
+            <div id="checkout-opt-card" class="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 opacity-60 cursor-not-allowed transition relative select-none">
               <div class="flex items-start justify-between">
                 <div class="flex items-center space-x-3">
-                  <input type="radio" name="checkout_modal_pm" id="pm-radio-card" value="CARD" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+                  <input type="radio" name="checkout_modal_pm" id="pm-radio-card" value="CARD" disabled class="w-4 h-4 text-slate-400 cursor-not-allowed">
                   <div>
                     <div class="flex items-center space-x-2">
-                      <span class="font-bold text-slate-900 text-xs">3. Credit / Debit Card</span>
-                      <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Visa / RuPay</span>
+                      <span class="font-bold text-slate-500 text-xs">3. Credit / Debit Card</span>
+                      <span class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">Coming Soon / जल्द उपलब्ध</span>
                     </div>
-                    <p class="text-[10px] text-slate-500 mt-0.5">RuPay, Visa, Mastercard & Maestro cards accepted</p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Secure authorized gateway integration in progress</p>
                   </div>
                 </div>
-                <span class="text-base">💳</span>
-              </div>
-              <!-- Collapsible 16-Digit Card Form -->
-              <div id="checkout-card-form" class="mt-3 pt-3 border-t border-slate-200 space-y-2.5 hidden">
-                <div>
-                  <label class="block text-[10px] font-semibold text-slate-600 mb-1">Card Number (16 Digits)</label>
-                  <input type="text" id="checkout-card-number" maxlength="19" placeholder="4111 2222 3333 4444" oninput="formatCardNumberInput(this)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                  <div>
-                    <label class="block text-[10px] font-semibold text-slate-600 mb-1">Expiry (MM/YY)</label>
-                    <input type="text" id="checkout-card-expiry" maxlength="5" placeholder="12/28" oninput="formatCardExpiryInput(this)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none text-center">
-                  </div>
-                  <div>
-                    <label class="block text-[10px] font-semibold text-slate-600 mb-1">CVV (3 Digits)</label>
-                    <input type="text" inputmode="numeric" autocomplete="off" id="checkout-card-cvv" maxlength="3" placeholder="123" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:bg-white focus:border-emerald-600 focus:outline-none text-center">
-                  </div>
-                </div>
+                <span class="text-base opacity-50">💳</span>
               </div>
             </div>
 
@@ -2405,7 +2406,7 @@
   <!-- ===================================================================== -->
   <!-- JAVASCRIPT APPLICATION CORE -->
   <!-- ===================================================================== -->
-  <script src="customer_script_3.js"></script>
+  <script src="./customer_script_3.js"></script>
 
     <!-- Product Details Modal Overlay -->
     <div id="modal-product-details" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -2465,7 +2466,7 @@
 
 
   <!-- GaonBazaar Offline-First Service Worker Registration -->
-  <script src="customer_script_4.js"></script>
+  <script src="./customer_script_4.js"></script>
 
 </body>
 </html>

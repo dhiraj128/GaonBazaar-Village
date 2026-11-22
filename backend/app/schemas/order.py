@@ -10,7 +10,7 @@ class CartSyncRequest(BaseModel):
     store_id: str
     delivery_latitude: Optional[float] = None
     delivery_longitude: Optional[float] = None
-    items: List[OrderItemInput]
+    items: List[OrderItemInput] = Field(default_factory=list, description="Cart items (can be empty when clearing cart)")
 
 class CartPriceBreakdown(BaseModel):
     subtotal: float
@@ -25,7 +25,7 @@ class CreateOrderRequest(BaseModel):
     store_id: str
     delivery_address_id: str
     payment_method: str = "COD" # COD or ONLINE
-    items: List[OrderItemInput]
+    items: List[OrderItemInput] = Field(..., min_length=1, description="Order items cannot be empty")
     customer_notes: Optional[str] = None
 
 class OrderItemDetail(BaseModel):
