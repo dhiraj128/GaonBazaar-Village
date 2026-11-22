@@ -105,7 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const {
       user_id,
-      role = 'vendor',
+      role,
       shop_name,
       account_holder_name,
       payout_method,
