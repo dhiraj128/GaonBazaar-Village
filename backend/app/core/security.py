@@ -99,6 +99,8 @@ async def get_current_admin(
     
     # 2. JWT Bearer Token check with authoritative database validation
     if credentials:
+        if is_token_revoked(credentials.credentials):
+            raise HTTPException(status_code=401, detail="Revoked admin token")
         payload = decode_access_token(credentials.credentials)
         if payload and payload.get("role") in ["admin", "super_admin", "hub_manager"]:
             user_id = payload.get("sub")
