@@ -212,7 +212,7 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // 4. Determine OTP code (Strict 6-digit numeric OTP: 100000–999999, or 123456 for test personas/compliance)
+    // 4. Generate a cryptographically random six-digit OTP for every request.
     // Production OTPs are never deterministic; use a sandbox/provider mock only in isolated tests.
     const otpCode = String(crypto.randomInt(100000, 1000000));
 
@@ -243,10 +243,10 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // 6. Dispatch real 6-digit SMS OTP via 2Factor.in API if not test persona
+    // 6. Dispatch real six-digit SMS OTP via the configured provider
     const twoFactorApiKey = (process.env.TWOFACTOR_API_KEY || '').trim();
     const twoFactorTemplate = (process.env.TWOFACTOR_OTP_TEMPLATE || 'OTP1').trim();
-    if (!isTestPersona) {
+    {
       if (!twoFactorApiKey) {
         console.error('[CRITICAL] Missing TWOFACTOR_API_KEY in serverless environment.');
         return sendJson(res, 500, {
