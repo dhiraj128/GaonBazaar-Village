@@ -184,7 +184,6 @@ async def verify_otp(
     now = datetime.now(timezone.utc)
     now_ts = now.timestamp()
     is_non_prod = getattr(settings, "ENVIRONMENT", "").lower() != "production"
-    is_razorpay_backdoor = (is_non_prod and clean_phone == "9999999999" and payload.otp == "123456")
 
     # 1. Lookup active persistent OTP challenge from database
     query = select(OtpChallenge).where(
@@ -198,7 +197,7 @@ async def verify_otp(
     result = await db.execute(query)
     challenge = result.scalars().first()
 
-    matched_role = payload.role or "customer"
+    matched_role = "customer"
 
     if challenge:
         # Check 5-minute expiry
@@ -227,7 +226,7 @@ async def verify_otp(
 
         # Constant-time hash verification (strictly 6-digit OTP)
         is_test_phone = is_whitelisted_test_phone(clean_phone)
-        is_valid = verify_otp_hash(payload.otp, challenge.otp_hash) or (is_test_phone and payload.otp == "123456") or is_razorpay_backdoor
+        is_valid = verify_otp_hash(payload.otp, challenge.otp_hash)
         if not is_valid:
             await db.commit()
             raise HTTPException(
@@ -240,20 +239,17 @@ async def verify_otp(
         challenge.used = True
         challenge.verified = True
         await db.commit()
-        matched_role = challenge.role or payload.role or "customer"
+        matched_role = challenge.role if challenge.role in {"customer", "vendor", "runner"} else "customer"
         OTP_STORAGE.pop(clean_phone, None)
 
     else:
         # Fallback to in-memory OTP_STORAGE (for tests where DB might be mocked or pre-seeded)
         mem_stored = OTP_STORAGE.get(clean_phone)
-        if not mem_stored:
-            if is_razorpay_backdoor:
-                matched_role = payload.role or "customer"
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="कोई सक्रिय ओटीपी अनुरोध नहीं मिला। कृपया पहले ओटीपी भेजें (No active OTP challenge found. Please request an OTP first)"
-                )
+        if not mem_stored or not getattr(settings, "TESTING", False) or not is_non_prod:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No active OTP challenge found. Please request an OTP first"
+            )
 
         if mem_stored.get("expires_at", 0) < now_ts:
             OTP_STORAGE.pop(clean_phone, None)
@@ -271,21 +267,24 @@ async def verify_otp(
             )
 
         is_test_phone = is_whitelisted_test_phone(clean_phone)
-        is_valid = secrets.compare_digest(str(mem_stored.get("otp")), str(payload.otp)) or (is_test_phone and payload.otp in ["1234", "123456"]) or is_razorpay_backdoor
+        is_valid = secrets.compare_digest(str(mem_stored.get("otp")), str(payload.otp))
         if not is_valid:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="गलत ओटीपी दर्ज किया गया है (Invalid OTP code)"
             )
 
-        matched_role = mem_stored.get("role", payload.role or "customer")
+        stored_role = mem_stored.get("role")
+        matched_role = stored_role if stored_role in {"customer", "vendor", "runner"} else "customer"
         OTP_STORAGE.pop(clean_phone, None)
+
+    # Only self-service roles can be created by public OTP verification.
+    if matched_role not in {"customer", "vendor", "runner"}:
+        raise HTTPException(status_code=403, detail="Privileged roles require administrator provisioning")
 
     # 2. Query or create User entity in PostgreSQL / SQLite
     user_query = await db.execute(select(User).where(User.phone == clean_phone))
     user = user_query.scalars().first()
-
-    is_staging_persona = is_whitelisted_test_phone(clean_phone)
 
     if not user:
         user = User(
@@ -305,7 +304,7 @@ async def verify_otp(
         await db.refresh(user)
 
         # Linked Store/Runner setup
-        if matched_role == "vendor" and payload.phone in PRE_APPROVED_PERSONAS:
+        if matched_role == "vendor" and is_non_prod and clean_phone in PRE_APPROVED_PERSONAS:
             store = Store(
                 owner_id=user.id,
                 shop_name=user.name or f"{user.phone[-4:]} Kirana Store",
@@ -321,7 +320,7 @@ async def verify_otp(
             await db.commit()
 
         elif matched_role == "runner":
-            is_approved = payload.phone in PRE_APPROVED_PERSONAS
+            is_approved = is_non_prod and clean_phone in PRE_APPROVED_PERSONAS
             runner = Runner(
                 user_id=user.id,
                 full_name=user.name or "Runner Partner",
@@ -335,7 +334,7 @@ async def verify_otp(
             await db.commit()
     else:
         # User already exists: only pre-approved personas are ensured approved
-        if payload.phone in PRE_APPROVED_PERSONAS:
+        if is_non_prod and clean_phone in PRE_APPROVED_PERSONAS:
             if matched_role == "vendor":
                 store_q = await db.execute(select(Store).where(Store.owner_id == user.id))
                 store = store_q.scalars().first()
