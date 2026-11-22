@@ -54,6 +54,28 @@
           "value": "no-cache, no-store, must-revalidate"
         }
       ]
+    },
+    {
+      "source": "/favicon.ico",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "image/x-icon"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(ico|png|svg)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
     }
   ],
   "rewrites": [
@@ -111,8 +133,28 @@
     },
     {
       "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
+      "source": "/favicon.ico",
+      "destination": "/favicon.ico"
+    },
+    {
+      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
       "source": "/favicon.png",
-      "destination": "/vendor/favicon.png"
+      "destination": "/favicon.png"
+    },
+    {
+      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
+      "source": "/favicon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
+      "source": "/apple-touch-icon.png",
+      "destination": "/apple-touch-icon.png"
+    },
+    {
+      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
+      "source": "/favicon-:size(.*)",
+      "destination": "/favicon-:size$1"
     },
     {
       "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
@@ -161,8 +203,28 @@
     },
     {
       "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
+      "source": "/favicon.ico",
+      "destination": "/favicon.ico"
+    },
+    {
+      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
       "source": "/favicon.png",
-      "destination": "/runner/favicon.png"
+      "destination": "/favicon.png"
+    },
+    {
+      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
+      "source": "/favicon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
+      "source": "/apple-touch-icon.png",
+      "destination": "/apple-touch-icon.png"
+    },
+    {
+      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
+      "source": "/favicon-:size(.*)",
+      "destination": "/favicon-:size$1"
     },
     {
       "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
@@ -188,6 +250,41 @@
       "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
       "source": "/(.*)",
       "destination": "/runner/index.html"
+    },
+    {
+      "has": [{ "type": "host", "value": "admin.apnagaonbazaar.in" }],
+      "source": "/favicon.ico",
+      "destination": "/favicon.ico"
+    },
+    {
+      "has": [{ "type": "host", "value": "admin.apnagaonbazaar.in" }],
+      "source": "/favicon.png",
+      "destination": "/favicon.png"
+    },
+    {
+      "has": [{ "type": "host", "value": "admin.apnagaonbazaar.in" }],
+      "source": "/favicon.svg",
+      "destination": "/favicon.svg"
+    },
+    {
+      "has": [{ "type": "host", "value": "admin.apnagaonbazaar.in" }],
+      "source": "/apple-touch-icon.png",
+      "destination": "/apple-touch-icon.png"
+    },
+    {
+      "has": [{ "type": "host", "value": "admin.apnagaonbazaar.in" }],
+      "source": "/favicon-:size(.*)",
+      "destination": "/favicon-:size$1"
+    },
+    {
+      "has": [{ "type": "host", "value": "admin.apnagaonbazaar.in" }],
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
+      "has": [{ "type": "host", "value": "admin.apnagaonbazaar.in" }],
+      "source": "/icons/(.*)",
+      "destination": "/icons/$1"
     },
     {
       "has": [{ "type": "host", "value": "admin.apnagaonbazaar.in" }],
