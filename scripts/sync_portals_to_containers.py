@@ -48,11 +48,19 @@ def sync_portal(app_name):
         if os.path.exists(src_css_path):
             shutil.copy2(src_css_path, os.path.join(target_dir, css_file))
             
-        # Copy all JS scripts
+        # Copy all JS scripts, icons, favicons, manifests
         for fname in os.listdir(src_dir):
-            if fname.endswith(".js") or fname.endswith(".json") or fname.endswith(".png"):
+            if fname.endswith((".js", ".json", ".png", ".ico", ".svg")):
                 shutil.copy2(os.path.join(src_dir, fname), os.path.join(target_dir, fname))
                 
+        # Copy icons directory if it exists
+        src_icons_dir = os.path.join(src_dir, "icons")
+        if os.path.isdir(src_icons_dir):
+            dst_icons_dir = os.path.join(target_dir, "icons")
+            os.makedirs(dst_icons_dir, exist_ok=True)
+            for ic in os.listdir(src_icons_dir):
+                shutil.copy2(os.path.join(src_icons_dir, ic), os.path.join(dst_icons_dir, ic))
+
         # Write container index.html with relative script paths
         dest_index = os.path.join(target_dir, "index.html")
         with open(dest_index, "w", encoding="utf-8") as f:

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512">
+  <defs>
+    <linearGradient id="gb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E9352" />
+      <stop offset="100%" stop-color="#075E34" />
+    </linearGradient>
+  </defs>
+  <!-- Rounded Square Container in GaonBazaar Signature Emerald Green -->
+  <rect width="64" height="64" rx="14" fill="url(#gb-grad)" />
+  
+  <!-- Village Storefront Roof in Crisp White -->
+  <path d="M32 9L10 25H54L32 9Z" fill="#FFFFFF" />
+  <!-- Rooftop Flagpole & Flag -->
+  <path d="M32 5V13M32 5L40 8.5L32 12" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Storefront Body in Soft Mint Tint (#E8F5E9) -->
+  <rect x="15" y="25" width="34" height="22" rx="2" fill="#E8F5E9" />
+  
+  <!-- Left Pillar, Central Entrance, Right Pillar in GaonBazaar Green -->
+  <rect x="19" y="28" width="5" height="16" rx="1" fill="#0C8346" />
+  <rect x="29" y="31" width="6" height="13" rx="1" fill="#0C8346" />
+  <rect x="40" y="28" width="5" height="16" rx="1" fill="#0C8346" />
+  
+  <!-- Delivery Cart Undercarriage Axle & Wheels in Crisp White -->
+  <path d="M13 52H51" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" />
+  <circle cx="21" cy="52" r="3.5" fill="#FFFFFF" />
+  <circle cx="43" cy="52" r="3.5" fill="#FFFFFF" />
+</svg>
