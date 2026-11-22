@@ -48,7 +48,8 @@ function extractAndVerifyCaller(req: VercelRequest): any | null {
 
   if (!rawToken) return null;
 
-  const secret = process.env.SECRET_KEY || process.env.JWT_SECRET || 'dev-insecure-secret-key-change-in-production';
+  const secret = process.env.SECRET_KEY || process.env.JWT_SECRET;
+  if (!secret || secret.startsWith('dev-insecure-')) return null;
   try {
     const parts = rawToken.split('.');
     if (parts.length !== 3) return null;
@@ -57,9 +58,13 @@ function extractAndVerifyCaller(req: VercelRequest): any | null {
       .createHmac('sha256', secret)
       .update(`${headerB64}.${payloadB64}`)
       .digest('base64url');
-    if (signatureB64 !== expectedSig) return null;
+    const providedSig = Buffer.from(signatureB64, 'utf-8');
+    const calculatedSig = Buffer.from(expectedSig, 'utf-8');
+    if (providedSig.length !== calculatedSig.length || !crypto.timingSafeEqual(providedSig, calculatedSig)) return null;
+    const header = JSON.parse(Buffer.from(headerB64, 'base64url').toString('utf-8'));
+    if (header.alg !== 'HS256' || header.typ !== 'JWT') return null;
     const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf-8'));
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+    if (!payload.exp || payload.exp <= Math.floor(Date.now() / 1000) || !payload.sub) return null;
     return payload;
   } catch {
     return null;
@@ -111,8 +116,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } = body;
 
     const caller = extractAndVerifyCaller(req);
-    const targetUserId = caller ? caller.sub : (user_id || 'usr_party');
-    const targetRole = role === 'runner' ? 'runner' : 'vendor';
+    if (!caller) {
+      return sendJson(res, 401, { success: false, error: 'Authentication is required to save payout details.' });
+    }
+    if (caller.role !== 'vendor' && caller.role !== 'runner') {
+      return sendJson(res, 403, { success: false, error: 'Only vendor or runner accounts can save payout details.' });
+    }
+    const targetUserId = String(caller.sub);
+    const targetRole = caller.role;
+    if (user_id && String(user_id) !== targetUserId) {
+      return sendJson(res, 403, { success: false, error: 'Payout account ownership mismatch.' });
+    }
+    if (role && role !== targetRole) {
+      return sendJson(res, 403, { success: false, error: 'Payout account role mismatch.' });
+    }
 
     const cleanHolderName = String(account_holder_name || '').trim();
     if (!cleanHolderName || cleanHolderName.length < 2) {
