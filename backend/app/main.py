@@ -308,6 +308,13 @@ async def lifespan(app: FastAPI):
             init_task.cancel()
 
 is_prod = settings.ENVIRONMENT.lower() == "production"
+if is_prod:
+    if not settings.SECRET_KEY or settings.SECRET_KEY.startswith("dev-insecure-"):
+        raise RuntimeError("Production JWT signing key is not configured securely")
+    if not settings.ADMIN_API_KEY or settings.ADMIN_API_KEY.startswith("dev-insecure-"):
+        raise RuntimeError("Production administrative API key is not configured securely")
+    if getattr(settings, "TESTING", False):
+        raise RuntimeError("TESTING mode must not be enabled in production")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
