@@ -47,8 +47,20 @@ async def sync_cart(data: CartSyncRequest, db: AsyncSession = Depends(get_db)):
         is_serv, distance_km = is_within_service_radius(
             store.latitude, store.longitude, data.delivery_latitude, data.delivery_longitude
         )
+
+    # 3. Handle empty cart (allows customers to clear cart without error)
+    if not data.items or len(data.items) == 0:
+        return CartPriceBreakdown(
+            subtotal=0.0,
+            delivery_fee=0.0,
+            platform_fee=0.0,
+            total_amount=0.0,
+            is_serviceable=is_serv,
+            distance_km=distance_km,
+            warning=None
+        )
         
-    # 3. Calculate subtotal from products in store
+    # 4. Calculate subtotal from products in store
     subtotal = 0.0
     for itm in data.items:
         pres = await db.execute(
@@ -81,6 +93,12 @@ async def create_order(
     db: AsyncSession = Depends(get_db)
 ):
     customer_id = payload.get("sub")
+
+    if not data.items or len(data.items) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cart cannot be empty. Please add items to your cart."
+        )
     
     # Verify Store
     s_res = await db.execute(select(Store).where(Store.id == data.store_id))
@@ -177,6 +195,12 @@ async def create_order(
             image_url=prod.image_url
         ))
         
+    if subtotal <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Order subtotal must be greater than zero."
+        )
+
     totals = calculate_order_totals(subtotal, dist_km)
     
     now = datetime.now(timezone.utc)

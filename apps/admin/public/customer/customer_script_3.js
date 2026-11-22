@@ -6079,54 +6079,49 @@ function createProductCardElement(p) {
 
       const modal = document.getElementById('modal-checkout-payment');
       if (modal) {
+        modal.style.setProperty('display', 'flex', 'important');
         modal.classList.remove('hidden');
-        lucide.createIcons();
+        modal.classList.add('is-open');
+        if (window.lucide) lucide.createIcons();
       }
     }
 
     function closeCheckoutPaymentModal() {
       const modal = document.getElementById('modal-checkout-payment');
-      if (modal) modal.classList.add('hidden');
+      if (modal) {
+        modal.style.setProperty('display', 'none', 'important');
+        modal.classList.add('hidden');
+        modal.classList.remove('is-open');
+      }
     }
 
     function selectCheckoutModalPayment(mode) {
-      selectedCheckoutModalPayment = mode;
-      if (mode === 'CARD') {
-        const cForm = document.getElementById('checkout-card-form');
-        if (cForm) cForm.classList.remove('hidden');
-      } else {
-        const cForm = document.getElementById('checkout-card-form');
-        if (cForm) cForm.classList.add('hidden');
+      if (mode === 'BANK' || mode === 'CARD') {
+        toastInfo(currentLang === 'hi' 
+          ? "यह भुगतान विधि जल्द उपलब्ध होगी। कृपया यूपीआई (UPI) या कैश ऑन डिलीवरी (COD) चुनें।" 
+          : "This payment method is coming soon. Please select UPI or Cash on Delivery.");
+        return;
       }
+
+      selectedCheckoutModalPayment = (mode === 'COD') ? 'COD' : 'ONLINE';
       
       const upiCard = document.getElementById('checkout-opt-upi');
-      const bankCard = document.getElementById('checkout-opt-bank');
-      const cardCard = document.getElementById('checkout-opt-card');
       const codCard = document.getElementById('checkout-opt-cod');
 
       const rUpi = document.getElementById('pm-radio-upi');
-      const rBank = document.getElementById('pm-radio-bank');
-      const rCard = document.getElementById('pm-radio-card');
       const rCod = document.getElementById('pm-radio-cod');
 
-      [upiCard, bankCard, cardCard, codCard].forEach(el => {
-        if (el) {
-          el.className = "p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative";
-        }
-      });
+      if (upiCard) upiCard.className = "p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative";
+      if (codCard) codCard.className = "p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative";
 
-      if (mode === 'ONLINE' || mode === 'UPI') {
+      if (selectedCheckoutModalPayment === 'ONLINE') {
         if (upiCard) upiCard.className = "p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition relative";
         if (rUpi) rUpi.checked = true;
-      } else if (mode === 'BANK') {
-        if (bankCard) bankCard.className = "p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition relative";
-        if (rBank) rBank.checked = true;
-      } else if (mode === 'CARD') {
-        if (cardCard) cardCard.className = "p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition relative";
-        if (rCard) rCard.checked = true;
-      } else if (mode === 'COD') {
+        if (rCod) rCod.checked = false;
+      } else if (selectedCheckoutModalPayment === 'COD') {
         if (codCard) codCard.className = "p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/50 cursor-pointer transition relative";
         if (rCod) rCod.checked = true;
+        if (rUpi) rUpi.checked = false;
       }
 
       updateCheckoutModalUI();
@@ -6153,6 +6148,21 @@ function createProductCardElement(p) {
     window.openRuralAddressModal = openRuralAddressModal;
 
     function updateCheckoutModalUI() {
+      if (!Array.isArray(cartItems) || cartItems.length === 0) {
+        const itemTotalEl = document.getElementById('checkout-modal-item-total');
+        if (itemTotalEl) itemTotalEl.innerText = `₹0.00`;
+        const delFeeEl = document.getElementById('checkout-modal-delivery-fee');
+        if (delFeeEl) delFeeEl.innerText = `₹0.00`;
+        const platFeeEl = document.getElementById('checkout-modal-platform-fee');
+        if (platFeeEl) platFeeEl.innerText = `₹0.00`;
+        const grandTotalEl = document.getElementById('checkout-modal-grand-total');
+        if (grandTotalEl) grandTotalEl.innerText = `₹0.00`;
+        const btn = document.getElementById('btn-checkout-modal-confirm');
+        if (btn) btn.disabled = true;
+        closeCheckoutPaymentModal();
+        return;
+      }
+
       const itemTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
       const deliveryFee = 0.00; // Rural free delivery / base promo
       const platformFee = 3.00;
@@ -6187,58 +6197,39 @@ function createProductCardElement(p) {
 
       // Update Radio and card styles
       const upiCard = document.getElementById('checkout-opt-upi');
-      const bankCard = document.getElementById('checkout-opt-bank');
-      const cardCard = document.getElementById('checkout-opt-card');
       const codCard = document.getElementById('checkout-opt-cod');
 
       const upiRadio = document.getElementById('pm-radio-upi');
-      const bankRadio = document.getElementById('pm-radio-bank');
-      const cardRadio = document.getElementById('pm-radio-card');
       const codRadio = document.getElementById('pm-radio-cod');
       
       const btnText = document.getElementById('btn-checkout-modal-text');
+      const btn = document.getElementById('btn-checkout-modal-confirm');
+      if (btn) btn.disabled = false;
 
-      [upiCard, bankCard, cardCard, codCard].forEach(el => {
-        if (el) el.className = "p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative";
-      });
-      [upiRadio, bankRadio, cardRadio, codRadio].forEach(el => {
-        if (el) el.checked = false;
-      });
+      if (upiCard) upiCard.className = "p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative";
+      if (codCard) codCard.className = "p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition relative";
 
-      if (selectedCheckoutModalPayment === 'ONLINE' || selectedCheckoutModalPayment === 'UPI') {
-        if (upiRadio) upiRadio.checked = true;
-        if (upiCard) upiCard.className = 'p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 cursor-pointer transition relative';
-        if (btnText) {
-          btnText.innerText = currentLang === 'hi' 
-            ? `UPI द्वारा ₹${grandTotal.toFixed(2)} भुगतान करें` 
-            : `Pay ₹${grandTotal.toFixed(2)} via UPI`;
-        }
-      } else if (selectedCheckoutModalPayment === 'BANK') {
-        if (bankRadio) bankRadio.checked = true;
-        if (bankCard) bankCard.className = 'p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 cursor-pointer transition relative';
-        if (btnText) {
-          btnText.innerText = currentLang === 'hi' 
-            ? `नेट बैंकिंग द्वारा ₹${grandTotal.toFixed(2)} भुगतान करें` 
-            : `Pay ₹${grandTotal.toFixed(2)} via Net Banking`;
-        }
-      } else if (selectedCheckoutModalPayment === 'CARD') {
-        if (cardRadio) cardRadio.checked = true;
-        if (cardCard) cardCard.className = 'p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 cursor-pointer transition relative';
-        if (btnText) {
-          btnText.innerText = currentLang === 'hi' 
-            ? `कार्ड द्वारा ₹${grandTotal.toFixed(2)} भुगतान करें` 
-            : `Pay ₹${grandTotal.toFixed(2)} via Card`;
-        }
-      } else if (selectedCheckoutModalPayment === 'COD') {
+      if (selectedCheckoutModalPayment === 'COD') {
         if (codRadio) codRadio.checked = true;
+        if (upiRadio) upiRadio.checked = false;
         if (codCard) codCard.className = 'p-4 rounded-2xl border-2 border-amber-600 bg-amber-50/60 cursor-pointer transition relative';
         if (btnText) {
           btnText.innerText = currentLang === 'hi' 
             ? `COD ऑर्डर की पुष्टि करें (₹${grandTotal.toFixed(2)})` 
             : `Confirm COD Order (₹${grandTotal.toFixed(2)})`;
         }
+      } else {
+        selectedCheckoutModalPayment = 'ONLINE';
+        if (upiRadio) upiRadio.checked = true;
+        if (codRadio) codRadio.checked = false;
+        if (upiCard) upiCard.className = 'p-4 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 cursor-pointer transition relative';
+        if (btnText) {
+          btnText.innerText = currentLang === 'hi' 
+            ? `UPI द्वारा ₹${grandTotal.toFixed(2)} भुगतान करें` 
+            : `Pay ₹${grandTotal.toFixed(2)} via UPI`;
+        }
       }
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     
@@ -6435,6 +6426,19 @@ function createProductCardElement(p) {
     window.proceedToOrderTrackingPending = proceedToOrderTrackingPending;
 
     async function confirmPaymentAndPlaceOrder() {
+      if (!Array.isArray(cartItems) || cartItems.length === 0) {
+        toastError(currentLang === 'hi' ? "आपका कार्ट खाली है! कृपया पहले सामान जोड़ें।" : "Your cart is empty! Please add items first.");
+        closeCheckoutPaymentModal();
+        return;
+      }
+
+      if (selectedCheckoutModalPayment !== 'ONLINE' && selectedCheckoutModalPayment !== 'COD') {
+        toastInfo(currentLang === 'hi' ? "कृपया यूपीआई (UPI) या कैश ऑन डिलीवरी (COD) चुनें।" : "Please select UPI or Cash on Delivery.");
+        selectedCheckoutModalPayment = 'ONLINE';
+        updateCheckoutModalUI();
+        return;
+      }
+
       const btn = document.getElementById('btn-checkout-modal-confirm');
       const originalHtml = btn ? btn.innerHTML : '';
       

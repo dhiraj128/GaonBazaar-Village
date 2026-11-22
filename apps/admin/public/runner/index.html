@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>GaonBazaar Runner | Hyperlocal Delivery Partner</title>
   
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Standalone Bundled Tailwind CSS (Zero Third-Party CDN Dependency) -->
+  <link rel="stylesheet" href="./runner.css">
+  <link rel="stylesheet" href="/css/tailwind-legacy.min.css">
   <script src="/runner/runner_script_1.js"></script>
 
   <!-- Google Font: Inter -->
@@ -25,6 +26,11 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
   <style>
+    /* Native Instant-Render Visibility Safeguards */
+    .hidden, [hidden] {
+      display: none !important;
+    }
+
     body {
       font-family: 'Inter', sans-serif;
       -webkit-tap-highlight-color: transparent;

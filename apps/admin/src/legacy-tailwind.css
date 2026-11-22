@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-50: #f0fdf4;
+  --color-brand-100: #dcfce7;
+  --color-brand-200: #bbf7d0;
+  --color-brand-500: #22c55e;
+  --color-brand-600: #16a34a;
+  --color-brand-700: #15803d;
+  --color-brand-800: #166534;
+  --color-brand-900: #14532d;
+
+  --color-runner-50: #eff6ff;
+  --color-runner-100: #dbeafe;
+  --color-runner-500: #3b82f6;
+  --color-runner-600: #2563eb;
+  --color-runner-700: #1d4ed8;
+}
+
+@source "../public/customer/**/*.{html,js}";
+@source "../public/vendor/**/*.{html,js}";
+@source "../public/runner/**/*.{html,js}";
+@source "../public/*.html";
+@source "../public/**/*.html";
+@source "../public/**/*.js";
+
+@layer utilities {
+  .hidden, [hidden] {
+    display: none !important;
+  }
+  #modal-checkout-payment {
+    display: none !important;
+  }
+  #modal-checkout-payment.is-open {
+    display: flex !important;
+  }
+}

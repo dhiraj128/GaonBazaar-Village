@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Any
 from jose import jwt, JWTError
@@ -15,9 +16,14 @@ security_bearer = HTTPBearer(auto_error=False)
 admin_key_header = APIKeyHeader(name="X-Admin-Key", auto_error=False)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    # bcrypt truncates passwords after 72 bytes; reject oversized input up front.
+    if len(plain_password.encode("utf-8")) > 72:
+        return False
     return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
+    if len(password.encode("utf-8")) > 72:
+        raise ValueError("Password exceeds the 72-byte bcrypt limit")
     return pwd_context.hash(password)
 
 REVOKED_TOKENS: set = set()
@@ -86,11 +92,15 @@ async def get_current_admin(
     db: AsyncSession = Depends(get_db)
 ) -> dict:
     # 1. API Key check
-    if api_key and api_key == settings.ADMIN_API_KEY:
+    if (api_key and settings.ADMIN_API_KEY
+            and not settings.ADMIN_API_KEY.startswith("dev-insecure-")
+            and secrets.compare_digest(api_key, settings.ADMIN_API_KEY)):
         return {"sub": "admin_key_user", "role": "super_admin", "phone": "9800000099", "is_active": True}
     
     # 2. JWT Bearer Token check with authoritative database validation
     if credentials:
+        if is_token_revoked(credentials.credentials):
+            raise HTTPException(status_code=401, detail="Revoked admin token")
         payload = decode_access_token(credentials.credentials)
         if payload and payload.get("role") in ["admin", "super_admin", "hub_manager"]:
             user_id = payload.get("sub")
@@ -115,7 +125,11 @@ async def get_current_admin(
                     "name": user.name or payload.get("name", "Admin"),
                     "is_active": user.is_active
                 }
-            return payload
+            # A signed token is not sufficient if the authoritative admin record is missing.
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Administrative account not found"
+            )
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,

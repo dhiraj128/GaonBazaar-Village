@@ -28,6 +28,32 @@
           "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://*.razorpay.com https://cdn.tailwindcss.com https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://gaonbazaar-village.onrender.com https://*.supabase.co wss://*.supabase.co https://api.razorpay.com https://lumberjack.razorpay.com https://*.razorpay.com https://ifsc.razorpay.com https://maps.googleapis.com https://*.googleapis.com https://nominatim.openstreetmap.org https://api.qrserver.com; frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://www.google.com https://maps.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://api.razorpay.com https://checkout.razorpay.com;"
         }
       ]
+    },
+    {
+      "source": "/(.*)\\.css",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/css; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)service-worker\\.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     }
   ],
   "rewrites": [
@@ -65,6 +91,31 @@
     },
     {
       "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
+      "source": "/vendor.css",
+      "destination": "/vendor/vendor.css"
+    },
+    {
+      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
+      "source": "/css/(.*)",
+      "destination": "/css/$1"
+    },
+    {
+      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
+      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
+      "source": "/icons/(.*)",
+      "destination": "/vendor/icons/$1"
+    },
+    {
+      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
+      "source": "/favicon.png",
+      "destination": "/vendor/favicon.png"
+    },
+    {
+      "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
       "source": "/vendor_script_(.*)",
       "destination": "/vendor/vendor_script_$1"
     },
@@ -87,6 +138,31 @@
       "has": [{ "type": "host", "value": "dukaan.apnagaonbazaar.in" }],
       "source": "/(.*)",
       "destination": "/vendor/index.html"
+    },
+    {
+      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
+      "source": "/runner.css",
+      "destination": "/runner/runner.css"
+    },
+    {
+      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
+      "source": "/css/(.*)",
+      "destination": "/css/$1"
+    },
+    {
+      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
+      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
+      "source": "/icons/(.*)",
+      "destination": "/runner/icons/$1"
+    },
+    {
+      "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
+      "source": "/favicon.png",
+      "destination": "/runner/favicon.png"
     },
     {
       "has": [{ "type": "host", "value": "mitra.apnagaonbazaar.in" }],
@@ -119,6 +195,18 @@
       "destination": "/index.html"
     },
     {
+      "source": "/customer.css",
+      "destination": "/customer/customer.css"
+    },
+    {
+      "source": "/vendor.css",
+      "destination": "/vendor/vendor.css"
+    },
+    {
+      "source": "/runner.css",
+      "destination": "/runner/runner.css"
+    },
+    {
       "source": "/customer_script_(.*)",
       "destination": "/customer/customer_script_$1"
     },
@@ -129,6 +217,22 @@
     {
       "source": "/runner_script_(.*)",
       "destination": "/runner/runner_script_$1"
+    },
+    {
+      "source": "/css/(.*)",
+      "destination": "/css/$1"
+    },
+    {
+      "source": "/customer/(.*)",
+      "destination": "/customer/$1"
+    },
+    {
+      "source": "/vendor/(.*)",
+      "destination": "/vendor/$1"
+    },
+    {
+      "source": "/runner/(.*)",
+      "destination": "/runner/$1"
     },
     {
       "source": "/(.*)",

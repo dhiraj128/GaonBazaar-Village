@@ -81,25 +81,25 @@ async function getActiveChallengeFromSupabase(
   }
 }
 
-// Mark challenge used in Supabase to atomically prevent replay attacks
+// Consume exactly one unexpired OTP challenge only once, even across concurrent workers.
 async function markChallengeUsedInSupabase(verificationId: string): Promise<boolean> {
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/otp_challenges?session_id=eq.${encodeURIComponent(
-        verificationId
-      )}`,
+      `${SUPABASE_URL}/rest/v1/otp_challenges?session_id=eq.${encodeURIComponent(verificationId)}&is_used=eq.false&expires_at=gt.${encodeURIComponent(new Date().toISOString())}`,
       {
         method: 'PATCH',
         headers: {
           apikey: SUPABASE_KEY,
           Authorization: `Bearer ${SUPABASE_KEY}`,
           'Content-Type': 'application/json',
-          Prefer: 'return=minimal',
+          Prefer: 'return=representation',
         },
         body: JSON.stringify({ is_used: true, used: true, verified: true }),
       }
     );
-    return res.ok;
+    if (!res.ok) return false;
+    const consumed = await res.json();
+    return Array.isArray(consumed) && consumed.length === 1;
   } catch (err) {
     console.warn('[Verify OTP] Supabase mark used notice:', err);
     return false;
@@ -330,22 +330,12 @@ export default async function handler(req: any, res: any) {
       : safeRequestedRole;
 
     // 5. Verify 6-digit OTP
-    const isTestPersona =
-      clean === '9999999999' ||
-      clean === '9800000001' ||
-      clean === '9800000002' ||
-      clean === '9800000003';
-
     let isMatch = false;
-    if (isTestPersona && enteredOtp === '123456') {
-      isMatch = true;
-    } else if (challenge.code && challenge.code === enteredOtp) {
-      isMatch = true;
-    } else if (challenge.otp_hash) {
+    if (challenge.otp_hash) {
       const computedHash = crypto.createHash('sha256').update(enteredOtp).digest('hex');
-      if (computedHash === challenge.otp_hash) {
-        isMatch = true;
-      }
+      const expected = Buffer.from(challenge.otp_hash, 'hex');
+      const actual = Buffer.from(computedHash, 'hex');
+      isMatch = expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
     }
 
     if (!isMatch) {
@@ -359,7 +349,13 @@ export default async function handler(req: any, res: any) {
     }
 
     // 6. Replay Prevention: Mark challenge used immediately in Supabase
-    await markChallengeUsedInSupabase(verificationId);
+    if (!(await markChallengeUsedInSupabase(verificationId))) {
+      return sendJson(res, 409, {
+        success: false,
+        code: 'auth/code-already-used',
+        error: 'Verification code has already been used or could not be consumed. Request a new OTP.',
+      });
+    }
 
     // 7. Database Persistence: Authoritative User Profile Lookup / Registration
     let user: any;
