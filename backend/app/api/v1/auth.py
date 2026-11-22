@@ -50,7 +50,7 @@ def verify_otp_hash(otp: str, hashed: str, salt: str = OTP_SALT) -> bool:
 
 def is_whitelisted_test_phone(phone: str) -> bool:
     """Returns True if the phone is an authorized test persona in non-production environment."""
-    if getattr(settings, "ENVIRONMENT", "").lower() == "production":
+    if getattr(settings, "ENVIRONMENT", "").lower() == "production" or not getattr(settings, "TESTING", False):
         return False
     return phone in TEST_PHONE_WHITELIST
 
@@ -103,7 +103,7 @@ async def send_otp(
     # 2. Challenge generation:
     # Staging/development test persona handling (strictly disabled in production)
     is_non_prod = getattr(settings, "ENVIRONMENT", "").lower() != "production"
-    if is_non_prod and clean_phone == "9999999999":
+    if is_non_prod and getattr(settings, "TESTING", False) and clean_phone == "9999999999":
         otp_code = "123456"
         delivery_channel = "razorpay_compliance"
     elif is_whitelisted_test_phone(clean_phone):
@@ -161,7 +161,7 @@ async def send_otp(
         except Exception as exc:
             logger.error(f"[SMS Background Task] Failed delivering 2Factor.in OTP to +91{phone_num}: {exc}")
 
-    if not (is_non_prod and clean_phone == "9999999999"):
+    if not (is_non_prod and getattr(settings, "TESTING", False) and clean_phone == "9999999999"):
         background_tasks.add_task(_async_dispatch_sms_otp, clean_phone, otp_code, payload.role)
 
     return SendOTPResponse(
