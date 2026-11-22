@@ -50,9 +50,11 @@ def verify_otp_hash(otp: str, hashed: str, salt: str = OTP_SALT) -> bool:
 
 def is_whitelisted_test_phone(phone: str) -> bool:
     """Returns True if the phone is an authorized test persona in non-production environment."""
-    if getattr(settings, "ENVIRONMENT", "").lower() == "production" or not getattr(settings, "TESTING", False):
+    if getattr(settings, "ENVIRONMENT", "").lower() == "production":
         return False
-    return phone in TEST_PHONE_WHITELIST
+    is_testing = getattr(settings, "TESTING", False)
+    is_dev_staging = getattr(settings, "ENVIRONMENT", "").lower() in ("staging", "development", "test")
+    return (is_testing or is_dev_staging) and phone in TEST_PHONE_WHITELIST
 
 from app.services.sms import send_sms_otp, normalize_indian_phone
 
