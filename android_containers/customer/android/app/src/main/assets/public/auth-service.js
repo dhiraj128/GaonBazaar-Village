@@ -1057,6 +1057,8 @@ try {
     elName.value = '';
     elName.setAttribute('autocomplete', 'off');
   }
+} catch (e) {}
+
 // Wire CSP-compliant DOM event listeners for Customer Login
 export function initCustomerAuthListeners() {
   const sendOtpBtn = document.getElementById('send-otp-btn');
