@@ -1,3 +1,15 @@
+// Universal Safe Lucide Icons Helper (RunnerApp)
+function safeCreateIcons() {
+  try {
+    if (typeof window !== 'undefined' && window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+  } catch (e) {
+    console.debug('[RunnerApp] Lucide createIcons suppressed:', e);
+  }
+}
+if (typeof window !== 'undefined') window.safeCreateIcons = safeCreateIcons;
+
 // ===========================================================================
     // SUPABASE REALTIME GEOSPATIAL RUNNER DISPATCH & CONCURRENCY LOCKING
     // ===========================================================================
@@ -602,7 +614,7 @@
           checkHi.innerHTML = '';
         }
       }
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
 
     function setLanguage(lang) {
@@ -948,7 +960,7 @@
       }
 
       window.scrollTo(0, 0);
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function openDashboard(initialTab = 'missions', pushHistory = true) {
@@ -1008,7 +1020,7 @@
       }
 
       window.scrollTo(0, 0);
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function switchDashboardTab(tabName, pushHistory = true) {
@@ -1035,7 +1047,7 @@
       }
 
       window.scrollTo(0, 0);
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     window.addEventListener('popstate', (e) => {
@@ -1079,7 +1091,7 @@
       if (modal) {
         modal.classList.remove('hidden');
         history.pushState({ modalOpen: modalId }, '', '#' + modalId);
-        lucide.createIcons();
+        safeCreateIcons();
       }
     }
 
@@ -1183,7 +1195,7 @@
       const sendBtnContent = document.getElementById('send-otp-btn-content');
       if (sendBtnContent) {
         sendBtnContent.innerHTML = `<span id="send-otp-text" data-i18n="send_otp_btn">${currentLang === 'hi' ? "OTP भेजें" : "Send OTP"}</span><i data-lucide="send" class="w-4 h-4 ml-2"></i>`;
-        if (window.lucide) lucide.createIcons();
+        safeCreateIcons();
       }
       const phoneInput = document.getElementById('runner-phone-input');
       if (phoneInput) {
@@ -1463,7 +1475,7 @@
         const verifiedText = currentLang === 'hi' ? "मोबाइल नंबर सत्यापित" : "Mobile number verified";
         if (btnContent) {
           btnContent.innerHTML = `<span>${verifiedText}</span><i data-lucide="check" class="w-4 h-4 ml-2"></i>`;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         }
 
         localStorage.setItem('gb_runner_phone', clean);
@@ -1485,7 +1497,7 @@
         if (btn) btn.disabled = false;
         if (btnContent) {
           btnContent.innerHTML = `<span id="verify-btn-text" data-i18n="verify_proceed">${currentLang === 'hi' ? "सत्यापित करें और आगे बढ़ें" : "Verify & Continue"}</span><i data-lucide="check" class="w-4 h-4 ml-2"></i>`;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         }
 
         let userMsg = currentLang === 'hi' ? "गलत कोड। कृपया पुनः प्रयास करें।" : "Incorrect code. Please try again.";
@@ -1574,7 +1586,7 @@
         panPanel.classList.add('hidden');
         document.getElementById('kyc-aadhaar-input')?.focus();
       }
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function showKycError(msg) {
@@ -1694,7 +1706,7 @@
         if (btn) {
           btn.innerHTML = origHtml;
           btn.disabled = false;
-          lucide.createIcons();
+          safeCreateIcons();
         }
       }
     }
@@ -2027,7 +2039,7 @@
       document.getElementById('aadhaar-camera-section')?.classList.add('hidden');
       document.getElementById('qr-unreadable-overlay')?.classList.add('hidden');
       document.getElementById('aadhaar-choice-section')?.classList.remove('hidden');
-      if (window.lucide) window.lucide.createIcons();
+      safeCreateIcons();
     }
 
     // -------------------------------------------------------------------------
@@ -2207,7 +2219,7 @@
         currentCropZoom = 1.0;
         renderCropCanvas(sourceImgOrCanvas, currentCropZoom);
       }
-      if (window.lucide) window.lucide.createIcons();
+      safeCreateIcons();
     }
 
     function renderCropCanvas(img, zoom) {
@@ -2286,7 +2298,7 @@
             errEl.classList.add('hidden');
           }
         }
-        if (window.lucide) window.lucide.createIcons();
+        safeCreateIcons();
       });
     }
 
@@ -2440,7 +2452,7 @@
           if (title) title.innerText = msg;
         }
       }
-      if (window.lucide) window.lucide.createIcons();
+      safeCreateIcons();
     }
 
     function hideAadhaarLoading() {
@@ -2536,7 +2548,7 @@
         localStorage.setItem('gb_kyc_verified', 'true');
 
         toastSuccess("Aadhaar Secure QR cryptographically verified! UIDAI digital signature authentic.");
-        if (window.lucide) window.lucide.createIcons();
+        safeCreateIcons();
 
       } catch (err) {
         hideAadhaarLoading();
@@ -3911,7 +3923,7 @@
 
       dropdown.innerHTML = html;
       dropdown.classList.remove('hidden');
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.handleRunnerVillageSearch = handleRunnerVillageSearch;
 
@@ -3965,7 +3977,7 @@
         if (btn) {
           btn.innerHTML = origHtml;
           btn.disabled = false;
-          lucide.createIcons();
+          safeCreateIcons();
         }
       }
 
@@ -3997,7 +4009,7 @@
         validatePayoutForm('upi');
         document.getElementById('upi-vpa')?.focus();
       }
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function handleAccountInput() {
@@ -4547,9 +4559,7 @@
       }).join('');
 
       container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        lucide.createIcons();
-      }
+      safeCreateIcons();
     }
 
     async function sendRunnerChatMessage() {
@@ -4747,7 +4757,7 @@
       );
 
       toastSuccess("Pickup confirmed! Order is OUT FOR DELIVERY to " + (state.activeMission?.customer_name || "Customer") + ".");
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.confirmVendorPickup = confirmVendorPickup;
 
@@ -4825,7 +4835,7 @@
       toastSuccess(collectionMode === 'ADMIN_QR' 
         ? "Admin QR Payment Verified! ₹" + (mission.earning || 55).toFixed(2) + " net earnings credited."
         : "Mission Completed! ₹" + (mission.earning || 55).toFixed(2) + " credited to your earnings wallet.");
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.verifyCustomerDeliveryAndFinish = verifyCustomerDeliveryAndFinish;
 
@@ -4939,5 +4949,5 @@
         history.replaceState({ screen: 'onboarding-1', view: 'onboarding' }, '', '#onboarding-1');
       }
 
-      lucide.createIcons();
+      safeCreateIcons();
     });

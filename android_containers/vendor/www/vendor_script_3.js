@@ -1,3 +1,15 @@
+// Universal Safe Lucide Icons Helper (VendorApp)
+function safeCreateIcons() {
+  try {
+    if (typeof window !== 'undefined' && window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+  } catch (e) {
+    console.debug('[VendorApp] Lucide createIcons suppressed:', e);
+  }
+}
+if (typeof window !== 'undefined') window.safeCreateIcons = safeCreateIcons;
+
 // ---------------------------------------------------------------------------
     // COMPLETE BILINGUAL LOCALIZATION DICTIONARY (English & Hindi)
     // ---------------------------------------------------------------------------
@@ -631,7 +643,7 @@
           checkHi.innerHTML = '';
         }
       }
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
 
     function setLanguage(lang) {
@@ -691,7 +703,7 @@
         accLang.innerText = lang === 'en' ? 'English' : 'हिन्दी';
       }
 
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.setLanguage = setLanguage;
 
@@ -1039,7 +1051,7 @@
             </div>
           </div>
         `;
-        if (window.lucide) lucide.createIcons();
+        safeCreateIcons();
       }
     }
     window.SectionErrorBoundary = SectionErrorBoundary;
@@ -1111,7 +1123,7 @@
       }
 
       window.scrollTo(0, 0);
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function openDashboard(initialTab = 'orders', pushHistory = true) {
@@ -1149,7 +1161,7 @@
       }
 
       window.scrollTo(0, 0);
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function switchDashboardTab(tabName, pushHistory = true) {
@@ -1200,7 +1212,7 @@
         } else if (tabName === 'orders') {
           if (typeof updateOrdersUIFromData === 'function') updateOrdersUIFromData(window.currentVendorOrders || []);
         }
-        if (window.lucide) lucide.createIcons();
+        safeCreateIcons();
       }, tabName.charAt(0).toUpperCase() + tabName.slice(1) + ' Section');
 
       if (pushHistory) {
@@ -1208,7 +1220,7 @@
       }
 
       window.scrollTo(0, 0);
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
 
     window.addEventListener('popstate', (e) => {
@@ -1252,7 +1264,7 @@
       if (modal) {
         modal.classList.remove('hidden');
         history.pushState({ modalOpen: modalId }, '', '#' + modalId);
-        lucide.createIcons();
+        safeCreateIcons();
       }
     }
 
@@ -1356,7 +1368,7 @@
       const sendBtnContent = document.getElementById('send-otp-btn-content');
       if (sendBtnContent) {
         sendBtnContent.innerHTML = `<span id="send-otp-text" data-i18n="send_otp_btn">${currentLang === 'hi' ? "OTP भेजें" : "Send OTP"}</span><i data-lucide="send" class="w-4 h-4 ml-2"></i>`;
-        if (window.lucide) lucide.createIcons();
+        safeCreateIcons();
       }
       const phoneInput = document.getElementById('vendor-phone-input');
       if (phoneInput) {
@@ -1636,7 +1648,7 @@
         const verifiedText = currentLang === 'hi' ? "मोबाइल नंबर सत्यापित" : "Mobile number verified";
         if (btnContent) {
           btnContent.innerHTML = `<span>${verifiedText}</span><i data-lucide="check" class="w-4 h-4 ml-2"></i>`;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         }
 
         localStorage.setItem('gb_vendor_phone', clean);
@@ -1658,7 +1670,7 @@
         if (btn) btn.disabled = false;
         if (btnContent) {
           btnContent.innerHTML = `<span id="verify-btn-text" data-i18n="verify_proceed">${currentLang === 'hi' ? "सत्यापित करें और आगे बढ़ें" : "Verify & Continue"}</span><i data-lucide="check" class="w-4 h-4 ml-2"></i>`;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         }
 
         let userMsg = currentLang === 'hi' ? "गलत कोड। कृपया पुनः प्रयास करें।" : "Incorrect code. Please try again.";
@@ -1747,7 +1759,7 @@
         panPanel.classList.add('hidden');
         document.getElementById('kyc-aadhaar-input')?.focus();
       }
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function showKycError(msg) {
@@ -1867,7 +1879,7 @@
         if (btn) {
           btn.innerHTML = origHtml;
           btn.disabled = false;
-          lucide.createIcons();
+          safeCreateIcons();
         }
       }
     }
@@ -2200,7 +2212,7 @@
       document.getElementById('aadhaar-camera-section')?.classList.add('hidden');
       document.getElementById('qr-unreadable-overlay')?.classList.add('hidden');
       document.getElementById('aadhaar-choice-section')?.classList.remove('hidden');
-      if (window.lucide) window.lucide.createIcons();
+      safeCreateIcons();
     }
 
     // -------------------------------------------------------------------------
@@ -2380,7 +2392,7 @@
         currentCropZoom = 1.0;
         renderCropCanvas(sourceImgOrCanvas, currentCropZoom);
       }
-      if (window.lucide) window.lucide.createIcons();
+      safeCreateIcons();
     }
 
     function renderCropCanvas(img, zoom) {
@@ -2459,7 +2471,7 @@
             errEl.classList.add('hidden');
           }
         }
-        if (window.lucide) window.lucide.createIcons();
+        safeCreateIcons();
       });
     }
 
@@ -2613,7 +2625,7 @@
           if (title) title.innerText = msg;
         }
       }
-      if (window.lucide) window.lucide.createIcons();
+      safeCreateIcons();
     }
 
     function hideAadhaarLoading() {
@@ -2709,7 +2721,7 @@
         localStorage.setItem('gb_kyc_verified', 'true');
 
         toastSuccess("Aadhaar Secure QR cryptographically verified! UIDAI digital signature authentic.");
-        if (window.lucide) window.lucide.createIcons();
+        safeCreateIcons();
 
       } catch (err) {
         hideAadhaarLoading();
@@ -4081,7 +4093,7 @@
 
       dropdown.innerHTML = html;
       dropdown.classList.remove('hidden');
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.handleVendorVillageSearch = handleVendorVillageSearch;
 
@@ -4137,7 +4149,7 @@
         if (btn) {
           btn.innerHTML = origHtml;
           btn.disabled = false;
-          lucide.createIcons();
+          safeCreateIcons();
         }
       }
 
@@ -4169,7 +4181,7 @@
         validatePayoutForm('upi');
         document.getElementById('upi-vpa')?.focus();
       }
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function handleAccountInput() {
@@ -4593,7 +4605,7 @@
           }
         }
       });
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     async function acceptOrder(orderId) {
@@ -4702,7 +4714,7 @@
       }
       document.getElementById('ready-orders-badge').innerText = '0';
       toastSuccess("Handover verified! ₹420 added to daily ledger.");
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     // ---------------------------------------------------------------------------
@@ -5437,7 +5449,7 @@
           </div>
         `;
       }).join('');
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
 
     function filterMasterCatalog() {
@@ -5485,7 +5497,7 @@
       if (catTag) catTag.innerText = `${itemCategory} • ${itemVariant} • Fixed MRP ₹${itemMrp}`;
 
       recalculateDiscount();
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
       toastSuccess(`Loaded "${itemName}" from Master Library!`);
     }
 
@@ -6024,7 +6036,7 @@
         modal.classList.remove('hidden');
         modal.classList.add('flex');
       }
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.openPhotoCaptureModal = openPhotoCaptureModal;
 
@@ -6640,7 +6652,7 @@
           suggText.innerText = (typeof currentLang !== 'undefined' && currentLang === 'hi') 
             ? `मास्टर SKU छवि: ${match.title || name}` 
             : `Master SKU: ${match.title || name}`;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         }
       } else if (suggBanner) {
         suggBanner.classList.add('hidden');
@@ -6714,7 +6726,7 @@
       calculateCustomPricingDiscount();
 
       openModal('modal-custom-pricing');
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
 
       setTimeout(() => {
         if (name && mrpInp) {
@@ -6735,18 +6747,19 @@
     }
     window.closeCustomPricingModal = closeCustomPricingModal;
 
-    // Backward compatibility alias for openAddProductModal
-    function openAddProductModal() {
-      openCustomPricingModal({
-        title: "",
-        category: "Grocery",
-        unit: "1 kg",
-        mrp: 60.0,
-        price: 54.0,
-        img: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80"
-      });
+    // Backward compatibility fallback for openAddProductModal
+    if (typeof window !== 'undefined' && !window.openAddProductModal) {
+      window.openAddProductModal = function() {
+        openCustomPricingModal({
+          title: "",
+          category: "Grocery",
+          unit: "1 kg",
+          mrp: 60.0,
+          price: 54.0,
+          img: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80"
+        });
+      };
     }
-    window.openAddProductModal = openAddProductModal;
 
     function computeItemMarkup(vendorPrice, mrp) {
       const vPrice = parseFloat(vendorPrice) || 0;
@@ -7051,7 +7064,7 @@
             </button>
           `;
           document.getElementById('inventory-list')?.appendChild(emptyDiv);
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         } else {
           const tEl = document.getElementById('empty-search-title');
           const sEl = document.getElementById('empty-search-sub');
@@ -7130,7 +7143,7 @@
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 mr-1.5"></i>Add to Live Store`;
-          lucide.createIcons();
+          safeCreateIcons();
         }
         return; // PRESERVES ENTERED DATA IN FORM
       } finally {
@@ -7185,7 +7198,7 @@
       list.prepend(newCard);
       closeModal('modal-add-product');
       toastSuccess(name + (currentLang === 'hi' ? " इन्वेंटरी में सफलतापूर्वक जोड़ दिया गया!" : " added to live store inventory!"));
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     // ---------------------------------------------------------------------------
@@ -7336,7 +7349,7 @@
       if (counterEl) {
         counterEl.innerText = `${activeCount} Items Active in Shop`;
       }
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.renderMasterCatalogToggleList = renderMasterCatalogToggleList;
 
@@ -7492,125 +7505,6 @@ function openAddProductModal() {
       openModal('modal-add-product');
     }
 
-    // Save Product with Strict Transactional Backend Persistence & 48px Geometry
-    async function saveNewProduct() {
-      const name = document.getElementById('new-item-name').value.trim();
-      const brand = document.getElementById('new-item-brand').value.trim();
-      const variant = document.getElementById('new-item-variant').value.trim();
-      const cat = document.getElementById('new-item-cat').value;
-      const unit = document.getElementById('new-item-unit').value;
-      const mrp = parseFloat(document.getElementById('new-item-mrp').value) || 0;
-      const price = parseFloat(document.getElementById('new-item-price').value) || 0;
-      const stock = parseInt(document.getElementById('new-item-stock').value, 10) || 0;
-      const inStock = document.getElementById('new-item-instock').checked;
-      const imgUrl = document.getElementById('selected-product-img-url').value.trim() || "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80";
-      const globalId = document.getElementById('selected-global-catalog-id').value || null;
-
-      if (!name) {
-        toastError(currentLang === 'hi' ? "कृपया सामान का नाम दर्ज करें" : "Please enter Product Name");
-        return;
-      }
-      if (price <= 0) {
-        toastError(currentLang === 'hi' ? "कृपया मान्य विक्रय मूल्य दर्ज करें" : "Please enter valid Selling Price (> ₹0)");
-        return;
-      }
-      if (mrp > 0 && price > mrp) {
-        toastError(currentLang === 'hi' ? "विक्रय मूल्य एमआरपी से अधिक नहीं हो सकता" : "Selling Price cannot exceed MRP");
-        return;
-      }
-
-      const effectiveMrp = mrp > 0 ? mrp : price;
-      const discountPct = (effectiveMrp > price) ? Math.max(0, Math.round(((effectiveMrp - price) / effectiveMrp) * 100)) : 0;
-
-      const btn = document.getElementById('save-product-submit-btn');
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = `<span class="inline-block animate-spin mr-1.5">⏳</span>Saving to Server...`;
-      }
-
-      let savedProduct = null;
-      try {
-        const payload = {
-          global_product_id: globalId,
-          custom_name_en: name,
-          custom_name_hi: name,
-          category: cat,
-          unit: variant || unit,
-          price: price,
-          mrp: effectiveMrp,
-          image_url: imgUrl,
-          stock_quantity: stock,
-          in_stock: inStock
-        };
-
-        savedProduct = await apiRequest('/api/v1/vendor/products', 'POST', payload);
-      } catch (err) {
-        console.error("Backend product save error:", err);
-        // TRANSACTIONAL INTEGRITY: Never show successful save if the API fails
-        toastError(currentLang === 'hi'
-          ? ("सामान जोड़ने में विफल: " + (err.message || "सर्वर त्रुटि"))
-          : ("Failed to add product: " + (err.message || "Server error. Please retry.")));
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 mr-1.5"></i>Add to Live Store`;
-          lucide.createIcons();
-        }
-        return; // PRESERVES ENTERED DATA IN FORM
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 mr-1.5"></i>Add to Live Store`;
-        }
-      }
-
-      const backendProdId = (savedProduct && savedProduct.id) ? savedProduct.id : ("prod_" + Date.now());
-
-      // Prepend to Live UI Product Cards List with Exact 48px Geometry
-      const list = document.getElementById('inventory-list');
-      const newCard = document.createElement('div');
-      newCard.className = "product-item bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between gap-2.5 w-full overflow-hidden";
-      newCard.setAttribute('data-id', backendProdId);
-      newCard.setAttribute('data-title', name);
-      newCard.setAttribute('data-category', cat);
-      
-      const discountMarkup = discountPct > 0 
-        ? `<span class="text-[10px] text-slate-400 line-through">₹${effectiveMrp.toFixed(2)}</span>
-           <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800">${discountPct}% OFF</span>`
-        : `<span class="text-[10px] text-slate-400 font-semibold">MRP ₹${effectiveMrp.toFixed(2)}</span>`;
-
-      newCard.innerHTML = `
-        <div class="flex items-center space-x-2.5 min-w-0 flex-1 overflow-hidden">
-          <img src="${imgUrl}" alt="${name}" class="w-12 h-12 shrink-0 rounded-lg object-cover border border-slate-200 shadow-2xs" style="width: 48px; height: 48px; min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px; object-fit: cover;">
-          <div class="min-w-0 flex-1 overflow-hidden">
-            <div class="flex items-center space-x-1 min-w-0">
-              <h4 class="text-xs font-bold text-slate-900 truncate">${name}</h4>
-              ${variant ? `<span class="text-[10px] text-slate-500 font-medium shrink-0">(${variant})</span>` : ''}
-            </div>
-            <div class="flex items-center space-x-1.5 mt-0.5 flex-wrap">
-              <span class="text-xs font-extrabold text-slate-900">₹${price.toFixed(2)}</span>
-              ${discountMarkup}
-            </div>
-            <div class="flex items-center space-x-1.5 mt-0.5 text-[10px]">
-              <span class="text-slate-500 font-medium">Stock: <strong class="text-slate-700">${stock} units</strong></span>
-              <span class="text-slate-300">•</span>
-              <span class="stock-label font-bold ${inStock ? 'text-emerald-600' : 'text-rose-500'} block">
-                ${inStock ? (i18n[currentLang]?.in_stock_label || "IN STOCK") : (i18n[currentLang]?.out_of_stock_label || "OUT OF STOCK")}
-              </span>
-            </div>
-          </div>
-        </div>
-        <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-1">
-          <input type="checkbox" ${inStock ? 'checked' : ''} onchange="toggleProductStock(this, '${backendProdId}', '${name.replace(/'/g, "\\'")}')" class="sr-only peer">
-          <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-        </label>
-      `;
-
-      list.prepend(newCard);
-      closeModal('modal-add-product');
-      toastSuccess(name + (currentLang === 'hi' ? " इन्वेंटरी में सफलतापूर्वक जोड़ दिया गया!" : " added to live store inventory!"));
-      lucide.createIcons();
-    }
-
     
 
     // ---------------------------------------------------------------------------
@@ -7720,6 +7614,6 @@ function openAddProductModal() {
         }
       }
 
-      lucide.createIcons();
+      safeCreateIcons();
       loadGlobalCatalog();
     });
