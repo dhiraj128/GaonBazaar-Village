@@ -320,6 +320,10 @@
       "destination": "/css/$1"
     },
     {
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
       "source": "/customer/(.*)",
       "destination": "/customer/$1"
     },

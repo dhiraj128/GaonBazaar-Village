@@ -1,3 +1,15 @@
+// Universal Safe Lucide Icons Helper (VendorApp)
+function safeCreateIcons() {
+  try {
+    if (typeof window !== 'undefined' && window.lucide && typeof window.lucide.createIcons === 'function') {
+      safeCreateIcons();
+    }
+  } catch (e) {
+    console.debug('[VendorApp] Lucide createIcons suppressed:', e);
+  }
+}
+if (typeof window !== 'undefined') window.safeCreateIcons = safeCreateIcons;
+
 // ---------------------------------------------------------------------------
     // COMPLETE BILINGUAL LOCALIZATION DICTIONARY (English & Hindi)
     // ---------------------------------------------------------------------------
@@ -631,7 +643,7 @@
           checkHi.innerHTML = '';
         }
       }
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
 
     function setLanguage(lang) {
@@ -691,7 +703,7 @@
         accLang.innerText = lang === 'en' ? 'English' : 'हिन्दी';
       }
 
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.setLanguage = setLanguage;
 
@@ -1039,7 +1051,7 @@
             </div>
           </div>
         `;
-        if (window.lucide) lucide.createIcons();
+        safeCreateIcons();
       }
     }
     window.SectionErrorBoundary = SectionErrorBoundary;
@@ -1111,7 +1123,7 @@
       }
 
       window.scrollTo(0, 0);
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function openDashboard(initialTab = 'orders', pushHistory = true) {
@@ -1149,7 +1161,7 @@
       }
 
       window.scrollTo(0, 0);
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function switchDashboardTab(tabName, pushHistory = true) {
@@ -1200,7 +1212,7 @@
         } else if (tabName === 'orders') {
           if (typeof updateOrdersUIFromData === 'function') updateOrdersUIFromData(window.currentVendorOrders || []);
         }
-        if (window.lucide) lucide.createIcons();
+        safeCreateIcons();
       }, tabName.charAt(0).toUpperCase() + tabName.slice(1) + ' Section');
 
       if (pushHistory) {
@@ -1208,7 +1220,7 @@
       }
 
       window.scrollTo(0, 0);
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
 
     window.addEventListener('popstate', (e) => {
@@ -1252,7 +1264,7 @@
       if (modal) {
         modal.classList.remove('hidden');
         history.pushState({ modalOpen: modalId }, '', '#' + modalId);
-        lucide.createIcons();
+        safeCreateIcons();
       }
     }
 
@@ -1356,7 +1368,7 @@
       const sendBtnContent = document.getElementById('send-otp-btn-content');
       if (sendBtnContent) {
         sendBtnContent.innerHTML = `<span id="send-otp-text" data-i18n="send_otp_btn">${currentLang === 'hi' ? "OTP भेजें" : "Send OTP"}</span><i data-lucide="send" class="w-4 h-4 ml-2"></i>`;
-        if (window.lucide) lucide.createIcons();
+        safeCreateIcons();
       }
       const phoneInput = document.getElementById('vendor-phone-input');
       if (phoneInput) {
@@ -1636,7 +1648,7 @@
         const verifiedText = currentLang === 'hi' ? "मोबाइल नंबर सत्यापित" : "Mobile number verified";
         if (btnContent) {
           btnContent.innerHTML = `<span>${verifiedText}</span><i data-lucide="check" class="w-4 h-4 ml-2"></i>`;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         }
 
         localStorage.setItem('gb_vendor_phone', clean);
@@ -1658,7 +1670,7 @@
         if (btn) btn.disabled = false;
         if (btnContent) {
           btnContent.innerHTML = `<span id="verify-btn-text" data-i18n="verify_proceed">${currentLang === 'hi' ? "सत्यापित करें और आगे बढ़ें" : "Verify & Continue"}</span><i data-lucide="check" class="w-4 h-4 ml-2"></i>`;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         }
 
         let userMsg = currentLang === 'hi' ? "गलत कोड। कृपया पुनः प्रयास करें।" : "Incorrect code. Please try again.";
@@ -1747,7 +1759,7 @@
         panPanel.classList.add('hidden');
         document.getElementById('kyc-aadhaar-input')?.focus();
       }
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function showKycError(msg) {
@@ -1867,7 +1879,7 @@
         if (btn) {
           btn.innerHTML = origHtml;
           btn.disabled = false;
-          lucide.createIcons();
+          safeCreateIcons();
         }
       }
     }
@@ -2200,7 +2212,7 @@
       document.getElementById('aadhaar-camera-section')?.classList.add('hidden');
       document.getElementById('qr-unreadable-overlay')?.classList.add('hidden');
       document.getElementById('aadhaar-choice-section')?.classList.remove('hidden');
-      if (window.lucide) window.lucide.createIcons();
+      safeCreateIcons();
     }
 
     // -------------------------------------------------------------------------
@@ -2380,7 +2392,7 @@
         currentCropZoom = 1.0;
         renderCropCanvas(sourceImgOrCanvas, currentCropZoom);
       }
-      if (window.lucide) window.lucide.createIcons();
+      safeCreateIcons();
     }
 
     function renderCropCanvas(img, zoom) {
@@ -2459,7 +2471,7 @@
             errEl.classList.add('hidden');
           }
         }
-        if (window.lucide) window.lucide.createIcons();
+        safeCreateIcons();
       });
     }
 
@@ -2613,7 +2625,7 @@
           if (title) title.innerText = msg;
         }
       }
-      if (window.lucide) window.lucide.createIcons();
+      safeCreateIcons();
     }
 
     function hideAadhaarLoading() {
@@ -2709,7 +2721,7 @@
         localStorage.setItem('gb_kyc_verified', 'true');
 
         toastSuccess("Aadhaar Secure QR cryptographically verified! UIDAI digital signature authentic.");
-        if (window.lucide) window.lucide.createIcons();
+        safeCreateIcons();
 
       } catch (err) {
         hideAadhaarLoading();
@@ -4081,7 +4093,7 @@
 
       dropdown.innerHTML = html;
       dropdown.classList.remove('hidden');
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.handleVendorVillageSearch = handleVendorVillageSearch;
 
@@ -4137,7 +4149,7 @@
         if (btn) {
           btn.innerHTML = origHtml;
           btn.disabled = false;
-          lucide.createIcons();
+          safeCreateIcons();
         }
       }
 
@@ -4169,7 +4181,7 @@
         validatePayoutForm('upi');
         document.getElementById('upi-vpa')?.focus();
       }
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function handleAccountInput() {
@@ -4593,7 +4605,7 @@
           }
         }
       });
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     async function acceptOrder(orderId) {
@@ -4702,7 +4714,7 @@
       }
       document.getElementById('ready-orders-badge').innerText = '0';
       toastSuccess("Handover verified! ₹420 added to daily ledger.");
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     // ---------------------------------------------------------------------------
@@ -5437,7 +5449,7 @@
           </div>
         `;
       }).join('');
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
 
     function filterMasterCatalog() {
@@ -5485,7 +5497,7 @@
       if (catTag) catTag.innerText = `${itemCategory} • ${itemVariant} • Fixed MRP ₹${itemMrp}`;
 
       recalculateDiscount();
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
       toastSuccess(`Loaded "${itemName}" from Master Library!`);
     }
 
@@ -6024,7 +6036,7 @@
         modal.classList.remove('hidden');
         modal.classList.add('flex');
       }
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.openPhotoCaptureModal = openPhotoCaptureModal;
 
@@ -6640,7 +6652,7 @@
           suggText.innerText = (typeof currentLang !== 'undefined' && currentLang === 'hi') 
             ? `मास्टर SKU छवि: ${match.title || name}` 
             : `Master SKU: ${match.title || name}`;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         }
       } else if (suggBanner) {
         suggBanner.classList.add('hidden');
@@ -6714,7 +6726,7 @@
       calculateCustomPricingDiscount();
 
       openModal('modal-custom-pricing');
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
 
       setTimeout(() => {
         if (name && mrpInp) {
@@ -7051,7 +7063,7 @@
             </button>
           `;
           document.getElementById('inventory-list')?.appendChild(emptyDiv);
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         } else {
           const tEl = document.getElementById('empty-search-title');
           const sEl = document.getElementById('empty-search-sub');
@@ -7130,7 +7142,7 @@
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 mr-1.5"></i>Add to Live Store`;
-          lucide.createIcons();
+          safeCreateIcons();
         }
         return; // PRESERVES ENTERED DATA IN FORM
       } finally {
@@ -7185,7 +7197,7 @@
       list.prepend(newCard);
       closeModal('modal-add-product');
       toastSuccess(name + (currentLang === 'hi' ? " इन्वेंटरी में सफलतापूर्वक जोड़ दिया गया!" : " added to live store inventory!"));
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     // ---------------------------------------------------------------------------
@@ -7336,7 +7348,7 @@
       if (counterEl) {
         counterEl.innerText = `${activeCount} Items Active in Shop`;
       }
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.renderMasterCatalogToggleList = renderMasterCatalogToggleList;
 
@@ -7553,7 +7565,7 @@ function openAddProductModal() {
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 mr-1.5"></i>Add to Live Store`;
-          lucide.createIcons();
+          safeCreateIcons();
         }
         return; // PRESERVES ENTERED DATA IN FORM
       } finally {
@@ -7608,7 +7620,7 @@ function openAddProductModal() {
       list.prepend(newCard);
       closeModal('modal-add-product');
       toastSuccess(name + (currentLang === 'hi' ? " इन्वेंटरी में सफलतापूर्वक जोड़ दिया गया!" : " added to live store inventory!"));
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     
@@ -7720,6 +7732,6 @@ function openAddProductModal() {
         }
       }
 
-      lucide.createIcons();
+      safeCreateIcons();
       loadGlobalCatalog();
     });

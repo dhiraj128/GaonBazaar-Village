@@ -52,7 +52,13 @@ _sms_http_client: Optional[httpx.AsyncClient] = None
 def get_sms_http_client() -> httpx.AsyncClient:
     global _sms_http_client
     if _sms_http_client is None or _sms_http_client.is_closed:
-        _sms_http_client = httpx.AsyncClient(timeout=5.0)
+        _sms_http_client = httpx.AsyncClient(
+            timeout=5.0,
+            headers={
+                "Accept": "application/json",
+                "User-Agent": "ApnaGaonBazaar/1.0 (Transactional-SMS-Service; +https://www.apnagaonbazaar.in)"
+            }
+        )
     return _sms_http_client
 
 async def send_sms_otp(phone: str, otp: Optional[str] = None, role: str = "customer") -> Dict[str, Any]:
@@ -153,10 +159,11 @@ async def send_sms_otp(phone: str, otp: Optional[str] = None, role: str = "custo
             }
         else:
             err_detail = res_data.get("Details") if isinstance(res_data, dict) else resp.text
-            logger.error(f"[SMS 2Factor] 2Factor.in rejected delivery for {masked_phone}: {err_detail}")
+            is_waf = "waf" in str(err_detail).lower() or "access denied" in str(resp.text).lower()
+            logger.error(f"[SMS 2Factor] 2Factor.in {'WAF blocked' if is_waf else 'rejected'} delivery for {masked_phone}: {err_detail}")
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"SMS OTP delivery failed via 2Factor.in: {err_detail}"
+                detail=f"SMS OTP delivery {'blocked by gateway WAF (Access Denied)' if is_waf else 'failed via 2Factor.in'}: {err_detail}"
             )
     else:
         err_detail = provider_details or resp.text

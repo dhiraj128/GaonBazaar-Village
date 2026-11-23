@@ -239,7 +239,8 @@ export default async function handler(req: any, res: any) {
       const smsRes = await fetch(twoFactorUrl, {
         method: 'GET',
         headers: {
-          accept: 'application/json',
+          Accept: 'application/json',
+          'User-Agent': 'ApnaGaonBazaar/1.0 (Transactional-SMS-Service; +https://www.apnagaonbazaar.in)',
         },
         signal: abortController.signal,
       });
@@ -263,12 +264,14 @@ export default async function handler(req: any, res: any) {
       if (!smsRes.ok || smsData.Status !== 'Success') {
         const errDetail = smsData.Details || smsData.message || `2Factor.in returned status ${smsRes.status}`;
         console.error(`[2Factor.in Delivery Failure]:`, errDetail);
+        const isWaf = typeof smsText === 'string' && (smsText.includes('WAF') || smsText.includes('Access Denied'));
         return sendJson(res, 502, {
           success: false,
-          code: 'auth/sms-delivery-failed',
+          code: isWaf ? 'auth/gateway-waf-blocked' : 'auth/sms-delivery-failed',
           error: "Couldn't send the code. Please try again.",
           message: "Couldn't send the code. Please try again.",
           providerStatus: smsData?.Status || smsRes.status,
+          providerDetails: isWaf ? 'Access Denied - WAF' : undefined,
         });
       }
 

@@ -353,7 +353,10 @@ export default async function handler(req: any, res: any) {
       try {
         const verifyRes = await fetch(verifyUrl, {
           method: 'GET',
-          headers: { accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': 'ApnaGaonBazaar/1.0 (Transactional-SMS-Service; +https://www.apnagaonbazaar.in)',
+          },
           signal: abortController.signal,
         });
         clearTimeout(timeoutHandle);
