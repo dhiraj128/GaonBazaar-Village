@@ -2,7 +2,7 @@
 function safeCreateIcons() {
   try {
     if (typeof window !== 'undefined' && window.lucide && typeof window.lucide.createIcons === 'function') {
-      safeCreateIcons();
+      window.lucide.createIcons();
     }
   } catch (e) {
     console.debug('[RunnerApp] Lucide createIcons suppressed:', e);
