@@ -94,3 +94,52 @@ Authored [`backend/sql/cleanup_demo_data_with_backup.sql`](file:///c:/Users/dhir
    - `Vercel Deployment`: PASS
 3. **Production Merge:** PR #7 merged into `main` at commit `ca88552`, followed by commit `a492c2e`.
 4. **Production Status:** Vercel automatically deployed the production build to `https://www.apnagaonbazaar.in` (`Age: 0`, HTTP 200).
+
+---
+
+## 4. Customer App Bottom Navigation Fix (PR #9)
+
+### Root Cause Analysis
+1. **Home Tab Icon:** Tab 1 in [`index.html`](file:///c:/Users/dhira/OneDrive/Desktop/GaoBazar-Village/apps/admin/public/customer/index.html) was referencing `shopping-bag` instead of the authentic `home` icon.
+2. **Chrome Orange Focus Border:** Android Chrome and Mobile Chromium apply an orange focus outline on focused/active buttons unless explicit outline resets are declared.
+3. **AI Assistant "Empty Green Circle":** Tab 2 had a custom protruding container (`-mt-2 w-8 h-8 rounded-full bg-emerald-50 border border-emerald-200`) relying on an unpkg CDN Lucide icon. When Lucide was delayed, slow, or offline, the container rendered as a literal empty green circle.
+4. **Icon Inconsistency & Fragility:** Lucide CDN script tags can fail on spotty rural cellular connections or strict caching policies, leaving `<i data-lucide="...">` tags un-rendered.
+5. **Cart Badge Overlap:** The item-count badge `#nav-cart-badge` was positioned directly over the shopping cart icon rather than in the top-right corner.
+
+### Key Corrections Applied
+1. **Authentic Inline SVGs:** Embedded authentic inline SVG icons for all 5 tabs (`home`, `sparkles`, `shopping-cart`, `package-check`, `user`), ensuring 0ms first-paint rendering with zero external CDN dependency.
+2. **Zero Focus Border:** Added explicit global outline and tap-highlight resets:
+   ```css
+   .customer-bottom-nav button,
+   .customer-bottom-nav button:focus,
+   .customer-bottom-nav button:focus-visible,
+   .customer-bottom-nav button:active {
+     outline: none !important;
+     border: none !important;
+     box-shadow: none !important;
+     -webkit-tap-highlight-color: transparent !important;
+   }
+   ```
+3. **Even Alignment & Baseline Consistency:** Removed the protruding circle container for AI Assistant, aligning all 5 tabs on the exact same horizontal baseline with `nav-icon-wrap` (24px fixed height) and `nav-label` (10px, truncate).
+4. **Brand Green Active Tab Indicator:** Added `.nav-active-pill` — a centered 28px × 3px rounded pill in brand green (`#059669`) with smooth transition and icon scaling.
+5. **Cart Badge Positioning:** Positioned `#nav-cart-badge` at `-top-1.5 -right-2.5` with minimum 16px × 16px dimensions, proper ring contrast, and hidden state when empty.
+6. **Synchronized All Targets:** Executed [`scripts/sync_portals_to_containers.py`](file:///c:/Users/dhira/OneDrive/Desktop/GaoBazar-Village/scripts/sync_portals_to_containers.py) to sync changes to `apps/customer/web`, `android_containers`, and `public_web`.
+
+### Before & After Comparison
+
+````carousel
+![Before: Shopping bag icon, protruding empty green circle, missing active pill](/C:/Users/dhira/.gemini/antigravity/brain/918c8085-b60b-40a9-a077-a3344458bcc5/before_bottom_nav_bar.png)
+<!-- slide -->
+![After: Authentic home icon, AI sparkles, aligned baseline, active green indicator](/C:/Users/dhira/.gemini/antigravity/brain/918c8085-b60b-40a9-a077-a3344458bcc5/after_bottom_nav_android_412x915.png)
+<!-- slide -->
+![After (Hindi Localization on 320px screen): Fully legible, zero wrapping, zero overflow](/C:/Users/dhira/.gemini/antigravity/brain/918c8085-b60b-40a9-a077-a3344458bcc5/after_bottom_nav_hindi_small_320x650.png)
+````
+
+### Verification Results
+- **Android Mobile (`412x915`):** All 5 tabs verified, active indicator toggles, view switching confirmed: **PASS**
+- **Narrow Mobile (`320x650`):** Zero horizontal scrollbars, text labels fit without wrapping: **PASS**
+- **Bilingual Localization (Hindi & English):** "होम", "AI सहायक", "कार्ट", "ऑर्डर", "खाता" perfectly aligned: **PASS**
+- **Vite & TypeScript Production Build:** Built in 4.85s (0 errors): **PASS**
+- **Backend & Security Pytest:** 16 passed in 1.13s: **PASS**
+- **Pull Request & Deployment:** Merged in [PR #9](https://github.com/dhiraj128/GaonBazaar-Village/pull/9) (`1d83c57`) to `main`.
+
