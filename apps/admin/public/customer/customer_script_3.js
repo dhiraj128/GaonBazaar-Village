@@ -2,7 +2,7 @@
 function safeCreateIcons() {
   try {
     if (typeof window !== 'undefined' && window.lucide && typeof window.lucide.createIcons === 'function') {
-      safeCreateIcons();
+      window.lucide.createIcons();
     }
   } catch (e) {
     console.debug('[GaonBazaar] Lucide createIcons suppressed:', e);
@@ -3470,6 +3470,7 @@ function createProductCardElement(p) {
           safeCreateIcons();
         }
       }
+    }
 
     function populateRationOrderReviewModal() {
       const store = (typeof storesDirectory !== 'undefined' && storesDirectory[0]) ? storesDirectory[0] : { name: 'Authorized Store', locality: 'Hub Center', distanceKm: 1.2 };
