@@ -217,6 +217,7 @@ async function runPortalAudit() {
       record('Vendor Portal Not Blank', vendorBody.length > 20, `Text length: ${vendorBody.length} chars`);
 
       // Check for interactive elements either directly or via frame
+      await pageVendor.frameLocator('iframe').locator('button, a').first().waitFor({ timeout: 15000 }).catch(() => {});
       let vendorButtons = await pageVendor.locator('button, a').count();
       if (vendorButtons < 5) {
         vendorButtons += await pageVendor.frameLocator('iframe').locator('button, a').count().catch(() => 0);
@@ -246,6 +247,7 @@ async function runPortalAudit() {
       const runnerBody = await pageRunner.evaluate(() => document.body.innerText.trim());
       record('Runner Portal Not Blank', runnerBody.length > 20, `Text length: ${runnerBody.length} chars`);
 
+      await pageRunner.frameLocator('iframe').locator('button, a').first().waitFor({ timeout: 15000 }).catch(() => {});
       let runnerButtons = await pageRunner.locator('button, a').count();
       if (runnerButtons < 5) {
         runnerButtons += await pageRunner.frameLocator('iframe').locator('button, a').count().catch(() => 0);
