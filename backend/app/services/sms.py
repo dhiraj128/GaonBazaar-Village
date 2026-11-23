@@ -55,17 +55,18 @@ def get_sms_http_client() -> httpx.AsyncClient:
         _sms_http_client = httpx.AsyncClient(timeout=5.0)
     return _sms_http_client
 
-async def send_sms_otp(phone: str, otp: str, role: str = "customer") -> Dict[str, Any]:
+async def send_sms_otp(phone: str, otp: Optional[str] = None, role: str = "customer") -> Dict[str, Any]:
     """
     Sends transactional 6-digit SMS OTP using official 2Factor.in SMS OTP API:
-    GET https://2factor.in/API/V1/{TWOFACTOR_API_KEY}/SMS/+91{ten_digit_phone}/{otp_code}/{template_name}
+    GET https://2factor.in/API/V1/{TWOFACTOR_API_KEY}/SMS/+91{ten_digit_phone}/AUTOGEN/{template_name}
 
     - Reads TWOFACTOR_API_KEY from environment variables (trimmed)
     - Reads TWOFACTOR_OTP_TEMPLATE from environment variable (default "OTP1", URL-encoded)
     - Strictly normalizes Indian numbers to 10 digits starting with 6–9 and sends as +91{phone}
     - ZERO voice fallback endpoints
     - Employs shared pooled httpx.AsyncClient with a tight 5-second timeout
-    - Logs HTTP status and sanitized JSON response (Status, Details), never logging the API key or OTP code
+    - Logs HTTP status and sanitized JSON response (Status, Details), never logging the API key
+    - Returns 2Factor session_id from response Details
     - Raises clear HTTP 502 / 400 errors with logged error details if 2Factor.in fails
     """
     import urllib.parse
@@ -107,13 +108,14 @@ async def send_sms_otp(phone: str, otp: str, role: str = "customer") -> Dict[str
         return {
             "status": "pending_credentials",
             "provider": "2factor",
+            "session_id": f"sess_mock_{ten_digit_phone}",
             "message": "SMS delivery pending TWOFACTOR_API_KEY configuration"
         }
 
-    # 3. Format official 2Factor.in transactional SMS OTP endpoint
-    endpoint_url = f"https://2factor.in/API/V1/{api_key}/SMS/+91{ten_digit_phone}/{otp}/{template}"
+    # 3. Format official 2Factor.in transactional SMS OTP AUTOGEN endpoint
+    endpoint_url = f"https://2factor.in/API/V1/{api_key}/SMS/+91{ten_digit_phone}/AUTOGEN/{template}"
 
-    logger.info(f"[SMS 2Factor] Dispatching transactional OTP to {masked_phone} via 2Factor.in (Template: {raw_template})...")
+    logger.info(f"[SMS 2Factor] Dispatching transactional OTP to {masked_phone} via 2Factor.in (AUTOGEN/{raw_template})...")
 
     try:
         client = get_sms_http_client()
@@ -141,13 +143,13 @@ async def send_sms_otp(phone: str, otp: str, role: str = "customer") -> Dict[str
 
     if resp.status_code == 200:
         if isinstance(res_data, dict) and res_data.get("Status") == "Success":
-            session_id = res_data.get("Details", "")
-            logger.info(f"[SMS 2Factor] OTP successfully delivered to {masked_phone}. Session: {session_id}")
+            session_id = str(res_data.get("Details", "")).strip()
+            logger.info(f"[SMS 2Factor] OTP successfully dispatched to {masked_phone}. Session: {session_id}")
             return {
                 "status": "delivered",
                 "provider": "2factor",
                 "session_id": session_id,
-                "message": "OTP delivered successfully via 2Factor.in"
+                "message": "OTP dispatched successfully via 2Factor.in (OTP1)"
             }
         else:
             err_detail = res_data.get("Details") if isinstance(res_data, dict) else resp.text
@@ -164,3 +166,76 @@ async def send_sms_otp(phone: str, otp: str, role: str = "customer") -> Dict[str
             status_code=err_status,
             detail=f"SMS gateway returned error ({resp.status_code}): {err_detail}"
         )
+
+async def verify_sms_otp(session_id: str, otp: str) -> Dict[str, Any]:
+    """
+    Verifies a 6-digit SMS OTP against 2Factor.in verification API:
+    GET https://2factor.in/API/V1/{TWOFACTOR_API_KEY}/SMS/VERIFY/{session_id}/{otp_code}
+
+    - Validates matching status: 'OTP Matched'
+    - Detects expired OTP: 'OTP Expired'
+    - Detects mismatch: 'OTP Mismatch'
+    """
+    if not session_id or not otp:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Session ID and 6-digit OTP code are required for verification."
+        )
+
+    api_key = (
+        os.getenv("TWOFACTOR_API_KEY")
+        or os.getenv("TWO_FACTOR_API_KEY")
+        or getattr(settings, "RESOLVED_TWOFACTOR_API_KEY", "")
+        or getattr(settings, "TWOFACTOR_API_KEY", "")
+        or ""
+    ).strip()
+
+    if not api_key:
+        logger.error("[SMS Gateway] TWOFACTOR_API_KEY is not configured for OTP verification.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="SMS gateway verification service is not configured (missing TWOFACTOR_API_KEY)."
+        )
+
+    verify_url = f"https://2factor.in/API/V1/{api_key}/SMS/VERIFY/{session_id}/{otp}"
+    logger.info(f"[SMS 2Factor] Verifying OTP against session {session_id[:8]}... via 2Factor.in")
+
+    try:
+        client = get_sms_http_client()
+        resp = await client.get(verify_url)
+    except httpx.RequestError as exc:
+        logger.error(f"[SMS 2Factor] Network error verifying OTP: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Unable to reach SMS gateway verification service: {str(exc)}"
+        )
+
+    try:
+        res_data = resp.json()
+    except Exception:
+        res_data = {}
+
+    provider_status = res_data.get("Status") if isinstance(res_data, dict) else None
+    provider_details = str(res_data.get("Details", "") if isinstance(res_data, dict) else resp.text)
+
+    logger.info(f"[SMS 2Factor] Verify response: HTTP {resp.status_code}, Status={provider_status}, Details={provider_details}")
+
+    if resp.status_code == 200 and provider_status == "Success":
+        if "matched" in provider_details.lower():
+            return {
+                "status": "matched",
+                "session_id": session_id,
+                "message": "OTP verified successfully via 2Factor.in"
+            }
+
+    if "expired" in provider_details.lower():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification code has expired. Please request a new OTP."
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Incorrect verification code. Please check your SMS and try again."
+    )
+

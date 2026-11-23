@@ -210,34 +210,100 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // 4. Determine OTP code (Strict 6-digit numeric OTP: 100000–999999, or 123456 for test personas/compliance)
-    const isTestPersona =
-      clean === '9999999999' ||
-      clean === '9800000001' ||
-      clean === '9800000002' ||
-      clean === '9800000003';
+    let sessionId: string;
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
-    let otpCode: string;
-    if (isTestPersona) {
-      otpCode = '123456';
-    } else {
-      otpCode = String(crypto.randomInt(100000, 1000000));
+    // 4. Dispatch real transactional SMS OTP via 2Factor.in AUTOGEN/OTP1 API
+    const twoFactorApiKey = (process.env.TWOFACTOR_API_KEY || '').trim();
+    const twoFactorTemplate = (process.env.TWOFACTOR_OTP_TEMPLATE || 'OTP1').trim();
+
+    if (!twoFactorApiKey) {
+      console.error('[CRITICAL] Missing TWOFACTOR_API_KEY in serverless environment.');
+      return sendJson(res, 500, {
+        success: false,
+        code: 'auth/missing-credentials',
+        error: 'SMS service is temporarily unavailable. Missing TWOFACTOR_API_KEY.',
+        message: 'SMS service is temporarily unavailable. Missing TWOFACTOR_API_KEY.',
+      });
     }
 
-    const otpHexHash = crypto.createHash('sha256').update(otpCode).digest('hex');
-    const sessionId = crypto.randomUUID ? crypto.randomUUID() : `gb_otp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-    const deliveryStatus = isTestPersona ? 'delivered' : 'dispatched';
+    const twoFactorUrl = `https://2factor.in/API/V1/${encodeURIComponent(twoFactorApiKey)}/SMS/+91${clean}/AUTOGEN/${encodeURIComponent(twoFactorTemplate)}`;
+    console.log(`[2Factor.in] Dispatching AUTOGEN/${twoFactorTemplate} OTP to ${maskedPhone}...`);
 
-    // 5. Durably Persist Verification Challenge to Supabase PostgreSQL table
+    const abortController = new AbortController();
+    const timeoutHandle = setTimeout(() => abortController.abort(), 5000);
+
+    try {
+      const smsRes = await fetch(twoFactorUrl, {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+        },
+        signal: abortController.signal,
+      });
+      clearTimeout(timeoutHandle);
+
+      const smsText = await smsRes.text();
+      let smsData: any = {};
+      try {
+        smsData = JSON.parse(smsText);
+      } catch {
+        smsData = { Status: 'Error', Details: smsText };
+      }
+
+      console.log(
+        `[2Factor.in] Send response status for ${maskedPhone}:`,
+        smsRes.status,
+        smsData?.Status,
+        smsData?.Details ? `Details: ${smsData.Details}` : ''
+      );
+
+      if (!smsRes.ok || smsData.Status !== 'Success') {
+        const errDetail = smsData.Details || smsData.message || `2Factor.in returned status ${smsRes.status}`;
+        console.error(`[2Factor.in Delivery Failure]:`, errDetail);
+        return sendJson(res, 502, {
+          success: false,
+          code: 'auth/sms-delivery-failed',
+          error: "Couldn't send the code. Please try again.",
+          message: "Couldn't send the code. Please try again.",
+          providerStatus: smsData?.Status || smsRes.status,
+        });
+      }
+
+      // 2Factor.in Details contains the unique session UUID for AUTOGEN templates
+      sessionId = String(smsData.Details || '').trim();
+      if (!sessionId) {
+        console.error('[2Factor.in] Received empty session ID in Details payload');
+        return sendJson(res, 502, {
+          success: false,
+          code: 'auth/sms-delivery-failed',
+          error: 'SMS gateway did not return a valid session ID.',
+          message: 'SMS gateway did not return a valid session ID.',
+        });
+      }
+    } catch (fetchErr: any) {
+      clearTimeout(timeoutHandle);
+      if (fetchErr.name === 'AbortError') {
+        console.error(`[2Factor.in Timeout] Send OTP request timed out after 5000ms for ${maskedPhone}`);
+        return sendJson(res, 504, {
+          success: false,
+          code: 'auth/gateway-timeout',
+          error: 'Connection problem reaching SMS gateway. Please try again.',
+          message: 'Connection problem reaching SMS gateway. Please try again.',
+        });
+      }
+      throw fetchErr;
+    }
+
+    // 6. Durably Persist 2Factor Session Challenge to Supabase PostgreSQL table
     const saved = await saveChallengeToSupabase({
       id: sessionId,
       phone: clean,
       session_id: sessionId,
-      code: otpCode,
-      otp_hash: otpHexHash,
+      code: '',
+      otp_hash: '',
       role: safeRole,
-      delivery_status: deliveryStatus,
+      delivery_status: 'dispatched',
       expires_at: expiresAt,
     });
 
@@ -251,81 +317,10 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // 6. Dispatch real 6-digit SMS OTP via 2Factor.in API if not test persona
-    const twoFactorApiKey = (process.env.TWOFACTOR_API_KEY || '').trim();
-    const twoFactorTemplate = (process.env.TWOFACTOR_OTP_TEMPLATE || 'OTP1').trim();
-    if (!isTestPersona) {
-      if (!twoFactorApiKey) {
-        console.error('[CRITICAL] Missing TWOFACTOR_API_KEY in serverless environment.');
-        return sendJson(res, 500, {
-          success: false,
-          code: 'auth/missing-credentials',
-          error: "SMS service is temporarily unavailable. Missing TWOFACTOR_API_KEY.",
-          message: "SMS service is temporarily unavailable. Missing TWOFACTOR_API_KEY.",
-        });
-      }
-
-      const twoFactorUrl = `https://2factor.in/API/V1/${encodeURIComponent(twoFactorApiKey)}/SMS/+91${clean}/${otpCode}/${encodeURIComponent(twoFactorTemplate)}`;
-      console.log(`[2Factor.in] Dispatching 6-digit OTP to ${maskedPhone}...`);
-
-      const abortController = new AbortController();
-      const timeoutHandle = setTimeout(() => abortController.abort(), 5000);
-
-      try {
-        const smsRes = await fetch(twoFactorUrl, {
-          method: 'GET',
-          headers: {
-            accept: 'application/json',
-          },
-          signal: abortController.signal,
-        });
-        clearTimeout(timeoutHandle);
-
-        const smsText = await smsRes.text();
-        let smsData: any = {};
-        try {
-          smsData = JSON.parse(smsText);
-        } catch {
-          smsData = { Status: 'Error', Details: smsText };
-        }
-
-        console.log(
-          `[2Factor.in] Send response status for ${maskedPhone}:`,
-          smsRes.status,
-          smsData?.Status,
-          smsData?.Details ? `Details: ${smsData.Details}` : ''
-        );
-
-        if (!smsRes.ok || smsData.Status !== 'Success') {
-          const errDetail = smsData.Details || smsData.message || `2Factor.in returned status ${smsRes.status}`;
-          console.error(`[2Factor.in Delivery Failure]:`, errDetail);
-          return sendJson(res, 502, {
-            success: false,
-            code: 'auth/sms-delivery-failed',
-            error: "Couldn't send the code. Please try again.",
-            message: "Couldn't send the code. Please try again.",
-            providerStatus: smsData?.Status || smsRes.status,
-          });
-        }
-      } catch (fetchErr: any) {
-        clearTimeout(timeoutHandle);
-        if (fetchErr.name === 'AbortError') {
-          console.error(`[2Factor.in Timeout] Send OTP request timed out after 5000ms for ${maskedPhone}`);
-          return sendJson(res, 504, {
-            success: false,
-            code: 'auth/gateway-timeout',
-            error: 'Connection problem. Please try again.',
-            message: 'Connection problem. Please try again.',
-          });
-        }
-        throw fetchErr;
-      }
-    }
-
     // 7. Respond with success and sessionId/verificationId
     return sendJson(res, 200, {
       success: true,
-      message: '6-digit SMS OTP dispatched successfully via 2Factor.in',
+      message: '6-digit SMS OTP dispatched successfully via 2Factor.in (OTP1)',
       verificationId: sessionId,
       sessionId: sessionId,
       phoneNumber: clean,

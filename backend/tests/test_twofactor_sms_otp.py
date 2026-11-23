@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from httpx import AsyncClient, ASGITransport
 from app.main import app
 from app.core.config import settings
-from app.services.sms import normalize_indian_phone, send_sms_otp
+from app.services.sms import normalize_indian_phone, send_sms_otp, verify_sms_otp
 
 def test_normalize_indian_phone_formats():
     """Verify normalize_indian_phone handles multiple input variations correctly."""
@@ -40,7 +40,7 @@ def test_normalize_indian_phone_formats():
 
 @pytest.mark.asyncio
 async def test_twofactor_sms_otp_success_mock(monkeypatch):
-    """Verify send_sms_otp dispatches to 2Factor.in endpoint and parses success JSON."""
+    """Verify send_sms_otp dispatches to 2Factor.in AUTOGEN/OTP1 endpoint and parses success JSON."""
     test_key = "2factor-test-api-key-success-123"
     monkeypatch.setenv("TWOFACTOR_API_KEY", test_key)
 
@@ -53,12 +53,12 @@ async def test_twofactor_sms_otp_success_mock(monkeypatch):
     with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = mock_resp
 
-        result = await send_sms_otp("+91 98765-43210", "654321")
+        result = await send_sms_otp("+91 98765-43210")
 
-        # Verify correct URL format: https://2factor.in/API/V1/{KEY}/SMS/+91{PHONE}/{OTP}/OTP1
+        # Verify correct URL format: https://2factor.in/API/V1/{KEY}/SMS/+91{PHONE}/AUTOGEN/OTP1
         mock_get.assert_called_once()
         called_url = mock_get.call_args[0][0]
-        assert called_url == f"https://2factor.in/API/V1/{test_key}/SMS/+919876543210/654321/OTP1"
+        assert called_url == f"https://2factor.in/API/V1/{test_key}/SMS/+919876543210/AUTOGEN/OTP1"
 
         # Verify response structure
         assert result["status"] == "delivered"
@@ -204,3 +204,69 @@ async def test_auth_send_otp_non_blocking_instant_response_on_background_error(m
             resp_data = send_res.json()
             assert resp_data["status"] == "sent"
             assert resp_data["delivery_status"] == "dispatched"
+
+@pytest.mark.asyncio
+async def test_twofactor_sms_otp_verify_success_mock(monkeypatch):
+    """Verify verify_sms_otp dispatches to VERIFY/:session_id/:otp endpoint and parses success."""
+    test_key = "2factor-test-api-key-verify"
+    monkeypatch.setenv("TWOFACTOR_API_KEY", test_key)
+
+    mock_resp = httpx.Response(
+        200,
+        json={"Status": "Success", "Details": "OTP Matched"},
+        request=httpx.Request("GET", "https://2factor.in")
+    )
+
+    with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_resp
+
+        res = await verify_sms_otp("sess-uuid-abc-123", "456789")
+
+        mock_get.assert_called_once()
+        called_url = mock_get.call_args[0][0]
+        assert called_url == f"https://2factor.in/API/V1/{test_key}/SMS/VERIFY/sess-uuid-abc-123/456789"
+        assert res["status"] == "matched"
+        assert res["session_id"] == "sess-uuid-abc-123"
+
+@pytest.mark.asyncio
+async def test_twofactor_sms_otp_verify_mismatch(monkeypatch):
+    """Verify verify_sms_otp raises HTTP 400 on OTP Mismatch."""
+    test_key = "2factor-test-api-key-mismatch"
+    monkeypatch.setenv("TWOFACTOR_API_KEY", test_key)
+
+    mock_resp = httpx.Response(
+        200,
+        json={"Status": "Error", "Details": "OTP Mismatch"},
+        request=httpx.Request("GET", "https://2factor.in")
+    )
+
+    with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_resp
+
+        with pytest.raises(HTTPException) as exc_info:
+            await verify_sms_otp("sess-uuid-abc-123", "000000")
+
+        assert exc_info.value.status_code == 400
+        assert "Incorrect verification code" in exc_info.value.detail
+
+@pytest.mark.asyncio
+async def test_twofactor_sms_otp_verify_expired(monkeypatch):
+    """Verify verify_sms_otp raises HTTP 400 on OTP Expired."""
+    test_key = "2factor-test-api-key-expired"
+    monkeypatch.setenv("TWOFACTOR_API_KEY", test_key)
+
+    mock_resp = httpx.Response(
+        200,
+        json={"Status": "Error", "Details": "OTP Expired"},
+        request=httpx.Request("GET", "https://2factor.in")
+    )
+
+    with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = mock_resp
+
+        with pytest.raises(HTTPException) as exc_info:
+            await verify_sms_otp("sess-uuid-abc-123", "123456")
+
+        assert exc_info.value.status_code == 400
+        assert "expired" in exc_info.value.detail.lower()
+

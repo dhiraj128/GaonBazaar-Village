@@ -329,13 +329,76 @@ export default async function handler(req: any, res: any) {
       ? challenge.role
       : safeRequestedRole;
 
-    // 5. Verify 6-digit OTP
+    // 5. Verify 6-digit OTP strictly via 2Factor.in Session Verification API (AUTOGEN template flow)
     let isMatch = false;
-    if (challenge.otp_hash) {
-      const computedHash = crypto.createHash('sha256').update(enteredOtp).digest('hex');
-      const expected = Buffer.from(challenge.otp_hash, 'hex');
-      const actual = Buffer.from(computedHash, 'hex');
-      isMatch = expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+    const twoFactorApiKey = (process.env.TWOFACTOR_API_KEY || '').trim();
+
+    if (verificationId) {
+      if (!twoFactorApiKey) {
+        console.error('[CRITICAL] Missing TWOFACTOR_API_KEY for 2Factor OTP verification');
+        return sendJson(res, 500, {
+          success: false,
+          code: 'auth/missing-credentials',
+          error: 'Verification service configuration error.',
+          message: 'Verification service configuration error.',
+        });
+      }
+
+      const verifyUrl = `https://2factor.in/API/V1/${encodeURIComponent(twoFactorApiKey)}/SMS/VERIFY/${encodeURIComponent(verificationId)}/${encodeURIComponent(enteredOtp)}`;
+      console.log(`[2Factor.in] Verifying session for ${maskedPhone}...`);
+
+      const abortController = new AbortController();
+      const timeoutHandle = setTimeout(() => abortController.abort(), 5000);
+
+      try {
+        const verifyRes = await fetch(verifyUrl, {
+          method: 'GET',
+          headers: { accept: 'application/json' },
+          signal: abortController.signal,
+        });
+        clearTimeout(timeoutHandle);
+
+        const verifyText = await verifyRes.text();
+        let verifyData: any = {};
+        try {
+          verifyData = JSON.parse(verifyText);
+        } catch {
+          verifyData = { Status: 'Error', Details: verifyText };
+        }
+
+        console.log(
+          `[2Factor.in] Verify status for ${maskedPhone}:`,
+          verifyRes.status,
+          verifyData?.Status,
+          verifyData?.Details
+        );
+
+        if (verifyRes.ok && verifyData.Status === 'Success') {
+          const details = String(verifyData.Details || '').toLowerCase();
+          if (details === 'otp matched' || details.includes('matched')) {
+            isMatch = true;
+          }
+        } else if (verifyData.Details && String(verifyData.Details).toLowerCase().includes('expired')) {
+          await incrementChallengeAttempts(verificationId, currentAttempts);
+          return sendJson(res, 400, {
+            success: false,
+            code: 'auth/code-expired',
+            error: 'Verification code has expired. Please request a new OTP.',
+            message: 'Verification code has expired. Please request a new OTP.',
+          });
+        }
+      } catch (fetchErr: any) {
+        clearTimeout(timeoutHandle);
+        if (fetchErr.name === 'AbortError') {
+          return sendJson(res, 504, {
+            success: false,
+            code: 'auth/gateway-timeout',
+            error: 'Verification request timed out. Please try again.',
+            message: 'Verification request timed out. Please try again.',
+          });
+        }
+        throw fetchErr;
+      }
     }
 
     if (!isMatch) {
