@@ -1,3 +1,15 @@
+// Universal Safe Lucide Icons Helper (Prevents unhandled ReferenceErrors if CDN is blocked/slow)
+function safeCreateIcons() {
+  try {
+    if (typeof window !== 'undefined' && window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+  } catch (e) {
+    console.debug('[GaonBazaar] Lucide createIcons suppressed:', e);
+  }
+}
+if (typeof window !== 'undefined') window.safeCreateIcons = safeCreateIcons;
+
 var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
     window.GMAPS_API_KEY = GMAPS_API_KEY;
 
@@ -129,9 +141,7 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
       document.body.classList.add('overflow-hidden');
       document.documentElement.classList.add('overflow-hidden');
 
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        lucide.createIcons();
-      }
+      safeCreateIcons();
       if (modalId === 'modal-my-tickets') {
         window.loadMyTickets();
       } else if (modalId === 'modal-faq') {
@@ -448,9 +458,7 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
           initialsEl.classList.add('hidden');
         }
 
-        if (window.lucide && typeof window.lucide.createIcons === 'function') {
-          window.lucide.createIcons();
-        }
+        safeCreateIcons();
 
         toastSuccess('प्रोफ़ाइल फोटो सफलतापूर्वक अपडेट हो गई! (Profile photo updated!)');
       } catch (err) {
@@ -549,7 +557,7 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
           </div>
         `;
       }).join('');
-      if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+      safeCreateIcons();
     };
 
     window.submitCustomerSupportTicket = async function() {
@@ -710,7 +718,7 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
         </div>
       `).join('');
 
-      if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+      safeCreateIcons();
     };
 
     window.toggleFaqAccordion = function(idx) {
@@ -1407,7 +1415,7 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
           checkHi.innerHTML = '';
         }
       }
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
 
     function selectLanguage(lang) {
@@ -1421,7 +1429,7 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
       pushView('page-login');
       document.getElementById('page-language').classList.add('hidden');
       document.getElementById('page-login').classList.remove('hidden');
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     // ---------------------------------------------------------------------------
@@ -1468,7 +1476,7 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
         const tabName = view.replace('tab-', '');
         switchTab(tabName, false);
       }
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function switchTab(tabName, pushToHistory = true) {
@@ -1494,9 +1502,9 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
         const btn = document.getElementById('nav-btn-' + t);
         if (btn) {
           if (t === tabName) {
-            btn.className = "flex-1 py-1 flex flex-col items-center justify-center text-emerald-700 font-bold transition active:scale-95";
+            btn.classList.add('is-active');
           } else {
-            btn.className = "flex-1 py-1 flex flex-col items-center justify-center text-slate-400 font-medium hover:text-emerald-600 transition active:scale-95";
+            btn.classList.remove('is-active');
           }
         }
       });
@@ -1507,7 +1515,7 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
       if (tabName === 'orders') { syncActiveOrderUI(); renderPastOrdersList(); checkCancellationState(); if (orderLeafletMap) setTimeout(() => orderLeafletMap.invalidateSize(), 200); }
 
       window.scrollTo(0, 0);
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     // ---------------------------------------------------------------------------
@@ -1737,9 +1745,7 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
       }
 
       openModal('modal-product-details');
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        lucide.createIcons();
-      }
+      safeCreateIcons();
     }
     window.openProductModal = openProductModal;
 
@@ -1837,10 +1843,17 @@ function createProductCardElement(p) {
           if (filteredSection) filteredSection.classList.remove('hidden');
           if (filteredGrid) {
             filteredGrid.innerHTML = `
-              <div class="col-span-2 py-12 text-center text-slate-400 space-y-2">
-                <i data-lucide="package-open" class="w-10 h-10 mx-auto text-slate-300"></i>
-                <p class="text-xs font-semibold text-slate-500">${currentLang === 'hi' ? 'वर्तमान में कोई सामान उपलब्ध नहीं है' : 'No products available at the moment'}</p>
-                <p class="text-[10px] text-slate-400">${currentLang === 'hi' ? 'जैसे ही नजदीकी दुकानें सामान जोड़ेंगी, वे यहाँ दिखाई देंगे।' : 'Products will appear once local stores list them.'}</p>
+              <div class="col-span-2 py-10 px-4 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl space-y-3">
+                <div class="w-12 h-12 mx-auto rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                  <i data-lucide="package-open" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-bold text-slate-700">${currentLang === 'hi' ? 'वर्तमान में कोई सामान उपलब्ध नहीं है' : 'No products currently available'}</p>
+                  <p class="text-[11px] text-slate-400 mt-1">${currentLang === 'hi' ? 'जैसे ही नजदीकी अधिकृत दुकानें सामान सूचीबद्ध करेंगी, वे यहाँ दिखाई देंगे।' : 'Products will appear here once local stores list their stock.'}</p>
+                </div>
+                <button onclick="fetchLiveStoresAndProducts()" class="px-3.5 py-1.5 bg-emerald-600 text-white text-[11px] font-bold rounded-lg hover:bg-emerald-700 transition active:scale-95 shadow-xs">
+                  ${currentLang === 'hi' ? 'पुनः जाँचें' : 'Check Again'}
+                </button>
               </div>
             `;
           }
@@ -1887,9 +1900,7 @@ function createProductCardElement(p) {
         }
       }
 
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        lucide.createIcons();
-      }
+      safeCreateIcons();
     }
 
     // ---------------------------------------------------------------------------
@@ -1911,9 +1922,7 @@ function createProductCardElement(p) {
             <p class="text-[10px] text-slate-400">${currentLang === 'hi' ? 'कृपया बाद में पुनः देखें।' : 'New stores will appear once onboarded & approved.'}</p>
           </div>
         `;
-        if (window.lucide && typeof lucide.createIcons === 'function') {
-          lucide.createIcons();
-        }
+        safeCreateIcons();
         return;
       }
 
@@ -2180,7 +2189,8 @@ function createProductCardElement(p) {
         badge.innerText = totalQty;
         if (totalQty > 0) {
           badge.classList.remove('hidden');
-          badge.className = "absolute -top-1.5 -right-2 px-1.5 py-0.2 bg-emerald-600 text-white text-[9px] font-extrabold rounded-full";
+        } else {
+          badge.classList.add('hidden');
         }
       }
       window.cart = cartItems;
@@ -2234,7 +2244,7 @@ function createProductCardElement(p) {
           btnPlace.classList.add('opacity-50', 'pointer-events-none');
         }
 
-        if (window.lucide) lucide.createIcons();
+        safeCreateIcons();
         return;
       }
 
@@ -2358,7 +2368,7 @@ function createProductCardElement(p) {
       const poEl = document.getElementById('place-order-total-badge');
       if (poEl) poEl.innerText = "₹" + grandTotal.toFixed(2);
 
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
 }
 
     
@@ -2485,7 +2495,7 @@ function createProductCardElement(p) {
         `;
         listEl.appendChild(card);
       });
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function selectCheckoutAddress(addrId) {
@@ -2520,7 +2530,7 @@ function createProductCardElement(p) {
         if (label) label.innerText = "Show Code";
         if (icon) icon.setAttribute('data-lucide', 'eye');
         isDeliveryOtpRevealed = false;
-        lucide.createIcons();
+        safeCreateIcons();
         return;
       }
 
@@ -2539,7 +2549,7 @@ function createProductCardElement(p) {
           if (label) label.innerText = "Hide Code";
           if (icon) icon.setAttribute('data-lucide', 'eye-off');
           isDeliveryOtpRevealed = true;
-          lucide.createIcons();
+          safeCreateIcons();
         } else {
           toastError("Unable to retrieve verification code from secure backend.");
         }
@@ -2671,7 +2681,7 @@ function createProductCardElement(p) {
             <p class="text-[11px] text-rose-700">This order was cancelled. 100% full refund initiated to your original payment mode.</p>
           </div>
         `;
-        lucide.createIcons();
+        safeCreateIcons();
         return;
       }
 
@@ -2743,7 +2753,7 @@ function createProductCardElement(p) {
 
       html += '</div>';
       container.innerHTML = html;
-      lucide.createIcons();
+      safeCreateIcons();
     }
 
     function initOrUpdateOrderLiveMap(storeLat, storeLng, destLat, destLng, runnerLat, runnerLng, vehicleType, lastUpdated, isLive) {
@@ -3062,7 +3072,7 @@ function createProductCardElement(p) {
           `;
           container.appendChild(card);
         });
-        lucide.createIcons();
+        safeCreateIcons();
       } catch (err) {
         console.error("Past orders render error:", err);
       }
@@ -3322,9 +3332,7 @@ function createProductCardElement(p) {
 
       if (countEl) countEl.innerText = `${items.length} items (${totalUnits} packs)`;
       if (totalEl) totalEl.innerText = `₹${totalSum.toFixed(2)}`;
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        lucide.createIcons();
-      }
+      safeCreateIcons();
     }
 
     function triggerRationAutosave() {
@@ -3460,9 +3468,10 @@ function createProductCardElement(p) {
         if (orderNowBtn) {
           orderNowBtn.innerHTML = `<span>Order Now</span> <i data-lucide="arrow-right" class="w-3.5 h-3.5 ml-0.5"></i>`;
           orderNowBtn.disabled = false;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         }
       }
+    }
 
     function populateRationOrderReviewModal() {
       const store = (typeof storesDirectory !== 'undefined' && storesDirectory[0]) ? storesDirectory[0] : { name: 'Authorized Store', locality: 'Hub Center', distanceKm: 1.2 };
@@ -3585,7 +3594,7 @@ function createProductCardElement(p) {
         if (confirmBtn) {
           confirmBtn.innerHTML = `<span>Confirm Order</span> <span id="btn-confirm-ration-total-badge" class="font-mono text-xs"></span> <i data-lucide="arrow-right" class="w-3.5 h-3.5 ml-1"></i>`;
           confirmBtn.disabled = false;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         }
       }
     }
@@ -4926,7 +4935,7 @@ function createProductCardElement(p) {
 
       dropdown.innerHTML = html;
       dropdown.classList.remove('hidden');
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.handleCustomerVillageSearch = handleCustomerVillageSearch;
 
@@ -5018,7 +5027,7 @@ function createProductCardElement(p) {
         }
       }
 
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
       return isServiceable;
     }
     window.checkServiceability = checkServiceability;
@@ -5146,7 +5155,7 @@ function createProductCardElement(p) {
       if (!("geolocation" in navigator)) {
         toastError("Geolocation is not supported by your browser.");
         if (btn) btn.innerHTML = `<i data-lucide="crosshair" class="w-3 h-3"></i><span>Current GPS</span>`;
-        if (window.lucide) lucide.createIcons();
+        safeCreateIcons();
         return;
       }
 
@@ -5172,13 +5181,13 @@ function createProductCardElement(p) {
           }
           updatePickerGeofence(lat, lng);
           if (btn) btn.innerHTML = `<i data-lucide="crosshair" class="w-3 h-3"></i><span>Current GPS</span>`;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
           toastSuccess("GPS coordinates detected and pinned!");
         },
         (err) => {
           toastWarning("GPS permission denied or unavailable. You can tap or drag the pin manually.");
           if (btn) btn.innerHTML = `<i data-lucide="crosshair" class="w-3 h-3"></i><span>Current GPS</span>`;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         },
         { enableHighAccuracy: true, timeout: 8000 }
       );
@@ -5430,9 +5439,7 @@ function createProductCardElement(p) {
       if (hasDetectingIndicator) appendDetectingIndicator(container);
 
       container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        lucide.createIcons();
-      }
+      safeCreateIcons();
     }
 
     function appendDetectingIndicator(container) {
@@ -5693,7 +5700,7 @@ function createProductCardElement(p) {
         m.classList.remove('hidden');
         m.classList.add('flex');
       }
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.openPaymentSettingsModal = openPaymentSettingsModal;
     window.switchTab = switchTab;
@@ -5776,7 +5783,7 @@ function createProductCardElement(p) {
         }
       });
 
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.selectVaultPaymentOption = selectVaultPaymentOption;
 
@@ -6001,7 +6008,7 @@ function createProductCardElement(p) {
           btnIcon.setAttribute('data-lucide', 'check-circle');
         }
         if (btnText) btnText.innerText = originalText;
-        if (window.lucide) lucide.createIcons();
+        safeCreateIcons();
       }
     }
     window.saveCustomerPaymentVault = saveCustomerPaymentVault;
@@ -6082,7 +6089,7 @@ function createProductCardElement(p) {
         modal.style.setProperty('display', 'flex', 'important');
         modal.classList.remove('hidden');
         modal.classList.add('is-open');
-        if (window.lucide) lucide.createIcons();
+        safeCreateIcons();
       }
     }
 
@@ -6229,7 +6236,7 @@ function createProductCardElement(p) {
             : `Pay ₹${grandTotal.toFixed(2)} via UPI`;
         }
       }
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
 
     
@@ -6327,7 +6334,7 @@ function createProductCardElement(p) {
         }
       }
 
-      if (window.lucide) lucide.createIcons();
+      safeCreateIcons();
     }
     window.openUpiVerificationModal = openUpiVerificationModal;
 
@@ -6522,7 +6529,7 @@ function createProductCardElement(p) {
           if (btn) {
             btn.innerHTML = originalHtml;
             btn.disabled = false;
-            if (window.lucide) lucide.createIcons();
+            safeCreateIcons();
           }
         }
       } else {
@@ -6537,7 +6544,7 @@ function createProductCardElement(p) {
           if (btn) {
             btn.innerHTML = originalHtml;
             btn.disabled = false;
-            lucide.createIcons();
+            safeCreateIcons();
           }
         }
       }
@@ -6740,7 +6747,7 @@ function createProductCardElement(p) {
         const res = await apiRequest('/api/v1/orders', 'POST', orderPayload);
         btn.innerHTML = `<span>${currentLang === 'hi' ? 'ऑर्डर करें' : 'Place Order'}</span> <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>`;
         btn.disabled = false;
-        lucide.createIcons();
+        safeCreateIcons();
 
         if (!res || !res.id) {
           throw new Error(currentLang === 'hi' ? 'सर्वर पर ऑर्डर बनाने में असमर्थ। कृपया पुनः प्रयास करें।' : 'Order creation failed on server. Please try again.');
@@ -6767,7 +6774,7 @@ function createProductCardElement(p) {
       } catch (orderErr) {
         btn.innerHTML = `<span>${currentLang === 'hi' ? 'ऑर्डर करें' : 'Place Order'}</span> <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>`;
         btn.disabled = false;
-        lucide.createIcons();
+        safeCreateIcons();
         toastError(orderErr.message || "Failed to place order. Please check delivery address.");
       }
     }
@@ -7366,9 +7373,7 @@ function createProductCardElement(p) {
         `;
       }).join('');
 
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        lucide.createIcons();
-      }
+      safeCreateIcons();
     }
 
     function viewAddressMapPin(addrId) {
@@ -7749,7 +7754,7 @@ function createProductCardElement(p) {
         if (submitBtn) {
           submitBtn.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i> <span>Submit Complaint</span>`;
           submitBtn.disabled = false;
-          if (window.lucide) lucide.createIcons();
+          safeCreateIcons();
         }
       }
     }
@@ -7868,52 +7873,70 @@ function createProductCardElement(p) {
     // ---------------------------------------------------------------------------
     // INITIALIZATION (Single-Step Seamless Auth & Language Persistence)
     // ---------------------------------------------------------------------------
-    window.addEventListener('DOMContentLoaded', () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const paramLang = urlParams.get('lang');
-      if (paramLang === 'en' || paramLang === 'hi') {
-        currentLang = paramLang;
-        localStorage.setItem('gb_customer_lang', paramLang);
-      } else {
-        currentLang = localStorage.getItem('gb_customer_lang') || 'en';
+        function initCustomerApp() {
+      if (window.__customerAppInitialized) return;
+      window.__customerAppInitialized = true;
+
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramLang = urlParams.get('lang');
+        if (paramLang === 'en' || paramLang === 'hi') {
+          currentLang = paramLang;
+          localStorage.setItem('gb_customer_lang', paramLang);
+        } else {
+          currentLang = localStorage.getItem('gb_customer_lang') || 'en';
+        }
+        setAppLanguage(currentLang);
+
+        const isAuth =
+          localStorage.getItem('gb_customer_authenticated') === 'true' ||
+          localStorage.getItem('gb_customer_logged_in') === 'true' ||
+          localStorage.getItem('gb_auth_authenticated') === 'true' ||
+          !!localStorage.getItem('gb_customer_token') ||
+          !!localStorage.getItem('gb_customer_jwt') ||
+          urlParams.get('embedded') === 'true';
+
+        const pageLangEl = document.getElementById('page-language');
+        const pageLoginEl = document.getElementById('page-login');
+        const dashboardEl = document.getElementById('dashboard-container');
+
+        if (isAuth) {
+          document.body.classList.add('customer-authenticated');
+          if (pageLangEl) {
+            pageLangEl.classList.add('hidden');
+            pageLangEl.classList.remove('initial-active');
+          }
+          if (pageLoginEl) pageLoginEl.classList.add('hidden');
+          if (dashboardEl) dashboardEl.classList.remove('hidden');
+          switchTab('home', false);
+          loadUserProfile();
+          checkPaymentGatewayStatus();
+          loadUserSavedAddresses();
+        } else {
+          document.body.classList.remove('customer-authenticated');
+          if (pageLangEl) pageLangEl.classList.remove('hidden');
+          if (dashboardEl) dashboardEl.classList.add('hidden');
+        }
+
+        startOrderCancellationTimer();
+        syncActiveOrderUI();
+        renderPastOrdersList();
+        renderProductCatalog();
+        renderStoresList();
+        fetchLiveStoresAndProducts();
+        renderCartItems();
+        renderFaqAccordion();
+        safeCreateIcons();
+      } catch (initErr) {
+        console.error('[CustomerApp Init Error]:', initErr);
       }
-      setAppLanguage(currentLang);
+    }
 
-      const isAuth =
-        localStorage.getItem('gb_customer_authenticated') === 'true' ||
-        localStorage.getItem('gb_customer_logged_in') === 'true' ||
-        localStorage.getItem('gb_auth_authenticated') === 'true' ||
-        !!localStorage.getItem('gb_customer_token') ||
-        !!localStorage.getItem('gb_customer_jwt') ||
-        urlParams.get('embedded') === 'true';
-
-      const pageLangEl = document.getElementById('page-language');
-      const pageLoginEl = document.getElementById('page-login');
-      const dashboardEl = document.getElementById('dashboard-container');
-
-      if (isAuth) {
-        if (pageLangEl) pageLangEl.classList.add('hidden');
-        if (pageLoginEl) pageLoginEl.classList.add('hidden');
-        if (dashboardEl) dashboardEl.classList.remove('hidden');
-        switchTab('home', false);
-        loadUserProfile();
-        checkPaymentGatewayStatus();
-        loadUserSavedAddresses();
-      } else {
-        if (pageLangEl) pageLangEl.classList.remove('hidden');
-        if (dashboardEl) dashboardEl.classList.add('hidden');
-      }
-
-      startOrderCancellationTimer();
-      syncActiveOrderUI();
-      renderPastOrdersList();
-      renderProductCatalog();
-      renderStoresList();
-      fetchLiveStoresAndProducts();
-      renderCartItems();
-      renderFaqAccordion();
-      lucide.createIcons();
-    });
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', initCustomerApp);
+    } else {
+      initCustomerApp();
+    }
   
     // UNIFIED CROSS-APP & WEBSOCKET ORDER PROGRESS SYNCHRONIZATION
     function initCustomerOrderSync() {

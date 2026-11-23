@@ -1502,9 +1502,9 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
         const btn = document.getElementById('nav-btn-' + t);
         if (btn) {
           if (t === tabName) {
-            btn.className = "flex-1 py-1 flex flex-col items-center justify-center text-emerald-700 font-bold transition active:scale-95";
+            btn.classList.add('is-active');
           } else {
-            btn.className = "flex-1 py-1 flex flex-col items-center justify-center text-slate-400 font-medium hover:text-emerald-600 transition active:scale-95";
+            btn.classList.remove('is-active');
           }
         }
       });
@@ -2189,7 +2189,8 @@ function createProductCardElement(p) {
         badge.innerText = totalQty;
         if (totalQty > 0) {
           badge.classList.remove('hidden');
-          badge.className = "absolute -top-1.5 -right-2 px-1.5 py-0.2 bg-emerald-600 text-white text-[9px] font-extrabold rounded-full";
+        } else {
+          badge.classList.add('hidden');
         }
       }
       window.cart = cartItems;

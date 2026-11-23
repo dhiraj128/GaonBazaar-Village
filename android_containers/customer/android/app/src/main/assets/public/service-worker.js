@@ -1,6 +1,6 @@
 // GaonBazaar Rural Hyperlocal PWA Service Worker: Customer
 // Offline-capable caching with network-first navigation for instant updates
-const CACHE_NAME = 'gaonbazaar-customer-v1.0.2';
+const CACHE_NAME = 'gaonbazaar-customer-v1.1.0';
 
 const PRECACHE_ASSETS = [
   './',
@@ -85,7 +85,10 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResp;
         })
-        .catch(() => caches.match(req).then((cached) => cached || caches.match('./index.html')))
+        .catch(() =>
+          caches.match(req, { ignoreSearch: true })
+            .then((cached) => cached || caches.match('./index.html', { ignoreSearch: true }) || caches.match('/customer/index.html', { ignoreSearch: true }))
+        )
     );
     return;
   }
@@ -94,7 +97,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(req).then((cachedResp) => {
       const fetchPromise = fetch(req).then((networkResp) => {
-        if (networkResp && networkResp.status === 200 && networkResp.type !== 'opaque') {
+        if (networkResp && (networkResp.status === 200 || networkResp.type === 'opaque')) {
           const respToCache = networkResp.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(req, respToCache);
