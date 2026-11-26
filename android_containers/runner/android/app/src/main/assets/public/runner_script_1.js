@@ -29,6 +29,12 @@ tailwind.config = {
     }
   }
 };
-if (typeof window.lucide === 'undefined') {
-  window.lucide = { createIcons: function() {} };
+
+// Ensure icons are automatically initialized once DOM is ready
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof window !== 'undefined' && window.lucide && typeof window.lucide.createIcons === 'function') {
+      window.lucide.createIcons();
+    }
+  });
 }

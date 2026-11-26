@@ -1,6 +1,6 @@
 // GaonBazaar Rural Hyperlocal PWA Service Worker: Vendor
 // Offline-capable caching with network-first navigation for instant updates
-const CACHE_NAME = 'gaonbazaar-vendor-v1.1.0';
+const CACHE_NAME = 'gaonbazaar-vendor-v1.2.0';
 
 const PRECACHE_ASSETS = [
   './',
@@ -15,7 +15,8 @@ const PRECACHE_ASSETS = [
   './vendor_script_1.js',
   './vendor_script_2.js',
   './vendor_script_3.js',
-  './vendor_script_4.js'
+  './vendor_script_4.js',
+  './js/lucide.min.js'
 ];
 
 // Install: precache critical app shell

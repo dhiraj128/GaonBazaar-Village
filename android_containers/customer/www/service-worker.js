@@ -1,6 +1,6 @@
 // GaonBazaar Rural Hyperlocal PWA Service Worker: Customer
 // Offline-capable caching with network-first navigation for instant updates
-const CACHE_NAME = 'gaonbazaar-customer-v1.1.0';
+const CACHE_NAME = 'gaonbazaar-customer-v1.2.0';
 
 const PRECACHE_ASSETS = [
   './',
@@ -17,7 +17,8 @@ const PRECACHE_ASSETS = [
   './customer_script_3.js',
   './customer_script_4.js',
   './config.js',
-  './auth-service.js'
+  './auth-service.js',
+  './js/lucide.min.js'
 ];
 
 // Install: precache critical app shell

@@ -61,6 +61,14 @@ def sync_portal(app_name):
             for ic in os.listdir(src_icons_dir):
                 shutil.copy2(os.path.join(src_icons_dir, ic), os.path.join(dst_icons_dir, ic))
 
+        # Copy js directory if it exists
+        src_js_dir = os.path.join(src_dir, "js")
+        if os.path.isdir(src_js_dir):
+            dst_js_dir = os.path.join(target_dir, "js")
+            os.makedirs(dst_js_dir, exist_ok=True)
+            for jf in os.listdir(src_js_dir):
+                shutil.copy2(os.path.join(src_js_dir, jf), os.path.join(dst_js_dir, jf))
+
         # Write container index.html with relative script paths
         dest_index = os.path.join(target_dir, "index.html")
         with open(dest_index, "w", encoding="utf-8") as f:

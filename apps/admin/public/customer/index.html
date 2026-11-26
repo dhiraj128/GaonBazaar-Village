@@ -17,8 +17,15 @@
   <link rel="stylesheet" href="/css/tailwind-legacy.min.css">
   <script src="/customer/customer_script_1.js"></script>
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Lucide Icons (Bundled Offline First + CDN Fallback) -->
+  <script src="./js/lucide.min.js"></script>
+  <script>
+    if (typeof window.lucide === 'undefined') {
+      var s = document.createElement('script');
+      s.src = 'https://unpkg.com/lucide@latest';
+      document.head.appendChild(s);
+    }
+  </script>
   
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -110,96 +117,19 @@
       display: flex !important;
     }
 
-    /* Customer Bottom Navigation Bar Hardening */
-    .customer-bottom-nav {
-      height: 60px;
-      max-height: 60px;
-      background-color: rgba(255, 255, 255, 0.98);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-top: 1px solid #e2e8f0;
-      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
-    }
-    .customer-bottom-nav button,
-    .customer-bottom-nav button:focus,
-    .customer-bottom-nav button:focus-visible,
-    .customer-bottom-nav button:active {
+    /* Customer Bottom Navigation Bar: Original Compact Layout & Focus Outline Suppression */
+    #customer-bottom-nav button,
+    nav button {
       outline: none !important;
-      border: none !important;
-      box-shadow: none !important;
       -webkit-tap-highlight-color: transparent !important;
+      -webkit-touch-callout: none !important;
+      user-select: none !important;
     }
-    .customer-bottom-nav .nav-tab-btn {
-      position: relative;
-      display: flex;
-      flex: 1 1 0%;
-      min-width: 0;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 2px;
-      transition: all 0.15s ease-in-out;
-      user-select: none;
-      -webkit-user-select: none;
-      cursor: pointer;
-    }
-    .customer-bottom-nav .nav-tab-btn .nav-icon-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 24px;
-    }
-    .customer-bottom-nav .nav-tab-btn .nav-icon-wrap svg {
-      width: 22px;
-      height: 22px;
-      stroke-width: 2;
-      transition: transform 0.15s ease, stroke 0.15s ease;
-    }
-    .customer-bottom-nav .nav-tab-btn.is-active .nav-icon-wrap svg {
-      stroke-width: 2.25;
-      transform: scale(1.08);
-    }
-    .customer-bottom-nav .nav-tab-btn .nav-label {
-      font-size: 10px;
-      line-height: 1.2;
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-      transition: color 0.15s ease;
-    }
-    .customer-bottom-nav .nav-tab-btn.is-active {
-      color: #047857 !important; /* emerald-700 */
-    }
-    .customer-bottom-nav .nav-tab-btn.is-active .nav-label {
-      font-weight: 700 !important;
-      color: #047857 !important;
-    }
-    .customer-bottom-nav .nav-tab-btn:not(.is-active) {
-      color: #94a3b8 !important; /* slate-400 */
-    }
-    .customer-bottom-nav .nav-tab-btn:not(.is-active) .nav-label {
-      font-weight: 500 !important;
-      color: #64748b !important; /* slate-500 */
-    }
-    .customer-bottom-nav .nav-tab-btn .nav-active-pill {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%) scaleX(0);
-      width: 28px;
-      height: 3px;
-      background-color: #059669; /* emerald-600 */
-      border-radius: 9999px;
-      opacity: 0;
-      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
-    }
-    .customer-bottom-nav .nav-tab-btn.is-active .nav-active-pill {
-      transform: translateX(-50%) scaleX(1);
-      opacity: 1;
+    #customer-bottom-nav button:focus,
+    #customer-bottom-nav button:focus-visible,
+    #customer-bottom-nav button:active {
+      outline: none !important;
+      box-shadow: none !important;
     }
   </style>
   <script src="/customer/customer_script_2.js"></script>
@@ -971,12 +901,16 @@
         <div class="p-4 space-y-5">
           <!-- Global Search Bar with ISOLATED Microphone Voice Search -->
           <div class="relative flex items-center">
-            <i data-lucide="search" class="absolute left-3.5 w-4 h-4 text-slate-400"></i>
+            <i data-lucide="search" class="absolute left-3.5 w-4 h-4 text-slate-400 flex items-center justify-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            </i>
             <input type="text" id="home-search-input" onkeyup="handleHomeSearch(this.value)" placeholder="Search stores, atta, milk, vegetables..." data-i18n-placeholder="search_placeholder" class="w-full pl-10 pr-11 py-3 bg-white border border-slate-200 focus:border-emerald-600 focus:outline-none rounded-xl text-xs text-slate-900 shadow-2xs transition">
             
             <!-- ISOLATED HOME MIC (Populates Search input & filters Home, ZERO AI/cart redirect) -->
             <button onclick="startHomeSearchVoice()" id="home-search-mic-btn" class="absolute right-2.5 w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center transition active:scale-95" title="Search by Voice">
-              <i data-lucide="mic" class="w-3.5 h-3.5"></i>
+              <i data-lucide="mic" class="w-3.5 h-3.5 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+              </i>
             </button>
           </div>
 
@@ -1080,12 +1014,19 @@
       <!-- TAB 2: AI ASSISTANT (EXCLUSIVE VOICE-TO-CART & GROUNDED CHAT) -->
       <!-- =================================================================== -->
       <section id="view-ai" class="tab-view hidden flex-1 flex flex-col bg-slate-50">
-        <!-- Header with Visible Back Navigation -->
+        <!-- Header with Visible Back Navigation and Assistant Avatar -->
         <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 flex items-center space-x-3 shadow-2xs">
           <button onclick="historyBack()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition active:scale-95" aria-label="Back">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <i data-lucide="arrow-left" class="w-4 h-4 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+            </i>
           </button>
-          <div>
+          <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200 shadow-2xs">
+            <i data-lucide="bot" class="w-5 h-5 flex items-center justify-center text-emerald-700">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+            </i>
+          </div>
+          <div class="flex-1 min-w-0">
             <div class="flex items-center space-x-1.5">
               <h2 class="text-sm font-bold text-slate-900" data-i18n="ai_assistant_title">GaonBazaar AI Assistant</h2>
               <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1099,7 +1040,9 @@
           <!-- Welcome Message -->
           <div class="flex items-start space-x-2.5 max-w-[85%]">
             <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0 shadow-xs">
-              🤖
+              <i data-lucide="bot" class="w-4 h-4 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+              </i>
             </div>
             <div class="bg-white p-3.5 rounded-2xl rounded-tl-xs border border-slate-200 shadow-2xs space-y-1 text-xs text-slate-800">
               <p class="font-bold text-emerald-800" data-i18n="ai_bot_name">GaonBazaar Sahayak</p>
@@ -1130,7 +1073,9 @@
             <div class="relative flex items-center justify-center">
               <div id="ai-pulse-ring" class="hidden absolute w-20 h-20 rounded-full bg-emerald-400 opacity-30 mic-pulse pointer-events-none"></div>
               <button onclick="toggleAiVoiceAssistant()" id="main-mic-btn" class="w-16 h-16 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/30 flex items-center justify-center transition active:scale-90 z-10" title="Tap to Speak">
-                <i data-lucide="mic" class="w-8 h-8"></i>
+                <i data-lucide="mic" class="w-8 h-8 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+                </i>
               </button>
             </div>
             <p id="ai-mic-status-label" class="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-wider" data-i18n="tap_mic_to_speak">Tap Microphone & Speak</p>
@@ -1149,7 +1094,9 @@
           <div class="flex items-center space-x-2">
             <input type="text" id="ai-text-input" onkeydown="if(event.key==='Enter') submitAiText()" placeholder="Type item e.g. 1kg sugar chahiye..." data-i18n-placeholder="ai_input_placeholder" class="flex-1 px-4 py-3 bg-slate-100 border border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none rounded-xl text-xs text-slate-900">
             <button onclick="submitAiText()" class="w-11 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center transition active:scale-95 shrink-0" title="Send Query">
-              <i data-lucide="send" class="w-4 h-4"></i>
+              <i data-lucide="send" class="w-4 h-4 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><line x1="22" x2="11" y1="2" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              </i>
             </button>
           </div>
         </div>
@@ -1656,73 +1603,49 @@
       <!-- ===================================================================== -->
       <!-- FIXED BOTTOM NAVIGATION BAR (5 TABS) -->
       <!-- ===================================================================== -->
-      <nav id="customer-bottom-nav" class="customer-bottom-nav fixed bottom-0 left-0 right-0 max-w-md mx-auto z-40 px-1 pb-[env(safe-area-inset-bottom,0px)] flex justify-around items-center">
+      <nav id="customer-bottom-nav" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 px-2 py-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex justify-around items-center shadow-lg">
         
         <!-- Tab 1: Home -->
-        <button type="button" onclick="switchTab('home')" id="nav-btn-home" class="nav-tab-btn is-active" aria-label="Home">
-          <span class="nav-active-pill"></span>
-          <div class="nav-icon-wrap">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-              <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
-          </div>
-          <span class="nav-label" data-i18n="nav_home">Home</span>
+        <button type="button" onclick="switchTab('home')" id="nav-btn-home" class="flex-1 py-1 flex flex-col items-center justify-center text-emerald-700 font-bold transition active:scale-95">
+          <i data-lucide="home" class="w-5 h-5 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          </i>
+          <span class="text-[10px] mt-0.5" data-i18n="nav_home">Home</span>
         </button>
 
         <!-- Tab 2: AI Assistant -->
-        <button type="button" onclick="switchTab('ai')" id="nav-btn-ai" class="nav-tab-btn" aria-label="AI Assistant">
-          <span class="nav-active-pill"></span>
-          <div class="nav-icon-wrap">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
-              <path d="M5 3v4"></path>
-              <path d="M19 17v4"></path>
-              <path d="M3 5h4"></path>
-              <path d="M17 19h4"></path>
-            </svg>
-          </div>
-          <span class="nav-label" data-i18n="nav_ai">AI Assistant</span>
+        <button type="button" onclick="switchTab('ai')" id="nav-btn-ai" class="flex-1 py-1 flex flex-col items-center justify-center text-slate-400 font-medium hover:text-emerald-600 transition active:scale-95">
+          <i data-lucide="bot" class="w-5 h-5 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+          </i>
+          <span class="text-[10px] mt-0.5" data-i18n="nav_ai">AI Assistant</span>
         </button>
 
         <!-- Tab 3: Cart with Badge -->
-        <button type="button" onclick="switchTab('cart')" id="nav-btn-cart" class="nav-tab-btn" aria-label="Cart">
-          <span class="nav-active-pill"></span>
-          <div class="nav-icon-wrap">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="8" cy="21" r="1"></circle>
-              <circle cx="19" cy="21" r="1"></circle>
-              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
-            </svg>
-            <span id="nav-cart-badge" class="hidden absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 bg-emerald-600 text-white text-[9px] font-extrabold rounded-full flex items-center justify-center shadow-xs ring-1 ring-white">0</span>
+        <button type="button" onclick="switchTab('cart')" id="nav-btn-cart" class="flex-1 py-1 flex flex-col items-center justify-center text-slate-400 font-medium hover:text-emerald-600 transition active:scale-95 relative">
+          <div class="relative flex items-center justify-center">
+            <i data-lucide="shopping-cart" class="w-5 h-5 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>
+            </i>
+            <span id="nav-cart-badge" class="hidden absolute -top-1.5 -right-2 px-1.5 py-0.2 bg-emerald-600 text-white text-[9px] font-extrabold rounded-full">0</span>
           </div>
-          <span class="nav-label" data-i18n="nav_cart">Cart</span>
+          <span class="text-[10px] mt-0.5" data-i18n="nav_cart">Cart</span>
         </button>
 
         <!-- Tab 4: Orders -->
-        <button type="button" onclick="switchTab('orders')" id="nav-btn-orders" class="nav-tab-btn" aria-label="Orders">
-          <span class="nav-active-pill"></span>
-          <div class="nav-icon-wrap">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m7.5 4.27 9 5.15"></path>
-              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
-              <path d="m3.3 7 8.7 5 8.7-5"></path>
-              <path d="M12 22V12"></path>
-            </svg>
-          </div>
-          <span class="nav-label" data-i18n="nav_orders">Orders</span>
+        <button type="button" onclick="switchTab('orders')" id="nav-btn-orders" class="flex-1 py-1 flex flex-col items-center justify-center text-slate-400 font-medium hover:text-emerald-600 transition active:scale-95">
+          <i data-lucide="package-check" class="w-5 h-5 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="m16 16 2 2 4-4"></path><path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"></path><path d="m7.5 4.27 9 5.15"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><line x1="12" x2="12" y1="22" y2="12"></line></svg>
+          </i>
+          <span class="text-[10px] mt-0.5" data-i18n="nav_orders">Orders</span>
         </button>
 
         <!-- Tab 5: Account -->
-        <button type="button" onclick="switchTab('account')" id="nav-btn-account" class="nav-tab-btn" aria-label="Account">
-          <span class="nav-active-pill"></span>
-          <div class="nav-icon-wrap">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-          </div>
-          <span class="nav-label" data-i18n="nav_account">Account</span>
+        <button type="button" onclick="switchTab('account')" id="nav-btn-account" class="flex-1 py-1 flex flex-col items-center justify-center text-slate-400 font-medium hover:text-emerald-600 transition active:scale-95">
+          <i data-lucide="user" class="w-5 h-5 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </i>
+          <span class="text-[10px] mt-0.5" data-i18n="nav_account">Account</span>
         </button>
       </nav>
 

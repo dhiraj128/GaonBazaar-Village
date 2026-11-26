@@ -1,6 +1,6 @@
 // GaonBazaar Rural Hyperlocal PWA Service Worker: Runner
 // Offline-capable caching with network-first navigation for instant updates
-const CACHE_NAME = 'gaonbazaar-runner-v1.1.0';
+const CACHE_NAME = 'gaonbazaar-runner-v1.2.0';
 
 const PRECACHE_ASSETS = [
   './',
@@ -15,7 +15,8 @@ const PRECACHE_ASSETS = [
   './runner_script_1.js',
   './runner_script_2.js',
   './runner_script_3.js',
-  './runner_script_4.js'
+  './runner_script_4.js',
+  './js/lucide.min.js'
 ];
 
 // Install: precache critical app shell

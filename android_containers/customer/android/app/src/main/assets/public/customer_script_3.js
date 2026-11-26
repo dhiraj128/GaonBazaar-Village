@@ -1501,10 +1501,11 @@ var GMAPS_API_KEY = "AIzaSyBqHZrBX7WMEw2vt5COVwfK7a4lZpGapMc";
       tabs.forEach(t => {
         const btn = document.getElementById('nav-btn-' + t);
         if (btn) {
+          const isCart = (t === 'cart');
           if (t === tabName) {
-            btn.classList.add('is-active');
+            btn.className = "flex-1 py-1 flex flex-col items-center justify-center text-emerald-700 font-bold transition active:scale-95" + (isCart ? " relative" : "");
           } else {
-            btn.classList.remove('is-active');
+            btn.className = "flex-1 py-1 flex flex-col items-center justify-center text-slate-400 font-medium hover:text-emerald-600 transition active:scale-95" + (isCart ? " relative" : "");
           }
         }
       });
