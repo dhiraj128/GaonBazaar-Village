@@ -129,7 +129,13 @@ async function verifyLiveProduction() {
     });
 
     await vendorPage.goto('https://dukaan.apnagaonbazaar.in/vendor/index.html', { waitUntil: 'networkidle' });
-    await vendorPage.waitForTimeout(2000);
+    await vendorPage.waitForTimeout(1000);
+
+    // Transition to active dashboard
+    await vendorPage.evaluate(() => {
+      if (typeof openDashboard === 'function') openDashboard('inventory');
+    });
+    await vendorPage.waitForTimeout(1000);
 
     const vendorShot = path.join(ARTIFACTS_DIR, 'live_prod_vendor_dashboard.png');
     await vendorPage.screenshot({ path: vendorShot, fullPage: false });
@@ -190,7 +196,13 @@ async function verifyLiveProduction() {
     });
 
     await runnerPage.goto('https://mitra.apnagaonbazaar.in/runner/index.html', { waitUntil: 'networkidle' });
-    await runnerPage.waitForTimeout(2000);
+    await runnerPage.waitForTimeout(1000);
+
+    // Transition to active dashboard
+    await runnerPage.evaluate(() => {
+      if (typeof openDashboard === 'function') openDashboard('missions');
+    });
+    await runnerPage.waitForTimeout(1000);
 
     const runnerShot = path.join(ARTIFACTS_DIR, 'live_prod_runner_dashboard.png');
     await runnerPage.screenshot({ path: runnerShot, fullPage: false });
