@@ -51,6 +51,10 @@ packages/*/build/
 .idea/
 *.iml
 .vscode/
+*.jks
+*.keystore
+key.properties
+**/key.properties
 
 # Environment Variables & Secrets (Strictly Ignored)
 .env

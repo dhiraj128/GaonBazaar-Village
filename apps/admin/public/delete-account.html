@@ -25,31 +25,33 @@
     h2 { font-size: 1.75rem; font-weight: 800; color: #0f172a; margin-bottom: 0.25rem; }
     .subtext { font-size: 0.75rem; color: #64748b; margin-bottom: 1.5rem; }
     section { margin-top: 1.5rem; }
-    h3 { font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; }
+    h3 { font-size: 1.05rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; }
     p { font-size: 0.875rem; color: #334155; margin-bottom: 0.5rem; }
     .grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 0.75rem; }
     @media (min-width: 768px) { .grid { grid-template-columns: 1fr 1fr; } }
-    .box-rose { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 0.75rem; padding: 1rem; }
-    .box-slate { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem; }
-    .box-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; }
-    ul, ol { padding-left: 1.25rem; font-size: 0.75rem; color: #475569; }
-    li { margin-bottom: 0.25rem; }
-    .form-container { background: #fff; border: 2px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; margin-top: 1.5rem; max-width: 28rem; }
-    label { display: block; font-size: 0.75rem; font-weight: 600; color: #334155; margin-bottom: 0.25rem; }
+    .box-rose { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 0.75rem; padding: 1.25rem; }
+    .box-slate { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.25rem; }
+    .box-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; }
+    ul, ol { padding-left: 1.25rem; font-size: 0.85rem; color: #475569; }
+    li { margin-bottom: 0.35rem; }
+    .form-container { background: #fff; border: 2px solid #e2e8f0; border-radius: 1rem; padding: 1.75rem; margin-top: 1.75rem; max-width: 32rem; }
+    label { display: block; font-size: 0.8rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem; }
     .input-group { display: flex; border: 1px solid #cbd5e1; border-radius: 0.75rem; overflow: hidden; margin-bottom: 1rem; }
-    .input-prefix { padding: 0.625rem 0.75rem; background: #f1f5f9; font-size: 0.75rem; color: #475569; font-weight: 500; border-right: 1px solid #cbd5e1; }
-    input[type="tel"], select, textarea { width: 100%; padding: 0.625rem 0.75rem; font-size: 0.75rem; border: none; outline: none; background: transparent; }
+    .input-prefix { padding: 0.625rem 0.75rem; background: #f1f5f9; font-size: 0.8rem; color: #475569; font-weight: 500; border-right: 1px solid #cbd5e1; }
+    input[type="tel"], select, textarea { width: 100%; padding: 0.625rem 0.75rem; font-size: 0.85rem; border: none; outline: none; background: transparent; }
     .select-wrap, .textarea-wrap { border: 1px solid #cbd5e1; border-radius: 0.75rem; overflow: hidden; margin-bottom: 1rem; }
     .checkbox-row { display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 1.25rem; }
-    .checkbox-row input { margin-top: 0.15rem; }
-    .checkbox-row label { font-size: 0.75rem; color: #475569; font-weight: normal; margin: 0; }
-    .submit-btn { width: 100%; padding: 0.625rem 1rem; background: #e11d48; color: #fff; border: none; border-radius: 0.75rem; font-weight: 700; font-size: 0.75rem; cursor: pointer; transition: background 0.15s; }
+    .checkbox-row input { margin-top: 0.2rem; }
+    .checkbox-row label { font-size: 0.8rem; color: #475569; font-weight: normal; margin: 0; line-height: 1.4; }
+    .submit-btn { width: 100%; padding: 0.75rem 1rem; background: #e11d48; color: #fff; border: none; border-radius: 0.75rem; font-weight: 700; font-size: 0.875rem; cursor: pointer; transition: background 0.15s; }
     .submit-btn:hover { background: #be123c; }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .msg-box { font-size: 0.75rem; padding: 0.75rem; border-radius: 0.75rem; margin-top: 0.5rem; font-weight: 500; }
+    .msg-box { font-size: 0.8rem; padding: 0.875rem; border-radius: 0.75rem; margin-top: 0.75rem; font-weight: 500; line-height: 1.5; }
     .msg-box.hidden { display: none; }
     .msg-error { background: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; }
     .msg-success { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .info-list dt { font-weight: 700; color: #0f172a; margin-top: 0.5rem; font-size: 0.875rem; }
+    .info-list dd { color: #475569; font-size: 0.85rem; margin-left: 0; margin-bottom: 0.5rem; }
     footer { background: #fff; border-top: 1px solid #e2e8f0; text-align: center; padding: 1.5rem 1rem; font-size: 0.75rem; color: #64748b; }
     .footer-inner { max-width: 56rem; margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 0.75rem; }
     @media (min-width: 640px) { .footer-inner { flex-direction: row; } }
@@ -73,82 +75,122 @@
   <main>
     <div class="card">
       <div class="badge">Google Play Store Mandatory Compliance</div>
-      <h2>Account & Data Deletion Request (खाता और डेटा हटाने का अनुरोध)</h2>
+      <h2>Account & Data Deletion (खाता और डेटा हटाने का अनुरोध)</h2>
       <div class="subtext">Apna GaonBazaar Customer, Vendor & Runner Applications</div>
 
       <section>
-        <h3>1. Your Right to Delete Data / डेटा हटाने का अधिकार</h3>
-        <p>Under Google Play's User Data policy and the Digital Personal Data Protection (DPDP) Act 2023, you have the absolute right to request the deletion of your Apna GaonBazaar account and all associated personal records.</p>
+        <h3>1. Who Can Request Account Deletion / कौन अनुरोध कर सकता है</h3>
+        <p>Any registered user of <strong>Apna GaonBazaar</strong> across all three applications may request complete deletion of their account and associated personal data at any time:</p>
+        <ul>
+          <li><strong>Customers (ग्राहक):</strong> App users who order groceries and farm produce.</li>
+          <li><strong>Vendors (दुकानदार):</strong> Village shopkeepers and merchants listing store products.</li>
+          <li><strong>Runners (डिलीवरी पार्टनर):</strong> Village delivery partners fulfilling order deliveries.</li>
+        </ul>
       </section>
 
       <section>
-        <h3>2. What Happens When You Delete Your Account / क्या डेटा हटाया जाता है</h3>
+        <h3>2. What Data is Deleted vs. Retained / डेटा विलोपन विवरण</h3>
         <div class="grid">
           <div class="box-rose">
             <div class="box-title" style="color: #9f1239;">Permanently Deleted / Anonymized:</div>
             <ul style="color: #9f1239;">
-              <li>Your profile details (Full name, phone number, email address)</li>
-              <li>Profile avatars and uploaded KYC documents/photos</li>
+              <li>Your personal profile (Full name, mobile number, email, avatar photo)</li>
               <li>Saved delivery locations, village landmarks, and GPS pins</li>
-              <li>Active authentication session tokens (instant revocation)</li>
+              <li>KYC documents, Aadhaar metadata, and PAN records</li>
+              <li>Active authentication session tokens (instant revocation across all devices)</li>
+              <li>Connected vendor catalog or runner driver profiles (marked permanently inactive)</li>
             </ul>
           </div>
           <div class="box-slate">
             <div class="box-title" style="color: #334155;">Retained for Statutory Compliance:</div>
             <ul style="color: #475569;">
-              <li>Completed financial invoice receipts (retained strictly in anonymized form per Indian tax laws for 7 years)</li>
-              <li>Fraud prevention transaction IDs (non-PII)</li>
+              <li>Completed financial transaction receipts and tax invoices (retained strictly in anonymized, non-PII format per Indian GST & Companies Act rules for 7 years)</li>
+              <li>Fraud prevention and anti-money laundering reference records (non-PII)</li>
             </ul>
           </div>
         </div>
       </section>
 
       <section class="box-slate" style="margin-top: 1.5rem;">
-        <h3>Method 1: Direct In-App Deletion (Instantaneous)</h3>
+        <h3>3. Method 1: Direct In-App Deletion (Instantaneous)</h3>
+        <p>If you have the Apna GaonBazaar app installed on your Android smartphone, in-app deletion is instantaneous:</p>
         <ol>
-          <li>Open the <strong>Apna GaonBazaar</strong> app on your Android phone.</li>
-          <li>Navigate to the <strong>Account</strong> or <strong>Profile</strong> tab.</li>
-          <li>Scroll down and tap <strong>"Delete My Account"</strong>.</li>
-          <li>Confirm the prompt. Your personal profile and saved addresses are purged immediately.</li>
+          <li>Open the <strong>Apna GaonBazaar</strong> (Customer, Dukaan, or Mitra) app.</li>
+          <li>Navigate to the <strong>Account</strong> or <strong>Dashboard</strong> tab.</li>
+          <li>Scroll down and tap <strong>"Delete Account & Data" (खाता और डेटा हटाएं)</strong>.</li>
+          <li>Confirm the confirmation prompt. Your profile and personal records are purged immediately and sessions revoked.</li>
         </ol>
       </section>
 
-      <div class="form-container">
-        <h3>Method 2: Online Deletion Request Form</h3>
-        <p style="font-size: 0.75rem; color: #64748b; margin-bottom: 1rem;">Submit this form if you have uninstalled the application or cannot access your phone.</p>
+      <section>
+        <h3>4. Method 2: Online Deletion Request Form (Without App)</h3>
+        <p>If you have uninstalled the application or cannot access your phone, submit your request using the form below:</p>
 
-        <form id="deletion-form">
-          <label for="del-phone">Registered Indian Mobile Number / मोबाइल नंबर</label>
-          <div class="input-group">
-            <span class="input-prefix">+91</span>
-            <input type="tel" id="del-phone" required maxlength="10" placeholder="98XXXXXXXX">
-          </div>
+        <div class="form-container">
+          <form id="deletion-form">
+            <label for="del-phone">Registered Indian Mobile Number / मोबाइल नंबर *</label>
+            <div class="input-group">
+              <span class="input-prefix">+91</span>
+              <input type="tel" id="del-phone" required maxlength="10" placeholder="98XXXXXXXX">
+            </div>
 
-          <label for="del-role">Account Role / ऐप का प्रकार</label>
-          <div class="select-wrap">
-            <select id="del-role">
-              <option value="customer">Customer (ग्राहक)</option>
-              <option value="vendor">Vendor / Village Shopkeeper (दुकानदार)</option>
-              <option value="runner">Runner Delivery Partner (डिलीवरी पार्टनर)</option>
-            </select>
-          </div>
+            <label for="del-role">Account Role / ऐप का प्रकार *</label>
+            <div class="select-wrap">
+              <select id="del-role">
+                <option value="customer">Customer (ग्राहक)</option>
+                <option value="vendor">Vendor / Village Shopkeeper (दुकानदार)</option>
+                <option value="runner">Runner Delivery Partner (डिलीवरी पार्टनर)</option>
+              </select>
+            </div>
 
-          <label for="del-reason">Reason for Deletion (Optional)</label>
-          <div class="textarea-wrap">
-            <textarea id="del-reason" rows="2" placeholder="e.g. No longer living in pilot village, privacy preference..."></textarea>
-          </div>
+            <label for="del-reason">Reason for Deletion (Optional)</label>
+            <div class="textarea-wrap">
+              <textarea id="del-reason" rows="2" placeholder="e.g. Relocated from pilot village, privacy preference..."></textarea>
+            </div>
 
-          <div class="checkbox-row">
-            <input type="checkbox" id="del-confirm" required>
-            <label for="del-confirm">I confirm that I want to permanently delete my account and associated personal data.</label>
-          </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="del-confirm" required>
+              <label for="del-confirm">I confirm that I am the authorized owner of this account and request permanent deletion of my account and associated personal data.</label>
+            </div>
 
-          <button type="submit" id="del-btn" class="submit-btn">
-            Submit Account Deletion Request
-          </button>
-          <div id="del-result" class="msg-box hidden"></div>
-        </form>
-      </div>
+            <button type="submit" id="del-btn" class="submit-btn">
+              Submit Account Deletion Request
+            </button>
+            <div id="del-result" class="msg-box hidden"></div>
+          </form>
+        </div>
+      </section>
+
+      <section>
+        <h3>5. How Account Ownership is Verified / पहचान सत्यापन</h3>
+        <p>To prevent unauthorized or fraudulent deletion of accounts by third parties, online requests submitted through this webpage undergo secure verification:</p>
+        <ul>
+          <li>An automated confirmation SMS is dispatched to your registered Indian mobile number.</li>
+          <li>If an active order or delivery is currently in transit, deletion is paused until the ongoing order is safely delivered or cancelled.</li>
+          <li>For vendor stores with pending settlement balances, payouts must clear before shop profile closure.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>6. Processing Timeline / प्रक्रिया की समय-सीमा</h3>
+        <ul>
+          <li><strong>In-App Deletion:</strong> Immediate (0 to 60 seconds).</li>
+          <li><strong>Online Web Requests:</strong> Processed within <strong>24 to 48 hours</strong> following mobile verification per the Digital Personal Data Protection (DPDP) Act 2023.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>7. Contact Support & Data Protection Officer</h3>
+        <p>If you encounter any issues or wish to request manual deletion via support desk:</p>
+        <dl class="info-list">
+          <dt>Support Email:</dt>
+          <dd><a href="mailto:support@apnagaonbazaar.in" style="color: #047857; font-weight: 600;">support@apnagaonbazaar.in</a></dd>
+          <dt>Customer Helpline:</dt>
+          <dd>+91 98000 00000 (Mon–Sat, 8:00 AM – 8:00 PM IST)</dd>
+          <dt>Registered Address:</dt>
+          <dd>Apna GaonBazaar Technologies Private Limited, Minapur Block, Muzaffarpur District, Bihar — 843128, India.</dd>
+        </dl>
+      </section>
     </div>
   </main>
 
@@ -156,10 +198,11 @@
 
   <footer>
     <div class="footer-inner">
-      <p>© 2026 Apna GaonBazaar. All rights reserved.</p>
+      <p>© 2026 Apna GaonBazaar Technologies Private Limited. All rights reserved.</p>
       <div class="footer-links">
-        <a href="/terms">Terms of Service</a>
+        <a href="/terms-and-conditions">Terms of Service</a>
         <a href="/privacy-policy">Privacy Policy</a>
+        <a href="/refund-policy">Refund Policy</a>
         <a href="/delete-account" style="color: #be123c; font-weight: 600;">Delete Account</a>
       </div>
     </div>

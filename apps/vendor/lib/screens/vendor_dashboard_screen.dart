@@ -1194,6 +1194,69 @@ class _VendorDashboardScreenState extends State<VendorDashboardScreen> with Sing
             );
           },
         ),
+        const SizedBox(height: 12),
+
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.red.shade800,
+            side: BorderSide(color: Colors.red.shade300),
+            minimumSize: const Size.fromHeight(44),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          icon: const Icon(Icons.delete_forever_outlined, size: 20),
+          label: Text(
+            isHi ? 'विक्रेता खाता और डेटा हटाएं' : 'Delete Vendor Account & Data',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: Text(isHi ? 'विक्रेता खाता हटाने की पुष्टि' : 'Delete Vendor Account'),
+                content: Text(
+                  isHi
+                      ? 'क्या आप वाकई अपना विक्रेता खाता और दुकान प्रोफ़ाइल डेटा हमेशा के लिए हटाना चाहते हैं? यह क्रिया वापस नहीं की जा सकती।'
+                      : 'Are you sure you want to permanently delete your vendor account and store profile data? This action cannot be undone.',
+                ),
+                actions: [
+                  TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(isHi ? 'रद्द करें' : 'Cancel')),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade800,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () async {
+                      Navigator.of(ctx).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(isHi ? 'विक्रेता खाता हटाने की प्रक्रिया जारी है...' : 'Processing vendor account deletion...'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                      final result = await state.deleteAccount();
+                      if (!context.mounted) return;
+                      if (result['success'] == true) {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => const VendorAuthScreen()),
+                          (r) => false,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(result['message'] as String? ?? 'Error deleting account'),
+                            backgroundColor: GBColors.error,
+                            duration: const Duration(seconds: 4),
+                          ),
+                        );
+                      }
+                    },
+                    child: Text(isHi ? 'स्थायी रूप से हटाएं' : 'Delete Permanently'),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ],
     );
   }

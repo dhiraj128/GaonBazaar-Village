@@ -175,6 +175,29 @@ class CustomerAppState extends ChangeNotifier {
     } catch (_) {}
   }
 
+  Future<Map<String, dynamic>> deleteAccount() async {
+    if (authToken == null) {
+      logout();
+      return {'success': true};
+    }
+    final res = await apiClient.deleteAccount();
+    if (res.isSuccess) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('gb_auth_token');
+        await prefs.remove('gb_user_data');
+        await prefs.remove('gb_selected_address');
+      } catch (_) {}
+      logout();
+      return {'success': true};
+    } else {
+      return {
+        'success': false,
+        'message': res.errorMessage ?? 'खाता हटाने में त्रुटि हुई (Failed to delete account)',
+      };
+    }
+  }
+
   Future<void> fetchProfile() async {
     if (authToken == null) return;
     final res = await apiClient.getCurrentUser();

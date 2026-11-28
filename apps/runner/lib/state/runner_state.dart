@@ -161,6 +161,28 @@ class RunnerAppState extends ChangeNotifier {
     } catch (_) {}
   }
 
+  Future<Map<String, dynamic>> deleteAccount() async {
+    if (authToken == null) {
+      logout();
+      return {'success': true};
+    }
+    final res = await apiClient.deleteAccount();
+    if (res.isSuccess) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('gb_runner_token');
+        await prefs.remove('gb_runner_user');
+      } catch (_) {}
+      logout();
+      return {'success': true};
+    } else {
+      return {
+        'success': false,
+        'message': res.errorMessage ?? 'राइडर खाता हटाने में त्रुटि हुई (Failed to delete rider account)',
+      };
+    }
+  }
+
   Future<void> fetchProfile() async {
     final res = await apiClient.getRunnerMe();
     if (res.isSuccess && res.data != null) {

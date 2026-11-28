@@ -250,6 +250,18 @@ class AccountTab extends StatelessWidget {
                     iconColor: GBColors.error,
                     onTap: () => _confirmLogout(context, state, loc),
                   ),
+                  const Divider(height: 1, indent: 56),
+
+                  // 8. Delete Account
+                  _buildMenuItem(
+                    context: context,
+                    icon: Icons.delete_forever_outlined,
+                    title: loc.isHindi ? 'खाता और डेटा हटाएं' : 'Delete Account & Data',
+                    subtitle: loc.isHindi ? 'स्थायी रूप से प्रोफ़ाइल और डेटा हटाएं' : 'Permanently delete profile & data',
+                    textColor: Colors.red.shade800,
+                    iconColor: Colors.red.shade800,
+                    onTap: () => _confirmDeleteAccount(context, state, loc),
+                  ),
                 ],
               ),
             ),
@@ -285,6 +297,57 @@ class AccountTab extends StatelessWidget {
               );
             },
             child: Text(loc.tr('confirm')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteAccount(BuildContext context, CustomerAppState state, GBLocalizations loc) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.isHindi ? 'खाता और डेटा हटाने की पुष्टि' : 'Delete Account & Data'),
+        content: Text(
+          loc.isHindi
+              ? 'क्या आप वाकई अपना खाता और सारा व्यक्तिगत डेटा स्थायी रूप से हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।'
+              : 'Are you sure you want to permanently delete your account and personal data? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(loc.tr('cancel')),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade800,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(loc.isHindi ? 'खाता हटाने की प्रक्रिया जारी है...' : 'Processing account deletion...'),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+              final result = await state.deleteAccount();
+              if (!context.mounted) return;
+              if (result['success'] == true) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LanguageSelectionScreen()),
+                  (r) => false,
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(result['message'] as String? ?? 'Error deleting account'),
+                    backgroundColor: GBColors.error,
+                  ),
+                );
+              }
+            },
+            child: Text(loc.isHindi ? 'स्थायी रूप से हटाएं' : 'Delete Permanently'),
           ),
         ],
       ),

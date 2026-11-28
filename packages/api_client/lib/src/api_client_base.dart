@@ -303,6 +303,29 @@ class GBApiClient {
     }
   }
 
+  Future<ApiResponse<Map<String, dynamic>>> deleteAccount({String? reason}) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl${Endpoints.currentUser}'),
+        headers: _headers(),
+        body: jsonEncode({
+          'reason': reason ?? 'User requested account deletion',
+          'confirm': true,
+        }),
+      ).timeout(const Duration(seconds: 12));
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        final data = response.body.isNotEmpty
+            ? jsonDecode(response.body) as Map<String, dynamic>
+            : <String, dynamic>{'status': 'SUCCESS'};
+        return ApiResponse(isSuccess: true, data: data, statusCode: response.statusCode);
+      }
+      return ApiResponse(isSuccess: false, errorMessage: _extractErrorMessage(response), statusCode: response.statusCode);
+    } catch (e) {
+      return ApiResponse(isSuccess: false, errorMessage: _cleanErrorMessage(e), statusCode: 500);
+    }
+  }
+
   // --- Store & Catalog APIs ---
   Future<ApiResponse<List<GBStore>>> getNearbyStores({
     required double latitude,
